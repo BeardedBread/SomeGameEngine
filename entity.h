@@ -2,11 +2,19 @@
 #define __ENTITY_H
 #include <stdbool.h>
 #include "sc/map/sc_map.h"
-#define MAX_TAG_LEN 32
+
+#define N_TAGS 3
+enum EntityTag
+{
+    NO_ENT_TAG,
+    PLAYER_ENT_TAG,
+    ENEMY_ENT_TAG,
+};
+typedef enum EntityTag EntityTag_t;
 typedef struct Entity
 {
     unsigned long m_id;
-    char m_tag[MAX_TAG_LEN];
+    EntityTag_t m_tag;
     bool m_alive;
     struct sc_map_64 components;
 }Entity_t;

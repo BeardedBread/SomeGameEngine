@@ -7,6 +7,10 @@ void init_entity_manager(EntityManager_t *p_manager)
     {
         sc_map_init_64v(p_manager->component_map + i, MAX_COMP_POOL_SIZE, 0);
     }
+    for (size_t i=0; i<N_TAGS; ++i)
+    {
+        sc_map_init_64v(p_manager->entities_map + i, MAX_COMP_POOL_SIZE, 0);
+    }
     sc_queue_init(&p_manager->to_add);
     sc_queue_init(&p_manager->to_remove);
 }
@@ -28,6 +32,7 @@ void update_entity_manager(EntityManager_t *p_manager)
         {
             free_component_to_mempool((ComponentEnum_t)comp_type_idx, comp_idx);
             sc_map_del_64v(&p_manager->component_map[comp_type_idx], comp_idx);
+            sc_map_del_64v(&p_manager->entities_map[p_entity->m_tag], e_idx);
         }
         free_entity_to_mempool(e_idx);
         sc_map_del_64v(&p_manager->entities, e_idx);
@@ -35,8 +40,9 @@ void update_entity_manager(EntityManager_t *p_manager)
     sc_queue_clear(&p_manager->to_remove);
     sc_queue_foreach (&p_manager->to_add, e_idx)
     {
-        Entity_t *ent = get_entity_wtih_id(e_idx);
-        sc_map_put_64v(&p_manager->entities, e_idx, (void *)ent);
+        Entity_t *p_entity = get_entity_wtih_id(e_idx);
+        sc_map_put_64v(&p_manager->entities, e_idx, (void *)p_entity);
+        sc_map_put_64v(&p_manager->entities_map[p_entity->m_tag], e_idx, (void *)p_entity);
     }
     sc_queue_clear(&p_manager->to_add);
 
@@ -61,14 +67,19 @@ void free_entity_manager(EntityManager_t *p_manager)
     {
         sc_map_term_64v(p_manager->component_map + i);
     }
+    for (size_t i=0; i<N_TAGS; ++i)
+    {
+        sc_map_term_64v(p_manager->entities_map + i);
+    }
     sc_queue_term(&p_manager->to_add);
     sc_queue_term(&p_manager->to_remove);
 }
 
-Entity_t *add_entity(EntityManager_t *p_manager, const char *tag)
+Entity_t *add_entity(EntityManager_t *p_manager, EntityTag_t tag)
 {
     unsigned long e_idx = 0;
     Entity_t * p_ent = new_entity_from_mempool(&e_idx);
+    p_ent->m_tag = tag;
     if (p_ent)
     {
         sc_queue_add_last(&p_manager->to_add, e_idx);
@@ -78,8 +89,6 @@ Entity_t *add_entity(EntityManager_t *p_manager, const char *tag)
 
 void remove_entity(EntityManager_t *p_manager, unsigned long id)
 {
-    unsigned long comp_type, comp_id;
-
     Entity_t *p_entity = sc_map_get_64v(&p_manager->entities, id);
     if(!sc_map_found(&p_manager->entities)) return;
     // This only marks the entity for deletion

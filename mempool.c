@@ -72,7 +72,7 @@ Entity_t* new_entity_from_mempool(unsigned long *p_e_idx)
     Entity_t * ent = entity_mem_pool.entity_buffer + e_idx;
     sc_map_clear_64(&ent->components);
     ent->m_alive = true;
-    memset(ent->m_tag, 0, MAX_TAG_LEN);
+    ent->m_tag = NO_ENT_TAG;
     return ent;
 }
 

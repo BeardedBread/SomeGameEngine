@@ -11,10 +11,10 @@ int main(void)
     init_entity_manager(&manager);
 
     puts("Creating two entities");
-    Entity_t *p_ent = add_entity(&manager, "player");
+    Entity_t *p_ent = add_entity(&manager, PLAYER_ENT_TAG);
     CBBox_t * p_bbox = (CBBox_t *)add_component(&manager, p_ent, CBBOX_COMP_T);
     p_bbox->x = 15;
-    p_ent = add_entity(&manager, "enemy");
+    p_ent = add_entity(&manager, ENEMY_ENT_TAG);
     p_bbox = (CBBox_t *)add_component(&manager, p_ent, CBBOX_COMP_T);
     p_bbox->x = 40;
     update_entity_manager(&manager);

@@ -6,7 +6,7 @@
 void init_memory_pools(void);
 void free_memory_pools(void);
 
-Entity_t* new_entity_from_mempool(unsigned long *idx);
+Entity_t* new_entity_from_mempool(unsigned long *p_idx);
 Entity_t* get_entity_wtih_id(unsigned long idx);
 void free_entity_to_mempool(unsigned long idx);
 

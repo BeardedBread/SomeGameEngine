@@ -13,16 +13,16 @@ typedef struct EntityManager
     struct sc_queue_uint to_remove;
 }EntityManager_t;
 
-void init_entity_manager(EntityManager_t *manager);
-void update_entity_manager(EntityManager_t *manager);
-void clear_entity_manager(EntityManager_t *manager);
-void free_entity_manager(EntityManager_t *manager);
+void init_entity_manager(EntityManager_t *p_manager);
+void update_entity_manager(EntityManager_t *p_manager);
+void clear_entity_manager(EntityManager_t *p_manager);
+void free_entity_manager(EntityManager_t *p_manager);
 
-Entity_t *add_entity(EntityManager_t *manager, const char *tag);
-void remove_entity(EntityManager_t *manager, unsigned long id);
+Entity_t *add_entity(EntityManager_t *p_manager, const char *tag);
+void remove_entity(EntityManager_t *p_manager, unsigned long id);
 
-void *add_component(EntityManager_t *manager, Entity_t *entity, ComponentEnum_t comp_type);
-void *get_component(EntityManager_t *manager, Entity_t *entity, ComponentEnum_t comp_type);
-void remove_component(EntityManager_t *manager, Entity_t *entity, ComponentEnum_t comp_type);
+void *add_component(EntityManager_t *p_manager, Entity_t *entity, ComponentEnum_t comp_type);
+void *get_component(EntityManager_t *p_manager, Entity_t *entity, ComponentEnum_t comp_type);
+void remove_component(EntityManager_t *p_manager, Entity_t *entity, ComponentEnum_t comp_type);
 
 #endif // __ENTITY_MANAGER_H

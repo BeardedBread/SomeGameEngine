@@ -1,0 +1,14 @@
+Trivial Variables: i,n,c,etc... (Only one letter. If one letter isn't clear, then make it a Local Variable)
+Local Variables: snake_case
+Global Variables: g_snake_case
+Const Variables: ALL_CAPS
+Pointer Variables: add a p_ to the prefix. For global variables it would be gp_var, for local variables p_var, for const variables p_VAR. If far pointers are used then use an fp_ instead of p_.
+Typedef Values: suffix _t
+
+Structs: PascalCase
+Enums: PascalCase
+Struct Member Variables: camelCase
+Enum Values: ALL_CAPS
+Functions: snake_case
+Macros: ALL_CAPS
+

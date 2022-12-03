@@ -4,6 +4,10 @@ set(CMAKE_C_FLAGS "-Wall")
 cmake_minimum_required(VERSION 3.22.1)
 project(${PROJECT_NAME} C)
 set(CMAKE_C_STANDARD 99)
+set(RAYLIB_DIR $ENV{HOME}/Documents/Coding/raylib/out/)
+
+
+
 
 add_subdirectory(sc)
 add_executable(${PROJECT_NAME}
@@ -13,10 +17,70 @@ add_executable(${PROJECT_NAME}
 )
 
 target_include_directories(${PROJECT_NAME}
-    PUBLIC
+    PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
+    ${RAYLIB_DIR}/include
 )
+target_link_directories(${PROJECT_NAME}
+    PRIVATE
+    ${RAYLIB_DIR}/lib
+)
+
 target_link_libraries(${PROJECT_NAME}
     sc_queue
     sc_map
+    raylib
+    m
+)
+
+add_executable(EntManager_test
+    entManager_test.c
+    entManager.c
+    mempool.c
+)
+target_compile_options(EntManager_test PRIVATE -fsanitize=address -gdwarf-4)
+target_link_options(EntManager_test PRIVATE -fsanitize=address -gdwarf-4)
+target_include_directories(EntManager_test
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${RAYLIB_DIR}/include
+)
+target_link_directories(EntManager_test
+    PRIVATE
+    ${RAYLIB_DIR}/lib
+)
+target_link_libraries(EntManager_test
+    sc_queue
+    sc_map
+)
+
+
+add_executable(scene_test
+    scene_test.c
+    scene_impl.c
+    scene.c
+    entManager.c
+    mempool.c
+)
+
+target_include_directories(scene_test
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${RAYLIB_DIR}/include
+)
+
+target_compile_options(scene_test PRIVATE -fsanitize=address -gdwarf-4)
+target_link_options(scene_test PRIVATE -fsanitize=address -gdwarf-4)
+
+target_link_directories(scene_test
+    PRIVATE
+    ${RAYLIB_DIR}/lib
+)
+
+target_link_libraries(scene_test
+    sc_queue
+    sc_map
+    sc_array
+    raylib
+    m
 )

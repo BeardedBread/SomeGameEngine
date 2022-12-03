@@ -1,47 +1,39 @@
-#include "mempool.h"
-#include "entManager.h"
-#include <stdio.h>
+#include "raylib.h"
+#include "scene.h"
+#define N_SCENES 3
 
-int main(void)
+Scene_t scenes[N_SCENES];
+unsigned int current_scene;
+
+const int screenWidth = 800;
+const int screenHeight = 450;
+
+static void load_assets(void)
 {
-    init_memory_pools();
+}
 
-    puts("Init-ing manager and memory pool");
-    EntityManager_t manager;
-    init_entity_manager(&manager);
+int main(void) 
+{
+    // Initialization
+    //--------------------------------------------------------------------------------------
+    //char dir[7]; 
 
-    puts("Creating two entities");
-    Entity_t *p_ent = add_entity(&manager, PLAYER_ENT_TAG);
-    CBBox_t * p_bbox = (CBBox_t *)add_component(&manager, p_ent, CBBOX_COMP_T);
-    p_bbox->x = 15;
-    p_ent = add_entity(&manager, ENEMY_ENT_TAG);
-    p_bbox = (CBBox_t *)add_component(&manager, p_ent, CBBOX_COMP_T);
-    p_bbox->x = 40;
-    update_entity_manager(&manager);
-
-    puts("Print and remove the entities");
-    unsigned long idx = 0;
-    sc_map_foreach(&manager.entities, idx, p_ent)
+    InitWindow(screenWidth, screenHeight, "raylib");
+    SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
+    load_assets();
+    //Camera2D camera = { 0 };
+    //camera.offset = (Vector2){0,0};
+    //camera.rotation = 0.0f;
+    //camera.zoom = 1.0f;
+    while (!WindowShouldClose())
     {
-        p_bbox = (CBBox_t *)get_component(&manager, p_ent, CBBOX_COMP_T);
-        printf("BBOX x: %d\n", p_bbox->x);
-        remove_entity(&manager, idx);
+        // TODO: Handle keystrokes/input here
+        // TODO: Update Scene here or scene changes
+
+        BeginDrawing();
+            // TODO: Call the current scene Render function
+            ClearBackground(RAYWHITE);
+        EndDrawing();
     }
-    puts("");
-    update_entity_manager(&manager);
-
-    puts("Print again, should show nothing");
-    sc_map_foreach(&manager.entities, idx, p_ent)
-    {
-        p_bbox = (CBBox_t *)get_component(&manager, p_ent, CBBOX_COMP_T);
-        printf("BBOX x: %d\n", p_bbox->x);
-        remove_entity(&manager, idx);
-    }
-    puts("");
-
-    puts("Freeing manager and memory pool");
-    free_entity_manager(&manager);
-
-    free_memory_pools();
-    return 0;
+    CloseWindow(); 
 }

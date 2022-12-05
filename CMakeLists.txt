@@ -7,8 +7,6 @@ set(CMAKE_C_STANDARD 99)
 set(RAYLIB_DIR $ENV{HOME}/Documents/Coding/raylib/out/)
 
 
-
-
 add_subdirectory(sc)
 add_executable(${PROJECT_NAME}
     main.c

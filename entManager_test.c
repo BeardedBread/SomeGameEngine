@@ -13,10 +13,10 @@ int main(void)
     puts("Creating two entities");
     Entity_t *p_ent = add_entity(&manager, PLAYER_ENT_TAG);
     CBBox_t * p_bbox = (CBBox_t *)add_component(&manager, p_ent, CBBOX_COMP_T);
-    p_bbox->x = 15;
+    p_bbox->size.x = 15;
     p_ent = add_entity(&manager, ENEMY_ENT_TAG);
     p_bbox = (CBBox_t *)add_component(&manager, p_ent, CBBOX_COMP_T);
-    p_bbox->x = 40;
+    p_bbox->size.y = 40;
     update_entity_manager(&manager);
 
     puts("Print and remove the entities");
@@ -24,7 +24,7 @@ int main(void)
     sc_map_foreach(&manager.entities, idx, p_ent)
     {
         p_bbox = (CBBox_t *)get_component(&manager, p_ent, CBBOX_COMP_T);
-        printf("BBOX x: %d\n", p_bbox->x);
+        printf("BBOX: %f,%f\n", p_bbox->size.x, p_bbox->size.y);
         remove_entity(&manager, idx);
     }
     puts("");
@@ -34,7 +34,7 @@ int main(void)
     sc_map_foreach(&manager.entities, idx, p_ent)
     {
         p_bbox = (CBBox_t *)get_component(&manager, p_ent, CBBOX_COMP_T);
-        printf("BBOX x: %d\n", p_bbox->x);
+        printf("BBOX: %f,%f\n", p_bbox->size.x, p_bbox->size.y);
         remove_entity(&manager, idx);
     }
     puts("");

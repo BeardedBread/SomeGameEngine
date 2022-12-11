@@ -5,10 +5,25 @@
 #ifndef __SCENE_IMPL_H
 #define __SCENE_IMPL_H
 #include "scene.h"
+typedef struct Tile
+{
+    bool solid;
+    // TODO: add a map?
+}Tile_t;
+
+typedef struct TileGrid
+{
+    unsigned int width;
+    unsigned int height;
+    Tile_t * const tiles;
+}TileGrid_t;
+
 typedef struct LevelSceneData
 {
     Entity_t * player;
-}LevelSceneData_t ;
+    TileGrid_t tilemap;
+}LevelSceneData_t;
+
 typedef struct LevelScene
 {
     Scene_t scene;

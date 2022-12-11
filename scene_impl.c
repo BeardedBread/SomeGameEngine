@@ -58,16 +58,50 @@ static void screen_bounce_system(Scene_t *scene)
 
 }
 
+void level_do_action(Scene_t *scene, ActionType_t action, bool pressed)
+{
+    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
+    CTransform_t *p_ctransform = get_component(&scene->ent_manager, data->player, CTRANSFORM_COMP_T);
+    Vector2 dir = {0, 0};
+    if (pressed)
+    {
+        switch(action)
+        {
+            case ACTION_UP:
+                dir.y -= 1;
+            break;
+            case ACTION_DOWN:
+                dir.y += 1;
+            break;
+            case ACTION_LEFT:
+                dir.x -= 1;
+            break;
+            case ACTION_RIGHT:
+                dir.x += 1;
+            break;
+        }
+    }
+    p_ctransform->accel.x = dir.x * 500;
+    p_ctransform->accel.y = dir.y * 500;
+
+}
+
 void init_level_scene(LevelScene_t *scene)
 {
-    init_scene(&scene->scene, LEVEL_SCENE, &level_scene_render_func);
+    init_scene(&scene->scene, LEVEL_SCENE, &level_scene_render_func, &level_do_action);
     scene->scene.scene_data = &scene->data;
     scene->data.player = NULL;
 
     // insert level scene systems
     sc_array_add(&scene->scene.systems, &movement_update_system);
     sc_array_add(&scene->scene.systems, &screen_bounce_system);
+
+    sc_map_put_64(&scene->scene.action_map, KEY_UP, ACTION_UP);
+    sc_map_put_64(&scene->scene.action_map, KEY_DOWN, ACTION_DOWN);
+    sc_map_put_64(&scene->scene.action_map, KEY_LEFT, ACTION_LEFT);
+    sc_map_put_64(&scene->scene.action_map, KEY_RIGHT, ACTION_RIGHT);
 }
+
 void free_level_scene(LevelScene_t *scene)
 {
     free_scene(&scene->scene);

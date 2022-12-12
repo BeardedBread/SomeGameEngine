@@ -3,16 +3,12 @@
 #include <stdio.h>
 #include <unistd.h>
 
-// Use double buffer to handle key presses
-// Can do single buffer, but need careful handling
-unsigned int curr_keybuf = 0;
-unsigned int next_keybuf = 1;
-struct sc_queue_32 key_buffer[2];
+// Maintain own queue to handle key presses
+struct sc_queue_32 key_buffer;
 
 int main(void)
 {
-    sc_queue_init(key_buffer);
-    sc_queue_init(key_buffer + 1);
+    sc_queue_init(&key_buffer);
     InitWindow(320, 240, "raylib");
     SetTargetFPS(60);
     init_memory_pools();
@@ -32,10 +28,11 @@ int main(void)
         // This entire key processing relies on the assumption that a pressed key will
         // appear in the polling of raylib
 
+        unsigned int sz = sc_queue_size(&key_buffer);
         // Process any existing pressed key
-        while (!sc_queue_empty(key_buffer + curr_keybuf))
+        for (size_t i=0; i<sz; i++)
         {
-            int button = sc_queue_del_first(key_buffer + curr_keybuf);
+            int button = sc_queue_del_first(&key_buffer);
             ActionType_t action = sc_map_get_64(&scene.scene.action_map, button);
             if (IsKeyReleased(button))
             {
@@ -44,7 +41,7 @@ int main(void)
             else
             {
                 do_action(&scene.scene, action, true);
-                sc_queue_add_last(key_buffer + next_keybuf, button);
+                sc_queue_add_last(&key_buffer, button);
             }
         }
 
@@ -52,20 +49,11 @@ int main(void)
         while(true)
         {
             int button = GetKeyPressed();
-            printf("Button pressed: %d\n", button);
             if (button == 0) break;
             ActionType_t action = sc_map_get_64(&scene.scene.action_map, button);
             if (!sc_map_found(&scene.scene.action_map)) continue;
-            printf("Action mapped: %d\n", action);
             do_action(&scene.scene, action, true);
-            sc_queue_add_last(key_buffer + next_keybuf, button);
-        }
-
-        // Swap keystroke buffer;
-        {
-            unsigned int tmp = curr_keybuf;
-            curr_keybuf = next_keybuf;
-            next_keybuf = tmp;
+            sc_queue_add_last(&key_buffer, button);
         }
 
         update_scene(&scene.scene);
@@ -78,6 +66,5 @@ int main(void)
     } 
     CloseWindow();
     free_level_scene(&scene);
-    sc_queue_term(key_buffer);
-    sc_queue_term(key_buffer + 1);
+    sc_queue_term(&key_buffer);
 }

@@ -17,6 +17,19 @@ static void level_scene_render_func(Scene_t* scene)
 
 static void movement_update_system(Scene_t* scene)
 {
+    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
+    float mag = Vector2Length(data->player_dir);
+    mag = (mag == 0)? 1 : mag;
+    Entity_t * p_player;
+    sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
+    {
+        CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
+        p_ctransform->accel.x = data->player_dir.x * 200 * 1.0 / mag;
+        p_ctransform->accel.y = data->player_dir.y * 200 * 1.0 / mag;
+    }
+    data->player_dir.x = 0;
+    data->player_dir.y = 0;
+
     float delta_time = GetFrameTime();
     CTransform_t * p_ctransform;
     sc_map_foreach_value(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], p_ctransform)
@@ -61,28 +74,24 @@ static void screen_bounce_system(Scene_t *scene)
 void level_do_action(Scene_t *scene, ActionType_t action, bool pressed)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
-    CTransform_t *p_ctransform = get_component(&scene->ent_manager, data->player, CTRANSFORM_COMP_T);
-    Vector2 dir = {0, 0};
     if (pressed)
     {
         switch(action)
         {
             case ACTION_UP:
-                dir.y -= 1;
+                data->player_dir.y = -1;
             break;
             case ACTION_DOWN:
-                dir.y += 1;
+                data->player_dir.y = 1;
             break;
             case ACTION_LEFT:
-                dir.x -= 1;
+                data->player_dir.x = -1;
             break;
             case ACTION_RIGHT:
-                dir.x += 1;
+                data->player_dir.x = 1;
             break;
         }
     }
-    p_ctransform->accel.x = dir.x * 500;
-    p_ctransform->accel.y = dir.y * 500;
 
 }
 
@@ -90,7 +99,7 @@ void init_level_scene(LevelScene_t *scene)
 {
     init_scene(&scene->scene, LEVEL_SCENE, &level_scene_render_func, &level_do_action);
     scene->scene.scene_data = &scene->data;
-    scene->data.player = NULL;
+    memset(&scene->data.player_dir, 0, sizeof(Vector2));
 
     // insert level scene systems
     sc_array_add(&scene->scene.systems, &movement_update_system);

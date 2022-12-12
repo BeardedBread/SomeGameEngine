@@ -19,14 +19,14 @@ int main(void)
     LevelScene_t scene;
     init_level_scene(&scene);
     Entity_t *p_ent = add_entity(&scene.scene.ent_manager, PLAYER_ENT_TAG);
-    scene.data.player = p_ent;
 
     CBBox_t *p_bbox = add_component(&scene.scene.ent_manager, p_ent, CBBOX_COMP_T);
     p_bbox->size.x = 30;
     p_bbox->size.y = 30;
     add_component(&scene.scene.ent_manager, p_ent, CTRANSFORM_COMP_T);
     update_entity_manager(&scene.scene.ent_manager);
-    for (size_t step = 0; step < 6000; step++)
+    //for (size_t step = 0; step < 6000; step++)
+    while(true)
     {
 
         // This entire key processing relies on the assumption that a pressed key will
@@ -68,7 +68,6 @@ int main(void)
             next_keybuf = tmp;
         }
 
-        printf("Step %lu\n", step);
         update_scene(&scene.scene);
         // This is needed to advance time delta
         BeginDrawing();

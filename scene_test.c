@@ -9,7 +9,7 @@ struct sc_queue_32 key_buffer;
 int main(void)
 {
     sc_queue_init(&key_buffer);
-    InitWindow(320, 240, "raylib");
+    InitWindow(640, 640, "raylib");
     SetTargetFPS(60);
     init_memory_pools();
     LevelScene_t scene;
@@ -20,6 +20,7 @@ int main(void)
     p_bbox->size.x = 30;
     p_bbox->size.y = 30;
     add_component(&scene.scene.ent_manager, p_ent, CTRANSFORM_COMP_T);
+    add_component(&scene.scene.ent_manager, p_ent, CTILECOORD_COMP_T);
     update_entity_manager(&scene.scene.ent_manager);
     //for (size_t step = 0; step < 6000; step++)
     while(true)

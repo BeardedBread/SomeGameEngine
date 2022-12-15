@@ -8,14 +8,15 @@
 typedef struct Tile
 {
     bool solid;
-    // TODO: add a map?
+    struct sc_map_64 entities_set;
 }Tile_t;
 
 typedef struct TileGrid
 {
     unsigned int width;
     unsigned int height;
-    Tile_t * const tiles;
+    unsigned int n_tiles;
+    Tile_t * tiles;
 }TileGrid_t;
 
 typedef struct LevelSceneData

@@ -65,8 +65,7 @@ static void movement_update_system(Scene_t* scene)
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
-        p_ctransform->accel.x = data->player_dir.x * 200 * 1.0 / mag;
-        p_ctransform->accel.y = data->player_dir.y * 200 * 1.0 / mag;
+        p_ctransform->accel = Vector2Scale(Vector2Normalize(data->player_dir), 600);
     }
     data->player_dir.x = 0;
     data->player_dir.y = 0;
@@ -76,9 +75,12 @@ static void movement_update_system(Scene_t* scene)
     CTransform_t * p_ctransform;
     sc_map_foreach_value(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], p_ctransform)
     {
-        p_ctransform->velocity = Vector2Add(
-            p_ctransform->velocity,
-            Vector2Scale(p_ctransform->accel, delta_time)
+        p_ctransform->velocity = Vector2Scale(
+            Vector2Add(
+                p_ctransform->velocity,
+                Vector2Scale(p_ctransform->accel, delta_time)
+            ),
+            0.95
         );
 
         // Store previous position before update

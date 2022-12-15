@@ -119,30 +119,19 @@ static void update_tilemap_system(Scene_t *scene)
         p_tilecoord->n_tiles = 0;
 
         // Compute new occupied tile positions and add
-        unsigned int tile_x = (p_ctransform->position.x) / TILE_SIZE;
-        unsigned int tile_y = (p_ctransform->position.y) / TILE_SIZE;
-        p_tilecoord->tiles[0] = tile_y * tilemap.width + tile_x;
-        p_tilecoord->n_tiles++;
+        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
+        unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
+        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
+        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
 
-        bool check_x = (tile_x + 1) < tilemap.width;
-        bool check_y = (tile_y + 1) < tilemap.height;
-        if (check_x)
+        for (unsigned int tile_y=tile_y1; tile_y <= tile_y2; tile_y++)
         {
-            p_tilecoord->tiles[p_tilecoord->n_tiles++] = p_tilecoord->tiles[0] + 1;
-        }
-        if (check_y)
-        {
-            p_tilecoord->tiles[p_tilecoord->n_tiles++] = p_tilecoord->tiles[0] + tilemap.width;
-        }
-        if (check_x && check_y)
-        {
-            p_tilecoord->tiles[p_tilecoord->n_tiles++] = p_tilecoord->tiles[0] + tilemap.width + 1;
-        }
-
-        for (size_t i=0;i<p_tilecoord->n_tiles;++i)
-        {
-            unsigned int tile_idx = p_tilecoord->tiles[i];
-            sc_map_put_64(&(tilemap.tiles[tile_idx].entities_set), p_ent->m_id, 0);
+            for (unsigned int tile_x=tile_x1; tile_x <= tile_x2; tile_x++)
+            {
+                unsigned int tile_idx = tile_y * tilemap.width + tile_x;
+                p_tilecoord->tiles[p_tilecoord->n_tiles++] = tile_idx;
+                sc_map_put_64(&(tilemap.tiles[tile_idx].entities_set), p_ent->m_id, 0);
+            }
         }
     }
 }
@@ -240,9 +229,10 @@ void init_level_scene(LevelScene_t *scene)
     sc_map_put_64(&scene->scene.action_map, KEY_LEFT, ACTION_LEFT);
     sc_map_put_64(&scene->scene.action_map, KEY_RIGHT, ACTION_RIGHT);
 
-    scene->data.tilemap.width = 16;
+    scene->data.tilemap.width = 32;
     scene->data.tilemap.height = 16;
-    scene->data.tilemap.n_tiles = 16*16;
+    assert(32*16 <= MAX_N_TILES);
+    scene->data.tilemap.n_tiles = 32*16;
     scene->data.tilemap.tiles = all_tiles;
     for (size_t i=0; i<MAX_N_TILES;i++)
     {

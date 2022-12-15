@@ -30,7 +30,7 @@ typedef struct _CTransform_t
 // Thus the size of the entity cannot be larger than the tile
 typedef struct _CTileCoord_t
 {
-    unsigned int tiles[4];
+    unsigned int tiles[8];
     unsigned int n_tiles;
 }CTileCoord_t;
 

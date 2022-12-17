@@ -21,6 +21,10 @@ int main(void)
     p_bbox->size.y = 45;
     add_component(&scene.scene.ent_manager, p_ent, CTRANSFORM_COMP_T);
     add_component(&scene.scene.ent_manager, p_ent, CTILECOORD_COMP_T);
+    CJump_t *p_cjump = add_component(&scene.scene.ent_manager, p_ent, CJUMP_COMP_T);
+    p_cjump->jump_speed = 680;
+    p_cjump->jumps = 1;
+    p_cjump->max_jumps = 1;
     update_entity_manager(&scene.scene.ent_manager);
     //for (size_t step = 0; step < 6000; step++)
     while(true)

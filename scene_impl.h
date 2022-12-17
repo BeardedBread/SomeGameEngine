@@ -22,8 +22,9 @@ typedef struct TileGrid
 typedef struct LevelSceneData
 {
     Vector2 player_dir;
-    bool jumped;
     TileGrid_t tilemap;
+    bool jumped_pressed;
+    bool jumped_released;
 }LevelSceneData_t;
 
 typedef struct LevelScene

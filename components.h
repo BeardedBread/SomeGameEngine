@@ -3,12 +3,13 @@
 #include "raylib.h"
 // TODO: Look at sc to use macros to auto generate functions
 
-#define N_COMPONENTS 3
+#define N_COMPONENTS 4
 enum ComponentEnum
 {
     CBBOX_COMP_T,
     CTRANSFORM_COMP_T,
     CTILECOORD_COMP_T,
+    CJUMP_COMP_T,
 };
 typedef enum ComponentEnum ComponentEnum_t;
 
@@ -23,6 +24,7 @@ typedef struct _CTransform_t
     Vector2 position;
     Vector2 velocity;
     Vector2 accel;
+    bool on_ground;
 }CTransform_t;
 
 // This is to store the occupying tiles
@@ -34,4 +36,12 @@ typedef struct _CTileCoord_t
     unsigned int n_tiles;
 }CTileCoord_t;
 
+typedef struct _CJump_t
+{
+    unsigned int jumps;
+    unsigned int max_jumps;
+    int jump_speed;
+    bool jumped;
+    bool short_hop;
+}CJump_t;
 #endif // __COMPONENTS_H

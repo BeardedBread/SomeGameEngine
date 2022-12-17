@@ -54,19 +54,22 @@ static void level_scene_render_func(Scene_t* scene)
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
     {
         CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
+        CJump_t* p_cjump = get_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
         char buffer[64];
         sprintf(buffer, "Pos: %.3f\n %.3f", p_ct->position.x, p_ct->position.y);
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 15, 12, BLACK);
+        sprintf(buffer, "Jumps: %u", p_cjump->jumps);
+        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 60, 12, BLACK);
     }
 }
 
 static const Vector2 GRAVITY = {0, 1500};
 
-static bool on_ground(CTransform_t *p_ctransform, CBBox_t *p_bbox, TileGrid_t* grid)
+static bool check_on_ground(Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid)
 {
-    unsigned int tile_x1 = p_ctransform->position.x / TILE_SIZE;
-    unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
-    unsigned int tile_y = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
+    unsigned int tile_x1 = pos.x / TILE_SIZE;
+    unsigned int tile_x2 = (pos.x + bbox_sz.x - 1) / TILE_SIZE;
+    unsigned int tile_y = (pos.y + bbox_sz.y) / TILE_SIZE;
 
     for(unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
     {
@@ -86,24 +89,37 @@ static void movement_update_system(Scene_t* scene)
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
+        CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
         p_ctransform->accel.x = 0;
         p_ctransform->accel.y = 0;
         p_ctransform->accel = Vector2Scale(Vector2Normalize(data->player_dir), 2000);
 
         CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
-        if (!on_ground(p_ctransform, p_bbox, &data->tilemap))
+        bool on_ground = check_on_ground(p_ctransform->position, p_bbox->size, &data->tilemap);
+        p_ctransform->on_ground = on_ground;
+        if (p_cjump->jumped && p_ctransform->velocity.y < 0)
+        {
+            if (!data->jumped_pressed && !p_cjump->short_hop)
+            {
+                p_cjump->short_hop = true;
+                p_ctransform->velocity.y /= 2;
+            }
+        }
+        if (!on_ground)
         {
             p_ctransform->accel = Vector2Add(p_ctransform->accel, GRAVITY);
         }
         else
         {
-            if (data->jumped)
+            if (data->jumped_pressed && p_cjump->jumps > 0)
             {
-                p_ctransform->velocity.y -= 680;
+                p_ctransform->velocity.y -= p_cjump->jump_speed;
+                p_cjump->jumped = true;
+                p_cjump->jumps--;
             }
         }
+
     }
-    data->jumped = false;
     data->player_dir.x = 0;
     data->player_dir.y = 0;
 
@@ -134,6 +150,25 @@ static void movement_update_system(Scene_t* scene)
         );
     }
 
+    sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
+    {
+        CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
+        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
+        CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
+        bool on_ground = check_on_ground(p_ctransform->position, p_bbox->size, &data->tilemap);
+
+        // Handle Ground<->Air Transition
+        if (!on_ground && p_ctransform->on_ground)
+        {
+            if (!p_cjump->jumped) p_cjump->jumps--;
+        }
+        else if (on_ground && !p_ctransform->on_ground)
+        {
+            p_cjump->jumps = p_cjump->max_jumps;
+            p_cjump->jumped = false;
+            p_cjump->short_hop = false;
+        }
+    }
 }
 
 static void update_tilemap_system(Scene_t *scene)
@@ -331,23 +366,20 @@ static void player_collision_system(Scene_t *scene)
 void level_do_action(Scene_t *scene, ActionType_t action, bool pressed)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
-    if (pressed)
+    switch(action)
     {
-        switch(action)
-        {
-            case ACTION_UP:
-                data->jumped = true;
-            break;
-            case ACTION_DOWN:
-            //    data->player_dir.y = 1;
-            break;
-            case ACTION_LEFT:
-                data->player_dir.x = -1;
-            break;
-            case ACTION_RIGHT:
-                data->player_dir.x = 1;
-            break;
-        }
+        case ACTION_UP:
+            data->jumped_pressed = pressed;
+        break;
+        case ACTION_DOWN:
+        //    data->player_dir.y = 1;
+        break;
+        case ACTION_LEFT:
+            data->player_dir.x = (pressed)? -1 : 0;
+        break;
+        case ACTION_RIGHT:
+            data->player_dir.x = (pressed)? 1 : 0;
+        break;
     }
 
 }
@@ -383,7 +415,7 @@ void init_level_scene(LevelScene_t *scene)
     }
     for (size_t i=0; i<31; ++i)
     {
-        all_tiles[193+i].solid = true; // for testing
+        all_tiles[192+i].solid = true; // for testing
     }
     all_tiles[145].solid = true; // for testing
     all_tiles[178].solid = true; // for testing

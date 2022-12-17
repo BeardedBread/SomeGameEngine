@@ -8,6 +8,8 @@ static const Vector2 TILE_SZ = {TILE_SIZE, TILE_SIZE};
 #define MAX_N_TILES 4096
 static Tile_t all_tiles[MAX_N_TILES] = {0};
 
+static bool find_AABB_overlap(const Vector2 tl1, const Vector2 sz1, const Vector2 tl2, const Vector2 sz2, Vector2 * const overlap);
+
 static void level_scene_render_func(Scene_t* scene)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
@@ -53,12 +55,25 @@ static void level_scene_render_func(Scene_t* scene)
     {
         CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
         char buffer[64];
-        sprintf(buffer, "Pos: %.3f %.3f", p_ct->position.x, p_ct->position.y);
+        sprintf(buffer, "Pos: %.3f\n %.3f", p_ct->position.x, p_ct->position.y);
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 15, 12, BLACK);
     }
 }
 
-static const Vector2 GRAVITY = {0, 700};
+static const Vector2 GRAVITY = {0, 1500};
+
+static bool on_ground(CTransform_t *p_ctransform, CBBox_t *p_bbox, TileGrid_t* grid)
+{
+    unsigned int tile_x1 = p_ctransform->position.x / TILE_SIZE;
+    unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
+    unsigned int tile_y = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
+
+    for(unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
+    {
+        if (grid->tiles[tile_y*grid->width + tile_x].solid) return true;
+    }
+    return false;
+}
 
 static void movement_update_system(Scene_t* scene)
 {
@@ -73,9 +88,22 @@ static void movement_update_system(Scene_t* scene)
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
         p_ctransform->accel.x = 0;
         p_ctransform->accel.y = 0;
-        p_ctransform->accel = Vector2Scale(Vector2Normalize(data->player_dir), 1000);
-        p_ctransform->accel = Vector2Add(p_ctransform->accel, GRAVITY);
+        p_ctransform->accel = Vector2Scale(Vector2Normalize(data->player_dir), 2000);
+
+        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
+        if (!on_ground(p_ctransform, p_bbox, &data->tilemap))
+        {
+            p_ctransform->accel = Vector2Add(p_ctransform->accel, GRAVITY);
+        }
+        else
+        {
+            if (data->jumped)
+            {
+                p_ctransform->velocity.y -= 680;
+            }
+        }
     }
+    data->jumped = false;
     data->player_dir.x = 0;
     data->player_dir.y = 0;
 
@@ -84,13 +112,18 @@ static void movement_update_system(Scene_t* scene)
     CTransform_t * p_ctransform;
     sc_map_foreach_value(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], p_ctransform)
     {
-        p_ctransform->velocity = Vector2Scale(
+        p_ctransform->velocity =
             Vector2Add(
                 p_ctransform->velocity,
                 Vector2Scale(p_ctransform->accel, delta_time)
-            ),
-            0.95
-        );
+            );
+        p_ctransform->velocity.x *= 0.85;
+        p_ctransform->velocity.y *= 0.98;
+        mag = Vector2Length(p_ctransform->velocity);
+        p_ctransform->velocity = Vector2Scale(Vector2Normalize(p_ctransform->velocity), (mag > 1000)? 1000:mag);
+
+        if (fabs(p_ctransform->velocity.x) < 1e-3) p_ctransform->velocity.x = 0;
+        if (fabs(p_ctransform->velocity.y) < 1e-3) p_ctransform->velocity.y = 0;
 
         // Store previous position before update
         p_ctransform->prev_position.x = p_ctransform->position.x;
@@ -129,10 +162,11 @@ static void update_tilemap_system(Scene_t *scene)
         p_tilecoord->n_tiles = 0;
 
         // Compute new occupied tile positions and add
-        unsigned int tile_x1 = ceilf(p_ctransform->position.x) / TILE_SIZE;
-        unsigned int tile_y1 = ceilf(p_ctransform->position.y) / TILE_SIZE;
-        unsigned int tile_x2 = ceilf(p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
-        unsigned int tile_y2 = ceilf(p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE;
+        // Extend the check by a little to avoid missing
+        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
+        unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
+        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
+        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
 
         for (unsigned int tile_y=tile_y1; tile_y <= tile_y2; tile_y++)
         {
@@ -249,6 +283,23 @@ static void player_collision_system(Scene_t *scene)
             {
                 // TODO: check against the entities of each involved tiles
             }
+
+            // Level boundary collision
+            unsigned int level_width = tilemap.width * TILE_SIZE;
+            if(p_ctransform->position.x < 0 || p_ctransform->position.x + p_bbox->size.x > level_width)
+            {
+                p_ctransform->position.x = (p_ctransform->position.x < 0) ? 0 : p_ctransform->position.x;
+                p_ctransform->position.x = (p_ctransform->position.x + p_bbox->size.x > level_width) ? level_width - p_bbox->size.x : p_ctransform->position.x;
+                p_ctransform->velocity.x *= -1;
+            }
+            
+            unsigned int level_height = tilemap.height * TILE_SIZE;
+            if(p_ctransform->position.y < 0 || p_ctransform->position.y + p_bbox->size.y > level_height)
+            {
+                p_ctransform->position.y = (p_ctransform->position.y < 0) ? 0 : p_ctransform->position.y;
+                p_ctransform->position.y = (p_ctransform->position.y + p_bbox->size.y > level_height) ? level_height - p_bbox->size.y : p_ctransform->position.y;
+                p_ctransform->velocity.y *= -1;
+            }
         }
         // Deal with float precision, by rounding when it is near to an integer enough
         float decimal;
@@ -277,36 +328,6 @@ static void player_collision_system(Scene_t *scene)
 
 }
 
-static void screen_bounce_system(Scene_t *scene)
-{
-    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
-    TileGrid_t tilemap = data->tilemap;
-    Entity_t* p_ent;
-    sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
-    {
-        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
-        CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-        if (p_bbox == NULL || p_ctransform == NULL) continue;
-
-        unsigned int level_width = tilemap.width * TILE_SIZE;
-        if(p_ctransform->position.x < 0 || p_ctransform->position.x + p_bbox->size.x > level_width)
-        {
-            p_ctransform->position.x = (p_ctransform->position.x < 0) ? 0 : p_ctransform->position.x;
-            p_ctransform->position.x = (p_ctransform->position.x + p_bbox->size.x > level_width) ? level_width - p_bbox->size.x : p_ctransform->position.x;
-            p_ctransform->velocity.x *= -1;
-        }
-        
-        unsigned int level_height = tilemap.height * TILE_SIZE;
-        if(p_ctransform->position.y < 0 || p_ctransform->position.y + p_bbox->size.y > level_height)
-        {
-            p_ctransform->position.y = (p_ctransform->position.y < 0) ? 0 : p_ctransform->position.y;
-            p_ctransform->position.y = (p_ctransform->position.y + p_bbox->size.y > level_height) ? level_height - p_bbox->size.y : p_ctransform->position.y;
-            p_ctransform->velocity.y *= -1;
-        }
-    }
-
-}
-
 void level_do_action(Scene_t *scene, ActionType_t action, bool pressed)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
@@ -315,10 +336,10 @@ void level_do_action(Scene_t *scene, ActionType_t action, bool pressed)
         switch(action)
         {
             case ACTION_UP:
-                data->player_dir.y = -1;
+                data->jumped = true;
             break;
             case ACTION_DOWN:
-                data->player_dir.y = 1;
+            //    data->player_dir.y = 1;
             break;
             case ACTION_LEFT:
                 data->player_dir.x = -1;
@@ -341,7 +362,6 @@ void init_level_scene(LevelScene_t *scene)
     sc_array_add(&scene->scene.systems, &movement_update_system);
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &player_collision_system);
-    sc_array_add(&scene->scene.systems, &screen_bounce_system);
 
     // This avoid graphical glitch, not essential
     //sc_array_add(&scene->scene.systems, &update_tilemap_system);

@@ -58,6 +58,8 @@ static void level_scene_render_func(Scene_t* scene)
     }
 }
 
+static const Vector2 GRAVITY = {0, 700};
+
 static void movement_update_system(Scene_t* scene)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
@@ -69,13 +71,16 @@ static void movement_update_system(Scene_t* scene)
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
-        p_ctransform->accel = Vector2Scale(Vector2Normalize(data->player_dir), 600);
+        p_ctransform->accel.x = 0;
+        p_ctransform->accel.y = 0;
+        p_ctransform->accel = Vector2Scale(Vector2Normalize(data->player_dir), 1000);
+        p_ctransform->accel = Vector2Add(p_ctransform->accel, GRAVITY);
     }
     data->player_dir.x = 0;
     data->player_dir.y = 0;
 
     // Update movement
-    float delta_time = GetFrameTime();
+    float delta_time = 0.017;
     CTransform_t * p_ctransform;
     sc_map_foreach_value(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], p_ctransform)
     {
@@ -124,10 +129,10 @@ static void update_tilemap_system(Scene_t *scene)
         p_tilecoord->n_tiles = 0;
 
         // Compute new occupied tile positions and add
-        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
-        unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
-        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
-        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE;
+        unsigned int tile_x1 = ceilf(p_ctransform->position.x) / TILE_SIZE;
+        unsigned int tile_y1 = ceilf(p_ctransform->position.y) / TILE_SIZE;
+        unsigned int tile_x2 = ceilf(p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
+        unsigned int tile_y2 = ceilf(p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE;
 
         for (unsigned int tile_y=tile_y1; tile_y <= tile_y2; tile_y++)
         {
@@ -219,6 +224,16 @@ static void player_collision_system(Scene_t *scene)
                 {
                     find_AABB_overlap(p_ctransform->prev_position, p_bbox->size, other, TILE_SZ, &prev_overlap);
                     if (fabs(prev_overlap.y) > fabs(prev_overlap.x))
+                    {
+                        p_ctransform->position.x += overlap.x;
+                        p_ctransform->velocity.x = 0;
+                    }
+                    else if (fabs(prev_overlap.x) > fabs(prev_overlap.y))
+                    {
+                        p_ctransform->position.y += overlap.y;
+                        p_ctransform->velocity.y = 0;
+                    }
+                    else if (fabs(overlap.x) < fabs(overlap.y))
                     {
                         p_ctransform->position.x += overlap.x;
                         p_ctransform->velocity.x = 0;
@@ -324,9 +339,9 @@ void init_level_scene(LevelScene_t *scene)
 
     // insert level scene systems
     sc_array_add(&scene->scene.systems, &movement_update_system);
-    sc_array_add(&scene->scene.systems, &screen_bounce_system);
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &player_collision_system);
+    sc_array_add(&scene->scene.systems, &screen_bounce_system);
 
     // This avoid graphical glitch, not essential
     //sc_array_add(&scene->scene.systems, &update_tilemap_system);
@@ -346,11 +361,10 @@ void init_level_scene(LevelScene_t *scene)
         all_tiles[i].solid = 0;
         sc_map_init_64(&all_tiles[i].entities_set, 8, 0);
     }
-    all_tiles[98].solid = true; // for testing
-    all_tiles[99].solid = true; // for testing
-    all_tiles[100].solid = true; // for testing
-    all_tiles[101].solid = true; // for testing
-    all_tiles[102].solid = true; // for testing
+    for (size_t i=0; i<31; ++i)
+    {
+        all_tiles[193+i].solid = true; // for testing
+    }
     all_tiles[145].solid = true; // for testing
     all_tiles[178].solid = true; // for testing
     all_tiles[179].solid = true; // for testing

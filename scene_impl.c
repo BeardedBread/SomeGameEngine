@@ -25,6 +25,7 @@ static void level_scene_render_func(Scene_t* scene)
         if (tilemap.tiles[i].solid)
         {
             DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
+            DrawText(buffer, x, y, 10, WHITE);
         }
         else
         {
@@ -363,6 +364,29 @@ static void player_collision_system(Scene_t *scene)
 
 }
 
+static void toggle_block_system(Scene_t *scene)
+{
+    static unsigned int last_tile_idx = MAX_N_TILES;
+    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
+    TileGrid_t tilemap = data->tilemap;
+
+    if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+    {
+        int mouse_x = GetMouseX() / TILE_SIZE;
+        int mouse_y = GetMouseY() / TILE_SIZE;
+        unsigned int tile_idx = mouse_y * tilemap.width + mouse_x;
+        if (tile_idx != last_tile_idx)
+        {
+            tilemap.tiles[tile_idx].solid = !tilemap.tiles[tile_idx].solid;
+            last_tile_idx = tile_idx;
+        }
+    }
+    else
+    {
+        last_tile_idx = MAX_N_TILES;
+    }
+}
+
 void level_do_action(Scene_t *scene, ActionType_t action, bool pressed)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
@@ -388,12 +412,14 @@ void init_level_scene(LevelScene_t *scene)
 {
     init_scene(&scene->scene, LEVEL_SCENE, &level_scene_render_func, &level_do_action);
     scene->scene.scene_data = &scene->data;
+    scene->data.jumped_pressed = false;
     memset(&scene->data.player_dir, 0, sizeof(Vector2));
 
     // insert level scene systems
     sc_array_add(&scene->scene.systems, &movement_update_system);
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &player_collision_system);
+    sc_array_add(&scene->scene.systems, &toggle_block_system);
 
     // This avoid graphical glitch, not essential
     //sc_array_add(&scene->scene.systems, &update_tilemap_system);
@@ -413,14 +439,10 @@ void init_level_scene(LevelScene_t *scene)
         all_tiles[i].solid = 0;
         sc_map_init_64(&all_tiles[i].entities_set, 8, 0);
     }
-    for (size_t i=0; i<31; ++i)
+    for (size_t i=0; i<32; ++i)
     {
-        all_tiles[192+i].solid = true; // for testing
+        all_tiles[15*32+i].solid = true; // for testing
     }
-    all_tiles[145].solid = true; // for testing
-    all_tiles[178].solid = true; // for testing
-    all_tiles[179].solid = true; // for testing
-    all_tiles[190].solid = true; // for testing
 }
 
 void free_level_scene(LevelScene_t *scene)

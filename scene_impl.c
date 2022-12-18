@@ -8,7 +8,65 @@ static const Vector2 TILE_SZ = {TILE_SIZE, TILE_SIZE};
 #define MAX_N_TILES 4096
 static Tile_t all_tiles[MAX_N_TILES] = {0};
 
-static bool find_AABB_overlap(const Vector2 tl1, const Vector2 sz1, const Vector2 tl2, const Vector2 sz2, Vector2 * const overlap);
+static const Vector2 GRAVITY = {0, 1500};
+
+static bool find_1D_overlap(const Vector2 l1, const Vector2 l2, float* overlap)
+{
+   // No Overlap
+    if (l1.y < l2.x || l2.y < l1.x) return false;
+
+    if (l1.x >= l2.x && l1.y <= l2.y)
+    {
+        // Complete Overlap, not sure what to do tbh
+        *overlap = l2.y-l2.x + l1.y-l1.x;
+    }
+    else
+    {
+        //Partial overlap
+        // x is p1, y is p2
+        *overlap =  (l2.y >= l1.y)? l2.x - l1.y : l2.y - l1.x;
+    }
+    if (fabs(*overlap) < 0.01)
+    {
+        *overlap = 0;
+        return false;
+    }
+    return true;
+}
+
+static bool find_AABB_overlap(const Vector2 tl1, const Vector2 sz1, const Vector2 tl2, const Vector2 sz2, Vector2 * const overlap)
+{
+    // Note that we include one extra pixel for checking
+    // This avoid overlapping on the border
+    Vector2 l1, l2;
+    bool overlap_x, overlap_y;
+    l1.x = tl1.x;
+    l1.y = tl1.x + sz1.x;
+    l2.x = tl2.x;
+    l2.y = tl2.x + sz2.x;
+
+    overlap_x = find_1D_overlap(l1, l2, &overlap->x);
+    l1.x = tl1.y;
+    l1.y = tl1.y + sz1.y;
+    l2.x = tl2.y;
+    l2.y = tl2.y + sz2.y;
+    overlap_y = find_1D_overlap(l1, l2, &overlap->y);
+
+    return overlap_x && overlap_y;
+}
+
+static bool check_on_ground(Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid)
+{
+    unsigned int tile_x1 = pos.x / TILE_SIZE;
+    unsigned int tile_x2 = (pos.x + bbox_sz.x - 1) / TILE_SIZE;
+    unsigned int tile_y = (pos.y + bbox_sz.y) / TILE_SIZE;
+
+    for(unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
+    {
+        if (grid->tiles[tile_y*grid->width + tile_x].solid) return true;
+    }
+    return false;
+}
 
 static void level_scene_render_func(Scene_t* scene)
 {
@@ -64,22 +122,7 @@ static void level_scene_render_func(Scene_t* scene)
     }
 }
 
-static const Vector2 GRAVITY = {0, 1500};
-
-static bool check_on_ground(Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid)
-{
-    unsigned int tile_x1 = pos.x / TILE_SIZE;
-    unsigned int tile_x2 = (pos.x + bbox_sz.x - 1) / TILE_SIZE;
-    unsigned int tile_y = (pos.y + bbox_sz.y) / TILE_SIZE;
-
-    for(unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
-    {
-        if (grid->tiles[tile_y*grid->width + tile_x].solid) return true;
-    }
-    return false;
-}
-
-static void movement_update_system(Scene_t* scene)
+static void player_movement_input_system(Scene_t* scene)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
 
@@ -124,6 +167,10 @@ static void movement_update_system(Scene_t* scene)
     data->player_dir.x = 0;
     data->player_dir.y = 0;
 
+}
+
+static void movement_update_system(Scene_t* scene)
+{
     // Update movement
     float delta_time = 0.017;
     CTransform_t * p_ctransform;
@@ -136,7 +183,7 @@ static void movement_update_system(Scene_t* scene)
             );
         p_ctransform->velocity.x *= 0.85;
         p_ctransform->velocity.y *= 0.98;
-        mag = Vector2Length(p_ctransform->velocity);
+        float mag = Vector2Length(p_ctransform->velocity);
         p_ctransform->velocity = Vector2Scale(Vector2Normalize(p_ctransform->velocity), (mag > 1000)? 1000:mag);
 
         if (fabs(p_ctransform->velocity.x) < 1e-3) p_ctransform->velocity.x = 0;
@@ -151,6 +198,12 @@ static void movement_update_system(Scene_t* scene)
         );
     }
 
+}
+
+static void player_ground_air_transition_system(Scene_t* scene)
+{
+    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
+    Entity_t *p_player;
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
@@ -214,51 +267,6 @@ static void update_tilemap_system(Scene_t *scene)
             }
         }
     }
-}
-
-static bool find_1D_overlap(const Vector2 l1, const Vector2 l2, float* overlap)
-{
-   // No Overlap
-    if (l1.y < l2.x || l2.y < l1.x) return false;
-
-    if (l1.x >= l2.x && l1.y <= l2.y)
-    {
-        // Complete Overlap, not sure what to do tbh
-        *overlap = l2.y-l2.x + l1.y-l1.x;
-    }
-    else
-    {
-        //Partial overlap
-        // x is p1, y is p2
-        *overlap =  (l2.y >= l1.y)? l2.x - l1.y : l2.y - l1.x;
-    }
-    if (fabs(*overlap) < 0.01)
-    {
-        *overlap = 0;
-        return false;
-    }
-    return true;
-}
-
-static bool find_AABB_overlap(const Vector2 tl1, const Vector2 sz1, const Vector2 tl2, const Vector2 sz2, Vector2 * const overlap)
-{
-    // Note that we include one extra pixel for checking
-    // This avoid overlapping on the border
-    Vector2 l1, l2;
-    bool overlap_x, overlap_y;
-    l1.x = tl1.x;
-    l1.y = tl1.x + sz1.x;
-    l2.x = tl2.x;
-    l2.y = tl2.x + sz2.x;
-
-    overlap_x = find_1D_overlap(l1, l2, &overlap->x);
-    l1.x = tl1.y;
-    l1.y = tl1.y + sz1.y;
-    l2.x = tl2.y;
-    l2.y = tl2.y + sz2.y;
-    overlap_y = find_1D_overlap(l1, l2, &overlap->y);
-
-    return overlap_x && overlap_y;
 }
 
 static void player_collision_system(Scene_t *scene)
@@ -416,7 +424,9 @@ void init_level_scene(LevelScene_t *scene)
     memset(&scene->data.player_dir, 0, sizeof(Vector2));
 
     // insert level scene systems
+    sc_array_add(&scene->scene.systems, &player_movement_input_system);
     sc_array_add(&scene->scene.systems, &movement_update_system);
+    sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &player_collision_system);
     sc_array_add(&scene->scene.systems, &toggle_block_system);

@@ -55,9 +55,27 @@ static bool find_AABB_overlap(const Vector2 tl1, const Vector2 sz1, const Vector
     return overlap_x && overlap_y;
 }
 
-static bool check_on_ground(Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid)
+static bool check_collision_at(Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid, Vector2 point)
 {
-    unsigned int tile_x1 = pos.x / TILE_SIZE;
+    Vector2 new_pos = Vector2Add(pos, point);
+    unsigned int tile_x1 = (new_pos.x) / TILE_SIZE;
+    unsigned int tile_x2 = (new_pos.x + bbox_sz.x - 1) / TILE_SIZE;
+    unsigned int tile_y1 = (new_pos.y) / TILE_SIZE;
+    unsigned int tile_y2 = (new_pos.y + bbox_sz.y - 1) / TILE_SIZE;
+
+    for(unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
+    {
+        for(unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
+        {
+            if (grid->tiles[tile_y*grid->width + tile_x].solid) return true;
+        }
+    }
+    return false;
+}
+
+static inline bool check_on_ground(Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid)
+{
+    unsigned int tile_x1 = (pos.x) / TILE_SIZE;
     unsigned int tile_x2 = (pos.x + bbox_sz.x - 1) / TILE_SIZE;
     unsigned int tile_y = (pos.y + bbox_sz.y) / TILE_SIZE;
 
@@ -114,17 +132,21 @@ static void level_scene_render_func(Scene_t* scene)
     {
         CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
         CJump_t* p_cjump = get_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
+        CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
         char buffer[64];
         sprintf(buffer, "Pos: %.3f\n %.3f", p_ct->position.x, p_ct->position.y);
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 15, 12, BLACK);
         sprintf(buffer, "Jumps: %u", p_cjump->jumps);
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 60, 12, BLACK);
+        sprintf(buffer, "Crouch: %s", p_pstate->is_crouch? "YES":"NO");
+        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 90, 12, BLACK);
     }
 }
 
 static void player_movement_input_system(Scene_t* scene)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
+    TileGrid_t tilemap = data->tilemap;
 
     // Deal with player acceleration/velocity via inputs first
     float mag = Vector2Length(data->player_dir);
@@ -134,13 +156,12 @@ static void player_movement_input_system(Scene_t* scene)
     {
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
         CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
+        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
+        CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_player, CPLAYERSTATE_T);
         p_ctransform->accel.x = 0;
         p_ctransform->accel.y = 0;
         p_ctransform->accel = Vector2Scale(Vector2Normalize(data->player_dir), 2000);
 
-        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
-        bool on_ground = check_on_ground(p_ctransform->position, p_bbox->size, &data->tilemap);
-        p_ctransform->on_ground = on_ground;
         if (p_cjump->jumped && p_ctransform->velocity.y < 0)
         {
             if (!data->jumped_pressed && !p_cjump->short_hop)
@@ -149,20 +170,66 @@ static void player_movement_input_system(Scene_t* scene)
                 p_ctransform->velocity.y /= 2;
             }
         }
-        if (!on_ground)
+        if (!p_ctransform->on_ground)
         {
             p_ctransform->accel = Vector2Add(p_ctransform->accel, GRAVITY);
+            if(p_pstate->is_crouch)
+            {
+                p_pstate->is_crouch = false;
+                p_ctransform->position.y -= 23;
+                p_ctransform->position.x += 5;
+                p_bbox->size.y = 45;
+                p_bbox->size.x = 30;
+            }
         }
         else
         {
             if (data->jumped_pressed && p_cjump->jumps > 0)
             {
-                p_ctransform->velocity.y -= p_cjump->jump_speed;
-                p_cjump->jumped = true;
-                p_cjump->jumps--;
+                bool jump_valid = true;
+                if (p_pstate->is_crouch)
+                {
+                    Vector2 test_pos = p_ctransform->position;
+                    Vector2 test_bbox = {30, 45};
+                    Vector2 top = {0, 0};
+                    test_pos.y -= 23;
+                    test_pos.x += 5;
+                    jump_valid = !check_collision_at(test_pos, test_bbox, &tilemap, top);
+                }
+
+                if (jump_valid)
+                {
+                    p_ctransform->velocity.y -= p_cjump->jump_speed;
+                    p_cjump->jumped = true;
+                    p_cjump->jumps--;
+                }
+            }
+
+            if (data->crouch_pressed && !p_pstate->is_crouch)
+            {
+                p_ctransform->position.y += 23;
+                p_ctransform->position.x -= 5;
+                p_bbox->size.y = 22;
+                p_bbox->size.x = 40;
+                p_pstate->is_crouch = data->crouch_pressed;
+            }
+            else if (!data->crouch_pressed && p_pstate->is_crouch)
+            {
+                Vector2 test_pos = p_ctransform->position;
+                Vector2 test_bbox = {30, 45};
+                Vector2 top = {0, 0};
+                test_pos.y -= 23;
+                test_pos.x += 5;
+                if (!check_collision_at(test_pos, test_bbox, &tilemap, top))
+                {
+                    p_ctransform->position.y -= 23;
+                    p_ctransform->position.x += 5;
+                    p_bbox->size.y = 45;
+                    p_bbox->size.x = 30;
+                    p_pstate->is_crouch = data->crouch_pressed;
+                }
             }
         }
-
     }
     data->player_dir.x = 0;
     data->player_dir.y = 0;
@@ -210,7 +277,6 @@ static void player_ground_air_transition_system(Scene_t* scene)
         CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
         CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
         bool on_ground = check_on_ground(p_ctransform->position, p_bbox->size, &data->tilemap);
-
         // Handle Ground<->Air Transition
         if (!on_ground && p_ctransform->on_ground)
         {
@@ -222,6 +288,7 @@ static void player_ground_air_transition_system(Scene_t* scene)
             p_cjump->jumped = false;
             p_cjump->short_hop = false;
         }
+        p_ctransform->on_ground = on_ground;
     }
 }
 
@@ -404,7 +471,7 @@ void level_do_action(Scene_t *scene, ActionType_t action, bool pressed)
             data->jumped_pressed = pressed;
         break;
         case ACTION_DOWN:
-        //    data->player_dir.y = 1;
+            data->crouch_pressed = pressed;
         break;
         case ACTION_LEFT:
             data->player_dir.x = (pressed)? -1 : 0;
@@ -421,14 +488,15 @@ void init_level_scene(LevelScene_t *scene)
     init_scene(&scene->scene, LEVEL_SCENE, &level_scene_render_func, &level_do_action);
     scene->scene.scene_data = &scene->data;
     scene->data.jumped_pressed = false;
+    scene->data.crouch_pressed = false;
     memset(&scene->data.player_dir, 0, sizeof(Vector2));
 
     // insert level scene systems
     sc_array_add(&scene->scene.systems, &player_movement_input_system);
     sc_array_add(&scene->scene.systems, &movement_update_system);
-    sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &player_collision_system);
+    sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
     sc_array_add(&scene->scene.systems, &toggle_block_system);
 
     // This avoid graphical glitch, not essential

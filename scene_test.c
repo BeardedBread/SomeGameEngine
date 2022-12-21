@@ -25,6 +25,7 @@ int main(void)
     p_cjump->jump_speed = 680;
     p_cjump->jumps = 1;
     p_cjump->max_jumps = 1;
+    add_component(&scene.scene.ent_manager, p_ent, CPLAYERSTATE_T);
     update_entity_manager(&scene.scene.ent_manager);
     //for (size_t step = 0; step < 6000; step++)
     while(true)

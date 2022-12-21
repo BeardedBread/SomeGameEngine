@@ -3,19 +3,22 @@
 #include "raylib.h"
 // TODO: Look at sc to use macros to auto generate functions
 
-#define N_COMPONENTS 4
+#define N_COMPONENTS 5
 enum ComponentEnum
 {
     CBBOX_COMP_T,
     CTRANSFORM_COMP_T,
     CTILECOORD_COMP_T,
     CJUMP_COMP_T,
+    CPLAYERSTATE_T
 };
 typedef enum ComponentEnum ComponentEnum_t;
 
 typedef struct _CBBox_t
 {
     Vector2 size;
+    Vector2 offset;
+    Vector2 half_size;
 }CBBox_t;
 
 typedef struct _CTransform_t
@@ -44,4 +47,16 @@ typedef struct _CJump_t
     bool jumped;
     bool short_hop;
 }CJump_t;
+
+typedef enum PlayerState
+{
+    GROUNDED,
+    AIR,
+}PlayerState_t;
+
+typedef struct _CPlayerState_t
+{
+    unsigned int is_crouch: 1;
+    unsigned int in_water:1;
+}CPlayerState_t;
 #endif // __COMPONENTS_H

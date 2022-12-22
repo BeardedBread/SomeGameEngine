@@ -1,14 +1,14 @@
 #include "scene_impl.h"
+#include "constants.h"
 #include "raylib.h"
 #include "raymath.h"
 #include <stdio.h>
 
-#define TILE_SIZE 32
 static const Vector2 TILE_SZ = {TILE_SIZE, TILE_SIZE};
 #define MAX_N_TILES 4096
 static Tile_t all_tiles[MAX_N_TILES] = {0};
 
-static const Vector2 GRAVITY = {0, 1500};
+static const Vector2 GRAVITY = {0, GRAV_ACCEL};
 
 static bool find_1D_overlap(const Vector2 l1, const Vector2 l2, float* overlap)
 {
@@ -26,7 +26,7 @@ static bool find_1D_overlap(const Vector2 l1, const Vector2 l2, float* overlap)
         // x is p1, y is p2
         *overlap =  (l2.y >= l1.y)? l2.x - l1.y : l2.y - l1.x;
     }
-    if (fabs(*overlap) < 0.01)
+    if (fabs(*overlap) < 0.01) // Use 2 dp precision
     {
         *overlap = 0;
         return false;
@@ -128,6 +128,8 @@ static void level_scene_render_func(Scene_t* scene)
         int y = (i+1)*TILE_SIZE;
         DrawLine(0, y, tilemap.width * TILE_SIZE, y, BLACK);
     }
+
+    // For DEBUG
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
     {
         CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
@@ -160,8 +162,9 @@ static void player_movement_input_system(Scene_t* scene)
         CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_player, CPLAYERSTATE_T);
         p_ctransform->accel.x = 0;
         p_ctransform->accel.y = 0;
-        p_ctransform->accel = Vector2Scale(Vector2Normalize(data->player_dir), 2000);
+        p_ctransform->accel = Vector2Scale(Vector2Normalize(data->player_dir), MOVE_ACCEL);
 
+        // Short Hop
         if (p_cjump->jumped && p_ctransform->velocity.y < 0)
         {
             if (!data->jumped_pressed && !p_cjump->short_hop)
@@ -170,16 +173,17 @@ static void player_movement_input_system(Scene_t* scene)
                 p_ctransform->velocity.y /= 2;
             }
         }
+
         if (!p_ctransform->on_ground)
         {
             p_ctransform->accel = Vector2Add(p_ctransform->accel, GRAVITY);
             if(p_pstate->is_crouch)
             {
                 p_pstate->is_crouch = false;
-                p_ctransform->position.y -= 23;
-                p_ctransform->position.x += 5;
-                p_bbox->size.y = 45;
-                p_bbox->size.x = 30;
+                p_ctransform->position.x += PLAYER_C_XOFFSET;
+                p_ctransform->position.y -= PLAYER_C_YOFFSET;
+                p_bbox->size.y = PLAYER_HEIGHT;
+                p_bbox->size.x = PLAYER_WIDTH;
             }
         }
         else
@@ -190,10 +194,10 @@ static void player_movement_input_system(Scene_t* scene)
                 if (p_pstate->is_crouch)
                 {
                     Vector2 test_pos = p_ctransform->position;
-                    Vector2 test_bbox = {30, 45};
-                    Vector2 top = {0, 0};
-                    test_pos.y -= 23;
-                    test_pos.x += 5;
+                    Vector2 test_bbox = {PLAYER_WIDTH, PLAYER_HEIGHT};
+                    Vector2 top = {0, -1};
+                    test_pos.x += PLAYER_C_XOFFSET;
+                    test_pos.y -= PLAYER_C_YOFFSET;
                     jump_valid = !check_collision_at(test_pos, test_bbox, &tilemap, top);
                 }
 
@@ -201,31 +205,30 @@ static void player_movement_input_system(Scene_t* scene)
                 {
                     p_ctransform->velocity.y -= p_cjump->jump_speed;
                     p_cjump->jumped = true;
-                    p_cjump->jumps--;
                 }
             }
 
             if (data->crouch_pressed && !p_pstate->is_crouch)
             {
-                p_ctransform->position.y += 23;
-                p_ctransform->position.x -= 5;
-                p_bbox->size.y = 22;
-                p_bbox->size.x = 40;
+                p_ctransform->position.x -= PLAYER_C_XOFFSET;
+                p_ctransform->position.y += PLAYER_C_YOFFSET;
+                p_bbox->size.x = PLAYER_C_WIDTH;
+                p_bbox->size.y = PLAYER_C_HEIGHT;
                 p_pstate->is_crouch = data->crouch_pressed;
             }
             else if (!data->crouch_pressed && p_pstate->is_crouch)
             {
                 Vector2 test_pos = p_ctransform->position;
-                Vector2 test_bbox = {30, 45};
-                Vector2 top = {0, 0};
-                test_pos.y -= 23;
-                test_pos.x += 5;
+                Vector2 test_bbox = {PLAYER_WIDTH, PLAYER_HEIGHT};
+                Vector2 top = {0, -1};
+                test_pos.x += PLAYER_C_XOFFSET;
+                test_pos.y -= PLAYER_C_YOFFSET;
                 if (!check_collision_at(test_pos, test_bbox, &tilemap, top))
                 {
-                    p_ctransform->position.y -= 23;
-                    p_ctransform->position.x += 5;
-                    p_bbox->size.y = 45;
-                    p_bbox->size.x = 30;
+                    p_ctransform->position.x += PLAYER_C_XOFFSET;
+                    p_ctransform->position.y -= PLAYER_C_YOFFSET;
+                    p_bbox->size.x = PLAYER_WIDTH;
+                    p_bbox->size.y = PLAYER_HEIGHT;
                     p_pstate->is_crouch = data->crouch_pressed;
                 }
             }
@@ -239,7 +242,7 @@ static void player_movement_input_system(Scene_t* scene)
 static void movement_update_system(Scene_t* scene)
 {
     // Update movement
-    float delta_time = 0.017;
+    float delta_time = 0.017; // TODO: Will need to think about delta time handling
     CTransform_t * p_ctransform;
     sc_map_foreach_value(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], p_ctransform)
     {
@@ -248,11 +251,12 @@ static void movement_update_system(Scene_t* scene)
                 p_ctransform->velocity,
                 Vector2Scale(p_ctransform->accel, delta_time)
             );
-        p_ctransform->velocity.x *= 0.85;
-        p_ctransform->velocity.y *= 0.98;
+        p_ctransform->velocity.x *= X_FRICTION;
+        p_ctransform->velocity.y *= Y_FRICTION;
         float mag = Vector2Length(p_ctransform->velocity);
-        p_ctransform->velocity = Vector2Scale(Vector2Normalize(p_ctransform->velocity), (mag > 1000)? 1000:mag);
+        p_ctransform->velocity = Vector2Scale(Vector2Normalize(p_ctransform->velocity), (mag > PLAYER_MAX_SPEED)? PLAYER_MAX_SPEED:mag);
 
+        // 3 dp precision
         if (fabs(p_ctransform->velocity.x) < 1e-3) p_ctransform->velocity.x = 0;
         if (fabs(p_ctransform->velocity.y) < 1e-3) p_ctransform->velocity.y = 0;
 
@@ -280,7 +284,7 @@ static void player_ground_air_transition_system(Scene_t* scene)
         // Handle Ground<->Air Transition
         if (!on_ground && p_ctransform->on_ground)
         {
-            if (!p_cjump->jumped) p_cjump->jumps--;
+            p_cjump->jumps--;
         }
         else if (on_ground && !p_ctransform->on_ground)
         {
@@ -412,7 +416,7 @@ static void player_collision_system(Scene_t *scene)
                 p_ctransform->velocity.y *= -1;
             }
         }
-        // Deal with float precision, by rounding when it is near to an integer enough
+        // Deal with float precision, by rounding when it is near to an integer enough by 2 dp
         float decimal;
         float fractional = modff(p_ctransform->position.x, &decimal);
         if (fractional > 0.99)

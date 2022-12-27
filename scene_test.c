@@ -17,8 +17,7 @@ int main(void)
     Entity_t *p_ent = add_entity(&scene.scene.ent_manager, PLAYER_ENT_TAG);
 
     CBBox_t *p_bbox = add_component(&scene.scene.ent_manager, p_ent, CBBOX_COMP_T);
-    p_bbox->size.x = 30;
-    p_bbox->size.y = 45;
+    set_bbox(p_bbox, 30, 45);
     add_component(&scene.scene.ent_manager, p_ent, CTRANSFORM_COMP_T);
     add_component(&scene.scene.ent_manager, p_ent, CTILECOORD_COMP_T);
     CJump_t *p_cjump = add_component(&scene.scene.ent_manager, p_ent, CJUMP_COMP_T);

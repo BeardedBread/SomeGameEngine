@@ -59,4 +59,13 @@ typedef struct _CPlayerState_t
     unsigned int is_crouch: 1;
     unsigned int in_water:1;
 }CPlayerState_t;
+
+
+static inline void set_bbox(CBBox_t* p_bbox, unsigned int x, unsigned int y)
+{
+    p_bbox->size.x = x;
+    p_bbox->size.y = y;
+    p_bbox->half_size.x = (unsigned int)(x / 2);
+    p_bbox->half_size.y = (unsigned int)(y / 2);
+}
 #endif // __COMPONENTS_H

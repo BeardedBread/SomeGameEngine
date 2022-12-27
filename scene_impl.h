@@ -8,6 +8,7 @@
 typedef struct Tile
 {
     bool solid;
+    unsigned int water_level;
     struct sc_map_64 entities_set;
 }Tile_t;
 

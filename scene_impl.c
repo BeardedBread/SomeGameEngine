@@ -9,6 +9,7 @@ static const Vector2 TILE_SZ = {TILE_SIZE, TILE_SIZE};
 static Tile_t all_tiles[MAX_N_TILES] = {0};
 
 static const Vector2 GRAVITY = {0, GRAV_ACCEL};
+static const Vector2 UPTHRUST = {0, -GRAV_ACCEL * 0.7};
 
 static bool find_1D_overlap(const Vector2 l1, const Vector2 l2, float* overlap)
 {
@@ -105,6 +106,11 @@ static void level_scene_render_func(Scene_t* scene)
         }
         else
         {
+            // Draw water tile
+            if (tilemap.tiles[i].water_level > 0)
+            {
+                DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLUE);
+            }
             DrawText(buffer, x, y, 10, BLACK);
         }
     }
@@ -142,6 +148,8 @@ static void level_scene_render_func(Scene_t* scene)
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 60, 12, BLACK);
         sprintf(buffer, "Crouch: %s", p_pstate->is_crouch? "YES":"NO");
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 90, 12, BLACK);
+        sprintf(buffer, "Water: %s", p_pstate->in_water? "YES":"NO");
+        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 120, 12, BLACK);
     }
 }
 
@@ -162,7 +170,15 @@ static void player_movement_input_system(Scene_t* scene)
         CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_player, CPLAYERSTATE_T);
         p_ctransform->accel.x = 0;
         p_ctransform->accel.y = 0;
-        p_ctransform->accel = Vector2Scale(Vector2Normalize(data->player_dir), MOVE_ACCEL);
+        if (!p_pstate->in_water)
+        {
+            data->player_dir.y = 0;
+            p_ctransform->accel = Vector2Scale(Vector2Normalize(data->player_dir), MOVE_ACCEL/1.2);
+        }
+        else
+        {
+            p_ctransform->accel = Vector2Scale(Vector2Normalize(data->player_dir), MOVE_ACCEL);
+        }
 
         // Short Hop
         if (p_cjump->jumped && p_ctransform->velocity.y < 0)
@@ -174,23 +190,32 @@ static void player_movement_input_system(Scene_t* scene)
             }
         }
 
+
         if (!p_ctransform->on_ground)
         {
+            if (p_pstate->in_water)
+            {
+                p_ctransform->accel = Vector2Add(p_ctransform->accel, UPTHRUST);
+            }
             p_ctransform->accel = Vector2Add(p_ctransform->accel, GRAVITY);
             if(p_pstate->is_crouch)
             {
                 p_pstate->is_crouch = false;
                 p_ctransform->position.x += PLAYER_C_XOFFSET;
                 p_ctransform->position.y -= PLAYER_C_YOFFSET;
-                p_bbox->size.y = PLAYER_HEIGHT;
-                p_bbox->size.x = PLAYER_WIDTH;
+                set_bbox(p_bbox, PLAYER_WIDTH, PLAYER_HEIGHT);
             }
         }
         else
         {
+            // All these actions can only be done on ground
+
+            // Check if possible to jump when jump is pressed
             if (data->jumped_pressed && p_cjump->jumps > 0)
             {
                 bool jump_valid = true;
+
+                // Check Jump from crouch
                 if (p_pstate->is_crouch)
                 {
                     Vector2 test_pos = p_ctransform->position;
@@ -201,6 +226,7 @@ static void player_movement_input_system(Scene_t* scene)
                     jump_valid = !check_collision_at(test_pos, test_bbox, &tilemap, top);
                 }
 
+                // Jump okay
                 if (jump_valid)
                 {
                     p_ctransform->velocity.y -= p_cjump->jump_speed;
@@ -208,12 +234,12 @@ static void player_movement_input_system(Scene_t* scene)
                 }
             }
 
+            // Deal with hitbox change when crouch
             if (data->crouch_pressed && !p_pstate->is_crouch)
             {
                 p_ctransform->position.x -= PLAYER_C_XOFFSET;
                 p_ctransform->position.y += PLAYER_C_YOFFSET;
-                p_bbox->size.x = PLAYER_C_WIDTH;
-                p_bbox->size.y = PLAYER_C_HEIGHT;
+                set_bbox(p_bbox, PLAYER_C_WIDTH, PLAYER_C_HEIGHT);
                 p_pstate->is_crouch = data->crouch_pressed;
             }
             else if (!data->crouch_pressed && p_pstate->is_crouch)
@@ -223,15 +249,36 @@ static void player_movement_input_system(Scene_t* scene)
                 Vector2 top = {0, -1};
                 test_pos.x += PLAYER_C_XOFFSET;
                 test_pos.y -= PLAYER_C_YOFFSET;
+
+                // Uncrouch need to check overhead for tile
                 if (!check_collision_at(test_pos, test_bbox, &tilemap, top))
                 {
                     p_ctransform->position.x += PLAYER_C_XOFFSET;
                     p_ctransform->position.y -= PLAYER_C_YOFFSET;
-                    p_bbox->size.x = PLAYER_WIDTH;
-                    p_bbox->size.y = PLAYER_HEIGHT;
+                    set_bbox(p_bbox, PLAYER_WIDTH, PLAYER_HEIGHT);
                     p_pstate->is_crouch = data->crouch_pressed;
                 }
             }
+        }
+
+        // Friction
+        if (p_pstate->in_water)
+        {
+            // Apply water friction
+            // Consistent in all direction
+            p_ctransform->accel = Vector2Add(
+                p_ctransform->accel,
+                Vector2Scale(p_ctransform->velocity, -5.5)
+            );
+        }
+        else
+        {
+            // For game feel, y is set to air resistance only
+            // x is set to ground resistance (even in air)
+            // If not, then player is can go faster by bunny hopping
+            // which is fun but not quite beneficial here
+            p_ctransform->accel.x += p_ctransform->velocity.x * -3.3;
+            p_ctransform->accel.y += p_ctransform->velocity.y * -1;
         }
     }
     data->player_dir.x = 0;
@@ -251,8 +298,7 @@ static void movement_update_system(Scene_t* scene)
                 p_ctransform->velocity,
                 Vector2Scale(p_ctransform->accel, delta_time)
             );
-        p_ctransform->velocity.x *= X_FRICTION;
-        p_ctransform->velocity.y *= Y_FRICTION;
+
         float mag = Vector2Length(p_ctransform->velocity);
         p_ctransform->velocity = Vector2Scale(Vector2Normalize(p_ctransform->velocity), (mag > PLAYER_MAX_SPEED)? PLAYER_MAX_SPEED:mag);
 
@@ -280,7 +326,15 @@ static void player_ground_air_transition_system(Scene_t* scene)
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
         CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
         CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
+        CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_player, CPLAYERSTATE_T);
+
+        // State checks
         bool on_ground = check_on_ground(p_ctransform->position, p_bbox->size, &data->tilemap);
+        unsigned int tile_x = (p_ctransform->position.x + p_bbox->half_size.x) / TILE_SIZE;
+        unsigned int tile_y = (p_ctransform->position.y + p_bbox->half_size.y) / TILE_SIZE;
+        unsigned int tile_idx = tile_y * data->tilemap.width + tile_x;
+        bool in_water = data->tilemap.tiles[tile_idx].water_level > 0;
+                
         // Handle Ground<->Air Transition
         if (!on_ground && p_ctransform->on_ground)
         {
@@ -292,7 +346,11 @@ static void player_ground_air_transition_system(Scene_t* scene)
             p_cjump->jumped = false;
             p_cjump->short_hop = false;
         }
+
+        // TODO: Handle in water <-> out of water transition
+
         p_ctransform->on_ground = on_ground;
+        p_pstate->in_water = in_water;
     }
 }
 
@@ -457,6 +515,26 @@ static void toggle_block_system(Scene_t *scene)
         if (tile_idx != last_tile_idx)
         {
             tilemap.tiles[tile_idx].solid = !tilemap.tiles[tile_idx].solid;
+            tilemap.tiles[tile_idx].water_level = 0;
+            last_tile_idx = tile_idx;
+        }
+    }
+    // TODO: Check for right click to change to water, also update above
+    else if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
+    {
+        int mouse_x = GetMouseX() / TILE_SIZE;
+        int mouse_y = GetMouseY() / TILE_SIZE;
+        unsigned int tile_idx = mouse_y * tilemap.width + mouse_x;
+        if (tile_idx != last_tile_idx)
+        {
+            if (tilemap.tiles[tile_idx].water_level == 0)
+            {
+                tilemap.tiles[tile_idx].water_level = MAX_WATER_LEVEL;
+            }
+            else
+            {
+                tilemap.tiles[tile_idx].water_level = 0;
+            }
             last_tile_idx = tile_idx;
         }
     }
@@ -472,9 +550,11 @@ void level_do_action(Scene_t *scene, ActionType_t action, bool pressed)
     switch(action)
     {
         case ACTION_UP:
+            data->player_dir.y = (pressed)? -1 : 0;
             data->jumped_pressed = pressed;
         break;
         case ACTION_DOWN:
+            data->player_dir.y = (pressed)? 1 : 0;
             data->crouch_pressed = pressed;
         break;
         case ACTION_LEFT:

@@ -166,7 +166,6 @@ static void player_movement_input_system(Scene_t* scene)
     {
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
         CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
-        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
         CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_player, CPLAYERSTATE_T);
         p_ctransform->accel.x = 0;
         p_ctransform->accel.y = 0;
@@ -198,13 +197,6 @@ static void player_movement_input_system(Scene_t* scene)
                 p_ctransform->accel = Vector2Add(p_ctransform->accel, UPTHRUST);
             }
             p_ctransform->accel = Vector2Add(p_ctransform->accel, GRAVITY);
-            if(p_pstate->is_crouch)
-            {
-                p_pstate->is_crouch = false;
-                p_ctransform->position.x += PLAYER_C_XOFFSET;
-                p_ctransform->position.y -= PLAYER_C_YOFFSET;
-                set_bbox(p_bbox, PLAYER_WIDTH, PLAYER_HEIGHT);
-            }
         }
         else
         {
@@ -234,31 +226,6 @@ static void player_movement_input_system(Scene_t* scene)
                 }
             }
 
-            // Deal with hitbox change when crouch
-            if (data->crouch_pressed && !p_pstate->is_crouch)
-            {
-                p_ctransform->position.x -= PLAYER_C_XOFFSET;
-                p_ctransform->position.y += PLAYER_C_YOFFSET;
-                set_bbox(p_bbox, PLAYER_C_WIDTH, PLAYER_C_HEIGHT);
-                p_pstate->is_crouch = data->crouch_pressed;
-            }
-            else if (!data->crouch_pressed && p_pstate->is_crouch)
-            {
-                Vector2 test_pos = p_ctransform->position;
-                Vector2 test_bbox = {PLAYER_WIDTH, PLAYER_HEIGHT};
-                Vector2 top = {0, -1};
-                test_pos.x += PLAYER_C_XOFFSET;
-                test_pos.y -= PLAYER_C_YOFFSET;
-
-                // Uncrouch need to check overhead for tile
-                if (!check_collision_at(test_pos, test_bbox, &tilemap, top))
-                {
-                    p_ctransform->position.x += PLAYER_C_XOFFSET;
-                    p_ctransform->position.y -= PLAYER_C_YOFFSET;
-                    set_bbox(p_bbox, PLAYER_WIDTH, PLAYER_HEIGHT);
-                    p_pstate->is_crouch = data->crouch_pressed;
-                }
-            }
         }
 
         // Friction
@@ -284,6 +251,91 @@ static void player_movement_input_system(Scene_t* scene)
     data->player_dir.x = 0;
     data->player_dir.y = 0;
 
+}
+
+static void player_bbox_update_system(Scene_t *scene)
+{
+    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
+    TileGrid_t tilemap = data->tilemap;
+    Entity_t *p_player;
+    sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
+    {
+        CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
+        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
+        CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_player, CPLAYERSTATE_T);
+        Vector2 prev_size = p_bbox->size;
+        Vector2 prev_pos = p_ctransform->position;
+
+        if (p_ctransform->on_ground && data->crouch_pressed && !p_pstate->is_crouch)
+        {
+            // Deal with hitbox change when crouch
+            p_ctransform->position.x -= PLAYER_C_XOFFSET;
+            p_ctransform->position.y += PLAYER_C_YOFFSET;
+            set_bbox(p_bbox, PLAYER_C_WIDTH, PLAYER_C_HEIGHT);
+            p_pstate->is_crouch = data->crouch_pressed;
+        }
+        else if (p_pstate->is_crouch && (!p_ctransform->on_ground || !data->crouch_pressed))
+        {
+            Vector2 test_pos = p_ctransform->position;
+            Vector2 test_bbox = {PLAYER_WIDTH, PLAYER_HEIGHT};
+            Vector2 top = {0, -1};
+            test_pos.x += PLAYER_C_XOFFSET;
+            test_pos.y -= PLAYER_C_YOFFSET;
+
+            // Uncrouch need to check overhead for tile
+            if (!check_collision_at(test_pos, test_bbox, &tilemap, top))
+            {
+                p_ctransform->position.x += PLAYER_C_XOFFSET;
+                p_ctransform->position.y -= PLAYER_C_YOFFSET;
+                set_bbox(p_bbox, PLAYER_WIDTH, PLAYER_HEIGHT);
+                p_pstate->is_crouch = false;
+            }
+        }
+        // After changing bbox and reposition
+        // Do a collision check
+        // This will handle collision due to bbox changing
+        // Subsequent movement update will handle the offset
+        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
+        unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
+        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
+        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
+        for (unsigned int tile_y=tile_y1; tile_y <= tile_y2; tile_y++)
+        {
+            for (unsigned int tile_x=tile_x1; tile_x <= tile_x2; tile_x++)
+            {
+                unsigned int tile_idx = tile_y * tilemap.width + tile_x;
+                if(tilemap.tiles[tile_idx].solid)
+                {
+                    Vector2 overlap = {0};
+                    Vector2 prev_overlap = {0};
+                    Vector2 other;
+                    other.x = (tile_idx % tilemap.width) * TILE_SIZE;
+                    other.y = (tile_idx / tilemap.width) * TILE_SIZE; // Precision loss is intentional
+                    if (find_AABB_overlap(p_ctransform->position, p_bbox->size, other, TILE_SZ, &overlap))
+                    {
+                        find_AABB_overlap(prev_pos, prev_size, other, TILE_SZ, &prev_overlap);
+                        if (fabs(prev_overlap.y) > fabs(prev_overlap.x))
+                        {
+                            p_ctransform->position.x += overlap.x;
+                        }
+                        else if (fabs(prev_overlap.x) > fabs(prev_overlap.y))
+                        {
+                            p_ctransform->position.y += overlap.y;
+                        }
+                        else if (fabs(overlap.x) < fabs(overlap.y))
+                        {
+                            p_ctransform->position.x += overlap.x;
+                        }
+                        else
+                        {
+                            p_ctransform->position.y += overlap.y;
+                        }
+                        prev_pos = p_ctransform->position;
+                    }
+                }
+            }
+        }
+    }
 }
 
 static void movement_update_system(Scene_t* scene)
@@ -354,50 +406,6 @@ static void player_ground_air_transition_system(Scene_t* scene)
     }
 }
 
-static void update_tilemap_system(Scene_t *scene)
-{
-    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
-    TileGrid_t tilemap = data->tilemap;
-
-    Entity_t *p_ent;
-    sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
-    {
-        CTileCoord_t * p_tilecoord = get_component(&scene->ent_manager, p_ent, CTILECOORD_COMP_T);
-        if (p_tilecoord == NULL) continue;
-        CTransform_t * p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-        if (p_ctransform == NULL) continue;
-        CBBox_t * p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
-        if (p_bbox == NULL) continue;
-
-        // Update tilemap position
-        for (size_t i=0;i<p_tilecoord->n_tiles;++i)
-        {
-            // Use previously store tile position
-            // Clear from those positions
-            unsigned int tile_idx = p_tilecoord->tiles[i];
-            sc_map_del_64(&(tilemap.tiles[tile_idx].entities_set), p_ent->m_id);
-        }
-        p_tilecoord->n_tiles = 0;
-
-        // Compute new occupied tile positions and add
-        // Extend the check by a little to avoid missing
-        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
-        unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
-        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
-        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
-
-        for (unsigned int tile_y=tile_y1; tile_y <= tile_y2; tile_y++)
-        {
-            for (unsigned int tile_x=tile_x1; tile_x <= tile_x2; tile_x++)
-            {
-                unsigned int tile_idx = tile_y * tilemap.width + tile_x;
-                p_tilecoord->tiles[p_tilecoord->n_tiles++] = tile_idx;
-                sc_map_put_64(&(tilemap.tiles[tile_idx].entities_set), p_ent->m_id, 0);
-            }
-        }
-    }
-}
-
 static void player_collision_system(Scene_t *scene)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
@@ -409,7 +417,6 @@ static void player_collision_system(Scene_t *scene)
     {
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
         CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
-        CTileCoord_t* p_tilecoord = get_component(&scene->ent_manager, p_player, CTILECOORD_COMP_T);
         // Get the occupied tiles
         // For each tile, loop through the entities and find overlaps
         // exclude self
@@ -418,60 +425,70 @@ static void player_collision_system(Scene_t *scene)
         // Resolve collision via moving player by the overlap amount
         Vector2 overlap = {0};
         Vector2 prev_overlap = {0};
-        for (size_t i=0;i<p_tilecoord->n_tiles;++i)
+        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
+        unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
+        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
+        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
+        for (unsigned int tile_y=tile_y1; tile_y <= tile_y2; tile_y++)
         {
-            unsigned int tile_idx = p_tilecoord->tiles[i];
-            Vector2 other;
-            if(tilemap.tiles[tile_idx].solid)
+            for (unsigned int tile_x=tile_x1; tile_x <= tile_x2; tile_x++)
             {
-
-                other.x = (tile_idx % tilemap.width) * TILE_SIZE;
-                other.y = (tile_idx / tilemap.width) * TILE_SIZE; // Precision loss is intentional
-                if (find_AABB_overlap(p_ctransform->position, p_bbox->size, other, TILE_SZ, &overlap))
+                unsigned int tile_idx = tile_y * tilemap.width + tile_x;
+        //for (size_t i=0;i<p_tilecoord->n_tiles;++i)
+        //{
+            //unsigned int tile_idx = p_tilecoord->tiles[i];
+                Vector2 other;
+                if(tilemap.tiles[tile_idx].solid)
                 {
-                    find_AABB_overlap(p_ctransform->prev_position, p_bbox->size, other, TILE_SZ, &prev_overlap);
-                    if (fabs(prev_overlap.y) > fabs(prev_overlap.x))
+
+                    other.x = (tile_idx % tilemap.width) * TILE_SIZE;
+                    other.y = (tile_idx / tilemap.width) * TILE_SIZE; // Precision loss is intentional
+                    if (find_AABB_overlap(p_ctransform->position, p_bbox->size, other, TILE_SZ, &overlap))
                     {
-                        p_ctransform->position.x += overlap.x;
-                        p_ctransform->velocity.x = 0;
-                    }
-                    else if (fabs(prev_overlap.x) > fabs(prev_overlap.y))
-                    {
-                        p_ctransform->position.y += overlap.y;
-                        p_ctransform->velocity.y = 0;
-                    }
-                    else if (fabs(overlap.x) < fabs(overlap.y))
-                    {
-                        p_ctransform->position.x += overlap.x;
-                        p_ctransform->velocity.x = 0;
-                    }
-                    else
-                    {
-                        p_ctransform->position.y += overlap.y;
-                        p_ctransform->velocity.y = 0;
+                        find_AABB_overlap(p_ctransform->prev_position, p_bbox->size, other, TILE_SZ, &prev_overlap);
+                        if (fabs(prev_overlap.y) > fabs(prev_overlap.x))
+                        {
+                            p_ctransform->position.x += overlap.x;
+                            p_ctransform->velocity.x = 0;
+                        }
+                        else if (fabs(prev_overlap.x) > fabs(prev_overlap.y))
+                        {
+                            p_ctransform->position.y += overlap.y;
+                            p_ctransform->velocity.y = 0;
+                        }
+                        else if (fabs(overlap.x) < fabs(overlap.y))
+                        {
+                            p_ctransform->position.x += overlap.x;
+                            p_ctransform->velocity.x = 0;
+                        }
+                        else
+                        {
+                            p_ctransform->position.y += overlap.y;
+                            p_ctransform->velocity.y = 0;
+                        }
                     }
                 }
-            }
-            else
-            {
-                // TODO: check against the entities of each involved tiles
-            }
+                else
+                {
+                    // TODO: check against the entities of each involved tiles
+                }
 
-            // Level boundary collision
-            unsigned int level_width = tilemap.width * TILE_SIZE;
-            if(p_ctransform->position.x < 0 || p_ctransform->position.x + p_bbox->size.x > level_width)
-            {
-                p_ctransform->position.x = (p_ctransform->position.x < 0) ? 0 : p_ctransform->position.x;
-                p_ctransform->position.x = (p_ctransform->position.x + p_bbox->size.x > level_width) ? level_width - p_bbox->size.x : p_ctransform->position.x;
-                p_ctransform->velocity.x *= -1;
-            }
-            
-            unsigned int level_height = tilemap.height * TILE_SIZE;
-            if(p_ctransform->position.y < 0 || p_ctransform->position.y + p_bbox->size.y > level_height)
-            {
-                p_ctransform->position.y = (p_ctransform->position.y < 0) ? 0 : p_ctransform->position.y;
-                p_ctransform->position.y = (p_ctransform->position.y + p_bbox->size.y > level_height) ? level_height - p_bbox->size.y : p_ctransform->position.y;
-                p_ctransform->velocity.y *= -1;
+                // Level boundary collision
+                unsigned int level_width = tilemap.width * TILE_SIZE;
+                if(p_ctransform->position.x < 0 || p_ctransform->position.x + p_bbox->size.x > level_width)
+                {
+                    p_ctransform->position.x = (p_ctransform->position.x < 0) ? 0 : p_ctransform->position.x;
+                    p_ctransform->position.x = (p_ctransform->position.x + p_bbox->size.x > level_width) ? level_width - p_bbox->size.x : p_ctransform->position.x;
+                    p_ctransform->velocity.x *= -1;
+                }
+                
+                unsigned int level_height = tilemap.height * TILE_SIZE;
+                if(p_ctransform->position.y < 0 || p_ctransform->position.y + p_bbox->size.y > level_height)
+                {
+                    p_ctransform->position.y = (p_ctransform->position.y < 0) ? 0 : p_ctransform->position.y;
+                    p_ctransform->position.y = (p_ctransform->position.y + p_bbox->size.y > level_height) ? level_height - p_bbox->size.y : p_ctransform->position.y;
+                    p_ctransform->velocity.y *= -1;
+                }
             }
         }
         // Deal with float precision, by rounding when it is near to an integer enough by 2 dp
@@ -577,8 +594,9 @@ void init_level_scene(LevelScene_t *scene)
 
     // insert level scene systems
     sc_array_add(&scene->scene.systems, &player_movement_input_system);
+    sc_array_add(&scene->scene.systems, &player_bbox_update_system);
     sc_array_add(&scene->scene.systems, &movement_update_system);
-    sc_array_add(&scene->scene.systems, &update_tilemap_system);
+    //sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &player_collision_system);
     sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
     sc_array_add(&scene->scene.systems, &toggle_block_system);

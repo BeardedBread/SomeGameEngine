@@ -3,12 +3,11 @@
 #include "raylib.h"
 // TODO: Look at sc to use macros to auto generate functions
 
-#define N_COMPONENTS 5
+#define N_COMPONENTS 4
 enum ComponentEnum
 {
     CBBOX_COMP_T,
     CTRANSFORM_COMP_T,
-    CTILECOORD_COMP_T,
     CJUMP_COMP_T,
     CPLAYERSTATE_T
 };

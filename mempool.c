@@ -6,7 +6,7 @@
 static Entity_t entity_buffer[MAX_COMP_POOL_SIZE];
 static CBBox_t bbox_buffer[MAX_COMP_POOL_SIZE];
 static CTransform_t ctransform_buffer[MAX_COMP_POOL_SIZE];
-static CTileCoord_t ctilecoord_buffer[MAX_COMP_POOL_SIZE];
+//static CTileCoord_t ctilecoord_buffer[MAX_COMP_POOL_SIZE];
 static CJump_t cjump_buffer[1]; // Only player is expected to have this
 static CPlayerState_t cplayerstate_buffer[1]; // Only player is expected to have this
 
@@ -30,7 +30,7 @@ static MemPool_t comp_mempools[N_COMPONENTS] =
 {
     {bbox_buffer, MAX_COMP_POOL_SIZE, sizeof(CBBox_t), {0}, {0}},
     {ctransform_buffer, MAX_COMP_POOL_SIZE, sizeof(CTransform_t), {0}, {0}},
-    {ctilecoord_buffer, MAX_COMP_POOL_SIZE, sizeof(CTileCoord_t), {0}, {0}},
+    //{ctilecoord_buffer, MAX_COMP_POOL_SIZE, sizeof(CTileCoord_t), {0}, {0}},
     {cjump_buffer, 1, sizeof(CJump_t), {0}, {0}},
     {cplayerstate_buffer, 1, sizeof(CPlayerState_t), {0}, {0}},
 };

@@ -19,7 +19,6 @@ int main(void)
     CBBox_t *p_bbox = add_component(&scene.scene.ent_manager, p_ent, CBBOX_COMP_T);
     set_bbox(p_bbox, 30, 45);
     add_component(&scene.scene.ent_manager, p_ent, CTRANSFORM_COMP_T);
-    add_component(&scene.scene.ent_manager, p_ent, CTILECOORD_COMP_T);
     CJump_t *p_cjump = add_component(&scene.scene.ent_manager, p_ent, CJUMP_COMP_T);
     p_cjump->jump_speed = 680;
     p_cjump->jumps = 1;

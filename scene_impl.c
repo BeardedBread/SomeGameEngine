@@ -11,6 +11,13 @@ static Tile_t all_tiles[MAX_N_TILES] = {0};
 static const Vector2 GRAVITY = {0, GRAV_ACCEL};
 static const Vector2 UPTHRUST = {0, -GRAV_ACCEL * 0.7};
 
+static inline unsigned int get_tile_idx(int x, int y, unsigned int tilemap_width)
+{
+    unsigned int tile_x = x / TILE_SIZE;
+    unsigned int tile_y = y / TILE_SIZE;
+    return tile_y * tilemap_width + tile_x;
+}
+
 static bool find_1D_overlap(const Vector2 l1, const Vector2 l2, float* overlap)
 {
    // No Overlap
@@ -85,6 +92,86 @@ static inline bool check_on_ground(Vector2 pos, Vector2 bbox_sz, TileGrid_t* gri
         if (grid->tiles[tile_y*grid->width + tile_x].solid) return true;
     }
     return false;
+}
+
+typedef enum AnchorPoint
+{
+    AP_TOP_LEFT,
+    AP_TOP_CENTER,
+    AP_TOP_RIGHT,
+    AP_MID_LEFT,
+    AP_MID_CENTER,
+    AP_MID_RIGHT,
+    AP_BOT_LEFT,
+    AP_BOT_CENTER,
+    AP_BOT_RIGHT,
+}AnchorPoint_t;
+
+static Vector2 shift_bbox(Vector2 bbox, Vector2 new_bbox, AnchorPoint_t anchor)
+{
+    Vector2 p1;
+    Vector2 p2;
+
+    Vector2 offset = {0};
+    switch (anchor)
+    {
+        case AP_TOP_LEFT:
+            // When resizing bbox, it is implicitly assumed that to be already in topleft
+            // due to the coordindate system (+ve towards right and downwards)
+            // So do nothing
+        return offset;
+        case AP_TOP_CENTER:
+            p1.x = bbox.x / 2;
+            p1.y = 0;
+            p2.x = new_bbox.x / 2;
+            p2.y = 0;
+        break;
+        case AP_TOP_RIGHT:
+            p1.x = bbox.x;
+            p1.y = 0;
+            p2.x = new_bbox.x;
+            p2.y = 0;
+        break;
+        case AP_MID_LEFT:
+            p1.x = 0;
+            p1.y = bbox.y / 2;
+            p2.x = 0;
+            p2.y = new_bbox.y / 2;
+        break;
+        case AP_MID_CENTER:
+            p1.x = bbox.x / 2;
+            p1.y = bbox.y / 2;
+            p2.x = new_bbox.x / 2;
+            p2.y = new_bbox.y / 2;
+        break;
+        case AP_MID_RIGHT:
+            p1.x = bbox.x;
+            p1.y = bbox.y / 2;
+            p2.x = new_bbox.x;
+            p2.y = new_bbox.y / 2;
+        break;
+        case AP_BOT_LEFT:
+            p1.x = 0;
+            p1.y = bbox.y;
+            p2.x = 0;
+            p2.y = new_bbox.y;
+        break;
+        case AP_BOT_CENTER:
+            p1.x = bbox.x / 2;
+            p1.y = bbox.y;
+            p2.x = new_bbox.x / 2;
+            p2.y = new_bbox.y;
+        break;
+        case AP_BOT_RIGHT:
+            p1.x = bbox.x;
+            p1.y = bbox.y;
+            p2.x = new_bbox.x;
+            p2.y = new_bbox.y;
+        break;
+    }
+    offset.x = p1.x - p2.x;
+    offset.y = p1.y - p2.y;
+    return offset;
 }
 
 static void level_scene_render_func(Scene_t* scene)
@@ -167,6 +254,7 @@ static void player_movement_input_system(Scene_t* scene)
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
         CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
         CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_player, CPLAYERSTATE_T);
+        p_pstate->is_crouch = data->crouch_pressed;
         p_ctransform->accel.x = 0;
         p_ctransform->accel.y = 0;
         if (!p_pstate->in_water)
@@ -257,82 +345,65 @@ static void player_bbox_update_system(Scene_t *scene)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
     TileGrid_t tilemap = data->tilemap;
+
     Entity_t *p_player;
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
         CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
         CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_player, CPLAYERSTATE_T);
-        Vector2 prev_size = p_bbox->size;
-        Vector2 prev_pos = p_ctransform->position;
-
-        if (p_ctransform->on_ground && data->crouch_pressed && !p_pstate->is_crouch)
+        if (p_ctransform->on_ground)
         {
-            // Deal with hitbox change when crouch
-            p_ctransform->position.x -= PLAYER_C_XOFFSET;
-            p_ctransform->position.y += PLAYER_C_YOFFSET;
-            set_bbox(p_bbox, PLAYER_C_WIDTH, PLAYER_C_HEIGHT);
-            p_pstate->is_crouch = data->crouch_pressed;
-        }
-        else if (p_pstate->is_crouch && (!p_ctransform->on_ground || !data->crouch_pressed))
-        {
-            Vector2 test_pos = p_ctransform->position;
-            Vector2 test_bbox = {PLAYER_WIDTH, PLAYER_HEIGHT};
-            Vector2 top = {0, -1};
-            test_pos.x += PLAYER_C_XOFFSET;
-            test_pos.y -= PLAYER_C_YOFFSET;
-
-            // Uncrouch need to check overhead for tile
-            if (!check_collision_at(test_pos, test_bbox, &tilemap, top))
+            AnchorPoint_t anchor = AP_BOT_CENTER;
+            int dx[3] = {1, 0, 2};
+            for (size_t i=0; i<3; i++)
             {
-                p_ctransform->position.x += PLAYER_C_XOFFSET;
-                p_ctransform->position.y -= PLAYER_C_YOFFSET;
-                set_bbox(p_bbox, PLAYER_WIDTH, PLAYER_HEIGHT);
-                p_pstate->is_crouch = false;
-            }
-        }
-        // After changing bbox and reposition
-        // Do a collision check
-        // This will handle collision due to bbox changing
-        // Subsequent movement update will handle the offset
-        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
-        unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
-        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
-        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
-        for (unsigned int tile_y=tile_y1; tile_y <= tile_y2; tile_y++)
-        {
-            for (unsigned int tile_x=tile_x1; tile_x <= tile_x2; tile_x++)
-            {
-                unsigned int tile_idx = tile_y * tilemap.width + tile_x;
-                if(tilemap.tiles[tile_idx].solid)
+                unsigned int tile_idx = get_tile_idx
+                (
+                    p_ctransform->position.x + p_bbox->half_size.x * dx[i],
+                    p_ctransform->position.y + p_bbox->size.y,
+                    tilemap.width
+                );
+                if (tilemap.tiles[tile_idx].solid)
                 {
-                    Vector2 overlap = {0};
-                    Vector2 prev_overlap = {0};
-                    Vector2 other;
-                    other.x = (tile_idx % tilemap.width) * TILE_SIZE;
-                    other.y = (tile_idx / tilemap.width) * TILE_SIZE; // Precision loss is intentional
-                    if (find_AABB_overlap(p_ctransform->position, p_bbox->size, other, TILE_SZ, &overlap))
+                    switch(i)
                     {
-                        find_AABB_overlap(prev_pos, prev_size, other, TILE_SZ, &prev_overlap);
-                        if (fabs(prev_overlap.y) > fabs(prev_overlap.x))
-                        {
-                            p_ctransform->position.x += overlap.x;
-                        }
-                        else if (fabs(prev_overlap.x) > fabs(prev_overlap.y))
-                        {
-                            p_ctransform->position.y += overlap.y;
-                        }
-                        else if (fabs(overlap.x) < fabs(overlap.y))
-                        {
-                            p_ctransform->position.x += overlap.x;
-                        }
-                        else
-                        {
-                            p_ctransform->position.y += overlap.y;
-                        }
-                        prev_pos = p_ctransform->position;
+                        case 1: anchor = AP_BOT_LEFT;break;
+                        case 2: anchor = AP_BOT_RIGHT;break;
                     }
+                    break;
                 }
+            }
+            Vector2 new_bbox;
+            if (p_pstate->is_crouch)
+            {
+                new_bbox.x = PLAYER_C_WIDTH;
+                new_bbox.y = PLAYER_C_HEIGHT;
+            }
+            else
+            {
+                new_bbox.x = PLAYER_WIDTH;
+                new_bbox.y = PLAYER_HEIGHT;
+            }
+            Vector2 offset = shift_bbox(p_bbox->size, new_bbox, anchor);
+            set_bbox(p_bbox, new_bbox.x, new_bbox.y);
+            p_ctransform->position = Vector2Add(p_ctransform->position, offset);
+        }
+        else
+        {
+            if (p_pstate->in_water)
+            {
+                Vector2 new_bbox = {PLAYER_C_WIDTH, PLAYER_C_HEIGHT};
+                Vector2 offset = shift_bbox(p_bbox->size, new_bbox, AP_MID_CENTER);
+                set_bbox(p_bbox, PLAYER_C_WIDTH, PLAYER_C_HEIGHT);
+                p_ctransform->position = Vector2Add(p_ctransform->position, offset);
+            }
+            else
+            {
+                Vector2 new_bbox = {PLAYER_WIDTH, PLAYER_HEIGHT};
+                Vector2 offset = shift_bbox(p_bbox->size, new_bbox, AP_MID_CENTER);
+                set_bbox(p_bbox, PLAYER_WIDTH, PLAYER_HEIGHT);
+                p_ctransform->position = Vector2Add(p_ctransform->position, offset);
             }
         }
     }
@@ -382,17 +453,26 @@ static void player_ground_air_transition_system(Scene_t* scene)
 
         // State checks
         bool on_ground = check_on_ground(p_ctransform->position, p_bbox->size, &data->tilemap);
-        unsigned int tile_x = (p_ctransform->position.x + p_bbox->half_size.x) / TILE_SIZE;
-        unsigned int tile_y = (p_ctransform->position.y + p_bbox->half_size.y) / TILE_SIZE;
-        unsigned int tile_idx = tile_y * data->tilemap.width + tile_x;
-        bool in_water = data->tilemap.tiles[tile_idx].water_level > 0;
+        bool in_water = false;
+        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
+        unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
+        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
+        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
+        for (unsigned int tile_y=tile_y1; tile_y <= tile_y2; tile_y++)
+        {
+            for (unsigned int tile_x=tile_x1; tile_x <= tile_x2; tile_x++)
+            {
+                unsigned int tile_idx = tile_y * data->tilemap.width + tile_x;
+                in_water |= data->tilemap.tiles[tile_idx].water_level > 0;
+            }
+        }
                 
         // Handle Ground<->Air Transition
         if (!on_ground && p_ctransform->on_ground)
         {
             p_cjump->jumps--;
         }
-        else if (on_ground && !p_ctransform->on_ground)
+        else if ((on_ground && !p_ctransform->on_ground) || in_water)
         {
             p_cjump->jumps = p_cjump->max_jumps;
             p_cjump->jumped = false;
@@ -526,9 +606,7 @@ static void toggle_block_system(Scene_t *scene)
 
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
     {
-        int mouse_x = GetMouseX() / TILE_SIZE;
-        int mouse_y = GetMouseY() / TILE_SIZE;
-        unsigned int tile_idx = mouse_y * tilemap.width + mouse_x;
+        unsigned int tile_idx = get_tile_idx(GetMouseX(), GetMouseY(), tilemap.width);
         if (tile_idx != last_tile_idx)
         {
             tilemap.tiles[tile_idx].solid = !tilemap.tiles[tile_idx].solid;
@@ -539,9 +617,7 @@ static void toggle_block_system(Scene_t *scene)
     // TODO: Check for right click to change to water, also update above
     else if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
     {
-        int mouse_x = GetMouseX() / TILE_SIZE;
-        int mouse_y = GetMouseY() / TILE_SIZE;
-        unsigned int tile_idx = mouse_y * tilemap.width + mouse_x;
+        unsigned int tile_idx = get_tile_idx(GetMouseX(), GetMouseY(), tilemap.width);
         if (tile_idx != last_tile_idx)
         {
             if (tilemap.tiles[tile_idx].water_level == 0)

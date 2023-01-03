@@ -1,6 +1,7 @@
 #ifndef __COMPONENTS_H
 #define __COMPONENTS_H
 #include "raylib.h"
+#include <stdint.h>
 // TODO: Look at sc to use macros to auto generate functions
 
 #define N_COMPONENTS 5
@@ -27,7 +28,8 @@ typedef struct _CTransform_t
     Vector2 position;
     Vector2 velocity;
     Vector2 accel;
-    bool on_ground;
+    uint8_t ground_state:2;
+    uint8_t water_state:2;
 }CTransform_t;
 
 // This is to store the occupying tiles
@@ -58,7 +60,6 @@ typedef enum PlayerState
 typedef struct _CPlayerState_t
 {
     unsigned int is_crouch: 1;
-    unsigned int in_water:1;
 }CPlayerState_t;
 
 

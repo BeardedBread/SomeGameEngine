@@ -317,7 +317,6 @@ static void player_movement_input_system(Scene_t* scene)
                     }
 
                     p_cjump->jumped = true;
-                    p_cjump->jumps--;
                     p_cjump->cooldown_timer = 15;
                 }
             }
@@ -439,8 +438,8 @@ static void movement_update_system(Scene_t* scene)
             if (p_ctransform->water_state & 1)
             {
                 unsigned int tile_idx = get_tile_idx(
-                    p_ctransform->position.x + p_bbox->size.x / 2,
-                    p_ctransform->position.y + p_bbox->size.y / 2,
+                    p_ctransform->position.x + p_bbox->half_size.x,
+                    p_ctransform->position.y + p_bbox->half_size.y,
                     data->tilemap.width
                 );
 
@@ -499,7 +498,7 @@ static void player_ground_air_transition_system(Scene_t* scene)
         }
 
         // TODO: Handle in water <-> out of water transition
-        if (p_ctransform->water_state == 0b10)
+        if (p_ctransform->water_state == 0b10 || p_ctransform->ground_state == 0b10)
         {
             p_cjump->jumps -= (p_cjump->jumps > 0)? 1:0; 
         }
@@ -632,8 +631,8 @@ static void state_transition_update_system(Scene_t *scene)
         if (!(p_ctransform->water_state & 1))
         {
             unsigned int tile_idx = get_tile_idx(
-                p_ctransform->position.x + p_bbox->size.x / 2,
-                p_ctransform->position.y + p_bbox->size.y / 2,
+                p_ctransform->position.x + p_bbox->half_size.x,
+                p_ctransform->position.y + p_bbox->half_size.y,
                 data->tilemap.width
             );
 

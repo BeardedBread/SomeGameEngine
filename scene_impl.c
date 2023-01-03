@@ -9,7 +9,7 @@ static const Vector2 TILE_SZ = {TILE_SIZE, TILE_SIZE};
 static Tile_t all_tiles[MAX_N_TILES] = {0};
 
 static const Vector2 GRAVITY = {0, GRAV_ACCEL};
-static const Vector2 UPTHRUST = {0, -GRAV_ACCEL * 0.7};
+static const Vector2 UPTHRUST = {0, -GRAV_ACCEL * 1.1};
 
 static inline unsigned int get_tile_idx(int x, int y, unsigned int tilemap_width)
 {
@@ -638,6 +638,49 @@ static void player_collision_system(Scene_t *scene)
     }
 
 }
+static void update_tilemap_system(Scene_t *scene)
+{
+    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
+    TileGrid_t tilemap = data->tilemap;
+
+    Entity_t *p_ent;
+    sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
+    {
+        CTileCoord_t * p_tilecoord = get_component(&scene->ent_manager, p_ent, CTILECOORD_COMP_T);
+        if (p_tilecoord == NULL) continue;
+        CTransform_t * p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
+        if (p_ctransform == NULL) continue;
+        CBBox_t * p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
+        if (p_bbox == NULL) continue;
+
+        // Update tilemap position
+        for (size_t i=0;i<p_tilecoord->n_tiles;++i)
+        {
+            // Use previously store tile position
+            // Clear from those positions
+            unsigned int tile_idx = p_tilecoord->tiles[i];
+            sc_map_del_64(&(tilemap.tiles[tile_idx].entities_set), p_ent->m_id);
+        }
+        p_tilecoord->n_tiles = 0;
+
+        // Compute new occupied tile positions and add
+        // Extend the check by a little to avoid missing
+        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
+        unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
+        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
+        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
+
+        for (unsigned int tile_y=tile_y1; tile_y <= tile_y2; tile_y++)
+        {
+            for (unsigned int tile_x=tile_x1; tile_x <= tile_x2; tile_x++)
+            {
+                unsigned int tile_idx = tile_y * tilemap.width + tile_x;
+                p_tilecoord->tiles[p_tilecoord->n_tiles++] = tile_idx;
+                sc_map_put_64(&(tilemap.tiles[tile_idx].entities_set), p_ent->m_id, 0);
+            }
+        }
+    }
+}
 
 static void toggle_block_system(Scene_t *scene)
 {
@@ -714,7 +757,7 @@ void init_level_scene(LevelScene_t *scene)
     sc_array_add(&scene->scene.systems, &player_movement_input_system);
     sc_array_add(&scene->scene.systems, &player_bbox_update_system);
     sc_array_add(&scene->scene.systems, &movement_update_system);
-    //sc_array_add(&scene->scene.systems, &update_tilemap_system);
+    sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &player_collision_system);
     sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
     sc_array_add(&scene->scene.systems, &toggle_block_system);

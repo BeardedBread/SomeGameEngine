@@ -254,7 +254,7 @@ static void player_movement_input_system(Scene_t* scene)
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
-        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
+        //CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
         CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
         CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_player, CPLAYERSTATE_T);
         p_pstate->is_crouch = data->crouch_pressed;
@@ -283,25 +283,6 @@ static void player_movement_input_system(Scene_t* scene)
         }
 
 
-        if (!(p_ctransform->ground_state & 1))
-        {
-            // Only apply upthrust if center is in water
-            // If need more accuracy, need to find area of overlap
-            if (in_water)
-            {
-                unsigned int tile_idx = get_tile_idx(
-                    p_ctransform->position.x + p_bbox->size.x / 2,
-                    p_ctransform->position.y + p_bbox->size.y / 2,
-                    tilemap.width
-                );
-
-                if (tilemap.tiles[tile_idx].water_level > 0)
-                {
-                    p_ctransform->accel = Vector2Add(p_ctransform->accel, UPTHRUST);
-                }
-            }
-            p_ctransform->accel = Vector2Add(p_ctransform->accel, GRAVITY);
-        }
         //else
         {
             if (p_cjump->cooldown_timer > 0) p_cjump->cooldown_timer--;
@@ -451,6 +432,26 @@ static void movement_update_system(Scene_t* scene)
 
         if (p_ctransform == NULL) continue;
 
+        if (!(p_ctransform->ground_state & 1))
+        {
+            // Only apply upthrust if center is in water
+            // If need more accuracy, need to find area of overlap
+            if (p_ctransform->water_state & 1)
+            {
+                unsigned int tile_idx = get_tile_idx(
+                    p_ctransform->position.x + p_bbox->size.x / 2,
+                    p_ctransform->position.y + p_bbox->size.y / 2,
+                    data->tilemap.width
+                );
+
+                if (data->tilemap.tiles[tile_idx].water_level > 0)
+                {
+                    p_ctransform->accel = Vector2Add(p_ctransform->accel, UPTHRUST);
+                }
+            }
+            p_ctransform->accel = Vector2Add(p_ctransform->accel, GRAVITY);
+        }
+
         p_ctransform->velocity =
             Vector2Add(
                 p_ctransform->velocity,
@@ -472,40 +473,6 @@ static void movement_update_system(Scene_t* scene)
             Vector2Scale(p_ctransform->velocity, delta_time)
         );
 
-        if (p_bbox == NULL) continue;
-        bool on_ground = check_on_ground(p_ctransform->position, p_bbox->size, &data->tilemap);
-        bool in_water = false;
-        if (!(p_ctransform->water_state & 1))
-        {
-            unsigned int tile_idx = get_tile_idx(
-                p_ctransform->position.x + p_bbox->size.x / 2,
-                p_ctransform->position.y + p_bbox->size.y / 2,
-                data->tilemap.width
-            );
-
-            in_water =  (data->tilemap.tiles[tile_idx].water_level > 0);
-        }
-        else
-        {
-            unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
-            unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
-            unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
-            unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
-            for (unsigned int tile_y=tile_y1; tile_y <= tile_y2; tile_y++)
-            {
-                for (unsigned int tile_x=tile_x1; tile_x <= tile_x2; tile_x++)
-                {
-                    unsigned int tile_idx = tile_y * data->tilemap.width + tile_x;
-                    in_water |= data->tilemap.tiles[tile_idx].water_level > 0;
-                }
-            }
-        }
-        p_ctransform->ground_state <<= 1;
-        p_ctransform->ground_state |= on_ground? 1:0;
-        p_ctransform->ground_state &= 3;
-        p_ctransform->water_state <<= 1;
-        p_ctransform->water_state |= in_water? 1:0;
-        p_ctransform->water_state &= 3;
     }
 
 }
@@ -648,8 +615,54 @@ static void player_collision_system(Scene_t *scene)
             p_ctransform->position.y = decimal;
         }
     }
-
 }
+
+static void state_transition_update_system(Scene_t *scene)
+{
+    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
+    Entity_t* p_ent;
+    //sc_map_foreach_value(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], p_ctransform)
+    sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
+    {
+        CTransform_t * p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
+        CBBox_t * p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
+        if (p_bbox == NULL) continue;
+        bool on_ground = check_on_ground(p_ctransform->position, p_bbox->size, &data->tilemap);
+        bool in_water = false;
+        if (!(p_ctransform->water_state & 1))
+        {
+            unsigned int tile_idx = get_tile_idx(
+                p_ctransform->position.x + p_bbox->size.x / 2,
+                p_ctransform->position.y + p_bbox->size.y / 2,
+                data->tilemap.width
+            );
+
+            in_water =  (data->tilemap.tiles[tile_idx].water_level > 0);
+        }
+        else
+        {
+            unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
+            unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
+            unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
+            unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
+            for (unsigned int tile_y=tile_y1; tile_y <= tile_y2; tile_y++)
+            {
+                for (unsigned int tile_x=tile_x1; tile_x <= tile_x2; tile_x++)
+                {
+                    unsigned int tile_idx = tile_y * data->tilemap.width + tile_x;
+                    in_water |= data->tilemap.tiles[tile_idx].water_level > 0;
+                }
+            }
+        }
+        p_ctransform->ground_state <<= 1;
+        p_ctransform->ground_state |= on_ground? 1:0;
+        p_ctransform->ground_state &= 3;
+        p_ctransform->water_state <<= 1;
+        p_ctransform->water_state |= in_water? 1:0;
+        p_ctransform->water_state &= 3;
+    }
+}
+
 static void update_tilemap_system(Scene_t *scene)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
@@ -771,6 +784,7 @@ void init_level_scene(LevelScene_t *scene)
     sc_array_add(&scene->scene.systems, &movement_update_system);
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &player_collision_system);
+    sc_array_add(&scene->scene.systems, &state_transition_update_system);
     sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
     sc_array_add(&scene->scene.systems, &toggle_block_system);
 

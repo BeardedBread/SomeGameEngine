@@ -248,34 +248,33 @@ static void player_movement_input_system(Scene_t* scene)
     TileGrid_t tilemap = data->tilemap;
 
     // Deal with player acceleration/velocity via inputs first
-    float mag = Vector2Length(data->player_dir);
-    mag = (mag == 0)? 1 : mag;
-    Entity_t * p_player;
-    sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
+    CPlayerState_t* p_pstate;
+    unsigned int ent_idx;
+    sc_map_foreach(&scene->ent_manager.component_map[CPLAYERSTATE_T], ent_idx, p_pstate)
     {
+        float mag = Vector2Length(p_pstate->player_dir);
+        mag = (mag == 0)? 1 : mag;
+        Entity_t * p_player = get_entity(&scene->ent_manager, ent_idx);
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
-        //CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
         CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
-        CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_player, CPLAYERSTATE_T);
-        p_pstate->is_crouch = data->crouch_pressed;
         p_ctransform->accel.x = 0;
         p_ctransform->accel.y = 0;
 
         bool in_water = (p_ctransform->water_state & 1);
         if (!in_water)
         {
-            data->player_dir.y = 0;
-            p_ctransform->accel = Vector2Scale(Vector2Normalize(data->player_dir), MOVE_ACCEL/1.2);
+            p_pstate->player_dir.y = 0;
+            p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL/1.2);
         }
         else
         {
-            p_ctransform->accel = Vector2Scale(Vector2Normalize(data->player_dir), MOVE_ACCEL);
+            p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL);
         }
 
         // Short Hop
         if (p_cjump->jumped && p_ctransform->velocity.y < 0)
         {
-            if (!data->jumped_pressed && !p_cjump->short_hop)
+            if (!p_pstate->jump_pressed && !p_cjump->short_hop)
             {
                 p_cjump->short_hop = true;
                 p_ctransform->velocity.y /= 2;
@@ -289,12 +288,12 @@ static void player_movement_input_system(Scene_t* scene)
             // Jumps is possible as long as you have a jump
 
             // Check if possible to jump when jump is pressed
-            if (data->jumped_pressed && p_cjump->jumps > 0 && p_cjump->cooldown_timer == 0)
+            if (p_pstate->jump_pressed && p_cjump->jumps > 0 && p_cjump->cooldown_timer == 0)
             {
                 bool jump_valid = true;
 
                 // Check Jump from crouch
-                if(data->crouch_pressed)
+                if(p_pstate->is_crouch)
                 {
                     Vector2 test_pos = p_ctransform->position;
                     Vector2 test_bbox = {PLAYER_WIDTH, PLAYER_HEIGHT};
@@ -342,10 +341,9 @@ static void player_movement_input_system(Scene_t* scene)
             p_ctransform->accel.x += p_ctransform->velocity.x * -3.3;
             p_ctransform->accel.y += p_ctransform->velocity.y * -1;
         }
+        p_pstate->player_dir.x = 0;
+        p_pstate->player_dir.y = 0;
     }
-    data->player_dir.x = 0;
-    data->player_dir.y = 0;
-
 }
 
 static void player_bbox_update_system(Scene_t *scene)
@@ -358,7 +356,7 @@ static void player_bbox_update_system(Scene_t *scene)
     {
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
         CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
-        //CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_player, CPLAYERSTATE_T);
+        CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_player, CPLAYERSTATE_T);
         if (p_ctransform->ground_state & 1)
         {
             AnchorPoint_t anchor = AP_BOT_CENTER;
@@ -382,7 +380,7 @@ static void player_bbox_update_system(Scene_t *scene)
                 }
             }
             Vector2 new_bbox;
-            if(data->crouch_pressed)
+            if(p_pstate->is_crouch)
             {
                 new_bbox.x = PLAYER_C_WIDTH;
                 new_bbox.y = PLAYER_C_HEIGHT;
@@ -750,25 +748,28 @@ static void toggle_block_system(Scene_t *scene)
 
 void level_do_action(Scene_t *scene, ActionType_t action, bool pressed)
 {
-    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
-    switch(action)
+    CPlayerState_t *p_playerstate;
+    sc_map_foreach_value(&scene->ent_manager.component_map[CPLAYERSTATE_T], p_playerstate)
     {
-        case ACTION_UP:
-            data->player_dir.y = (pressed)? -1 : 0;
-        break;
-        case ACTION_DOWN:
-            data->player_dir.y = (pressed)? 1 : 0;
-            data->crouch_pressed = pressed;
-        break;
-        case ACTION_LEFT:
-            data->player_dir.x = (pressed)? -1 : 0;
-        break;
-        case ACTION_RIGHT:
-            data->player_dir.x = (pressed)? 1 : 0;
-        break;
-        case ACTION_JUMP:
-            data->jumped_pressed = pressed;
-        break;
+        switch(action)
+        {
+            case ACTION_UP:
+                p_playerstate->player_dir.y = (pressed)? -1 : 0;
+            break;
+            case ACTION_DOWN:
+                p_playerstate->player_dir.y = (pressed)? 1 : 0;
+                p_playerstate->is_crouch = pressed;
+            break;
+            case ACTION_LEFT:
+                p_playerstate->player_dir.x = (pressed)? -1 : 0;
+            break;
+            case ACTION_RIGHT:
+                p_playerstate->player_dir.x = (pressed)? 1 : 0;
+            break;
+            case ACTION_JUMP:
+                p_playerstate->jump_pressed = pressed;
+            break;
+        }
     }
 }
 
@@ -776,9 +777,6 @@ void init_level_scene(LevelScene_t *scene)
 {
     init_scene(&scene->scene, LEVEL_SCENE, &level_scene_render_func, &level_do_action);
     scene->scene.scene_data = &scene->data;
-    scene->data.jumped_pressed = false;
-    scene->data.crouch_pressed = false;
-    memset(&scene->data.player_dir, 0, sizeof(Vector2));
 
     // insert level scene systems
     sc_array_add(&scene->scene.systems, &player_movement_input_system);

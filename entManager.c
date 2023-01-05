@@ -97,6 +97,13 @@ void remove_entity(EntityManager_t *p_manager, unsigned long id)
     sc_queue_add_last(&p_manager->to_remove, id);
 }
 
+Entity_t *get_entity(EntityManager_t *p_manager, unsigned long id)
+{
+    Entity_t *p_entity = sc_map_get_64v(&p_manager->entities, id);
+    if(!sc_map_found(&p_manager->entities)) return NULL;
+    return p_entity;
+}
+
 // Components are not expected to be removed
 // So, no need to extra steps to deal with iterator invalidation
 void *add_component(EntityManager_t *p_manager, Entity_t *p_entity, ComponentEnum_t comp_type)
@@ -107,7 +114,7 @@ void *add_component(EntityManager_t *p_manager, Entity_t *p_entity, ComponentEnu
     if (p_comp)
     {
         sc_map_put_64(&p_entity->components, comp_type_idx, comp_idx);
-        sc_map_put_64v(&p_manager->component_map[comp_type_idx], comp_idx, p_comp);
+        sc_map_put_64v(&p_manager->component_map[comp_type_idx], p_entity->m_id, p_comp);
     }
     return p_comp;
 }
@@ -115,9 +122,10 @@ void *add_component(EntityManager_t *p_manager, Entity_t *p_entity, ComponentEnu
 void *get_component(EntityManager_t *p_manager, Entity_t *p_entity, ComponentEnum_t comp_type)
 {
     unsigned long comp_type_idx = (unsigned long)comp_type;
-    unsigned long comp_idx = sc_map_get_64(&p_entity->components, comp_type_idx);
-    if (!sc_map_found(&p_entity->components)) return NULL;
-    return sc_map_get_64v(&p_manager->component_map[comp_type_idx], comp_idx);
+    void * p_comp = sc_map_get_64v(&p_manager->component_map[comp_type_idx], p_entity->m_id);
+    //unsigned long comp_idx = sc_map_get_64(&p_entity->components, comp_type_idx);
+    if (!sc_map_found(&p_manager->component_map[comp_type_idx])) return NULL;
+    return p_comp;
 }
 
 void remove_component(EntityManager_t *p_manager, Entity_t *p_entity, ComponentEnum_t comp_type)
@@ -125,6 +133,6 @@ void remove_component(EntityManager_t *p_manager, Entity_t *p_entity, ComponentE
     unsigned long comp_type_idx = (unsigned long)comp_type;
     unsigned long comp_idx = sc_map_del_64(&p_entity->components, comp_type_idx);
     if (!sc_map_found(&p_entity->components)) return;
-    sc_map_del_64v(&p_manager->component_map[comp_type_idx], comp_idx);
+    sc_map_del_64v(&p_manager->component_map[comp_type_idx], p_entity->m_id);
     free_component_to_mempool(comp_type, comp_idx);
 }

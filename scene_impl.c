@@ -421,12 +421,11 @@ static void movement_update_system(Scene_t* scene)
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
     // Update movement
     float delta_time = 0.017; // TODO: Will need to think about delta time handling
-    //CTransform_t * p_ctransform;
-    Entity_t* p_ent;
-    //sc_map_foreach_value(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], p_ctransform)
-    sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
+    CTransform_t * p_ctransform;
+    unsigned long ent_idx;
+    sc_map_foreach(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], ent_idx, p_ctransform)
     {
-        CTransform_t * p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
+        Entity_t *p_ent =  get_entity(&scene->ent_manager, ent_idx);
         CBBox_t * p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
 
         if (p_ctransform == NULL) continue;
@@ -619,13 +618,16 @@ static void player_collision_system(Scene_t *scene)
 static void state_transition_update_system(Scene_t *scene)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
-    Entity_t* p_ent;
-    //sc_map_foreach_value(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], p_ctransform)
-    sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
+    //Entity_t* p_ent;
+
+    CBBox_t *p_bbox;
+    unsigned long ent_idx;
+    sc_map_foreach(&scene->ent_manager.component_map[CBBOX_COMP_T], ent_idx, p_bbox)
     {
-        CTransform_t * p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-        CBBox_t * p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
-        if (p_bbox == NULL) continue;
+        Entity_t *p_ent =  get_entity(&scene->ent_manager, ent_idx);
+        CTransform_t *p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
+        if (p_ctransform == NULL) continue;
+
         bool on_ground = check_on_ground(p_ctransform->position, p_bbox->size, &data->tilemap);
         bool in_water = false;
         if (!(p_ctransform->water_state & 1))
@@ -667,11 +669,11 @@ static void update_tilemap_system(Scene_t *scene)
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
     TileGrid_t tilemap = data->tilemap;
 
-    Entity_t *p_ent;
-    sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
+    CTileCoord_t *p_tilecoord;
+    unsigned long ent_idx;
+    sc_map_foreach(&scene->ent_manager.component_map[CTILECOORD_COMP_T], ent_idx, p_tilecoord)
     {
-        CTileCoord_t * p_tilecoord = get_component(&scene->ent_manager, p_ent, CTILECOORD_COMP_T);
-        if (p_tilecoord == NULL) continue;
+        Entity_t *p_ent =  get_entity(&scene->ent_manager, ent_idx);
         CTransform_t * p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
         if (p_ctransform == NULL) continue;
         CBBox_t * p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
@@ -708,6 +710,7 @@ static void update_tilemap_system(Scene_t *scene)
 
 static void toggle_block_system(Scene_t *scene)
 {
+    // TODO: This system is not good as the interface between raw input and actions is broken
     static unsigned int last_tile_idx = MAX_N_TILES;
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
     TileGrid_t tilemap = data->tilemap;

@@ -21,6 +21,7 @@ void free_entity_manager(EntityManager_t *p_manager);
 
 Entity_t *add_entity(EntityManager_t *p_manager, EntityTag_t tag);
 void remove_entity(EntityManager_t *p_manager, unsigned long id);
+Entity_t *get_entity(EntityManager_t *p_manager, unsigned long id);
 
 void *add_component(EntityManager_t *p_manager, Entity_t *entity, ComponentEnum_t comp_type);
 void *get_component(EntityManager_t *p_manager, Entity_t *entity, ComponentEnum_t comp_type);

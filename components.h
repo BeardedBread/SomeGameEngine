@@ -4,12 +4,13 @@
 #include <stdint.h>
 // TODO: Look at sc to use macros to auto generate functions
 
-#define N_COMPONENTS 5
+#define N_COMPONENTS 6
 enum ComponentEnum
 {
     CBBOX_COMP_T,
     CTRANSFORM_COMP_T,
     CTILECOORD_COMP_T,
+    CMOVEMENTSTATE_T,
     CJUMP_COMP_T,
     CPLAYERSTATE_T
 };
@@ -28,9 +29,13 @@ typedef struct _CTransform_t
     Vector2 position;
     Vector2 velocity;
     Vector2 accel;
-    uint8_t ground_state:2;
-    uint8_t water_state:2;
 }CTransform_t;
+
+typedef struct _CMovementState_t
+{
+    uint8_t ground_state;
+    uint8_t water_state;
+}CMovementState_t;
 
 // This is to store the occupying tiles
 // Limits to store 4 tiles at a tile,

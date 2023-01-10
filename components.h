@@ -4,7 +4,7 @@
 #include <stdint.h>
 // TODO: Look at sc to use macros to auto generate functions
 
-#define N_COMPONENTS 6
+#define N_COMPONENTS 7
 enum ComponentEnum
 {
     CBBOX_COMP_T,
@@ -12,7 +12,8 @@ enum ComponentEnum
     CTILECOORD_COMP_T,
     CMOVEMENTSTATE_T,
     CJUMP_COMP_T,
-    CPLAYERSTATE_T
+    CPLAYERSTATE_T,
+    CCONTAINER_T,
 };
 typedef enum ComponentEnum ComponentEnum_t;
 
@@ -68,6 +69,29 @@ typedef struct _CPlayerState_t
     uint8_t jump_pressed: 1;
     uint8_t is_crouch: 1;
 }CPlayerState_t;
+
+typedef enum ContainerItem
+{
+    CONTAINER_EMPTY,
+    CONTAINER_LEFT_ARROW,
+    CONTAINER_RIGHT_ARROW,
+    CONTAINER_UP_ARROW,
+    CONTAINER_DOWN_ARROW,
+    CONTAINER_COIN,
+    CONTAINER_BOMB,
+}ContainerItem_t;
+
+typedef enum ContainerMaterial
+{
+    WOODEN_CONTAINER,
+    METAL_CONTAINER,
+}ContainerMaterial_t;
+
+typedef struct _CContainer_t
+{
+    ContainerMaterial_t material;
+    ContainerItem_t item;
+}CContainer_t;
 
 
 static inline void set_bbox(CBBox_t* p_bbox, unsigned int x, unsigned int y)

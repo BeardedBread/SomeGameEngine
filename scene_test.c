@@ -14,20 +14,6 @@ int main(void)
     init_memory_pools();
     LevelScene_t scene;
     init_level_scene(&scene);
-    Entity_t *p_ent = add_entity(&scene.scene.ent_manager, PLAYER_ENT_TAG);
-
-    CBBox_t *p_bbox = add_component(&scene.scene.ent_manager, p_ent, CBBOX_COMP_T);
-    set_bbox(p_bbox, 30, 45);
-    add_component(&scene.scene.ent_manager, p_ent, CTRANSFORM_COMP_T);
-    CJump_t *p_cjump = add_component(&scene.scene.ent_manager, p_ent, CJUMP_COMP_T);
-    p_cjump->jump_speed = 680;
-    p_cjump->jumps = 1;
-    p_cjump->max_jumps = 1;
-    add_component(&scene.scene.ent_manager, p_ent, CPLAYERSTATE_T);
-    add_component(&scene.scene.ent_manager, p_ent, CTILECOORD_COMP_T);
-    add_component(&scene.scene.ent_manager, p_ent, CMOVEMENTSTATE_T);
-    update_entity_manager(&scene.scene.ent_manager);
-    //for (size_t step = 0; step < 6000; step++)
     while(true)
     {
 
@@ -63,6 +49,7 @@ int main(void)
         }
 
         update_scene(&scene.scene);
+        update_entity_manager(&scene.scene.ent_manager);
         // This is needed to advance time delta
         BeginDrawing();
             render_scene(&scene.scene);

@@ -3,12 +3,13 @@
 #include <stdbool.h>
 #include "sc/map/sc_map.h"
 
-#define N_TAGS 3
+#define N_TAGS 4
 enum EntityTag
 {
     NO_ENT_TAG,
     PLAYER_ENT_TAG,
     ENEMY_ENT_TAG,
+    CRATES_ENT_TAG,
 };
 typedef enum EntityTag EntityTag_t;
 typedef struct Entity

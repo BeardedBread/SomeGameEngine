@@ -10,6 +10,7 @@ static CTileCoord_t ctilecoord_buffer[MAX_COMP_POOL_SIZE];
 static CMovementState_t cmstate_buffer[MAX_COMP_POOL_SIZE];
 static CJump_t cjump_buffer[1]; // Only player is expected to have this
 static CPlayerState_t cplayerstate_buffer[1]; // Only player is expected to have this
+static CContainer_t ccontainer_buffer[MAX_COMP_POOL_SIZE];
 
 // Use hashmap as a Set
 // Use list will be used to check if an object exist
@@ -35,6 +36,7 @@ static MemPool_t comp_mempools[N_COMPONENTS] =
     {cmstate_buffer, MAX_COMP_POOL_SIZE, sizeof(CMovementState_t), NULL, {0}},
     {cjump_buffer, 1, sizeof(CJump_t), NULL, {0}},
     {cplayerstate_buffer, 1, sizeof(CPlayerState_t), NULL, {0}},
+    {ccontainer_buffer, MAX_COMP_POOL_SIZE, sizeof(CContainer_t), NULL, {0}},
 };
 static MemPool_t ent_mempool = {entity_buffer, MAX_COMP_POOL_SIZE, sizeof(Entity_t), NULL, {0}};
 

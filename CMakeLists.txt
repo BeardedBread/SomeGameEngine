@@ -82,3 +82,33 @@ target_link_libraries(scene_test
     raylib
     m
 )
+
+add_executable(scene_test_mem
+    scene_test.c
+    scene_impl.c
+    scene.c
+    entManager.c
+    mempool.c
+)
+
+target_include_directories(scene_test_mem
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${RAYLIB_DIR}/include
+)
+
+target_link_options(scene_test_mem PRIVATE -Xlinker -Map=scene_test.map)
+
+target_link_directories(scene_test_mem
+    PRIVATE
+    ${RAYLIB_DIR}/lib
+)
+
+target_link_libraries(scene_test_mem
+    sc_queue
+    sc_map
+    sc_array
+    raylib
+    m
+)
+target_link_options(scene_test PRIVATE -fsanitize=address -gdwarf-4 )

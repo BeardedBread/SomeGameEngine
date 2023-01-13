@@ -22,6 +22,7 @@ typedef struct _CBBox_t
     Vector2 size;
     Vector2 offset;
     Vector2 half_size;
+    bool solid;
 }CBBox_t;
 
 typedef struct _CTransform_t

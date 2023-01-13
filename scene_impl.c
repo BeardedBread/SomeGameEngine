@@ -89,15 +89,30 @@ static bool check_collision_at(Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid, V
     return false;
 }
 
-static inline bool check_on_ground(Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid)
+static inline bool check_on_ground(unsigned int ent_idx, Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid, Scene_t* scene)
 {
+    pos.y += 1;
     unsigned int tile_x1 = (pos.x) / TILE_SIZE;
     unsigned int tile_x2 = (pos.x + bbox_sz.x - 1) / TILE_SIZE;
-    unsigned int tile_y = (pos.y + bbox_sz.y) / TILE_SIZE;
+    unsigned int tile_y = (pos.y + bbox_sz.y - 1) / TILE_SIZE;
 
     for(unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
     {
-        if (grid->tiles[tile_y*grid->width + tile_x].solid) return true;
+        unsigned int tile_idx = tile_y*grid->width + tile_x;
+        if (grid->tiles[tile_idx].solid) return true;
+
+        unsigned int other_ent_idx;
+        sc_map_foreach_key(&grid->tiles[tile_idx].entities_set, other_ent_idx)
+        {
+            Vector2 overlap;
+            if (other_ent_idx == ent_idx) continue;
+            Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
+            CBBox_t *p_other_bbox = get_component(&scene->ent_manager, p_other_ent, CBBOX_COMP_T);
+            if (p_other_bbox == NULL || !p_other_bbox->solid) continue;
+
+            CTransform_t *p_other_ct = get_component(&scene->ent_manager, p_other_ent, CTRANSFORM_COMP_T);
+            if (find_AABB_overlap(pos, bbox_sz, p_other_ct->position, p_other_bbox->size, &overlap)) return true;
+        }
     }
     return false;
 }
@@ -243,13 +258,13 @@ static void level_scene_render_func(Scene_t* scene)
     }
 
     // For DEBUG
+    char buffer[64];
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
     {
         CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
         CJump_t* p_cjump = get_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
         CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
         CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_ent, CMOVEMENTSTATE_T);
-        char buffer[64];
         sprintf(buffer, "Pos: %.3f\n %.3f", p_ct->position.x, p_ct->position.y);
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 15, 12, BLACK);
         sprintf(buffer, "Jumps: %u", p_cjump->jumps);
@@ -260,9 +275,13 @@ static void level_scene_render_func(Scene_t* scene)
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 90, 12, BLACK);
         sprintf(buffer, "Water: %s", p_mstate->water_state & 1? "YES":"NO");
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 120, 12, BLACK);
-        sprintf(buffer, "Spawn Entity: %u", current_spawn_selection);
-        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 240, 12, BLACK);
     }
+    sprintf(buffer, "Spawn Entity: %u", current_spawn_selection);
+    DrawText(buffer, tilemap.width * TILE_SIZE + 1, 240, 12, BLACK);
+    sprintf(buffer, "Number of Entities: %u", sc_map_size_64v(&scene->ent_manager.entities));
+    DrawText(buffer, tilemap.width * TILE_SIZE + 1, 270, 12, BLACK);
+    sprintf(buffer, "FPS: %u", GetFPS());
+    DrawText(buffer, tilemap.width * TILE_SIZE + 1, 320, 12, BLACK);
 }
 
 static void player_movement_input_system(Scene_t* scene)
@@ -281,8 +300,6 @@ static void player_movement_input_system(Scene_t* scene)
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
         CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
         CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_player, CMOVEMENTSTATE_T);
-        p_ctransform->accel.x = 0;
-        p_ctransform->accel.y = 0;
 
         bool in_water = (p_mstate->water_state & 1);
         if (!in_water)
@@ -498,7 +515,8 @@ static void movement_update_system(Scene_t* scene)
             p_ctransform->position,
             Vector2Scale(p_ctransform->velocity, delta_time)
         );
-
+        p_ctransform->accel.x = 0;
+        p_ctransform->accel.y = 0;
     }
 }
 
@@ -596,26 +614,61 @@ static void tile_collision_system(Scene_t *scene)
                 }
                 else
                 {
+                    unsigned int other_ent_idx;
                     // TODO: check against the entities of each involved tiles
+                    sc_map_foreach_key(&tilemap.tiles[tile_idx].entities_set, other_ent_idx)
+                    {
+                        if (other_ent_idx == ent_idx) continue;
+                        Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
+                        CBBox_t *p_other_bbox = get_component(&scene->ent_manager, p_other_ent, CBBOX_COMP_T);
+                        if (p_other_bbox == NULL || !p_other_bbox->solid) continue;
+
+                        CTransform_t *p_other_ct = get_component(&scene->ent_manager, p_other_ent, CTRANSFORM_COMP_T);
+                        if (find_AABB_overlap(p_ctransform->position, p_bbox->size, p_other_ct->position, p_other_bbox->size, &overlap))
+                        {
+                            find_AABB_overlap(p_ctransform->prev_position, p_bbox->size, p_other_ct->prev_position, p_other_bbox->size, &prev_overlap);
+                            if (fabs(prev_overlap.y) > fabs(prev_overlap.x))
+                            {
+                                p_ctransform->position.x += overlap.x;
+                                p_ctransform->velocity.x = 0;
+                            }
+                            else if (fabs(prev_overlap.x) > fabs(prev_overlap.y))
+                            {
+                                p_ctransform->position.y += overlap.y;
+                                p_ctransform->velocity.y = 0;
+                            }
+                            else if (fabs(overlap.x) < fabs(overlap.y))
+                            {
+                                p_ctransform->position.x += overlap.x;
+                                p_ctransform->velocity.x = 0;
+                            }
+                            else
+                            {
+                                p_ctransform->position.y += overlap.y;
+                                p_ctransform->velocity.y = 0;
+                            }
+                        }
+                    }
                 }
 
-                // Level boundary collision
-                unsigned int level_width = tilemap.width * TILE_SIZE;
-                if(p_ctransform->position.x < 0 || p_ctransform->position.x + p_bbox->size.x > level_width)
-                {
-                    p_ctransform->position.x = (p_ctransform->position.x < 0) ? 0 : p_ctransform->position.x;
-                    p_ctransform->position.x = (p_ctransform->position.x + p_bbox->size.x > level_width) ? level_width - p_bbox->size.x : p_ctransform->position.x;
-                    p_ctransform->velocity.x *= -1;
-                }
-                
-                unsigned int level_height = tilemap.height * TILE_SIZE;
-                if(p_ctransform->position.y < 0 || p_ctransform->position.y + p_bbox->size.y > level_height)
-                {
-                    p_ctransform->position.y = (p_ctransform->position.y < 0) ? 0 : p_ctransform->position.y;
-                    p_ctransform->position.y = (p_ctransform->position.y + p_bbox->size.y > level_height) ? level_height - p_bbox->size.y : p_ctransform->position.y;
-                    p_ctransform->velocity.y *= -1;
-                }
             }
+        }
+
+        // Level boundary collision
+        unsigned int level_width = tilemap.width * TILE_SIZE;
+        if(p_ctransform->position.x < 0 || p_ctransform->position.x + p_bbox->size.x > level_width)
+        {
+            p_ctransform->position.x = (p_ctransform->position.x < 0) ? 0 : p_ctransform->position.x;
+            p_ctransform->position.x = (p_ctransform->position.x + p_bbox->size.x > level_width) ? level_width - p_bbox->size.x : p_ctransform->position.x;
+            p_ctransform->velocity.x *= -1;
+        }
+        
+        unsigned int level_height = tilemap.height * TILE_SIZE;
+        if(p_ctransform->position.y < 0 || p_ctransform->position.y + p_bbox->size.y > level_height)
+        {
+            p_ctransform->position.y = (p_ctransform->position.y < 0) ? 0 : p_ctransform->position.y;
+            p_ctransform->position.y = (p_ctransform->position.y + p_bbox->size.y > level_height) ? level_height - p_bbox->size.y : p_ctransform->position.y;
+            p_ctransform->velocity.y *= -1;
         }
         // Deal with float precision, by rounding when it is near to an integer enough by 2 dp
         float decimal;
@@ -657,7 +710,7 @@ static void state_transition_update_system(Scene_t *scene)
         CBBox_t *p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
         if (p_ctransform == NULL || p_bbox == NULL) continue;
 
-        bool on_ground = check_on_ground(p_ctransform->position, p_bbox->size, &data->tilemap);
+        bool on_ground = check_on_ground(ent_idx, p_ctransform->position, p_bbox->size, &data->tilemap, scene);
         bool in_water = false;
         if (!(p_mstate->water_state & 1))
         {
@@ -743,6 +796,7 @@ static void spawn_crate(Scene_t *scene, unsigned int tile_idx)
     Entity_t *p_crate = add_entity(&scene->ent_manager, CRATES_ENT_TAG);
     CBBox_t *p_bbox = add_component(&scene->ent_manager, p_crate, CBBOX_COMP_T);
     set_bbox(p_bbox, TILE_SIZE, TILE_SIZE);
+    p_bbox->solid = true;
     CTransform_t *p_ctransform = add_component(&scene->ent_manager, p_crate, CTRANSFORM_COMP_T);
     p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
     p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;

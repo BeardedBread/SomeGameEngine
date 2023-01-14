@@ -67,8 +67,8 @@ typedef enum PlayerState
 typedef struct _CPlayerState_t
 {
     Vector2 player_dir;
-    uint8_t jump_pressed: 1;
-    uint8_t is_crouch: 1;
+    uint8_t jump_pressed;
+    uint8_t is_crouch;
 }CPlayerState_t;
 
 typedef enum ContainerItem

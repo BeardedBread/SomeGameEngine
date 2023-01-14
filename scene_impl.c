@@ -203,24 +203,6 @@ static void level_scene_render_func(Scene_t* scene)
     TileGrid_t tilemap = data->tilemap;
 
     Entity_t *p_ent;
-    sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
-    {
-        CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
-        Color colour;
-        switch(p_ent->m_tag)
-        {
-            case PLAYER_ENT_TAG:
-                colour = RED;
-            break;
-            case CRATES_ENT_TAG:
-                colour = BROWN;
-            break;
-            default:
-                colour = BLACK;
-        }
-        DrawRectangle(p_ct->position.x, p_ct->position.y, p_bbox->size.x, p_bbox->size.y, colour);
-    }
 
     for (size_t i=0; i<tilemap.n_tiles;++i)
     {
@@ -243,6 +225,25 @@ static void level_scene_render_func(Scene_t* scene)
             }
             DrawText(buffer, x, y, 10, BLACK);
         }
+    }
+
+    sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
+    {
+        CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
+        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
+        Color colour;
+        switch(p_ent->m_tag)
+        {
+            case PLAYER_ENT_TAG:
+                colour = RED;
+            break;
+            case CRATES_ENT_TAG:
+                colour = BROWN;
+            break;
+            default:
+                colour = BLACK;
+        }
+        DrawRectangle(p_ct->position.x, p_ct->position.y, p_bbox->size.x, p_bbox->size.y, colour);
     }
 
     // Draw tile grid
@@ -271,7 +272,7 @@ static void level_scene_render_func(Scene_t* scene)
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 60, 12, BLACK);
         sprintf(buffer, "Cooldown: %u", p_cjump->cooldown_timer);
         DrawText(buffer, (tilemap.width + 3) * TILE_SIZE + 1, 60, 12, BLACK);
-        sprintf(buffer, "Crouch: %s", p_pstate->is_crouch? "YES":"NO");
+        sprintf(buffer, "Crouch: %u", p_pstate->is_crouch);
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 90, 12, BLACK);
         sprintf(buffer, "Water: %s", p_mstate->water_state & 1? "YES":"NO");
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 120, 12, BLACK);
@@ -325,6 +326,22 @@ static void player_movement_input_system(Scene_t* scene)
 
         //else
         {
+            if (p_pstate->is_crouch == 0b01)
+            {
+                Vector2 test_pos = p_ctransform->position;
+                Vector2 test_bbox = {PLAYER_WIDTH, PLAYER_HEIGHT};
+                Vector2 top = {0, 0};
+                test_pos.x += PLAYER_C_XOFFSET;
+                test_pos.y -= PLAYER_C_YOFFSET;
+                if (!check_collision_at(test_pos, test_bbox, &tilemap, top))
+                {
+                    p_pstate->is_crouch >>= 1;
+                }
+            }
+            else
+            {
+                p_pstate->is_crouch >>= 1;
+            }
             if (p_cjump->cooldown_timer > 0) p_cjump->cooldown_timer--;
             // Jumps is possible as long as you have a jump
 
@@ -334,7 +351,7 @@ static void player_movement_input_system(Scene_t* scene)
                 bool jump_valid = true;
 
                 // Check Jump from crouch
-                if(p_pstate->is_crouch)
+                if(p_pstate->is_crouch & 1)
                 {
                     Vector2 test_pos = p_ctransform->position;
                     Vector2 test_bbox = {PLAYER_WIDTH, PLAYER_HEIGHT};
@@ -422,7 +439,7 @@ static void player_bbox_update_system(Scene_t *scene)
                 }
             }
             Vector2 new_bbox;
-            if(p_pstate->is_crouch)
+            if(p_pstate->is_crouch & 1)
             {
                 new_bbox.x = PLAYER_C_WIDTH;
                 new_bbox.y = PLAYER_C_HEIGHT;
@@ -881,7 +898,7 @@ void level_do_action(Scene_t *scene, ActionType_t action, bool pressed)
             break;
             case ACTION_DOWN:
                 p_playerstate->player_dir.y = (pressed)? 1 : 0;
-                p_playerstate->is_crouch = pressed;
+                p_playerstate->is_crouch |= (pressed)? 0b10 : 0;
             break;
             case ACTION_LEFT:
                 p_playerstate->player_dir.x = (pressed)? -1 : 0;

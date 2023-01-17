@@ -214,16 +214,11 @@ static void level_scene_render_func(Scene_t* scene)
         if (tilemap.tiles[i].solid)
         {
             DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
-            DrawText(buffer, x, y, 10, WHITE);
         }
-        else
+        else if (tilemap.tiles[i].water_level > 0)
         {
             // Draw water tile
-            if (tilemap.tiles[i].water_level > 0)
-            {
-                DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLUE);
-            }
-            DrawText(buffer, x, y, 10, BLACK);
+            DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLUE);
         }
     }
 
@@ -244,6 +239,24 @@ static void level_scene_render_func(Scene_t* scene)
                 colour = BLACK;
         }
         DrawRectangle(p_ct->position.x, p_ct->position.y, p_bbox->size.x, p_bbox->size.y, colour);
+    }
+
+    for (size_t i=0; i<tilemap.n_tiles;++i)
+    {
+        char buffer[6] = {0};
+        int x = (i % tilemap.width) * TILE_SIZE;
+        int y = (i / tilemap.width) * TILE_SIZE;
+        sprintf(buffer, "%u", sc_map_size_64(&tilemap.tiles[i].entities_set));
+
+        if (tilemap.tiles[i].solid)
+        {
+            DrawText(buffer, x, y, 10, WHITE);
+        }
+        else
+        {
+            // Draw water tile
+            DrawText(buffer, x, y, 10, BLACK);
+        }
     }
 
     // Draw tile grid
@@ -566,8 +579,11 @@ static void player_ground_air_transition_system(Scene_t* scene)
     }
 }
 
+
 static void tile_collision_system(Scene_t *scene)
 {
+    static bool checked_entities[MAX_COMP_POOL_SIZE] = {0};
+
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
     TileGrid_t tilemap = data->tilemap;
 
@@ -632,11 +648,16 @@ static void tile_collision_system(Scene_t *scene)
                 else
                 {
                     unsigned int other_ent_idx;
+                    memset(checked_entities, 0, sizeof(checked_entities));
                     // TODO: check against the entities of each involved tiles
                     sc_map_foreach_key(&tilemap.tiles[tile_idx].entities_set, other_ent_idx)
                     {
                         if (other_ent_idx == ent_idx) continue;
+                        if (checked_entities[other_ent_idx]) continue;
+
+                        checked_entities[other_ent_idx] = true;
                         Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
+                        if (p_other_ent->m_tag < p_ent->m_tag) continue; // To only allow one way collision check
                         CBBox_t *p_other_bbox = get_component(&scene->ent_manager, p_other_ent, CBBOX_COMP_T);
                         if (p_other_bbox == NULL || !p_other_bbox->solid) continue;
 

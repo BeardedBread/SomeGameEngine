@@ -108,7 +108,7 @@ static inline bool check_on_ground(unsigned int ent_idx, Vector2 pos, Vector2 bb
             if (other_ent_idx == ent_idx) continue;
             Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
             CBBox_t *p_other_bbox = get_component(&scene->ent_manager, p_other_ent, CBBOX_COMP_T);
-            if (p_other_bbox == NULL || !p_other_bbox->solid) continue;
+            if (p_other_bbox == NULL || !p_other_bbox->solid || p_other_bbox->fragile) continue;
 
             CTransform_t *p_other_ct = get_component(&scene->ent_manager, p_other_ent, CTRANSFORM_COMP_T);
             if (find_AABB_overlap(pos, bbox_sz, p_other_ct->position, p_other_bbox->size, &overlap)) return true;
@@ -579,7 +579,7 @@ static void player_ground_air_transition_system(Scene_t* scene)
     }
 }
 
-
+static struct sc_map_32 collision_events;
 static void tile_collision_system(Scene_t *scene)
 {
     static bool checked_entities[MAX_COMP_POOL_SIZE] = {0};
@@ -649,7 +649,6 @@ static void tile_collision_system(Scene_t *scene)
                 {
                     unsigned int other_ent_idx;
                     memset(checked_entities, 0, sizeof(checked_entities));
-                    // TODO: check against the entities of each involved tiles
                     sc_map_foreach_key(&tilemap.tiles[tile_idx].entities_set, other_ent_idx)
                     {
                         if (other_ent_idx == ent_idx) continue;
@@ -659,38 +658,89 @@ static void tile_collision_system(Scene_t *scene)
                         Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
                         if (p_other_ent->m_tag < p_ent->m_tag) continue; // To only allow one way collision check
                         CBBox_t *p_other_bbox = get_component(&scene->ent_manager, p_other_ent, CBBOX_COMP_T);
-                        if (p_other_bbox == NULL || !p_other_bbox->solid) continue;
+                        if (p_other_bbox == NULL) continue;
 
                         CTransform_t *p_other_ct = get_component(&scene->ent_manager, p_other_ent, CTRANSFORM_COMP_T);
                         if (find_AABB_overlap(p_ctransform->position, p_bbox->size, p_other_ct->position, p_other_bbox->size, &overlap))
                         {
                             find_AABB_overlap(p_ctransform->prev_position, p_bbox->size, p_other_ct->prev_position, p_other_bbox->size, &prev_overlap);
+                            // TODO: Store collision event here
+                            // Check collision on x or y axis
+                            // Encode key and value, -ve is left and up, +ve is right and down
+                            // Move only if solid
+                            uint8_t dir_to_move = 0; // x-axis, y-axis
+                            uint32_t collision_key = ((ent_idx << 16) | other_ent_idx);
+                            uint32_t collision_value = 0;
                             if (fabs(prev_overlap.y) > fabs(prev_overlap.x))
                             {
-                                p_ctransform->position.x += overlap.x;
-                                p_ctransform->velocity.x = 0;
+                                collision_value = (((overlap.x > 0?1:0)<< 14) | ( (uint16_t)(fabs(overlap.x)) ));
+                                dir_to_move = 0;
                             }
                             else if (fabs(prev_overlap.x) > fabs(prev_overlap.y))
                             {
-                                p_ctransform->position.y += overlap.y;
-                                p_ctransform->velocity.y = 0;
+                                collision_value = (((overlap.y > 0?3:2)<< 14) | ( (uint16_t)(fabs(overlap.x)) ));
+                                dir_to_move = 1;
                             }
                             else if (fabs(overlap.x) < fabs(overlap.y))
                             {
-                                p_ctransform->position.x += overlap.x;
-                                p_ctransform->velocity.x = 0;
+                                collision_value = (((overlap.x > 0?1:0)<< 14) | ( (uint16_t)(fabs(overlap.x)) ));
+                                dir_to_move = 0;
                             }
                             else
                             {
+                                collision_value = (((overlap.y > 0?3:2)<< 14) | ( (uint16_t)(fabs(overlap.x)) ));
+                                dir_to_move = 1;
+                            }
+                            sc_map_put_32(&collision_events, collision_key, collision_value);
+
+                            if (!p_other_bbox->solid) continue;
+                            if (dir_to_move == 1)
+                            {
                                 p_ctransform->position.y += overlap.y;
                                 p_ctransform->velocity.y = 0;
+                            }
+                            else
+                            {
+                                p_ctransform->position.x += overlap.x;
+                                p_ctransform->velocity.x = 0;
                             }
                         }
                     }
                 }
-
             }
         }
+
+        // TODO: Resolve all collision events
+        uint32_t collision_key, collision_value;
+        sc_map_foreach(&collision_events, collision_key, collision_value)
+        {
+            ent_idx = (collision_key >> 16);
+            uint other_ent_idx = (collision_key & 0xFFFF);
+            Entity_t *p_ent = get_entity(&scene->ent_manager, ent_idx);
+            Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
+            if (!p_ent->m_alive || !p_other_ent->m_alive) continue;
+            if (p_ent->m_tag == PLAYER_ENT_TAG && p_other_ent->m_tag == CRATES_ENT_TAG)
+            {
+                CTileCoord_t *p_tilecoord = get_component(&scene->ent_manager, p_other_ent, CTILECOORD_COMP_T);
+                for (size_t i=0;i<p_tilecoord->n_tiles;++i)
+                {
+                    // Use previously store tile position
+                    // Clear from those positions
+                    unsigned int tile_idx = p_tilecoord->tiles[i];
+                    sc_map_del_64(&(tilemap.tiles[tile_idx].entities_set), other_ent_idx);
+                }
+                CTransform_t *p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
+                CBBox_t * p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
+                CPlayerState_t * p_pstate = get_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
+                CTransform_t *p_other_ct = get_component(&scene->ent_manager, p_other_ent, CTRANSFORM_COMP_T);
+                if (p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y)
+                {
+                    p_ctransform->velocity.y = (p_pstate->jump_pressed)? -600 : -400;
+                }
+                remove_entity(&scene->ent_manager, other_ent_idx);
+            }
+        }
+        sc_map_clear_32(&collision_events);
 
         // Level boundary collision
         unsigned int level_width = tilemap.width * TILE_SIZE;
@@ -835,6 +885,7 @@ static void spawn_crate(Scene_t *scene, unsigned int tile_idx)
     CBBox_t *p_bbox = add_component(&scene->ent_manager, p_crate, CBBOX_COMP_T);
     set_bbox(p_bbox, TILE_SIZE, TILE_SIZE);
     p_bbox->solid = true;
+    p_bbox->fragile = true;
     CTransform_t *p_ctransform = add_component(&scene->ent_manager, p_crate, CTRANSFORM_COMP_T);
     p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
     p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
@@ -958,8 +1009,8 @@ void init_level_scene(LevelScene_t *scene)
     sc_array_add(&scene->scene.systems, &player_bbox_update_system);
     sc_array_add(&scene->scene.systems, &global_external_forces_system);
     sc_array_add(&scene->scene.systems, &movement_update_system);
-    sc_array_add(&scene->scene.systems, &tile_collision_system);
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
+    sc_array_add(&scene->scene.systems, &tile_collision_system);
     sc_array_add(&scene->scene.systems, &state_transition_update_system);
     sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
     sc_array_add(&scene->scene.systems, &toggle_block_system);
@@ -983,7 +1034,7 @@ void init_level_scene(LevelScene_t *scene)
     for (size_t i=0; i<MAX_N_TILES;i++)
     {
         all_tiles[i].solid = 0;
-        sc_map_init_64(&all_tiles[i].entities_set, 8, 0);
+        sc_map_init_64(&all_tiles[i].entities_set, 16, 0);
     }
     for (size_t i=0; i<32; ++i)
     {
@@ -992,6 +1043,7 @@ void init_level_scene(LevelScene_t *scene)
 
     spawn_player(&scene->scene);
     update_entity_manager(&scene->scene.ent_manager);
+    sc_map_init_32(&collision_events, 128, 0);
 }
 
 void free_level_scene(LevelScene_t *scene)
@@ -1002,6 +1054,7 @@ void free_level_scene(LevelScene_t *scene)
         all_tiles[i].solid = 0;
         sc_map_term_64(&all_tiles[i].entities_set);
     }
+    sc_map_term_32(&collision_events);
 }
 
 void reload_level_scene(LevelScene_t *scene)

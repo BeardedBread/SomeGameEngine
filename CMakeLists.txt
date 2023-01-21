@@ -24,6 +24,7 @@ target_link_directories(${PROJECT_NAME}
 
 target_link_libraries(${PROJECT_NAME}
     lib_EC
+    lib_scenes
     sc_queue
     sc_map
     raylib
@@ -46,14 +47,13 @@ target_link_directories(EntManager_test
 )
 target_link_libraries(EntManager_test
     lib_EC
+    lib_scenes
     sc_queue
     sc_map
 )
 
 add_executable(scene_test
     scene_test.c
-    scene_impl.c
-    scene.c
 )
 
 target_include_directories(scene_test
@@ -72,6 +72,7 @@ target_link_directories(scene_test
 
 target_link_libraries(scene_test
     lib_EC
+    lib_scenes
     sc_queue
     sc_map
     sc_array
@@ -81,8 +82,6 @@ target_link_libraries(scene_test
 
 add_executable(scene_test_mem
     scene_test.c
-    scene_impl.c
-    scene.c
 )
 
 target_include_directories(scene_test_mem
@@ -100,6 +99,7 @@ target_link_directories(scene_test_mem
 
 target_link_libraries(scene_test_mem
     lib_EC
+    lib_scenes
     sc_queue
     sc_map
     sc_array

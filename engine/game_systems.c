@@ -1,23 +1,23 @@
-#include "scene_impl.h"
+#include "game_systems.h"
 #include "constants.h"
 #include "raylib.h"
 #include "raymath.h"
-#include <stdio.h>
 
 static const Vector2 TILE_SZ = {TILE_SIZE, TILE_SIZE};
-#define MAX_N_TILES 4096
-static Tile_t all_tiles[MAX_N_TILES] = {0};
-
 static const Vector2 GRAVITY = {0, GRAV_ACCEL};
 static const Vector2 UPTHRUST = {0, -GRAV_ACCEL * 1.1};
-
-enum EntitySpawnSelection
+typedef enum AnchorPoint
 {
-    TOGGLE_TILE = 0,
-    SPAWN_CRATE,
-};
-#define MAX_SPAWN_TYPE 2
-static unsigned int current_spawn_selection = 0;
+    AP_TOP_LEFT,
+    AP_TOP_CENTER,
+    AP_TOP_RIGHT,
+    AP_MID_LEFT,
+    AP_MID_CENTER,
+    AP_MID_RIGHT,
+    AP_BOT_LEFT,
+    AP_BOT_CENTER,
+    AP_BOT_RIGHT,
+}AnchorPoint_t;
 
 static inline unsigned int get_tile_idx(int x, int y, unsigned int tilemap_width)
 {
@@ -116,20 +116,6 @@ static inline bool check_on_ground(unsigned int ent_idx, Vector2 pos, Vector2 bb
     }
     return false;
 }
-
-typedef enum AnchorPoint
-{
-    AP_TOP_LEFT,
-    AP_TOP_CENTER,
-    AP_TOP_RIGHT,
-    AP_MID_LEFT,
-    AP_MID_CENTER,
-    AP_MID_RIGHT,
-    AP_BOT_LEFT,
-    AP_BOT_CENTER,
-    AP_BOT_RIGHT,
-}AnchorPoint_t;
-
 static Vector2 shift_bbox(Vector2 bbox, Vector2 new_bbox, AnchorPoint_t anchor)
 {
     Vector2 p1;
@@ -197,108 +183,7 @@ static Vector2 shift_bbox(Vector2 bbox, Vector2 new_bbox, AnchorPoint_t anchor)
     return offset;
 }
 
-static void level_scene_render_func(Scene_t* scene)
-{
-    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
-    TileGrid_t tilemap = data->tilemap;
-
-    Entity_t *p_ent;
-
-    for (size_t i=0; i<tilemap.n_tiles;++i)
-    {
-        char buffer[6] = {0};
-        int x = (i % tilemap.width) * TILE_SIZE;
-        int y = (i / tilemap.width) * TILE_SIZE;
-        sprintf(buffer, "%u", sc_map_size_64(&tilemap.tiles[i].entities_set));
-
-        if (tilemap.tiles[i].solid)
-        {
-            DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
-        }
-        else if (tilemap.tiles[i].water_level > 0)
-        {
-            // Draw water tile
-            DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLUE);
-        }
-    }
-
-    sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
-    {
-        CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
-        Color colour;
-        switch(p_ent->m_tag)
-        {
-            case PLAYER_ENT_TAG:
-                colour = RED;
-            break;
-            case CRATES_ENT_TAG:
-                colour = BROWN;
-            break;
-            default:
-                colour = BLACK;
-        }
-        DrawRectangle(p_ct->position.x, p_ct->position.y, p_bbox->size.x, p_bbox->size.y, colour);
-    }
-
-    for (size_t i=0; i<tilemap.n_tiles;++i)
-    {
-        char buffer[6] = {0};
-        int x = (i % tilemap.width) * TILE_SIZE;
-        int y = (i / tilemap.width) * TILE_SIZE;
-        sprintf(buffer, "%u", sc_map_size_64(&tilemap.tiles[i].entities_set));
-
-        if (tilemap.tiles[i].solid)
-        {
-            DrawText(buffer, x, y, 10, WHITE);
-        }
-        else
-        {
-            // Draw water tile
-            DrawText(buffer, x, y, 10, BLACK);
-        }
-    }
-
-    // Draw tile grid
-    for (size_t i=0; i<tilemap.width;++i)
-    {
-        int x = (i+1)*TILE_SIZE;
-        DrawLine(x, 0, x, tilemap.height * TILE_SIZE, BLACK);
-    }
-    for (size_t i=0; i<tilemap.height;++i)
-    {
-        int y = (i+1)*TILE_SIZE;
-        DrawLine(0, y, tilemap.width * TILE_SIZE, y, BLACK);
-    }
-
-    // For DEBUG
-    char buffer[64];
-    sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
-    {
-        CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-        CJump_t* p_cjump = get_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
-        CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
-        CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_ent, CMOVEMENTSTATE_T);
-        sprintf(buffer, "Pos: %.3f\n %.3f", p_ct->position.x, p_ct->position.y);
-        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 15, 12, BLACK);
-        sprintf(buffer, "Jumps: %u", p_cjump->jumps);
-        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 60, 12, BLACK);
-        sprintf(buffer, "Cooldown: %u", p_cjump->cooldown_timer);
-        DrawText(buffer, (tilemap.width + 3) * TILE_SIZE + 1, 60, 12, BLACK);
-        sprintf(buffer, "Crouch: %u", p_pstate->is_crouch);
-        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 90, 12, BLACK);
-        sprintf(buffer, "Water: %s", p_mstate->water_state & 1? "YES":"NO");
-        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 120, 12, BLACK);
-    }
-    sprintf(buffer, "Spawn Entity: %u", current_spawn_selection);
-    DrawText(buffer, tilemap.width * TILE_SIZE + 1, 240, 12, BLACK);
-    sprintf(buffer, "Number of Entities: %u", sc_map_size_64v(&scene->ent_manager.entities));
-    DrawText(buffer, tilemap.width * TILE_SIZE + 1, 270, 12, BLACK);
-    sprintf(buffer, "FPS: %u", GetFPS());
-    DrawText(buffer, tilemap.width * TILE_SIZE + 1, 320, 12, BLACK);
-}
-
-static void player_movement_input_system(Scene_t* scene)
+void player_movement_input_system(Scene_t* scene)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
     TileGrid_t tilemap = data->tilemap;
@@ -417,7 +302,7 @@ static void player_movement_input_system(Scene_t* scene)
     }
 }
 
-static void player_bbox_update_system(Scene_t *scene)
+void player_bbox_update_system(Scene_t *scene)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
     TileGrid_t tilemap = data->tilemap;
@@ -486,101 +371,8 @@ static void player_bbox_update_system(Scene_t *scene)
     }
 }
 
-static void global_external_forces_system(Scene_t *scene)
-{
-    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
-    CMovementState_t* p_mstate;
-    unsigned long ent_idx;
-    sc_map_foreach(&scene->ent_manager.component_map[CMOVEMENTSTATE_T], ent_idx, p_mstate)
-    {
-        Entity_t *p_ent =  get_entity(&scene->ent_manager, ent_idx);
-        CTransform_t * p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-        CBBox_t * p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
-        if (!(p_mstate->ground_state & 1))
-        {
-            // Only apply upthrust if center is in water
-            // If need more accuracy, need to find area of overlap
-            if (p_mstate->water_state & 1)
-            {
-                unsigned int tile_idx = get_tile_idx(
-                    p_ctransform->position.x + p_bbox->half_size.x,
-                    p_ctransform->position.y + p_bbox->half_size.y,
-                    data->tilemap.width
-                );
-
-                if (data->tilemap.tiles[tile_idx].water_level > 0)
-                {
-                    p_ctransform->accel = Vector2Add(p_ctransform->accel, UPTHRUST);
-                }
-            }
-            p_ctransform->accel = Vector2Add(p_ctransform->accel, GRAVITY);
-        }
-    }
-}
-
-static void movement_update_system(Scene_t* scene)
-{
-    // Update movement
-    float delta_time = 0.017; // TODO: Will need to think about delta time handling
-    CTransform_t * p_ctransform;
-    sc_map_foreach_value(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], p_ctransform)
-    {
-        p_ctransform->velocity =
-            Vector2Add(
-                p_ctransform->velocity,
-                Vector2Scale(p_ctransform->accel, delta_time)
-            );
-
-        float mag = Vector2Length(p_ctransform->velocity);
-        p_ctransform->velocity = Vector2Scale(Vector2Normalize(p_ctransform->velocity), (mag > PLAYER_MAX_SPEED)? PLAYER_MAX_SPEED:mag);
-
-        // 3 dp precision
-        if (fabs(p_ctransform->velocity.x) < 1e-3) p_ctransform->velocity.x = 0;
-        if (fabs(p_ctransform->velocity.y) < 1e-3) p_ctransform->velocity.y = 0;
-
-        // Store previous position before update
-        p_ctransform->prev_position.x = p_ctransform->position.x;
-        p_ctransform->prev_position.y = p_ctransform->position.y;
-        p_ctransform->position = Vector2Add(
-            p_ctransform->position,
-            Vector2Scale(p_ctransform->velocity, delta_time)
-        );
-        p_ctransform->accel.x = 0;
-        p_ctransform->accel.y = 0;
-    }
-}
-
-static void player_ground_air_transition_system(Scene_t* scene)
-{
-    Entity_t *p_player;
-    sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
-    {
-        CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
-        CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_player, CMOVEMENTSTATE_T);
-
-        // Handle Ground<->Air Transition
-        bool in_water = (p_mstate->water_state & 1);
-        // Landing or in water
-        if (p_mstate->ground_state == 0b01 || in_water)
-        {
-            // Recover jumps
-            p_cjump->jumps = p_cjump->max_jumps;
-            p_cjump->jumped = false;
-            p_cjump->short_hop = false;
-            if (!in_water)
-                p_cjump->cooldown_timer = 0;
-        }
-
-        // TODO: Handle in water <-> out of water transition
-        if (p_mstate->water_state == 0b10 || p_mstate->ground_state == 0b10)
-        {
-            p_cjump->jumps -= (p_cjump->jumps > 0)? 1:0; 
-        }
-    }
-}
-
 static struct sc_map_32 collision_events;
-static void tile_collision_system(Scene_t *scene)
+void tile_collision_system(Scene_t *scene)
 {
     static bool checked_entities[MAX_COMP_POOL_SIZE] = {0};
 
@@ -784,7 +576,100 @@ static void tile_collision_system(Scene_t *scene)
     }
 }
 
-static void state_transition_update_system(Scene_t *scene)
+void global_external_forces_system(Scene_t *scene)
+{
+    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
+    CMovementState_t* p_mstate;
+    unsigned long ent_idx;
+    sc_map_foreach(&scene->ent_manager.component_map[CMOVEMENTSTATE_T], ent_idx, p_mstate)
+    {
+        Entity_t *p_ent =  get_entity(&scene->ent_manager, ent_idx);
+        CTransform_t * p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
+        CBBox_t * p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
+        if (!(p_mstate->ground_state & 1))
+        {
+            // Only apply upthrust if center is in water
+            // If need more accuracy, need to find area of overlap
+            if (p_mstate->water_state & 1)
+            {
+                unsigned int tile_idx = get_tile_idx(
+                    p_ctransform->position.x + p_bbox->half_size.x,
+                    p_ctransform->position.y + p_bbox->half_size.y,
+                    data->tilemap.width
+                );
+
+                if (data->tilemap.tiles[tile_idx].water_level > 0)
+                {
+                    p_ctransform->accel = Vector2Add(p_ctransform->accel, UPTHRUST);
+                }
+            }
+            p_ctransform->accel = Vector2Add(p_ctransform->accel, GRAVITY);
+        }
+    }
+}
+
+void movement_update_system(Scene_t* scene)
+{
+    // Update movement
+    float delta_time = 0.017; // TODO: Will need to think about delta time handling
+    CTransform_t * p_ctransform;
+    sc_map_foreach_value(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], p_ctransform)
+    {
+        p_ctransform->velocity =
+            Vector2Add(
+                p_ctransform->velocity,
+                Vector2Scale(p_ctransform->accel, delta_time)
+            );
+
+        float mag = Vector2Length(p_ctransform->velocity);
+        p_ctransform->velocity = Vector2Scale(Vector2Normalize(p_ctransform->velocity), (mag > PLAYER_MAX_SPEED)? PLAYER_MAX_SPEED:mag);
+
+        // 3 dp precision
+        if (fabs(p_ctransform->velocity.x) < 1e-3) p_ctransform->velocity.x = 0;
+        if (fabs(p_ctransform->velocity.y) < 1e-3) p_ctransform->velocity.y = 0;
+
+        // Store previous position before update
+        p_ctransform->prev_position.x = p_ctransform->position.x;
+        p_ctransform->prev_position.y = p_ctransform->position.y;
+        p_ctransform->position = Vector2Add(
+            p_ctransform->position,
+            Vector2Scale(p_ctransform->velocity, delta_time)
+        );
+        p_ctransform->accel.x = 0;
+        p_ctransform->accel.y = 0;
+    }
+}
+
+void player_ground_air_transition_system(Scene_t* scene)
+{
+    Entity_t *p_player;
+    sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
+    {
+        CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
+        CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_player, CMOVEMENTSTATE_T);
+
+        // Handle Ground<->Air Transition
+        bool in_water = (p_mstate->water_state & 1);
+        // Landing or in water
+        if (p_mstate->ground_state == 0b01 || in_water)
+        {
+            // Recover jumps
+            p_cjump->jumps = p_cjump->max_jumps;
+            p_cjump->jumped = false;
+            p_cjump->short_hop = false;
+            if (!in_water)
+                p_cjump->cooldown_timer = 0;
+        }
+
+        // TODO: Handle in water <-> out of water transition
+        if (p_mstate->water_state == 0b10 || p_mstate->ground_state == 0b10)
+        {
+            p_cjump->jumps -= (p_cjump->jumps > 0)? 1:0; 
+        }
+    }
+}
+
+void state_transition_update_system(Scene_t *scene)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
     //Entity_t* p_ent;
@@ -834,7 +719,7 @@ static void state_transition_update_system(Scene_t *scene)
     }
 }
 
-static void update_tilemap_system(Scene_t *scene)
+void update_tilemap_system(Scene_t *scene)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
     TileGrid_t tilemap = data->tilemap;
@@ -878,185 +763,12 @@ static void update_tilemap_system(Scene_t *scene)
     }
 }
 
-static void spawn_crate(Scene_t *scene, unsigned int tile_idx)
+void init_collision_system(void)
 {
-    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
-    Entity_t *p_crate = add_entity(&scene->ent_manager, CRATES_ENT_TAG);
-    CBBox_t *p_bbox = add_component(&scene->ent_manager, p_crate, CBBOX_COMP_T);
-    set_bbox(p_bbox, TILE_SIZE, TILE_SIZE);
-    p_bbox->solid = true;
-    p_bbox->fragile = true;
-    CTransform_t *p_ctransform = add_component(&scene->ent_manager, p_crate, CTRANSFORM_COMP_T);
-    p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
-    p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
-    add_component(&scene->ent_manager, p_crate, CMOVEMENTSTATE_T);
-    add_component(&scene->ent_manager, p_crate, CTILECOORD_COMP_T);
-}
-
-static void spawn_player(Scene_t *scene)
-{
-    Entity_t *p_ent = add_entity(&scene->ent_manager, PLAYER_ENT_TAG);
-
-    CBBox_t *p_bbox = add_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
-    set_bbox(p_bbox, 30, 45);
-    add_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-    CJump_t *p_cjump = add_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
-    p_cjump->jump_speed = 680;
-    p_cjump->jumps = 1;
-    p_cjump->max_jumps = 1;
-    add_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
-    add_component(&scene->ent_manager, p_ent, CTILECOORD_COMP_T);
-    add_component(&scene->ent_manager, p_ent, CMOVEMENTSTATE_T);
-}
-
-static void toggle_block_system(Scene_t *scene)
-{
-    // TODO: This system is not good as the interface between raw input and actions is broken
-    static unsigned int last_tile_idx = MAX_N_TILES;
-    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
-    TileGrid_t tilemap = data->tilemap;
-
-    if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
-    {
-        unsigned int tile_idx = get_tile_idx(GetMouseX(), GetMouseY(), tilemap.width);
-        enum EntitySpawnSelection sel = (enum EntitySpawnSelection)current_spawn_selection;
-        if (tile_idx != last_tile_idx)
-        {
-            switch (sel)
-            {
-                case TOGGLE_TILE:
-                        tilemap.tiles[tile_idx].solid = !tilemap.tiles[tile_idx].solid;
-                        tilemap.tiles[tile_idx].water_level = 0;
-                break;
-                case SPAWN_CRATE:
-                    spawn_crate(scene, tile_idx);
-                break;
-            }
-            last_tile_idx = tile_idx;
-        }
-    }
-    // TODO: Check for right click to change to water, also update above
-    else if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
-    {
-        unsigned int tile_idx = get_tile_idx(GetMouseX(), GetMouseY(), tilemap.width);
-        if (tile_idx != last_tile_idx)
-        {
-            if (tilemap.tiles[tile_idx].water_level == 0)
-            {
-                tilemap.tiles[tile_idx].water_level = MAX_WATER_LEVEL;
-            }
-            else
-            {
-                tilemap.tiles[tile_idx].water_level = 0;
-            }
-            last_tile_idx = tile_idx;
-        }
-    }
-    else
-    {
-        last_tile_idx = MAX_N_TILES;
-    }
-}
-
-void level_do_action(Scene_t *scene, ActionType_t action, bool pressed)
-{
-    CPlayerState_t *p_playerstate;
-    sc_map_foreach_value(&scene->ent_manager.component_map[CPLAYERSTATE_T], p_playerstate)
-    {
-        switch(action)
-        {
-            case ACTION_UP:
-                p_playerstate->player_dir.y = (pressed)? -1 : 0;
-            break;
-            case ACTION_DOWN:
-                p_playerstate->player_dir.y = (pressed)? 1 : 0;
-                p_playerstate->is_crouch |= (pressed)? 0b10 : 0;
-            break;
-            case ACTION_LEFT:
-                p_playerstate->player_dir.x = (pressed)? -1 : 0;
-            break;
-            case ACTION_RIGHT:
-                p_playerstate->player_dir.x = (pressed)? 1 : 0;
-            break;
-            case ACTION_JUMP:
-                p_playerstate->jump_pressed = pressed;
-            break;
-            case ACTION_NEXT_SPAWN:
-                if (!pressed)
-                {
-                    current_spawn_selection++;
-                    current_spawn_selection &= 1;
-                }
-            break;
-            case ACTION_PREV_SPAWN:
-                if (!pressed)
-                {
-                    current_spawn_selection--;
-                    current_spawn_selection &= 1;
-                }
-            break;
-        }
-    }
-}
-
-void init_level_scene(LevelScene_t *scene)
-{
-    init_scene(&scene->scene, LEVEL_SCENE, &level_scene_render_func, &level_do_action);
-    scene->scene.scene_data = &scene->data;
-
-    // insert level scene systems
-    sc_array_add(&scene->scene.systems, &player_movement_input_system);
-    sc_array_add(&scene->scene.systems, &player_bbox_update_system);
-    sc_array_add(&scene->scene.systems, &global_external_forces_system);
-    sc_array_add(&scene->scene.systems, &movement_update_system);
-    sc_array_add(&scene->scene.systems, &update_tilemap_system);
-    sc_array_add(&scene->scene.systems, &tile_collision_system);
-    sc_array_add(&scene->scene.systems, &state_transition_update_system);
-    sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
-    sc_array_add(&scene->scene.systems, &toggle_block_system);
-
-    // This avoid graphical glitch, not essential
-    //sc_array_add(&scene->scene.systems, &update_tilemap_system);
-
-    sc_map_put_64(&scene->scene.action_map, KEY_UP, ACTION_UP);
-    sc_map_put_64(&scene->scene.action_map, KEY_DOWN, ACTION_DOWN);
-    sc_map_put_64(&scene->scene.action_map, KEY_LEFT, ACTION_LEFT);
-    sc_map_put_64(&scene->scene.action_map, KEY_RIGHT, ACTION_RIGHT);
-    sc_map_put_64(&scene->scene.action_map, KEY_SPACE, ACTION_JUMP);
-    sc_map_put_64(&scene->scene.action_map, KEY_O, ACTION_PREV_SPAWN);
-    sc_map_put_64(&scene->scene.action_map, KEY_P, ACTION_NEXT_SPAWN);
-
-    scene->data.tilemap.width = 32;
-    scene->data.tilemap.height = 16;
-    assert(32*16 <= MAX_N_TILES);
-    scene->data.tilemap.n_tiles = 32*16;
-    scene->data.tilemap.tiles = all_tiles;
-    for (size_t i=0; i<MAX_N_TILES;i++)
-    {
-        all_tiles[i].solid = 0;
-        sc_map_init_64(&all_tiles[i].entities_set, 16, 0);
-    }
-    for (size_t i=0; i<32; ++i)
-    {
-        all_tiles[15*32+i].solid = true; // for testing
-    }
-
-    spawn_player(&scene->scene);
-    update_entity_manager(&scene->scene.ent_manager);
     sc_map_init_32(&collision_events, 128, 0);
 }
 
-void free_level_scene(LevelScene_t *scene)
+void term_collision_system(void)
 {
-    free_scene(&scene->scene);
-    for (size_t i=0; i<MAX_N_TILES;i++)
-    {
-        all_tiles[i].solid = 0;
-        sc_map_term_64(&all_tiles[i].entities_set);
-    }
     sc_map_term_32(&collision_events);
-}
-
-void reload_level_scene(LevelScene_t *scene)
-{
 }

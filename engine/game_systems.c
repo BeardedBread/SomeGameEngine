@@ -481,7 +481,14 @@ void tile_collision_system(Scene_t *scene)
                 CTransform_t *p_other_ct = get_component(&scene->ent_manager, p_other_ent, CTRANSFORM_COMP_T);
                 if (p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y)
                 {
-                    p_ctransform->velocity.y = (p_pstate->jump_pressed)? -600 : -400;
+                    p_ctransform->velocity.y = -400;
+                    if (p_pstate->jump_pressed)
+                    {
+                        p_ctransform->velocity.y = -600;
+                        CJump_t * p_cjump = get_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
+                        p_cjump->short_hop = false;
+                        p_cjump->jumped = true;
+                    }
                 }
                 remove_entity(&scene->ent_manager, other_ent_idx);
             }

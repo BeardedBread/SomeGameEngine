@@ -1,7 +1,6 @@
 #include "game_systems.h"
+#include "AABB.h"
 #include "constants.h"
-#include "raylib.h"
-#include "raymath.h"
 
 static const Vector2 TILE_SZ = {TILE_SIZE, TILE_SIZE};
 static const Vector2 GRAVITY = {0, GRAV_ACCEL};
@@ -24,51 +23,6 @@ static inline unsigned int get_tile_idx(int x, int y, unsigned int tilemap_width
     unsigned int tile_x = x / TILE_SIZE;
     unsigned int tile_y = y / TILE_SIZE;
     return tile_y * tilemap_width + tile_x;
-}
-
-static bool find_1D_overlap(const Vector2 l1, const Vector2 l2, float* overlap)
-{
-   // No Overlap
-    if (l1.y < l2.x || l2.y < l1.x) return false;
-
-    if (l1.x >= l2.x && l1.y <= l2.y)
-    {
-        // Complete Overlap, not sure what to do tbh
-        *overlap = l2.y-l2.x + l1.y-l1.x;
-    }
-    else
-    {
-        //Partial overlap
-        // x is p1, y is p2
-        *overlap =  (l2.y >= l1.y)? l2.x - l1.y : l2.y - l1.x;
-    }
-    if (fabs(*overlap) < 0.01) // Use 2 dp precision
-    {
-        *overlap = 0;
-        return false;
-    }
-    return true;
-}
-
-static bool find_AABB_overlap(const Vector2 tl1, const Vector2 sz1, const Vector2 tl2, const Vector2 sz2, Vector2 * const overlap)
-{
-    // Note that we include one extra pixel for checking
-    // This avoid overlapping on the border
-    Vector2 l1, l2;
-    bool overlap_x, overlap_y;
-    l1.x = tl1.x;
-    l1.y = tl1.x + sz1.x;
-    l2.x = tl2.x;
-    l2.y = tl2.x + sz2.x;
-
-    overlap_x = find_1D_overlap(l1, l2, &overlap->x);
-    l1.x = tl1.y;
-    l1.y = tl1.y + sz1.y;
-    l2.x = tl2.y;
-    l2.y = tl2.y + sz2.y;
-    overlap_y = find_1D_overlap(l1, l2, &overlap->y);
-
-    return overlap_x && overlap_y;
 }
 
 static bool check_collision_at(Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid, Vector2 point)

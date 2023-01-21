@@ -3,6 +3,7 @@ add_library(lib_scenes STATIC
     scene.c
     scene_impl.c
     game_systems.c
+    AABB.c
 )
 target_include_directories(lib_scenes
     PUBLIC

@@ -232,25 +232,6 @@ void player_movement_input_system(Scene_t* scene)
 
         }
 
-        // Friction
-        if (in_water)
-        {
-            // Apply water friction
-            // Consistent in all direction
-            p_ctransform->accel = Vector2Add(
-                p_ctransform->accel,
-                Vector2Scale(p_ctransform->velocity, -5.5)
-            );
-        }
-        else
-        {
-            // For game feel, y is set to air resistance only
-            // x is set to ground resistance (even in air)
-            // If not, then player is can go faster by bunny hopping
-            // which is fun but not quite beneficial here
-            p_ctransform->accel.x += p_ctransform->velocity.x * -3.3;
-            p_ctransform->accel.y += p_ctransform->velocity.y * -1;
-        }
         p_pstate->player_dir.x = 0;
         p_pstate->player_dir.y = 0;
     }
@@ -566,6 +547,25 @@ void global_external_forces_system(Scene_t *scene)
             }
             p_ctransform->accel = Vector2Add(p_ctransform->accel, GRAVITY);
         }
+        // Friction
+        if (p_mstate->water_state & 1)
+        {
+            // Apply water friction
+            // Consistent in all direction
+            p_ctransform->accel = Vector2Add(
+                p_ctransform->accel,
+                Vector2Scale(p_ctransform->velocity, -5.5)
+            );
+        }
+        else
+        {
+            // For game feel, y is set to air resistance only
+            // x is set to ground resistance (even in air)
+            // If not, then player is can go faster by bunny hopping
+            // which is fun but not quite beneficial here
+            p_ctransform->accel.x += p_ctransform->velocity.x * -3.3;
+            p_ctransform->accel.y += p_ctransform->velocity.y * -1;
+        }
     }
 }
 
@@ -621,9 +621,7 @@ void player_ground_air_transition_system(Scene_t* scene)
             if (!in_water)
                 p_cjump->cooldown_timer = 0;
         }
-
-        // TODO: Handle in water <-> out of water transition
-        if (p_mstate->water_state == 0b10 || p_mstate->ground_state == 0b10)
+        else if (p_mstate->water_state == 0b10 || p_mstate->ground_state == 0b10)
         {
             p_cjump->jumps -= (p_cjump->jumps > 0)? 1:0; 
         }

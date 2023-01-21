@@ -7,11 +7,9 @@ set(CMAKE_C_STANDARD 99)
 set(RAYLIB_DIR $ENV{HOME}/Documents/Coding/raylib/out/)
 
 
-add_subdirectory(sc)
+add_subdirectory(engine)
 add_executable(${PROJECT_NAME}
     main.c
-    entManager.c
-    mempool.c
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -25,6 +23,7 @@ target_link_directories(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
+    lib_EC
     sc_queue
     sc_map
     raylib
@@ -33,8 +32,6 @@ target_link_libraries(${PROJECT_NAME}
 
 add_executable(EntManager_test
     entManager_test.c
-    entManager.c
-    mempool.c
 )
 target_compile_options(EntManager_test PRIVATE -fsanitize=address -gdwarf-4)
 target_link_options(EntManager_test PRIVATE -fsanitize=address -gdwarf-4)
@@ -48,17 +45,15 @@ target_link_directories(EntManager_test
     ${RAYLIB_DIR}/lib
 )
 target_link_libraries(EntManager_test
+    lib_EC
     sc_queue
     sc_map
 )
-
 
 add_executable(scene_test
     scene_test.c
     scene_impl.c
     scene.c
-    entManager.c
-    mempool.c
 )
 
 target_include_directories(scene_test
@@ -76,6 +71,7 @@ target_link_directories(scene_test
 )
 
 target_link_libraries(scene_test
+    lib_EC
     sc_queue
     sc_map
     sc_array
@@ -87,8 +83,6 @@ add_executable(scene_test_mem
     scene_test.c
     scene_impl.c
     scene.c
-    entManager.c
-    mempool.c
 )
 
 target_include_directories(scene_test_mem
@@ -105,6 +99,7 @@ target_link_directories(scene_test_mem
 )
 
 target_link_libraries(scene_test_mem
+    lib_EC
     sc_queue
     sc_map
     sc_array

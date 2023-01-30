@@ -448,19 +448,15 @@ void tile_collision_system(Scene_t *scene)
             if (!p_ent->m_alive || !p_other_ent->m_alive) continue;
             if (p_ent->m_tag == PLAYER_ENT_TAG && p_other_ent->m_tag == CRATES_ENT_TAG)
             {
-                CTileCoord_t *p_tilecoord = get_component(&scene->ent_manager, p_other_ent, CTILECOORD_COMP_T);
-                for (size_t i=0;i<p_tilecoord->n_tiles;++i)
-                {
-                    // Use previously store tile position
-                    // Clear from those positions
-                    unsigned int tile_idx = p_tilecoord->tiles[i];
-                    sc_map_del_64(&(tilemap.tiles[tile_idx].entities_set), other_ent_idx);
-                }
                 CTransform_t *p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
                 CBBox_t * p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
                 CPlayerState_t * p_pstate = get_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
                 CTransform_t *p_other_ct = get_component(&scene->ent_manager, p_other_ent, CTRANSFORM_COMP_T);
-                if (p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y)
+                CBBox_t *p_other_bbox = get_component(&scene->ent_manager, p_other_ent, CBBOX_COMP_T);
+                if (
+                    // TODO: Check Material of the crates
+                    p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y
+                )
                 {
                     p_ctransform->velocity.y = -400;
                     if (p_pstate->jump_pressed)
@@ -471,7 +467,18 @@ void tile_collision_system(Scene_t *scene)
                         p_cjump->jumped = true;
                     }
                 }
-                remove_entity(&scene->ent_manager, other_ent_idx);
+                if (p_other_bbox->fragile)
+                {
+                    CTileCoord_t *p_tilecoord = get_component(&scene->ent_manager, p_other_ent, CTILECOORD_COMP_T);
+                    for (size_t i=0;i<p_tilecoord->n_tiles;++i)
+                    {
+                        // Use previously store tile position
+                        // Clear from those positions
+                        unsigned int tile_idx = p_tilecoord->tiles[i];
+                        sc_map_del_64(&(tilemap.tiles[tile_idx].entities_set), other_ent_idx);
+                    }
+                    remove_entity(&scene->ent_manager, other_ent_idx);
+                }
             }
         }
         sc_map_clear_32(&collision_events);

@@ -4,7 +4,7 @@
 #include <stdint.h>
 // TODO: Look at sc to use macros to auto generate functions
 
-#define N_COMPONENTS 7
+#define N_COMPONENTS 9
 enum ComponentEnum
 {
     CBBOX_COMP_T,
@@ -14,6 +14,8 @@ enum ComponentEnum
     CJUMP_COMP_T,
     CPLAYERSTATE_T,
     CCONTAINER_T,
+    CSELECTABLE_T,
+    CSELECTION_T,
 };
 typedef enum ComponentEnum ComponentEnum_t;
 
@@ -95,6 +97,21 @@ typedef struct _CContainer_t
     ContainerItem_t item;
 }CContainer_t;
 
+typedef struct _CSelection_t
+{
+    uint8_t max_choices;
+    uint8_t curr_choice;
+    void * data_arr;
+    unsigned int elem_size;
+}CSelection_t;
+
+typedef struct _CSelectable_t CSelectable_t;
+typedef void(*selected_callback_t)(CSelectable_t *);
+
+struct _CSelectable_t
+{
+    selected_callback_t callback;
+};
 
 static inline void set_bbox(CBBox_t* p_bbox, unsigned int x, unsigned int y)
 {

@@ -6,6 +6,7 @@
 typedef enum SceneType
 {
     LEVEL_SCENE = 0,
+    MENU_SCENE,
 }SceneType_t;
 
 typedef struct Scene Scene_t;

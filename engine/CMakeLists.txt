@@ -2,6 +2,7 @@ add_subdirectory(EC)
 add_library(lib_scenes STATIC
     scene.c
     scene_impl.c
+    menu_impl.c
     game_systems.c
     AABB.c
 )

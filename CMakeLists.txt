@@ -6,6 +6,16 @@ project(${PROJECT_NAME} C)
 set(CMAKE_C_STANDARD 99)
 set(RAYLIB_DIR $ENV{HOME}/Documents/Coding/raylib/out/)
 
+set(GAME_LIBS
+    lib_EC
+    lib_scenes
+    sc_queue
+    sc_map
+    sc_array
+    raylib
+    m
+)
+
 
 add_subdirectory(engine)
 add_executable(${PROJECT_NAME}
@@ -23,12 +33,7 @@ target_link_directories(${PROJECT_NAME}
 )
 
 target_link_libraries(${PROJECT_NAME}
-    lib_EC
-    lib_scenes
-    sc_queue
-    sc_map
-    raylib
-    m
+    ${GAME_LIBS}
 )
 
 add_executable(EntManager_test
@@ -71,13 +76,7 @@ target_link_directories(scene_test
 )
 
 target_link_libraries(scene_test
-    lib_EC
-    lib_scenes
-    sc_queue
-    sc_map
-    sc_array
-    raylib
-    m
+    ${GAME_LIBS}
 )
 
 add_executable(scene_test_mem
@@ -98,12 +97,29 @@ target_link_directories(scene_test_mem
 )
 
 target_link_libraries(scene_test_mem
-    lib_EC
-    lib_scenes
-    sc_queue
-    sc_map
-    sc_array
-    raylib
-    m
+    ${GAME_LIBS}
 )
 target_link_options(scene_test PRIVATE -fsanitize=address -gdwarf-4 )
+
+add_executable(menu_test
+    menu_test.c
+)
+
+target_include_directories(menu_test
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${RAYLIB_DIR}/include
+)
+
+target_compile_options(menu_test PRIVATE -fsanitize=address -gdwarf-4)
+target_link_options(menu_test PRIVATE -fsanitize=address -gdwarf-4)
+
+target_link_directories(menu_test
+    PRIVATE
+    ${RAYLIB_DIR}/lib
+)
+
+target_link_libraries(menu_test
+    ${GAME_LIBS}
+)
+

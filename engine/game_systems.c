@@ -178,6 +178,7 @@ void player_movement_input_system(Scene_t* scene)
 
         //else
         {
+            if (!(p_mstate->ground_state & 1)) p_pstate->is_crouch &= 0b01;
             if (p_pstate->is_crouch == 0b01)
             {
                 Vector2 test_pos = p_ctransform->position;
@@ -185,15 +186,13 @@ void player_movement_input_system(Scene_t* scene)
                 Vector2 top = {0, 0};
                 test_pos.x += PLAYER_C_XOFFSET;
                 test_pos.y -= PLAYER_C_YOFFSET;
-                if (!check_collision_at(test_pos, test_bbox, &tilemap, top))
+                if (check_collision_at(test_pos, test_bbox, &tilemap, top))
                 {
-                    p_pstate->is_crouch >>= 1;
+                    p_pstate->is_crouch |= 0b10;
                 }
             }
-            else
-            {
-                p_pstate->is_crouch >>= 1;
-            }
+            p_pstate->is_crouch >>= 1;
+
             if (p_cjump->cooldown_timer > 0) p_cjump->cooldown_timer--;
             // Jumps is possible as long as you have a jump
 
@@ -631,6 +630,10 @@ void player_ground_air_transition_system(Scene_t* scene)
         else if (p_mstate->water_state == 0b10 || p_mstate->ground_state == 0b10)
         {
             p_cjump->jumps -= (p_cjump->jumps > 0)? 1:0; 
+            if (p_mstate->ground_state & 1)
+            {
+                p_cjump->jumps++;
+            }
         }
     }
 }

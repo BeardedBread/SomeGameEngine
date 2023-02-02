@@ -151,6 +151,7 @@ void player_movement_input_system(Scene_t* scene)
         mag = (mag == 0)? 1 : mag;
         Entity_t * p_player = get_entity(&scene->ent_manager, ent_idx);
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
+        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
         CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
         CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_player, CMOVEMENTSTATE_T);
 
@@ -178,19 +179,21 @@ void player_movement_input_system(Scene_t* scene)
 
         //else
         {
-            if (!(p_mstate->ground_state & 1)) p_pstate->is_crouch &= 0b01;
-            if (p_pstate->is_crouch == 0b01)
+            bool hit = false;
+            unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
+            unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
+            unsigned int tile_y = (p_ctransform->position.y) / TILE_SIZE;
+            if (p_pstate->is_crouch == 0b01 && tile_y > 0)  tile_y--;
+
+            for(unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
             {
-                Vector2 test_pos = p_ctransform->position;
-                Vector2 test_bbox = {PLAYER_WIDTH, PLAYER_HEIGHT};
-                Vector2 top = {0, 0};
-                test_pos.x += PLAYER_C_XOFFSET;
-                test_pos.y -= PLAYER_C_YOFFSET;
-                if (check_collision_at(test_pos, test_bbox, &tilemap, top))
-                {
-                    p_pstate->is_crouch |= 0b10;
-                }
+                hit |= tilemap.tiles[tile_y * tilemap.width + tile_x].solid;
             }
+            if (hit)
+            {
+                p_pstate->is_crouch |= 0b10;
+            }
+            if (!(p_mstate->ground_state & 1)) p_pstate->is_crouch &= 0b01;
             p_pstate->is_crouch >>= 1;
 
             if (p_cjump->cooldown_timer > 0) p_cjump->cooldown_timer--;

@@ -560,6 +560,9 @@ void global_external_forces_system(Scene_t *scene)
             p_ctransform->accel.x += p_ctransform->velocity.x * -3.3;
             p_ctransform->accel.y += p_ctransform->velocity.y * -1;
         }
+
+
+        // Zero out acceleration for contacts with sturdy entites and tiles
         Vector2 new_pos = p_ctransform->position;
         new_pos.x--;
         TileArea_t area = {
@@ -570,10 +573,23 @@ void global_external_forces_system(Scene_t *scene)
         };
         if (check_collision(new_pos, p_bbox->size, area, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.x < 0) p_ctransform->accel.x = 0;
 
-        new_pos.x += p_bbox->size.x + 2; // 2 to account for the previous subtraction
+        new_pos.x += 2; // 2 to account for the previous subtraction
         area.tile_x1 = (p_ctransform->position.x + p_bbox->size.x + 1) / TILE_SIZE;
         area.tile_x2 = area.tile_x1;
         if (check_collision(new_pos, p_bbox->size, area, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.x > 0) p_ctransform->accel.x = 0;
+
+        new_pos.x -= 2;
+        new_pos.y--;
+        area.tile_x1 = (p_ctransform->position.x) / TILE_SIZE,
+        area.tile_x2 = (p_ctransform->position.x - 1) / TILE_SIZE,
+        area.tile_y1 = (p_ctransform->position.y - 1) / TILE_SIZE,
+        area.tile_y1 = area.tile_y2;
+        if (check_collision(new_pos, p_bbox->size, area, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.y < 0) p_ctransform->accel.y = 0;
+
+        new_pos.y += 2;
+        area.tile_y1 = (p_ctransform->position.y + p_bbox->size.y + 1) / TILE_SIZE,
+        area.tile_y1 = area.tile_y2;
+        if (check_collision(new_pos, p_bbox->size, area, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.y > 0) p_ctransform->accel.y = 0;
 
     }
 }

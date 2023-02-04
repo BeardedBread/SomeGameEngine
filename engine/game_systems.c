@@ -25,17 +25,19 @@ static inline unsigned int get_tile_idx(int x, int y, unsigned int tilemap_width
     return tile_y * tilemap_width + tile_x;
 }
 
-static bool check_collision_at(Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid, Vector2 point, EntityManager_t* p_manager)
+typedef struct TileArea
 {
-    Vector2 new_pos = Vector2Add(pos, point);
-    unsigned int tile_x1 = (new_pos.x) / TILE_SIZE;
-    unsigned int tile_x2 = (new_pos.x + bbox_sz.x - 1) / TILE_SIZE;
-    unsigned int tile_y1 = (new_pos.y) / TILE_SIZE;
-    unsigned int tile_y2 = (new_pos.y + bbox_sz.y - 1) / TILE_SIZE;
+    unsigned int tile_x1;
+    unsigned int tile_y1;
+    unsigned int tile_x2;
+    unsigned int tile_y2;
+}TileArea_t;
 
-    for(unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
+static bool check_collision(Vector2 pos, Vector2 bbox_sz, TileArea_t area_to_check, TileGrid_t* grid, EntityManager_t* p_manager)
+{
+    for(unsigned int tile_y = area_to_check.tile_y1; tile_y <= area_to_check.tile_y2; tile_y++)
     {
-        for(unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
+        for(unsigned int tile_x = area_to_check.tile_x1; tile_x <= area_to_check.tile_x2; tile_x++)
         {
             unsigned int tile_idx = tile_y*grid->width + tile_x;
             if (grid->tiles[tile_idx].solid) return true;
@@ -52,34 +54,32 @@ static bool check_collision_at(Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid, V
         }
     }
     return false;
+
 }
 
-static inline bool check_on_ground(unsigned int ent_idx, Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid, Scene_t* scene)
+static bool check_collision_at(Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid, Vector2 point, EntityManager_t* p_manager)
+{
+    Vector2 new_pos = Vector2Add(pos, point);
+    TileArea_t area = {
+        .tile_x1 = (new_pos.x) / TILE_SIZE,
+        .tile_y1 = (new_pos.y) / TILE_SIZE,
+        .tile_x2 = (new_pos.x + bbox_sz.x - 1) / TILE_SIZE,
+        .tile_y2 = (new_pos.y + bbox_sz.y - 1) / TILE_SIZE
+    };
+    
+    return check_collision(new_pos, bbox_sz, area, grid, p_manager);
+}
+
+static inline bool check_on_ground(unsigned int ent_idx, Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid, EntityManager_t* p_manager)
 {
     pos.y += 1;
-    unsigned int tile_x1 = (pos.x) / TILE_SIZE;
-    unsigned int tile_x2 = (pos.x + bbox_sz.x - 1) / TILE_SIZE;
-    unsigned int tile_y = (pos.y + bbox_sz.y - 1) / TILE_SIZE;
-
-    for(unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
-    {
-        unsigned int tile_idx = tile_y*grid->width + tile_x;
-        if (grid->tiles[tile_idx].solid) return true;
-
-        unsigned int other_ent_idx;
-        sc_map_foreach_key(&grid->tiles[tile_idx].entities_set, other_ent_idx)
-        {
-            Vector2 overlap;
-            if (other_ent_idx == ent_idx) continue;
-            Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
-            CBBox_t *p_other_bbox = get_component(&scene->ent_manager, p_other_ent, CBBOX_COMP_T);
-            if (p_other_bbox == NULL || !p_other_bbox->solid || p_other_bbox->fragile) continue;
-
-            CTransform_t *p_other_ct = get_component(&scene->ent_manager, p_other_ent, CTRANSFORM_COMP_T);
-            if (find_AABB_overlap(pos, bbox_sz, p_other_ct->position, p_other_bbox->size, &overlap)) return true;
-        }
-    }
-    return false;
+    TileArea_t area = {
+        .tile_x1 = (pos.x) / TILE_SIZE,
+        .tile_y1 = (pos.y + bbox_sz.y - 1) / TILE_SIZE,
+        .tile_x2 = (pos.x + bbox_sz.x - 1) / TILE_SIZE,
+        .tile_y2 = (pos.y + bbox_sz.y - 1) / TILE_SIZE,
+    };
+    return check_collision(pos, bbox_sz, area, grid, p_manager);
 }
 static Vector2 shift_bbox(Vector2 bbox, Vector2 new_bbox, AnchorPoint_t anchor)
 {
@@ -186,7 +186,6 @@ void player_movement_input_system(Scene_t* scene)
                 p_ctransform->velocity.y /= 2;
             }
         }
-
 
         //else
         {
@@ -561,6 +560,21 @@ void global_external_forces_system(Scene_t *scene)
             p_ctransform->accel.x += p_ctransform->velocity.x * -3.3;
             p_ctransform->accel.y += p_ctransform->velocity.y * -1;
         }
+        Vector2 new_pos = p_ctransform->position;
+        new_pos.x--;
+        TileArea_t area = {
+            .tile_x1 = (p_ctransform->position.x - 1) / TILE_SIZE,
+            .tile_y1 = (p_ctransform->position.y) / TILE_SIZE,
+            .tile_x2 = (p_ctransform->position.x - 1) / TILE_SIZE,
+            .tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE,
+        };
+        if (check_collision(new_pos, p_bbox->size, area, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.x < 0) p_ctransform->accel.x = 0;
+
+        new_pos.x += p_bbox->size.x + 2; // 2 to account for the previous subtraction
+        area.tile_x1 = (p_ctransform->position.x + p_bbox->size.x + 1) / TILE_SIZE;
+        area.tile_x2 = area.tile_x1;
+        if (check_collision(new_pos, p_bbox->size, area, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.x > 0) p_ctransform->accel.x = 0;
+
     }
 }
 
@@ -641,7 +655,7 @@ void state_transition_update_system(Scene_t *scene)
         CBBox_t *p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
         if (p_ctransform == NULL || p_bbox == NULL) continue;
 
-        bool on_ground = check_on_ground(ent_idx, p_ctransform->position, p_bbox->size, &data->tilemap, scene);
+        bool on_ground = check_on_ground(ent_idx, p_ctransform->position, p_bbox->size, &data->tilemap, &scene->ent_manager);
         bool in_water = false;
         if (!(p_mstate->water_state & 1))
         {

@@ -273,19 +273,20 @@ void init_level_scene(LevelScene_t *scene)
     sc_map_put_64(&scene->scene.action_map, KEY_O, ACTION_PREV_SPAWN);
     sc_map_put_64(&scene->scene.action_map, KEY_P, ACTION_NEXT_SPAWN);
 
-    scene->data.tilemap.width = 32;
-    scene->data.tilemap.height = 16;
-    assert(32*16 <= MAX_N_TILES);
-    scene->data.tilemap.n_tiles = 32*16;
+    scene->data.tilemap.width = DEFAULT_MAP_WIDTH;
+    scene->data.tilemap.height = DEFAULT_MAP_HEIGHT;
+    scene->data.tilemap.n_tiles = scene->data.tilemap.width * scene->data.tilemap.height;
+    assert(scene->data.tilemap.n_tiles <= MAX_N_TILES);
     scene->data.tilemap.tiles = all_tiles;
     for (size_t i=0; i<MAX_N_TILES;i++)
     {
         all_tiles[i].solid = 0;
         sc_map_init_64(&all_tiles[i].entities_set, 16, 0);
     }
-    for (size_t i=0; i<32; ++i)
+    for (size_t i=0; i<scene->data.tilemap.width; ++i)
     {
-        all_tiles[15*32+i].solid = true; // for testing
+        unsigned int tile_idx = (scene->data.tilemap.height - 1) * scene->data.tilemap.width + i;
+        all_tiles[tile_idx].solid = true; // for testing
     }
 
     spawn_player(&scene->scene);

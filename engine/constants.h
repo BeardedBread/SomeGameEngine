@@ -1,22 +1,38 @@
 // Constants to be used in game
+#ifndef __CONSTANTS_H
+#define __CONSTANTS_H
+#ifndef TILE16_SIZE
 #define TILE_SIZE 32
+#define DEFAULT_MAP_WIDTH 32
+#define DEFAULT_MAP_HEIGHT 16
+#else
+#define TILE_SIZE 16
+#define DEFAULT_MAP_WIDTH 64
+#define DEFAULT_MAP_HEIGHT 32
+#endif
 
 #define GRAV_ACCEL 1500
 #define JUMP_SPEED 70
 #define MOVE_ACCEL 1000
 #define FRICTION 0.98
-#define PLAYER_STAND_WIDTH 30
 
+#ifndef TILE16_SIZE
 #define PLAYER_WIDTH 30
 #define PLAYER_HEIGHT 55
-
 #define PLAYER_C_WIDTH 30
 #define PLAYER_C_HEIGHT 30
-#define PLAYER_C_YOFFSET 25
-#define PLAYER_C_XOFFSET 0
+#else
+#define PLAYER_WIDTH 14
+#define PLAYER_HEIGHT 30
+#define PLAYER_C_WIDTH 14
+#define PLAYER_C_HEIGHT 14
+#endif
+#define PLAYER_C_YOFFSET (PLAYER_HEIGHT - PLAYER_C_HEIGHT)
+#define PLAYER_C_XOFFSET (PLAYER_WIDTH - PLAYER_C_WIDTH)
 
 #define PLAYER_MAX_SPEED 1000
 #define Y_FRICTION 0.98
 #define X_FRICTION 0.85
 
 #define MAX_WATER_LEVEL 4
+#endif // __CONSTANTS_H

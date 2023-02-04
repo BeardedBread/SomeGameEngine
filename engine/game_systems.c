@@ -183,7 +183,7 @@ void player_movement_input_system(Scene_t* scene)
             unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
             unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
             unsigned int tile_y = (p_ctransform->position.y) / TILE_SIZE;
-            if (p_pstate->is_crouch == 0b01 && tile_y > 0)  tile_y--;
+            if (p_bbox->size.y < TILE_SIZE && tile_y > 0)  tile_y--; // hack to detect small bbox state
 
             for(unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
             {
@@ -251,6 +251,9 @@ void player_bbox_update_system(Scene_t *scene)
         CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
         CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_player, CPLAYERSTATE_T);
         CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_player, CMOVEMENTSTATE_T);
+
+        Vector2 new_bbox;
+        Vector2 offset;
         if (p_mstate->ground_state & 1)
         {
             AnchorPoint_t anchor = AP_BOT_CENTER;
@@ -273,7 +276,6 @@ void player_bbox_update_system(Scene_t *scene)
                     break;
                 }
             }
-            Vector2 new_bbox;
             if(p_pstate->is_crouch & 1)
             {
                 new_bbox.x = PLAYER_C_WIDTH;
@@ -284,26 +286,28 @@ void player_bbox_update_system(Scene_t *scene)
                 new_bbox.x = PLAYER_WIDTH;
                 new_bbox.y = PLAYER_HEIGHT;
             }
-            Vector2 offset = shift_bbox(p_bbox->size, new_bbox, anchor);
-            set_bbox(p_bbox, new_bbox.x, new_bbox.y);
-            p_ctransform->position = Vector2Add(p_ctransform->position, offset);
+            offset = shift_bbox(p_bbox->size, new_bbox, anchor);
         }
         else
         {
             if (p_mstate->water_state & 1)
             {
-                Vector2 new_bbox = {PLAYER_C_WIDTH, PLAYER_C_HEIGHT};
-                Vector2 offset = shift_bbox(p_bbox->size, new_bbox, AP_MID_CENTER);
-                set_bbox(p_bbox, PLAYER_C_WIDTH, PLAYER_C_HEIGHT);
-                p_ctransform->position = Vector2Add(p_ctransform->position, offset);
+                new_bbox.x = PLAYER_C_WIDTH;
+                new_bbox.y = PLAYER_C_HEIGHT;
+                offset = shift_bbox(p_bbox->size, new_bbox, AP_MID_CENTER);
             }
             else
             {
-                Vector2 new_bbox = {PLAYER_WIDTH, PLAYER_HEIGHT};
-                Vector2 offset = shift_bbox(p_bbox->size, new_bbox, AP_MID_CENTER);
-                set_bbox(p_bbox, PLAYER_WIDTH, PLAYER_HEIGHT);
-                p_ctransform->position = Vector2Add(p_ctransform->position, offset);
+                new_bbox.x = PLAYER_WIDTH;
+                new_bbox.y = PLAYER_HEIGHT;
+                offset = shift_bbox(p_bbox->size, new_bbox, AP_MID_CENTER);
             }
+        }
+
+        if (!check_collision_at(p_ctransform->position, new_bbox, &tilemap, offset))
+        {
+            set_bbox(p_bbox, new_bbox.x, new_bbox.y);
+            p_ctransform->position = Vector2Add(p_ctransform->position, offset);
         }
     }
 }

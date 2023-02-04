@@ -212,34 +212,18 @@ void player_movement_input_system(Scene_t* scene)
             // Check if possible to jump when jump is pressed
             if (p_pstate->jump_pressed && p_cjump->jumps > 0 && p_cjump->cooldown_timer == 0)
             {
-                bool jump_valid = true;
-
-                // Check Jump from crouch
-                if(p_pstate->is_crouch & 1)
+                p_cjump->jumps--;
+                if (!in_water)
                 {
-                    Vector2 test_pos = p_ctransform->position;
-                    Vector2 test_bbox = {PLAYER_WIDTH, PLAYER_HEIGHT};
-                    Vector2 top = {0, -1};
-                    test_pos.x += PLAYER_C_XOFFSET;
-                    test_pos.y -= PLAYER_C_YOFFSET;
-                    jump_valid = !check_collision_at(test_pos, test_bbox, &tilemap, top, &scene->ent_manager);
+                    p_ctransform->velocity.y -= p_cjump->jump_speed;
+                }
+                else
+                {
+                    p_ctransform->velocity.y -= p_cjump->jump_speed / 1.75;
                 }
 
-                // Jump okay
-                if (jump_valid)
-                {
-                    if (!in_water)
-                    {
-                        p_ctransform->velocity.y -= p_cjump->jump_speed;
-                    }
-                    else
-                    {
-                        p_ctransform->velocity.y -= p_cjump->jump_speed / 1.75;
-                    }
-
-                    p_cjump->jumped = true;
-                    p_cjump->cooldown_timer = 15;
-                }
+                p_cjump->jumped = true;
+                p_cjump->cooldown_timer = 15;
             }
 
         }

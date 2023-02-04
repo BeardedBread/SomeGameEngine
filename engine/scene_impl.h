@@ -23,6 +23,7 @@ typedef struct TileGrid
 typedef struct LevelSceneData
 {
     TileGrid_t tilemap;
+    struct sc_map_32 collision_events;
 }LevelSceneData_t;
 
 typedef struct LevelScene

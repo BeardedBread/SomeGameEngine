@@ -250,7 +250,7 @@ void init_level_scene(LevelScene_t *scene)
     init_scene(&scene->scene, LEVEL_SCENE, &level_scene_render_func, &level_do_action);
     scene->scene.scene_data = &scene->data;
 
-    init_collision_system();
+    init_level_scene_data(&scene->data);
     // insert level scene systems
     sc_array_add(&scene->scene.systems, &player_movement_input_system);
     sc_array_add(&scene->scene.systems, &player_bbox_update_system);
@@ -300,7 +300,7 @@ void free_level_scene(LevelScene_t *scene)
         all_tiles[i].solid = 0;
         sc_map_term_64(&all_tiles[i].entities_set);
     }
-    term_collision_system();
+    term_level_scene_data(&scene->data);
 }
 
 void reload_level_scene(LevelScene_t *scene)

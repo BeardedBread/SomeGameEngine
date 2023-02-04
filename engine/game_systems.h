@@ -1,8 +1,8 @@
 #ifndef __GAME_SYSTEMS_H
 #define __GAME_SYSTEMS_H
 #include "scene_impl.h"
-void init_collision_system(void);
-void term_collision_system(void);
+void init_level_scene_data(LevelSceneData_t *data);
+void term_level_scene_data(LevelSceneData_t *data);
 
 void player_movement_input_system(Scene_t* scene);
 void player_bbox_update_system(Scene_t *scene);

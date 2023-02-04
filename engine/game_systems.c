@@ -361,7 +361,6 @@ static bool check_collision_and_move(EntityManager_t* p_manager, TileGrid_t* til
     return false;
 }
 
-static struct sc_map_32 collision_events;
 void tile_collision_system(Scene_t *scene)
 {
     static bool checked_entities[MAX_COMP_POOL_SIZE] = {0};
@@ -419,7 +418,7 @@ void tile_collision_system(Scene_t *scene)
                         if (check_collision_and_move(&scene->ent_manager, &tilemap, p_ctransform, p_bbox->size, p_other_ct->position, p_other_bbox->size, p_other_bbox->solid, &collision_value))
                         {
                             uint32_t collision_key = ((ent_idx << 16) | other_ent_idx);
-                            sc_map_put_32(&collision_events, collision_key, collision_value);
+                            sc_map_put_32(&data->collision_events, collision_key, collision_value);
                         }
                     }
                 }
@@ -428,7 +427,7 @@ void tile_collision_system(Scene_t *scene)
 
         // TODO: Resolve all collision events
         uint32_t collision_key;
-        sc_map_foreach(&collision_events, collision_key, collision_value)
+        sc_map_foreach(&data->collision_events, collision_key, collision_value)
         {
             ent_idx = (collision_key >> 16);
             uint other_ent_idx = (collision_key & 0xFFFF);
@@ -470,7 +469,7 @@ void tile_collision_system(Scene_t *scene)
                 }
             }
         }
-        sc_map_clear_32(&collision_events);
+        sc_map_clear_32(&data->collision_events);
 
         // Level boundary collision
         unsigned int level_width = tilemap.width * TILE_SIZE;
@@ -722,12 +721,12 @@ void update_tilemap_system(Scene_t *scene)
     }
 }
 
-void init_collision_system(void)
+void init_level_scene_data(LevelSceneData_t *data)
 {
-    sc_map_init_32(&collision_events, 128, 0);
+    sc_map_init_32(&data->collision_events, 128, 0);
 }
 
-void term_collision_system(void)
+void term_level_scene_data(LevelSceneData_t *data)
 {
-    sc_map_term_32(&collision_events);
+    sc_map_term_32(&data->collision_events);
 }

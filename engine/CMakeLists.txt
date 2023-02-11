@@ -5,6 +5,7 @@ add_library(lib_scenes STATIC
     menu_impl.c
     game_systems.c
     AABB.c
+    gui.c
 )
 target_include_directories(lib_scenes
     PUBLIC

@@ -4,7 +4,8 @@
 
 typedef struct MenuSceneData
 {
-    Entity_t menus[32];
+    Entity_t *menus[8];
+    Entity_t *menu_opts[32];
 }MenuSceneData_t;
 
 typedef struct MenuScene

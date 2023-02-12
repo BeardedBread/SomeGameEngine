@@ -1,4 +1,4 @@
-#include "scene.h"
+#include "engine.h"
 
 void init_scene(Scene_t *scene, SceneType_t scene_type, system_func_t render_func, action_func_t action_func)
 {
@@ -9,8 +9,7 @@ void init_scene(Scene_t *scene, SceneType_t scene_type, system_func_t render_fun
     scene->scene_type = scene_type;
     scene->render_function = render_func;
     scene->action_function = action_func;
-    scene->paused = false;
-    scene->has_ended = false;
+    scene->state = SCENE_ENDED;
 }
 
 void free_scene(Scene_t *scene)

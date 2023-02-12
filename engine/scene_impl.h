@@ -4,7 +4,9 @@
  * */
 #ifndef __SCENE_IMPL_H
 #define __SCENE_IMPL_H
-#include "scene.h"
+#include "engine.h"
+#include "gui.h"
+
 typedef struct Tile
 {
     bool solid;
@@ -35,4 +37,27 @@ typedef struct LevelScene
 void init_level_scene(LevelScene_t *scene);
 void free_level_scene(LevelScene_t *scene);
 void reload_level_scene(LevelScene_t *scene);
+
+typedef enum GuiMode
+{
+    KEYBOARD_MODE,
+    MOUSE_MODE
+}GuiMode_t;
+
+typedef struct MenuSceneData
+{
+    UIComp_t buttons[3];
+    int selected_comp;
+    int max_comp;
+    GuiMode_t mode;
+}MenuSceneData_t;
+
+typedef struct MenuScene
+{
+    Scene_t scene;
+    MenuSceneData_t data;
+}MenuScene_t;
+
+void init_menu_scene(MenuScene_t *scene);
+void free_menu_scene(MenuScene_t *scene);
 #endif // __SCENE_IMPL_H

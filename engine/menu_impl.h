@@ -1,11 +1,11 @@
 #ifndef __MENU_IMPL_H
 #define __MENU_IMPL_H
 #include "scene.h"
+#include "gui.h"
 
 typedef struct MenuSceneData
 {
-    Entity_t *menus[8];
-    Entity_t *menu_opts[32];
+    UIComp_t buttons[2];
 }MenuSceneData_t;
 
 typedef struct MenuScene

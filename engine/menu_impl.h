@@ -3,9 +3,18 @@
 #include "scene.h"
 #include "gui.h"
 
+typedef enum GuiMode
+{
+    KEYBOARD_MODE,
+    MOUSE_MODE
+}GuiMode_t;
+
 typedef struct MenuSceneData
 {
-    UIComp_t buttons[2];
+    UIComp_t buttons[3];
+    int selected_comp;
+    int max_comp;
+    GuiMode_t mode;
 }MenuSceneData_t;
 
 typedef struct MenuScene

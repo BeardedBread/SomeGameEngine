@@ -1,4 +1,6 @@
 #include "menu_impl.h"
+#include "raymath.h"
+#include <stdio.h>
 
 
 static void menu_scene_render_func(Scene_t *scene)
@@ -6,35 +8,87 @@ static void menu_scene_render_func(Scene_t *scene)
     MenuSceneData_t *data = (MenuSceneData_t *)scene->scene_data;
     DrawText("This is a game", 25, 220, 12, BLACK);
     UI_button(data->buttons, "Start");
-    UI_button(data->buttons + 1, "Exit");
+    UI_button(data->buttons + 1, "Continue");
+    UI_button(data->buttons + 2, "Exit");
 }
 
 static void menu_do_action(Scene_t *scene, ActionType_t action, bool pressed)
 {
+    MenuSceneData_t *data = (MenuSceneData_t *)scene->scene_data;
+    int new_selection = data->selected_comp;
+    if (!pressed)
+    {
+        if (data->mode == MOUSE_MODE)
+        {
+            data->mode = KEYBOARD_MODE;
+        }
+        else
+        {
+            switch(action)
+            {
+                case ACTION_UP:
+                    new_selection--;
+                break;
+                case ACTION_DOWN:
+                    new_selection++;
+                break;
+                case ACTION_LEFT:
+                break;
+                case ACTION_RIGHT:
+                break;
+                default:
+                break;
+            }
+        }
+        data->buttons[data->selected_comp].state = STATE_NORMAL;
+        if (new_selection < 0) new_selection = data->max_comp - 1;
+        if (new_selection >= data->max_comp) new_selection = 0;
+        printf("new: %d, old %d\n", new_selection, data->selected_comp);
+
+        data->buttons[new_selection].state = STATE_FOCUSED;
+        data->selected_comp = new_selection;
+    }
 }
 
 static void gui_loop(Scene_t* scene)
 {
     MenuSceneData_t *data = (MenuSceneData_t *)scene->scene_data;
-    for (size_t i=0;i<2;i++)
+    if (Vector2LengthSqr(GetMouseDelta()) > 1)
     {
-       if ((data->buttons[i].state != STATE_DISABLED))
+        data->mode = MOUSE_MODE;
+    }
+    if (data->mode == KEYBOARD_MODE)
+    {
+    }
+    else
+    {
+        data->buttons[data->selected_comp].state = STATE_NORMAL;
+        for (size_t i=0;i<data->max_comp;i++)
         {
-            Vector2 mousePoint = GetMousePosition();
-
-            // Check button state
-            if (CheckCollisionPointRec(mousePoint, data->buttons[i].bbox))
+           if ((data->buttons[i].state != STATE_DISABLED))
             {
-                if (IsMouseButtonDown(MOUSE_LEFT_BUTTON)) data->buttons[i].state = STATE_PRESSED;
-                else data->buttons[i].state = STATE_FOCUSED;
+                Vector2 mousePoint = GetMousePosition();
 
-                if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) data->buttons[i].pressed = true;
-            }
-            else
-            {
-                data->buttons[i].state = STATE_NORMAL;
+                // Check button state
+                if (CheckCollisionPointRec(mousePoint, data->buttons[i].bbox))
+                {
+                    if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+                    {
+                        data->buttons[i].state = STATE_PRESSED;
+                    }
+                    else
+                    {
+                        data->buttons[i].state = STATE_FOCUSED;
+                    }
+                    if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+                    {
+                        data->buttons[i].pressed = true;
+                    }
+                    data->selected_comp = i;
+                }
             }
         }
+        
     }
 }
 
@@ -58,6 +112,20 @@ void init_menu_scene(MenuScene_t *scene)
         .state = STATE_NORMAL,
         .alpha = 1.0
     };
+    scene->data.buttons[2] = (UIComp_t)
+    {
+        .bbox = {25,345,125,30},
+        .state = STATE_NORMAL,
+        .alpha = 1.0
+    };
+    scene->data.max_comp = 3;
+    scene->data.selected_comp = 0;
+    scene->data.mode = KEYBOARD_MODE;
+
+    sc_map_put_64(&scene->scene.action_map, KEY_UP, ACTION_UP);
+    sc_map_put_64(&scene->scene.action_map, KEY_DOWN, ACTION_DOWN);
+    sc_map_put_64(&scene->scene.action_map, KEY_LEFT, ACTION_LEFT);
+    sc_map_put_64(&scene->scene.action_map, KEY_RIGHT, ACTION_RIGHT);
 }
 
 void free_menu_scene(MenuScene_t *scene)

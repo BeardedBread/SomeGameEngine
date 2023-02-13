@@ -241,6 +241,14 @@ void level_do_action(Scene_t *scene, ActionType_t action, bool pressed)
                     current_spawn_selection &= 1;
                 }
             break;
+            case ACTION_EXIT:
+                if(scene->engine != NULL)
+                {
+                    change_scene(scene->engine, 0);
+                }
+            break;
+            default:
+            break;
         }
     }
 }
@@ -272,6 +280,7 @@ void init_level_scene(LevelScene_t *scene)
     sc_map_put_64(&scene->scene.action_map, KEY_SPACE, ACTION_JUMP);
     sc_map_put_64(&scene->scene.action_map, KEY_O, ACTION_PREV_SPAWN);
     sc_map_put_64(&scene->scene.action_map, KEY_P, ACTION_NEXT_SPAWN);
+    sc_map_put_64(&scene->scene.action_map, KEY_Q, ACTION_EXIT);
 
     scene->data.tilemap.width = DEFAULT_MAP_WIDTH;
     scene->data.tilemap.height = DEFAULT_MAP_HEIGHT;

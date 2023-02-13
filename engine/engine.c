@@ -1,5 +1,11 @@
 #include "engine.h"
 
+void change_scene(GameEngine_t *engine, unsigned int idx)
+{
+    engine->scenes[engine->curr_scene]->state = SCENE_ENDED;
+    engine->curr_scene = idx;
+    engine->scenes[engine->curr_scene]->state = SCENE_PLAYING;
+}
 void init_scene(Scene_t *scene, SceneType_t scene_type, system_func_t render_func, action_func_t action_func)
 {
     sc_map_init_64(&scene->action_map, 32, 0);

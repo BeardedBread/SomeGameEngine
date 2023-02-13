@@ -7,11 +7,11 @@ typedef struct Scene Scene_t;
 
 typedef struct GameEngine
 {
-    Scene_t *scenes;
+    Scene_t **scenes;
     unsigned int max_scenes;
     unsigned int curr_scene;
 }GameEngine_t;
-void change_scene(GameEngine_t *engine);
+void change_scene(GameEngine_t *engine, unsigned int idx);
 
 typedef enum SceneType
 {

@@ -47,6 +47,17 @@ static void menu_do_action(Scene_t *scene, ActionType_t action, bool pressed)
 
         data->buttons[new_selection].state = STATE_FOCUSED;
         data->selected_comp = new_selection;
+        if (action == ACTION_CONFIRM && scene->engine != NULL)
+        {
+            switch(data->selected_comp)
+            {
+                case 0:
+                    change_scene(scene->engine, 1);
+                break;
+                default:
+                break;
+            }
+        }
     }
 }
 
@@ -83,6 +94,17 @@ static void gui_loop(Scene_t* scene)
                     if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
                     {
                         data->buttons[i].pressed = true;
+                        if (scene->engine != NULL)
+                        {
+                            switch(i)
+                            {
+                                case 0:
+                                    change_scene(scene->engine, 1);
+                                break;
+                                default:
+                                break;
+                            }
+                        }
                     }
                     data->selected_comp = i;
                 }
@@ -126,6 +148,7 @@ void init_menu_scene(MenuScene_t *scene)
     sc_map_put_64(&scene->scene.action_map, KEY_DOWN, ACTION_DOWN);
     sc_map_put_64(&scene->scene.action_map, KEY_LEFT, ACTION_LEFT);
     sc_map_put_64(&scene->scene.action_map, KEY_RIGHT, ACTION_RIGHT);
+    sc_map_put_64(&scene->scene.action_map, KEY_ENTER, ACTION_CONFIRM);
 }
 
 void free_menu_scene(MenuScene_t *scene)

@@ -109,8 +109,6 @@ static void level_scene_render_func(Scene_t* scene)
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 15, 12, BLACK);
         sprintf(buffer, "Jumps: %u", p_cjump->jumps);
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 60, 12, BLACK);
-        sprintf(buffer, "Cooldown: %u", p_cjump->cooldown_timer);
-        DrawText(buffer, (tilemap.width + 3) * TILE_SIZE + 1, 60, 12, BLACK);
         sprintf(buffer, "Crouch: %u", p_pstate->is_crouch);
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 90, 12, BLACK);
         sprintf(buffer, "Water: %s", p_mstate->water_state & 1? "YES":"NO");
@@ -150,6 +148,7 @@ static void spawn_player(Scene_t *scene)
     p_cjump->jump_speed = 680;
     p_cjump->jumps = 1;
     p_cjump->max_jumps = 1;
+    p_cjump->jump_ready = true;
     add_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
     add_component(&scene->ent_manager, p_ent, CTILECOORD_COMP_T);
     add_component(&scene->ent_manager, p_ent, CMOVEMENTSTATE_T);

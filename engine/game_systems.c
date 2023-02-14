@@ -178,12 +178,16 @@ void player_movement_input_system(Scene_t* scene)
         }
 
         // Short Hop
-        if (p_cjump->jumped && p_ctransform->velocity.y < 0)
+        //if (p_cjump->jumped)
         {
-            if (!p_pstate->jump_pressed && !p_cjump->short_hop)
+            
+            if (!p_pstate->jump_pressed)
             {
-                p_cjump->short_hop = true;
-                p_ctransform->velocity.y /= 2;
+                if (!p_cjump->short_hop && p_ctransform->velocity.y < 0)
+                {
+                    p_cjump->short_hop = true;
+                    p_ctransform->velocity.y /= 2;
+                }
             }
         }
 
@@ -206,11 +210,10 @@ void player_movement_input_system(Scene_t* scene)
             if (!(p_mstate->ground_state & 1)) p_pstate->is_crouch &= 0b01;
             p_pstate->is_crouch >>= 1;
 
-            if (p_cjump->cooldown_timer > 0) p_cjump->cooldown_timer--;
             // Jumps is possible as long as you have a jump
 
             // Check if possible to jump when jump is pressed
-            if (p_pstate->jump_pressed && p_cjump->jumps > 0 && p_cjump->cooldown_timer == 0)
+            if (p_pstate->jump_pressed && p_cjump->jumps > 0 && p_cjump->jump_ready)
             {
                 p_cjump->jumps--;
                 if (!in_water)
@@ -223,7 +226,7 @@ void player_movement_input_system(Scene_t* scene)
                 }
 
                 p_cjump->jumped = true;
-                p_cjump->cooldown_timer = 15;
+                p_cjump->jump_ready = false;
             }
 
         }
@@ -617,18 +620,18 @@ void player_ground_air_transition_system(Scene_t* scene)
     {
         CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
         CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_player, CMOVEMENTSTATE_T);
+        CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_player, CPLAYERSTATE_T);
 
         // Handle Ground<->Air Transition
         bool in_water = (p_mstate->water_state & 1);
         // Landing or in water
-        if (p_mstate->ground_state == 0b01 || in_water)
+        if ((p_mstate->ground_state & 1 || in_water) && !p_pstate->jump_pressed )
         {
             // Recover jumps
             p_cjump->jumps = p_cjump->max_jumps;
             p_cjump->jumped = false;
             p_cjump->short_hop = false;
-            if (!in_water)
-                p_cjump->cooldown_timer = 0;
+            p_cjump->jump_ready = true;
         }
         else if (p_mstate->water_state == 0b10 || p_mstate->ground_state == 0b10)
         {

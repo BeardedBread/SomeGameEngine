@@ -55,8 +55,8 @@ typedef struct _CJump_t
     unsigned int max_jumps;
     int jump_speed;
     bool jumped;
+    bool jump_ready;
     bool short_hop;
-    unsigned int cooldown_timer;
 }CJump_t;
 
 typedef enum PlayerState

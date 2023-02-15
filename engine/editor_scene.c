@@ -12,8 +12,9 @@ enum EntitySpawnSelection
 {
     TOGGLE_TILE = 0,
     SPAWN_CRATE,
+    SPAWN_METAL_CRATE,
 };
-#define MAX_SPAWN_TYPE 2
+#define MAX_SPAWN_TYPE 3
 static unsigned int current_spawn_selection = 0;
 
 static inline unsigned int get_tile_idx(int x, int y, unsigned int tilemap_width)
@@ -59,7 +60,7 @@ static void level_scene_render_func(Scene_t* scene)
                 colour = RED;
             break;
             case CRATES_ENT_TAG:
-                colour = BROWN;
+                colour = p_bbox->fragile? BROWN : GRAY;
             break;
             default:
                 colour = BLACK;
@@ -122,14 +123,14 @@ static void level_scene_render_func(Scene_t* scene)
     DrawText(buffer, tilemap.width * TILE_SIZE + 1, 320, 12, BLACK);
 }
 
-static void spawn_crate(Scene_t *scene, unsigned int tile_idx)
+static void spawn_crate(Scene_t *scene, unsigned int tile_idx, bool metal)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
     Entity_t *p_crate = add_entity(&scene->ent_manager, CRATES_ENT_TAG);
     CBBox_t *p_bbox = add_component(&scene->ent_manager, p_crate, CBBOX_COMP_T);
     set_bbox(p_bbox, TILE_SIZE, TILE_SIZE);
     p_bbox->solid = true;
-    p_bbox->fragile = true;
+    p_bbox->fragile = !metal;
     CTransform_t *p_ctransform = add_component(&scene->ent_manager, p_crate, CTRANSFORM_COMP_T);
     p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
     p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
@@ -174,7 +175,10 @@ static void toggle_block_system(Scene_t *scene)
                         tilemap.tiles[tile_idx].water_level = 0;
                 break;
                 case SPAWN_CRATE:
-                    spawn_crate(scene, tile_idx);
+                    spawn_crate(scene, tile_idx, false);
+                break;
+                case SPAWN_METAL_CRATE:
+                    spawn_crate(scene, tile_idx, true);
                 break;
             }
             last_tile_idx = tile_idx;
@@ -230,14 +234,17 @@ void level_do_action(Scene_t *scene, ActionType_t action, bool pressed)
                 if (!pressed)
                 {
                     current_spawn_selection++;
-                    current_spawn_selection &= 1;
+                    current_spawn_selection %= MAX_SPAWN_TYPE;
                 }
             break;
             case ACTION_PREV_SPAWN:
                 if (!pressed)
                 {
+                    if (current_spawn_selection == 0)
+                    {
+                        current_spawn_selection = MAX_SPAWN_TYPE;
+                    }
                     current_spawn_selection--;
-                    current_spawn_selection &= 1;
                 }
             break;
             case ACTION_EXIT:
@@ -265,6 +272,7 @@ void init_level_scene(LevelScene_t *scene)
     sc_array_add(&scene->scene.systems, &movement_update_system);
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &tile_collision_system);
+    //sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &state_transition_update_system);
     sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
     sc_array_add(&scene->scene.systems, &toggle_block_system);

@@ -405,6 +405,7 @@ void tile_collision_system(Scene_t *scene)
 
                         checked_entities[other_ent_idx] = true;
                         Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
+                        if (!p_other_ent->m_alive) continue; // To only allow one way collision check
                         if (p_other_ent->m_tag < p_ent->m_tag) continue; // To only allow one way collision check
                         CBBox_t *p_other_bbox = get_component(&scene->ent_manager, p_other_ent, CBBOX_COMP_T);
                         if (p_other_bbox == NULL) continue;
@@ -421,51 +422,15 @@ void tile_collision_system(Scene_t *scene)
         }
 
         // TODO: Resolve all collision events
-        uint32_t collision_key;
-        sc_map_foreach(&data->collision_events, collision_key, collision_value)
-        {
-            ent_idx = (collision_key >> 16);
-            uint other_ent_idx = (collision_key & 0xFFFF);
-            Entity_t *p_ent = get_entity(&scene->ent_manager, ent_idx);
-            Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
-            if (!p_ent->m_alive || !p_other_ent->m_alive) continue;
-            if (p_ent->m_tag == PLAYER_ENT_TAG && p_other_ent->m_tag == CRATES_ENT_TAG)
-            {
-                CBBox_t *p_other_bbox = get_component(&scene->ent_manager, p_other_ent, CBBOX_COMP_T);
-                if (!p_other_bbox->fragile) continue;
-
-                CTransform_t *p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-                CBBox_t * p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
-                CPlayerState_t * p_pstate = get_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
-                CTransform_t *p_other_ct = get_component(&scene->ent_manager, p_other_ent, CTRANSFORM_COMP_T);
-                if (
-                    // TODO: Check Material of the crates
-                    p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y
-                )
-                {
-                    p_ctransform->velocity.y = -400;
-                    if (p_pstate->jump_pressed)
-                    {
-                        p_ctransform->velocity.y = -600;
-                        CJump_t * p_cjump = get_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
-                        p_cjump->short_hop = false;
-                        p_cjump->jumped = true;
-                    }
-                }
-
-                {
-                    CTileCoord_t *p_tilecoord = get_component(&scene->ent_manager, p_other_ent, CTILECOORD_COMP_T);
-                    for (size_t i=0;i<p_tilecoord->n_tiles;++i)
-                    {
-                        // Use previously store tile position
-                        // Clear from those positions
-                        unsigned int tile_idx = p_tilecoord->tiles[i];
-                        sc_map_del_64(&(tilemap.tiles[tile_idx].entities_set), other_ent_idx);
-                    }
-                    remove_entity(&scene->ent_manager, other_ent_idx);
-                }
-            }
-        }
+        //uint32_t collision_key;
+        //sc_map_foreach(&data->collision_events, collision_key, collision_value)
+        //{
+        //    ent_idx = (collision_key >> 16);
+        //    uint other_ent_idx = (collision_key & 0xFFFF);
+        //    Entity_t *p_ent = get_entity(&scene->ent_manager, ent_idx);
+        //    Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
+        //    if (!p_ent->m_alive || !p_other_ent->m_alive) continue;
+        //}
         sc_map_clear_32(&data->collision_events);
 
         // Level boundary collision
@@ -744,6 +709,89 @@ void update_tilemap_system(Scene_t *scene)
                 unsigned int tile_idx = tile_y * tilemap.width + tile_x;
                 p_tilecoord->tiles[p_tilecoord->n_tiles++] = tile_idx;
                 sc_map_put_64(&(tilemap.tiles[tile_idx].entities_set), p_ent->m_id, p_ent->m_id);
+            }
+        }
+    }
+}
+
+void hitbox_update_system(Scene_t *scene)
+{
+    static bool checked_entities[MAX_COMP_POOL_SIZE] = {0};
+
+    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
+    TileGrid_t tilemap = data->tilemap;
+
+    unsigned int ent_idx;
+    CHitBox_t* p_hitbox;
+    //sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
+    sc_map_foreach(&scene->ent_manager.component_map[CHITBOX_T], ent_idx, p_hitbox)
+    {
+        Entity_t *p_ent =  get_entity(&scene->ent_manager, ent_idx);
+        CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
+        Vector2 hitbox_pos = Vector2Add(p_ctransform->position, p_hitbox->offset);
+
+        unsigned int tile_x1 = (hitbox_pos.x) / TILE_SIZE;
+        unsigned int tile_y1 = (hitbox_pos.y) / TILE_SIZE;
+        unsigned int tile_x2 = (hitbox_pos.x + p_hitbox->size.x - 1) / TILE_SIZE;
+        unsigned int tile_y2 = (hitbox_pos.y + p_hitbox->size.y - 1) / TILE_SIZE;
+
+        for (unsigned int tile_y=tile_y1; tile_y <= tile_y2; tile_y++)
+        {
+            for (unsigned int tile_x=tile_x1; tile_x <= tile_x2; tile_x++)
+            {
+                unsigned int tile_idx = tile_y * tilemap.width + tile_x;
+                unsigned int other_ent_idx;
+                memset(checked_entities, 0, sizeof(checked_entities));
+                sc_map_foreach_key(&tilemap.tiles[tile_idx].entities_set, other_ent_idx)
+                {
+                    if (other_ent_idx == ent_idx) continue;
+                    if (checked_entities[other_ent_idx]) continue;
+
+                    Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
+                    if (!p_other_ent->m_alive) continue; // To only allow one way collision check
+                    if (p_other_ent->m_tag < p_ent->m_tag) continue; // To only allow one way collision check
+
+                    CHurtbox_t *p_other_hurtbox = get_component(&scene->ent_manager, p_other_ent, CHURTBOX_T);
+                    if (p_other_hurtbox == NULL) continue;
+                    CTransform_t *p_other_ct = get_component(&scene->ent_manager, p_other_ent, CTRANSFORM_COMP_T);
+                    Vector2 hurtbox_pos = Vector2Add(p_other_ct->position, p_other_hurtbox->offset);
+
+                    Vector2 overlap;
+                    if (find_AABB_overlap(hitbox_pos, p_hitbox->size, hurtbox_pos, p_other_hurtbox->size, &overlap))
+                    {
+                        if (!p_other_hurtbox->fragile) continue;
+                        if (p_other_ent->m_tag == CRATES_ENT_TAG)
+                        {
+
+                            CBBox_t * p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
+                            CPlayerState_t * p_pstate = get_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
+                            if (
+                                // TODO: Check Material of the crates
+                                p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y
+                            )
+                            {
+                                p_ctransform->velocity.y = -400;
+                                if (p_pstate->jump_pressed)
+                                {
+                                    p_ctransform->velocity.y = -600;
+                                    CJump_t * p_cjump = get_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
+                                    p_cjump->short_hop = false;
+                                    p_cjump->jumped = true;
+                                }
+                            }
+
+                            CTileCoord_t *p_tilecoord = get_component(&scene->ent_manager, p_other_ent, CTILECOORD_COMP_T);
+                            for (size_t i=0;i<p_tilecoord->n_tiles;++i)
+                            {
+                                // Use previously store tile position
+                                // Clear from those positions
+                                unsigned int tile_idx = p_tilecoord->tiles[i];
+                                sc_map_del_64(&(tilemap.tiles[tile_idx].entities_set), other_ent_idx);
+                            }
+                            remove_entity(&scene->ent_manager, other_ent_idx);
+                        }
+                    }
+                }
             }
         }
     }

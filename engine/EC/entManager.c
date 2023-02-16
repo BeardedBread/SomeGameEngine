@@ -31,9 +31,10 @@ void update_entity_manager(EntityManager_t *p_manager)
         sc_map_foreach (&p_entity->components, comp_type_idx, comp_idx)
         {
             free_component_to_mempool((ComponentEnum_t)comp_type_idx, comp_idx);
-            sc_map_del_64v(&p_manager->component_map[comp_type_idx], comp_idx);
+            sc_map_del_64v(&p_manager->component_map[comp_type_idx], e_idx);
             sc_map_del_64v(&p_manager->entities_map[p_entity->m_tag], e_idx);
         }
+        sc_map_clear_64(&p_entity->components);
         free_entity_to_mempool(e_idx);
         sc_map_del_64v(&p_manager->entities, e_idx);
     }
@@ -93,8 +94,11 @@ void remove_entity(EntityManager_t *p_manager, unsigned long id)
     if(!sc_map_found(&p_manager->entities)) return;
     // This only marks the entity for deletion
     // Does not free entity. This is done during the update
-    p_entity->m_alive = false;
-    sc_queue_add_last(&p_manager->to_remove, id);
+    if (p_entity->m_alive)
+    {
+        p_entity->m_alive = false;
+        sc_queue_add_last(&p_manager->to_remove, id);
+    }
 }
 
 Entity_t *get_entity(EntityManager_t *p_manager, unsigned long id)

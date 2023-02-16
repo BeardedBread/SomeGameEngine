@@ -4,7 +4,7 @@
 #include <stdint.h>
 // TODO: Look at sc to use macros to auto generate functions
 
-#define N_COMPONENTS 7
+#define N_COMPONENTS 9
 enum ComponentEnum
 {
     CBBOX_COMP_T,
@@ -14,6 +14,8 @@ enum ComponentEnum
     CJUMP_COMP_T,
     CPLAYERSTATE_T,
     CCONTAINER_T,
+    CHITBOX_T,
+    CHURTBOX_T,
 };
 typedef enum ComponentEnum ComponentEnum_t;
 
@@ -94,6 +96,20 @@ typedef struct _CContainer_t
     ContainerMaterial_t material;
     ContainerItem_t item;
 }CContainer_t;
+
+typedef struct _CHitBox_t
+{
+    Vector2 offset;
+    Vector2 size;
+    bool strong;
+}CHitBox_t;
+
+typedef struct _CHurtbox_t
+{
+    Vector2 offset;
+    Vector2 size;
+    bool fragile;
+}CHurtbox_t;
 
 static inline void set_bbox(CBBox_t* p_bbox, unsigned int x, unsigned int y)
 {

@@ -1,6 +1,7 @@
 #include "mempool.h"
 #include "sc/queue/sc_queue.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 // Static allocate buffers
 static Entity_t entity_buffer[MAX_COMP_POOL_SIZE];
@@ -11,6 +12,8 @@ static CMovementState_t cmstate_buffer[MAX_COMP_POOL_SIZE];
 static CJump_t cjump_buffer[1]; // Only player is expected to have this
 static CPlayerState_t cplayerstate_buffer[1]; // Only player is expected to have this
 static CContainer_t ccontainer_buffer[MAX_COMP_POOL_SIZE];
+static CHitBox_t chitbox_buffer[MAX_COMP_POOL_SIZE];
+static CHurtbox_t churtbox_buffer[MAX_COMP_POOL_SIZE];
 
 // Use hashmap as a Set
 // Use list will be used to check if an object exist
@@ -37,6 +40,8 @@ static MemPool_t comp_mempools[N_COMPONENTS] =
     {cjump_buffer, 1, sizeof(CJump_t), NULL, {0}},
     {cplayerstate_buffer, 1, sizeof(CPlayerState_t), NULL, {0}},
     {ccontainer_buffer, MAX_COMP_POOL_SIZE, sizeof(CContainer_t), NULL, {0}},
+    {chitbox_buffer, MAX_COMP_POOL_SIZE, sizeof(CHitBox_t), NULL, {0}},
+    {churtbox_buffer, MAX_COMP_POOL_SIZE, sizeof(CHurtbox_t), NULL, {0}},
 };
 static MemPool_t ent_mempool = {entity_buffer, MAX_COMP_POOL_SIZE, sizeof(Entity_t), NULL, {0}};
 
@@ -150,6 +155,15 @@ void free_component_to_mempool(ComponentEnum_t comp_type, unsigned long idx)
     if (comp_mempools[comp_type].use_list[idx])
     {
         comp_mempools[comp_type].use_list[idx] = false;
-        sc_queue_add_first(&comp_mempools[comp_type].free_list, idx);
+        sc_queue_add_last(&comp_mempools[comp_type].free_list, idx);
+    }
+}
+
+void print_mempool_stats(char* buffer)
+{
+    int written = 0;
+    for (size_t i=0; i<N_COMPONENTS; ++i)
+    {
+        written += sprintf(buffer+written, "%lu: %lu/%lu\n", i, sc_queue_size(&comp_mempools[i].free_list), comp_mempools[i].max_size);
     }
 }

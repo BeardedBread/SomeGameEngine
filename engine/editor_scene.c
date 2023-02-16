@@ -49,6 +49,7 @@ static void level_scene_render_func(Scene_t* scene)
         }
     }
 
+    char buffer[64] = {0};
     sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
     {
         CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
@@ -66,11 +67,32 @@ static void level_scene_render_func(Scene_t* scene)
                 colour = BLACK;
         }
         DrawRectangle(p_ct->position.x, p_ct->position.y, p_bbox->size.x, p_bbox->size.y, colour);
+        CHurtbox_t* p_hurtbox = get_component(&scene->ent_manager, p_ent, CHURTBOX_T);
+        CHitBox_t* p_hitbox = get_component(&scene->ent_manager, p_ent, CHITBOX_T);
+        if (p_hitbox != NULL)
+        {
+            Rectangle rec = {
+                .x = p_ct->position.x + p_hitbox->offset.x,
+                .y = p_ct->position.y + p_hitbox->offset.y,
+                .width = p_hitbox->size.x,
+                .height = p_hitbox->size.y,
+            };
+            DrawRectangleLinesEx(rec, 1.5, ORANGE);
+        }
+        if (p_hurtbox != NULL)
+        {
+            Rectangle rec = {
+                .x = p_ct->position.x + p_hurtbox->offset.x,
+                .y = p_ct->position.y + p_hurtbox->offset.y,
+                .width = p_hurtbox->size.x,
+                .height = p_hurtbox->size.y,
+            };
+            DrawRectangleLinesEx(rec, 1.5, PURPLE);
+        }
     }
 
     for (size_t i=0; i<tilemap.n_tiles;++i)
     {
-        char buffer[6] = {0};
         int x = (i % tilemap.width) * TILE_SIZE;
         int y = (i / tilemap.width) * TILE_SIZE;
         sprintf(buffer, "%u", sc_map_size_64(&tilemap.tiles[i].entities_set));
@@ -99,7 +121,6 @@ static void level_scene_render_func(Scene_t* scene)
     }
 
     // For DEBUG
-    char buffer[64];
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
     {
         CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
@@ -121,6 +142,10 @@ static void level_scene_render_func(Scene_t* scene)
     DrawText(buffer, tilemap.width * TILE_SIZE + 1, 270, 12, BLACK);
     sprintf(buffer, "FPS: %u", GetFPS());
     DrawText(buffer, tilemap.width * TILE_SIZE + 1, 320, 12, BLACK);
+
+    static char mempool_stats[512];
+    print_mempool_stats(mempool_stats);
+    DrawText(mempool_stats, tilemap.width * TILE_SIZE + 1, 350, 12, BLACK);
 }
 
 static void spawn_crate(Scene_t *scene, unsigned int tile_idx, bool metal)
@@ -136,6 +161,9 @@ static void spawn_crate(Scene_t *scene, unsigned int tile_idx, bool metal)
     p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
     add_component(&scene->ent_manager, p_crate, CMOVEMENTSTATE_T);
     add_component(&scene->ent_manager, p_crate, CTILECOORD_COMP_T);
+    CHurtbox_t* p_hurtbox = add_component(&scene->ent_manager, p_crate, CHURTBOX_T);
+    p_hurtbox->size = p_bbox->size;
+    p_hurtbox->fragile = !metal;
 }
 
 static void spawn_player(Scene_t *scene)
@@ -143,7 +171,7 @@ static void spawn_player(Scene_t *scene)
     Entity_t *p_ent = add_entity(&scene->ent_manager, PLAYER_ENT_TAG);
 
     CBBox_t *p_bbox = add_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
-    set_bbox(p_bbox, 30, 45);
+    set_bbox(p_bbox, PLAYER_WIDTH, PLAYER_HEIGHT);
     add_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
     CJump_t *p_cjump = add_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
     p_cjump->jump_speed = 680;
@@ -153,6 +181,9 @@ static void spawn_player(Scene_t *scene)
     add_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
     add_component(&scene->ent_manager, p_ent, CTILECOORD_COMP_T);
     add_component(&scene->ent_manager, p_ent, CMOVEMENTSTATE_T);
+    CHitBox_t* p_hitbox = add_component(&scene->ent_manager, p_ent, CHITBOX_T);
+    p_hitbox->size = Vector2Add(p_bbox->size, (Vector2){2,2});
+    p_hitbox->offset = (Vector2){-1, -1};
 }
 
 static void toggle_block_system(Scene_t *scene)
@@ -272,6 +303,7 @@ void init_level_scene(LevelScene_t *scene)
     sc_array_add(&scene->scene.systems, &movement_update_system);
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &tile_collision_system);
+    sc_array_add(&scene->scene.systems, &hitbox_update_system);
     //sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &state_transition_update_system);
     sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);

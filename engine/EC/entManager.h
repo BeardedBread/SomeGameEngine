@@ -7,9 +7,9 @@
 typedef struct EntityManager
 {
     // All fields are Read-Only
-    struct sc_map_64v entities; // id : entity
-    struct sc_map_64v entities_map[N_TAGS]; // [{id: ent}]
-    struct sc_map_64v component_map[N_COMPONENTS]; // [{id: comp}, ...]
+    struct sc_map_64v entities; // ent id : entity
+    struct sc_map_64v entities_map[N_TAGS]; // [{ent id: ent}]
+    struct sc_map_64v component_map[N_COMPONENTS]; // [{ent id: comp}, ...]
     struct sc_queue_uint to_add;
     struct sc_queue_uint to_remove;
 }EntityManager_t;

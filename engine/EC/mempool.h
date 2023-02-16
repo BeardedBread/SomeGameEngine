@@ -13,4 +13,6 @@ void free_entity_to_mempool(unsigned long idx);
 void* new_component_from_mempool(ComponentEnum_t comp_type, unsigned long *idx);
 void* get_component_wtih_id(ComponentEnum_t comp_type, unsigned long idx);
 void free_component_to_mempool(ComponentEnum_t comp_type, unsigned long idx);
+
+void print_mempool_stats(char* buffer);
 #endif //__MEMPOOL_H

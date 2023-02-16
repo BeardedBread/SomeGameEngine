@@ -12,4 +12,5 @@ void movement_update_system(Scene_t* scene);
 void player_ground_air_transition_system(Scene_t* scene);
 void state_transition_update_system(Scene_t *scene);
 void update_tilemap_system(Scene_t *scene);
+void hitbox_update_system(Scene_t *scene);
 #endif // __GAME_SYSTEMS_H

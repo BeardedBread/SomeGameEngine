@@ -16,11 +16,11 @@ bool find_1D_overlap(const Vector2 l1, const Vector2 l2, float* overlap)
         // x is p1, y is p2
         *overlap =  (l2.y >= l1.y)? l2.x - l1.y : l2.y - l1.x;
     }
-    if (fabs(*overlap) < 0.01) // Use 2 dp precision
-    {
-        *overlap = 0;
-        return false;
-    }
+    //if (fabs(*overlap) < 0.01) // Use 2 dp precision
+    //{
+    //    *overlap = 0;
+    //    return false;
+    //}
     return true;
 }
 

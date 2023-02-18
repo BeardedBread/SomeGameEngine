@@ -699,8 +699,8 @@ void update_tilemap_system(Scene_t *scene)
         // Extend the check by a little to avoid missing
         unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
         unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
-        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
-        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
+        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
+        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE;
 
         for (unsigned int tile_y=tile_y1; tile_y <= tile_y2; tile_y++)
         {

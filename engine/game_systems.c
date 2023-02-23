@@ -187,9 +187,10 @@ void player_movement_input_system(Scene_t* scene)
         }
 
         // Short Hop
-        //if (p_cjump->jumped)
+        // Jumped check is needed to make sure it is applied on jumps, not generally
+        // One issue caused is lower velocity in water
+        if (p_cjump->jumped)
         {
-            
             if (!p_pstate->jump_pressed)
             {
                 if (!p_cjump->short_hop && p_ctransform->velocity.y < 0)

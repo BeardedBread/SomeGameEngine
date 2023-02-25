@@ -34,18 +34,26 @@ typedef struct TileArea
     unsigned int tile_y2;
 }TileArea_t;
 
-static bool check_collision(unsigned int self_idx, Vector2 pos, Vector2 bbox_sz, TileArea_t area_to_check, TileGrid_t* grid, EntityManager_t* p_manager)
+typedef struct CollideEntity
 {
-    for(unsigned int tile_y = area_to_check.tile_y1; tile_y <= area_to_check.tile_y2; tile_y++)
+    unsigned int idx;
+    Rectangle bbox;
+    TileArea_t area;
+}CollideEntity_t;
+
+// ------------------------- Collision functions ------------------------------------
+static bool check_collision(const CollideEntity_t *ent, TileGrid_t* grid, EntityManager_t* p_manager)
+{
+    for(unsigned int tile_y = ent->area.tile_y1; tile_y <= ent->area.tile_y2; tile_y++)
     {
-        for(unsigned int tile_x = area_to_check.tile_x1; tile_x <= area_to_check.tile_x2; tile_x++)
+        for(unsigned int tile_x = ent->area.tile_x1; tile_x <= ent->area.tile_x2; tile_x++)
         {
             unsigned int tile_idx = tile_y*grid->width + tile_x;
             if (grid->tiles[tile_idx].solid) return true;
             unsigned int ent_idx;
             sc_map_foreach_value(&grid->tiles[tile_idx].entities_set, ent_idx)
             {
-                if (self_idx == ent_idx) continue;
+                if (ent->idx == ent_idx) continue;
                 Entity_t * p_ent = get_entity(p_manager, ent_idx);
                 CTransform_t *p_ctransform = get_component(p_manager, p_ent, CTRANSFORM_COMP_T);
                 CBBox_t *p_bbox = get_component(p_manager, p_ent, CBBOX_COMP_T);
@@ -54,7 +62,7 @@ static bool check_collision(unsigned int self_idx, Vector2 pos, Vector2 bbox_sz,
                 //if (p_bbox->solid && !p_bbox->fragile)
                 if (p_bbox->solid)
                 {
-                    if (find_AABB_overlap(pos, bbox_sz, p_ctransform->position, p_bbox->size, &overlap))
+                    if (find_AABB_overlap((Vector2){ent->bbox.x, ent->bbox.y}, (Vector2){ent->bbox.width, ent->bbox.height}, p_ctransform->position, p_bbox->size, &overlap))
                     {
                         return true;
                     }
@@ -69,27 +77,88 @@ static bool check_collision(unsigned int self_idx, Vector2 pos, Vector2 bbox_sz,
 static bool check_collision_at(unsigned int ent_idx, Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid, Vector2 point, EntityManager_t* p_manager)
 {
     Vector2 new_pos = Vector2Add(pos, point);
-    TileArea_t area = {
-        .tile_x1 = (new_pos.x) / TILE_SIZE,
-        .tile_y1 = (new_pos.y) / TILE_SIZE,
-        .tile_x2 = (new_pos.x + bbox_sz.x - 1) / TILE_SIZE,
-        .tile_y2 = (new_pos.y + bbox_sz.y - 1) / TILE_SIZE
+    CollideEntity_t ent = 
+    {
+        .idx = ent_idx,
+        .bbox = (Rectangle){new_pos.x, new_pos.y, bbox_sz.x, bbox_sz.y},
+        .area = (TileArea_t){
+            .tile_x1 = (new_pos.x) / TILE_SIZE,
+            .tile_y1 = (new_pos.y) / TILE_SIZE,
+            .tile_x2 = (new_pos.x + bbox_sz.x - 1) / TILE_SIZE,
+            .tile_y2 = (new_pos.y + bbox_sz.y - 1) / TILE_SIZE
+        }
     };
     
-    return check_collision(ent_idx, new_pos, bbox_sz, area, grid, p_manager);
+    return check_collision(&ent, grid, p_manager);
 }
 
 static inline bool check_on_ground(unsigned int ent_idx, Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid, EntityManager_t* p_manager)
 {
-    pos.y += 1;
-    TileArea_t area = {
-        .tile_x1 = (pos.x) / TILE_SIZE,
-        .tile_y1 = (pos.y + bbox_sz.y - 1) / TILE_SIZE,
-        .tile_x2 = (pos.x + bbox_sz.x - 1) / TILE_SIZE,
-        .tile_y2 = (pos.y + bbox_sz.y - 1) / TILE_SIZE,
-    };
-    return check_collision(ent_idx, pos, bbox_sz, area, grid, p_manager);
+    return check_collision_at(ent_idx, pos, bbox_sz, grid, (Vector2){0, 1}, p_manager);
 }
+
+static bool check_collision_and_move(EntityManager_t* p_manager, TileGrid_t* tilemap,
+    unsigned int ent_idx, CTransform_t *const p_ct, Vector2 sz,
+    Vector2 other_pos, Vector2 other_sz, bool other_solid,
+    uint32_t* collision_value
+)
+{
+    Vector2 overlap = {0,0};
+    Vector2 prev_overlap = {0,0};
+    if (find_AABB_overlap(p_ct->position, sz, other_pos, other_sz, &overlap))
+    {
+        // If there is collision, use previous overlap to determine direction
+        find_AABB_overlap(p_ct->prev_position, sz, other_pos, other_sz, &prev_overlap);
+
+        // Store collision event here
+        // Check collision on x or y axis
+        // Encode key and value, -ve is left and up, +ve is right and down
+        uint8_t dir_to_move = 0;
+        Vector2 offset = {0, 0};
+        if (fabs(prev_overlap.y) > fabs(prev_overlap.x))
+        {
+            offset.x = overlap.x;
+            *collision_value = (((overlap.x > 0?1:0)<< 14) | ( (uint16_t)(fabs(overlap.x)) ));
+        }
+        else if (fabs(prev_overlap.x) > fabs(prev_overlap.y))
+        {
+            dir_to_move = 1;
+            offset.y = overlap.y;
+            *collision_value = (((overlap.y > 0?3:2)<< 14) | ( (uint16_t)(fabs(overlap.y)) ));
+        }
+        else if (fabs(overlap.x) < fabs(overlap.y))
+        {
+            offset.x = overlap.x;
+            *collision_value = (((overlap.x > 0?1:0)<< 14) | ( (uint16_t)(fabs(overlap.x)) ));
+        }
+        else
+        {
+            dir_to_move = 1;
+            offset.y = overlap.y;
+            *collision_value = (((overlap.y > 0?3:2)<< 14) | ( (uint16_t)(fabs(overlap.y)) ));
+        }
+
+        // Resolve collision via moving player by the overlap amount only if other is solid
+        // also check for empty to prevent creating new collision. Not fool-proof, but good enough
+        if (other_solid && !check_collision_at(ent_idx, p_ct->position, sz, tilemap, offset, p_manager))
+        {
+            p_ct->position = Vector2Add(p_ct->position, offset);
+            if (dir_to_move == 0)
+            //if (offset.x != 0)
+            {
+                p_ct->velocity.x = 0;
+            }
+            else
+            {
+                p_ct->velocity.y = 0;
+            }
+        }
+        return true;
+    }
+    return false;
+}
+
+
 static Vector2 shift_bbox(Vector2 bbox, Vector2 new_bbox, AnchorPoint_t anchor)
 {
     Vector2 p1;
@@ -179,11 +248,13 @@ void player_movement_input_system(Scene_t* scene)
         if (!in_water)
         {
             p_pstate->player_dir.y = 0;
-            p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL/1.2);
+            p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL);
         }
         else
         {
-            p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL);
+            // Although this can be achieved via higher friction, i'll explain away as the player is not
+            // good with swimming, resulting in lower movement acceleration
+            p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL/1.2);
         }
 
         // Short Hop
@@ -300,63 +371,6 @@ void player_bbox_update_system(Scene_t *scene)
     }
 }
 
-static bool check_collision_and_move(unsigned int ent_idx, EntityManager_t* p_manager, TileGrid_t* tilemap, CTransform_t *const p_ct, Vector2 sz, Vector2 other_pos, Vector2 other_sz, bool other_solid, uint32_t* collision_value)
-{
-    Vector2 overlap = {0,0};
-    Vector2 prev_overlap = {0,0};
-    if (find_AABB_overlap(p_ct->position, sz, other_pos, other_sz, &overlap))
-    {
-        // If there is collision, use previous overlap to determine direction
-        find_AABB_overlap(p_ct->prev_position, sz, other_pos, other_sz, &prev_overlap);
-
-        // Store collision event here
-        // Check collision on x or y axis
-        // Encode key and value, -ve is left and up, +ve is right and down
-        uint8_t dir_to_move = 0;
-        Vector2 offset = {0, 0};
-        if (fabs(prev_overlap.y) > fabs(prev_overlap.x))
-        {
-            offset.x = overlap.x;
-            *collision_value = (((overlap.x > 0?1:0)<< 14) | ( (uint16_t)(fabs(overlap.x)) ));
-        }
-        else if (fabs(prev_overlap.x) > fabs(prev_overlap.y))
-        {
-            dir_to_move = 1;
-            offset.y = overlap.y;
-            *collision_value = (((overlap.y > 0?3:2)<< 14) | ( (uint16_t)(fabs(overlap.y)) ));
-        }
-        else if (fabs(overlap.x) < fabs(overlap.y))
-        {
-            offset.x = overlap.x;
-            *collision_value = (((overlap.x > 0?1:0)<< 14) | ( (uint16_t)(fabs(overlap.x)) ));
-        }
-        else
-        {
-            dir_to_move = 1;
-            offset.y = overlap.y;
-            *collision_value = (((overlap.y > 0?3:2)<< 14) | ( (uint16_t)(fabs(overlap.y)) ));
-        }
-
-        // Resolve collision via moving player by the overlap amount only if other is solid
-        // also check for empty to prevent creating new collision. Not fool-proof, but good enough
-        if (other_solid && !check_collision_at(ent_idx, p_ct->position, sz, tilemap, offset, p_manager))
-        {
-            p_ct->position = Vector2Add(p_ct->position, offset);
-            if (dir_to_move == 0)
-            //if (offset.x != 0)
-            {
-                p_ct->velocity.x = 0;
-            }
-            else
-            {
-                p_ct->velocity.y = 0;
-            }
-        }
-        return true;
-    }
-    return false;
-}
-
 void tile_collision_system(Scene_t *scene)
 {
     static bool checked_entities[MAX_COMP_POOL_SIZE] = {0};
@@ -392,7 +406,7 @@ void tile_collision_system(Scene_t *scene)
                     other.x = (tile_idx % tilemap.width) * TILE_SIZE;
                     other.y = (tile_idx / tilemap.width) * TILE_SIZE; // Precision loss is intentional
 
-                    check_collision_and_move(ent_idx, &scene->ent_manager, &tilemap, p_ctransform, p_bbox->size, other, TILE_SZ, true, &collision_value);
+                    check_collision_and_move(&scene->ent_manager, &tilemap, ent_idx, p_ctransform, p_bbox->size, other, TILE_SZ, true, &collision_value);
 
                 }
                 else
@@ -412,7 +426,7 @@ void tile_collision_system(Scene_t *scene)
                         if (p_other_bbox == NULL) continue;
 
                         CTransform_t *p_other_ct = get_component(&scene->ent_manager, p_other_ent, CTRANSFORM_COMP_T);
-                        if (check_collision_and_move(ent_idx, &scene->ent_manager, &tilemap, p_ctransform, p_bbox->size, p_other_ct->position, p_other_bbox->size, p_other_bbox->solid, &collision_value))
+                        if (check_collision_and_move(&scene->ent_manager, &tilemap, ent_idx, p_ctransform, p_bbox->size, p_other_ct->position, p_other_bbox->size, p_other_bbox->solid, &collision_value))
                         {
                             uint32_t collision_key = ((ent_idx << 16) | other_ent_idx);
                             sc_map_put_32(&data->collision_events, collision_key, collision_value);
@@ -527,33 +541,37 @@ void global_external_forces_system(Scene_t *scene)
 
 
         // Zero out acceleration for contacts with sturdy entites and tiles
-        Vector2 new_pos = p_ctransform->position;
-        new_pos.x--;
-        TileArea_t area = {
-            .tile_x1 = (p_ctransform->position.x - 1) / TILE_SIZE,
-            .tile_y1 = (p_ctransform->position.y) / TILE_SIZE,
-            .tile_x2 = (p_ctransform->position.x - 1) / TILE_SIZE,
-            .tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE,
+        //Vector2 new_pos = p_ctransform->position;
+        CollideEntity_t ent = 
+        {
+            .idx = ent_idx,
+            .bbox = (Rectangle){p_ctransform->position.x - 1, p_ctransform->position.y, p_bbox->size.x, p_bbox->size.y},
+            .area = (TileArea_t){
+                .tile_x1 = (p_ctransform->position.x - 1) / TILE_SIZE,
+                .tile_y1 = (p_ctransform->position.y) / TILE_SIZE,
+                .tile_x2 = (p_ctransform->position.x - 1) / TILE_SIZE,
+                .tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE,
+            }
         };
-        if (check_collision(ent_idx, new_pos, p_bbox->size, area, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.x < 0) p_ctransform->accel.x = 0;
+        if (check_collision(&ent, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.x < 0) p_ctransform->accel.x = 0;
 
-        new_pos.x += 2; // 2 to account for the previous subtraction
-        area.tile_x1 = (p_ctransform->position.x + p_bbox->size.x + 1) / TILE_SIZE;
-        area.tile_x2 = area.tile_x1;
-        if (check_collision(ent_idx, new_pos, p_bbox->size, area, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.x > 0) p_ctransform->accel.x = 0;
+        ent.bbox.x += 2; // 2 to account for the previous subtraction
+        ent.area.tile_x1 = (p_ctransform->position.x + p_bbox->size.x + 1) / TILE_SIZE;
+        ent.area.tile_x2 = ent.area.tile_x1;
+        if (check_collision(&ent, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.x > 0) p_ctransform->accel.x = 0;
 
-        new_pos.x -= 2;
-        new_pos.y--;
-        area.tile_x1 = (p_ctransform->position.x) / TILE_SIZE,
-        area.tile_x2 = (p_ctransform->position.x - 1) / TILE_SIZE,
-        area.tile_y1 = (p_ctransform->position.y - 1) / TILE_SIZE,
-        area.tile_y1 = area.tile_y2;
-        if (check_collision(ent_idx, new_pos, p_bbox->size, area, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.y < 0) p_ctransform->accel.y = 0;
+        ent.bbox.x -= 2;
+        ent.bbox.y--;
+        ent.area.tile_x1 = (p_ctransform->position.x) / TILE_SIZE,
+        ent.area.tile_x2 = (p_ctransform->position.x - 1) / TILE_SIZE,
+        ent.area.tile_y1 = (p_ctransform->position.y - 1) / TILE_SIZE,
+        ent.area.tile_y1 = ent.area.tile_y2;
+        if (check_collision(&ent, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.y < 0) p_ctransform->accel.y = 0;
 
-        new_pos.y += 2;
-        area.tile_y1 = (p_ctransform->position.y + p_bbox->size.y + 1) / TILE_SIZE,
-        area.tile_y1 = area.tile_y2;
-        if (check_collision(ent_idx, new_pos, p_bbox->size, area, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.y > 0) p_ctransform->accel.y = 0;
+        ent.bbox.y += 2;
+        ent.area.tile_y1 = (p_ctransform->position.y + p_bbox->size.y + 1) / TILE_SIZE,
+        ent.area.tile_y1 = ent.area.tile_y2;
+        if (check_collision(&ent, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.y > 0) p_ctransform->accel.y = 0;
 
     }
 }

@@ -129,6 +129,10 @@ static void level_scene_render_func(Scene_t* scene)
         CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_ent, CMOVEMENTSTATE_T);
         sprintf(buffer, "Pos: %.3f\n %.3f", p_ct->position.x, p_ct->position.y);
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 15, 12, BLACK);
+        sprintf(buffer, "Vel: %.3f\n %.3f", p_ct->velocity.x, p_ct->velocity.y);
+        DrawText(buffer, tilemap.width * TILE_SIZE + 128, 15, 12, BLACK);
+        //sprintf(buffer, "Accel: %.3f\n %.3f", p_ct->accel.x, p_ct->accel.y);
+        //DrawText(buffer, tilemap.width * TILE_SIZE + 128, 60, 12, BLACK);
         sprintf(buffer, "Jumps: %u", p_cjump->jumps);
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 60, 12, BLACK);
         sprintf(buffer, "Crouch: %u", p_pstate->is_crouch);

@@ -12,7 +12,7 @@ static CMovementState_t cmstate_buffer[MAX_COMP_POOL_SIZE];
 static CJump_t cjump_buffer[1]; // Only player is expected to have this
 static CPlayerState_t cplayerstate_buffer[1]; // Only player is expected to have this
 static CContainer_t ccontainer_buffer[MAX_COMP_POOL_SIZE];
-static CHitBox_t chitbox_buffer[MAX_COMP_POOL_SIZE];
+static CHitBoxes_t chitboxes_buffer[MAX_COMP_POOL_SIZE];
 static CHurtbox_t churtbox_buffer[MAX_COMP_POOL_SIZE];
 
 // Use hashmap as a Set
@@ -40,7 +40,7 @@ static MemPool_t comp_mempools[N_COMPONENTS] =
     {cjump_buffer, 1, sizeof(CJump_t), NULL, {0}},
     {cplayerstate_buffer, 1, sizeof(CPlayerState_t), NULL, {0}},
     {ccontainer_buffer, MAX_COMP_POOL_SIZE, sizeof(CContainer_t), NULL, {0}},
-    {chitbox_buffer, MAX_COMP_POOL_SIZE, sizeof(CHitBox_t), NULL, {0}},
+    {chitboxes_buffer, MAX_COMP_POOL_SIZE, sizeof(CHitBoxes_t), NULL, {0}},
     {churtbox_buffer, MAX_COMP_POOL_SIZE, sizeof(CHurtbox_t), NULL, {0}},
 };
 static MemPool_t ent_mempool = {entity_buffer, MAX_COMP_POOL_SIZE, sizeof(Entity_t), NULL, {0}};

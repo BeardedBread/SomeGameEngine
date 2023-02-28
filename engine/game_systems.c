@@ -368,6 +368,11 @@ void player_bbox_update_system(Scene_t *scene)
             set_bbox(p_bbox, new_bbox.x, new_bbox.y);
             p_ctransform->position = Vector2Add(p_ctransform->position, offset);
         }
+
+        CHitBoxes_t* p_hitbox = get_component(&scene->ent_manager, p_player, CHITBOXES_T);
+        p_hitbox->boxes[0].height = p_bbox->size.y + 2;
+        p_hitbox->boxes[1].y = p_bbox->size.y / 4;
+        p_hitbox->boxes[1].height = p_bbox->size.y / 2;
     }
 }
 
@@ -741,73 +746,79 @@ void hitbox_update_system(Scene_t *scene)
     TileGrid_t tilemap = data->tilemap;
 
     unsigned int ent_idx;
-    CHitBox_t* p_hitbox;
+    CHitBoxes_t* p_hitbox;
     //sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
-    sc_map_foreach(&scene->ent_manager.component_map[CHITBOX_T], ent_idx, p_hitbox)
+    sc_map_foreach(&scene->ent_manager.component_map[CHITBOXES_T], ent_idx, p_hitbox)
     {
         Entity_t *p_ent =  get_entity(&scene->ent_manager, ent_idx);
         CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-        Vector2 hitbox_pos = Vector2Add(p_ctransform->position, p_hitbox->offset);
-
-        unsigned int tile_x1 = (hitbox_pos.x) / TILE_SIZE;
-        unsigned int tile_y1 = (hitbox_pos.y) / TILE_SIZE;
-        unsigned int tile_x2 = (hitbox_pos.x + p_hitbox->size.x - 1) / TILE_SIZE;
-        unsigned int tile_y2 = (hitbox_pos.y + p_hitbox->size.y - 1) / TILE_SIZE;
-
-        for (unsigned int tile_y=tile_y1; tile_y <= tile_y2; tile_y++)
+        for (uint8_t i=0;i<p_hitbox->n_boxes;++i)
         {
-            for (unsigned int tile_x=tile_x1; tile_x <= tile_x2; tile_x++)
+            Vector2 hitbox_pos = {
+                .x = p_ctransform->position.x + p_hitbox->boxes[i].x,
+                .y = p_ctransform->position.y + p_hitbox->boxes[i].y,
+            };
+
+            unsigned int tile_x1 = (hitbox_pos.x) / TILE_SIZE;
+            unsigned int tile_y1 = (hitbox_pos.y) / TILE_SIZE;
+            unsigned int tile_x2 = (hitbox_pos.x + p_hitbox->boxes[i].width - 1) / TILE_SIZE;
+            unsigned int tile_y2 = (hitbox_pos.y + p_hitbox->boxes[i].height - 1) / TILE_SIZE;
+
+            for (unsigned int tile_y=tile_y1; tile_y <= tile_y2; tile_y++)
             {
-                unsigned int tile_idx = tile_y * tilemap.width + tile_x;
-                unsigned int other_ent_idx;
-                memset(checked_entities, 0, sizeof(checked_entities));
-                sc_map_foreach_key(&tilemap.tiles[tile_idx].entities_set, other_ent_idx)
+                for (unsigned int tile_x=tile_x1; tile_x <= tile_x2; tile_x++)
                 {
-                    if (other_ent_idx == ent_idx) continue;
-                    if (checked_entities[other_ent_idx]) continue;
-
-                    Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
-                    if (!p_other_ent->m_alive) continue; // To only allow one way collision check
-                    if (p_other_ent->m_tag < p_ent->m_tag) continue; // To only allow one way collision check
-
-                    CHurtbox_t *p_other_hurtbox = get_component(&scene->ent_manager, p_other_ent, CHURTBOX_T);
-                    if (p_other_hurtbox == NULL) continue;
-                    CTransform_t *p_other_ct = get_component(&scene->ent_manager, p_other_ent, CTRANSFORM_COMP_T);
-                    Vector2 hurtbox_pos = Vector2Add(p_other_ct->position, p_other_hurtbox->offset);
-
-                    Vector2 overlap;
-                    if (find_AABB_overlap(hitbox_pos, p_hitbox->size, hurtbox_pos, p_other_hurtbox->size, &overlap))
+                    unsigned int tile_idx = tile_y * tilemap.width + tile_x;
+                    unsigned int other_ent_idx;
+                    memset(checked_entities, 0, sizeof(checked_entities));
+                    sc_map_foreach_key(&tilemap.tiles[tile_idx].entities_set, other_ent_idx)
                     {
-                        if (!p_other_hurtbox->fragile) continue;
-                        if (p_other_ent->m_tag == CRATES_ENT_TAG)
+                        if (other_ent_idx == ent_idx) continue;
+                        if (checked_entities[other_ent_idx]) continue;
+
+                        Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
+                        if (!p_other_ent->m_alive) continue; // To only allow one way collision check
+                        if (p_other_ent->m_tag < p_ent->m_tag) continue; // To only allow one way collision check
+
+                        CHurtbox_t *p_other_hurtbox = get_component(&scene->ent_manager, p_other_ent, CHURTBOX_T);
+                        if (p_other_hurtbox == NULL) continue;
+                        CTransform_t *p_other_ct = get_component(&scene->ent_manager, p_other_ent, CTRANSFORM_COMP_T);
+                        Vector2 hurtbox_pos = Vector2Add(p_other_ct->position, p_other_hurtbox->offset);
+
+                        Vector2 overlap;
+                        if (find_AABB_overlap(hitbox_pos, (Vector2){p_hitbox->boxes[i].width, p_hitbox->boxes[i].height}, hurtbox_pos, p_other_hurtbox->size, &overlap))
                         {
-
-                            CBBox_t * p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
-                            CPlayerState_t * p_pstate = get_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
-                            if (
-                                // TODO: Check Material of the crates
-                                p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y
-                            )
+                            if (!p_other_hurtbox->fragile) continue;
+                            if (p_other_ent->m_tag == CRATES_ENT_TAG)
                             {
-                                p_ctransform->velocity.y = -400;
-                                if (p_pstate->jump_pressed)
+
+                                CBBox_t * p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
+                                CPlayerState_t * p_pstate = get_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
+                                if (
+                                    // TODO: Check Material of the crates
+                                    p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y
+                                )
                                 {
-                                    p_ctransform->velocity.y = -600;
-                                    CJump_t * p_cjump = get_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
-                                    p_cjump->short_hop = false;
-                                    p_cjump->jumped = true;
+                                    p_ctransform->velocity.y = -400;
+                                    if (p_pstate->jump_pressed)
+                                    {
+                                        p_ctransform->velocity.y = -600;
+                                        CJump_t * p_cjump = get_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
+                                        p_cjump->short_hop = false;
+                                        p_cjump->jumped = true;
+                                    }
                                 }
-                            }
 
-                            CTileCoord_t *p_tilecoord = get_component(&scene->ent_manager, p_other_ent, CTILECOORD_COMP_T);
-                            for (size_t i=0;i<p_tilecoord->n_tiles;++i)
-                            {
-                                // Use previously store tile position
-                                // Clear from those positions
-                                unsigned int tile_idx = p_tilecoord->tiles[i];
-                                sc_map_del_64(&(tilemap.tiles[tile_idx].entities_set), other_ent_idx);
+                                CTileCoord_t *p_tilecoord = get_component(&scene->ent_manager, p_other_ent, CTILECOORD_COMP_T);
+                                for (size_t i=0;i<p_tilecoord->n_tiles;++i)
+                                {
+                                    // Use previously store tile position
+                                    // Clear from those positions
+                                    unsigned int tile_idx = p_tilecoord->tiles[i];
+                                    sc_map_del_64(&(tilemap.tiles[tile_idx].entities_set), other_ent_idx);
+                                }
+                                remove_entity(&scene->ent_manager, other_ent_idx);
                             }
-                            remove_entity(&scene->ent_manager, other_ent_idx);
                         }
                     }
                 }

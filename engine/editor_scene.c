@@ -68,16 +68,19 @@ static void level_scene_render_func(Scene_t* scene)
         }
         DrawRectangle(p_ct->position.x, p_ct->position.y, p_bbox->size.x, p_bbox->size.y, colour);
         CHurtbox_t* p_hurtbox = get_component(&scene->ent_manager, p_ent, CHURTBOX_T);
-        CHitBox_t* p_hitbox = get_component(&scene->ent_manager, p_ent, CHITBOX_T);
+        CHitBoxes_t* p_hitbox = get_component(&scene->ent_manager, p_ent, CHITBOXES_T);
         if (p_hitbox != NULL)
         {
-            Rectangle rec = {
-                .x = p_ct->position.x + p_hitbox->offset.x,
-                .y = p_ct->position.y + p_hitbox->offset.y,
-                .width = p_hitbox->size.x,
-                .height = p_hitbox->size.y,
-            };
-            DrawRectangleLinesEx(rec, 1.5, ORANGE);
+            for (uint8_t i=0;i<p_hitbox->n_boxes;++i)
+            {
+                Rectangle rec = {
+                    .x = p_ct->position.x + p_hitbox->boxes[i].x,
+                    .y = p_ct->position.y + p_hitbox->boxes[i].y,
+                    .width = p_hitbox->boxes[i].width,
+                    .height = p_hitbox->boxes[i].height,
+                };
+                DrawRectangleLinesEx(rec, 1.5, ORANGE);
+            }
         }
         if (p_hurtbox != NULL)
         {
@@ -185,9 +188,22 @@ static void spawn_player(Scene_t *scene)
     add_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
     add_component(&scene->ent_manager, p_ent, CTILECOORD_COMP_T);
     add_component(&scene->ent_manager, p_ent, CMOVEMENTSTATE_T);
-    CHitBox_t* p_hitbox = add_component(&scene->ent_manager, p_ent, CHITBOX_T);
-    p_hitbox->size = Vector2Add(p_bbox->size, (Vector2){2,2});
-    p_hitbox->offset = (Vector2){-1, -1};
+    CHitBoxes_t* p_hitbox = add_component(&scene->ent_manager, p_ent, CHITBOXES_T);
+    p_hitbox->n_boxes = 2;
+    p_hitbox->boxes[0] = (Rectangle)
+    {
+        .x = p_bbox->size.x / 4,
+        .y = -1,
+        .width = p_bbox->size.x / 2,
+        .height = p_bbox->size.y + 2,
+    };
+    p_hitbox->boxes[1] = (Rectangle)
+    {
+        .x =  -1,
+        .y = p_bbox->size.y / 4,
+        .width = p_bbox->size.x + 2 ,
+        .height = p_bbox->size.y / 2,
+    };
 }
 
 static void toggle_block_system(Scene_t *scene)

@@ -14,7 +14,7 @@ enum ComponentEnum
     CJUMP_COMP_T,
     CPLAYERSTATE_T,
     CCONTAINER_T,
-    CHITBOX_T,
+    CHITBOXES_T,
     CHURTBOX_T,
 };
 typedef enum ComponentEnum ComponentEnum_t;
@@ -97,12 +97,12 @@ typedef struct _CContainer_t
     ContainerItem_t item;
 }CContainer_t;
 
-typedef struct _CHitBox_t
+typedef struct _CHitBoxes_t
 {
-    Vector2 offset;
-    Vector2 size;
+    Rectangle boxes[2];
+    uint8_t n_boxes;
     bool strong;
-}CHitBox_t;
+}CHitBoxes_t;
 
 typedef struct _CHurtbox_t
 {

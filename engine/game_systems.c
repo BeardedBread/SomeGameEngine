@@ -140,7 +140,8 @@ static bool check_collision_and_move(EntityManager_t* p_manager, TileGrid_t* til
 
         // Resolve collision via moving player by the overlap amount only if other is solid
         // also check for empty to prevent creating new collision. Not fool-proof, but good enough
-        if (other_solid && !check_collision_at(ent_idx, p_ct->position, sz, tilemap, offset, p_manager))
+        //if (other_solid && !check_collision_at(ent_idx, p_ct->position, sz, tilemap, offset, p_manager))
+        if (other_solid)
         {
             p_ct->position = Vector2Add(p_ct->position, offset);
             if (dir_to_move == 0)

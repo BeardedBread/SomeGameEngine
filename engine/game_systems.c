@@ -258,6 +258,10 @@ void player_movement_input_system(Scene_t* scene)
             p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL/1.2);
         }
 
+        if (p_pstate->is_crouch & 1)
+        {
+            p_ctransform->accel = Vector2Scale(p_ctransform->accel, 0.5);
+        }
         // Short Hop
         // Jumped check is needed to make sure it is applied on jumps, not generally
         // One issue caused is lower velocity in water
@@ -496,6 +500,40 @@ void tile_collision_system(Scene_t *scene)
     }
 }
 
+void friction_coefficient_update_system(Scene_t *scene)
+{
+    CTransform_t* p_ct;
+    unsigned long ent_idx;
+    sc_map_foreach(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], ent_idx, p_ct)
+    {
+        Entity_t *p_ent =  get_entity(&scene->ent_manager, ent_idx);
+        CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_ent, CMOVEMENTSTATE_T);
+
+
+        // Friction
+        if (p_mstate->water_state & 1)
+        {
+            // Apply water friction
+            // Consistent in all direction
+            p_ct->fric_coeff = (Vector2){-5.5, -5.5};
+        }
+        else
+        {
+            // For game feel, y is set to air resistance only
+            // x is set to ground resistance (even in air)
+            // If not, then player is can go faster by bunny hopping
+            // which is fun but not quite beneficial here
+            p_ct->fric_coeff = (Vector2){-3.3, -1};
+        }
+
+        CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
+        if (p_pstate != NULL && (p_pstate->is_crouch & 1))
+        {
+            p_ct->fric_coeff.x -= 4;
+        }
+    }
+}
+
 void global_external_forces_system(Scene_t *scene)
 {
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
@@ -525,25 +563,12 @@ void global_external_forces_system(Scene_t *scene)
             }
             p_ctransform->accel = Vector2Add(p_ctransform->accel, GRAVITY);
         }
+
         // Friction
-        if (p_mstate->water_state & 1)
-        {
-            // Apply water friction
-            // Consistent in all direction
-            p_ctransform->accel = Vector2Add(
-                p_ctransform->accel,
-                Vector2Scale(p_ctransform->velocity, -5.5)
-            );
-        }
-        else
-        {
-            // For game feel, y is set to air resistance only
-            // x is set to ground resistance (even in air)
-            // If not, then player is can go faster by bunny hopping
-            // which is fun but not quite beneficial here
-            p_ctransform->accel.x += p_ctransform->velocity.x * -3.3;
-            p_ctransform->accel.y += p_ctransform->velocity.y * -1;
-        }
+        p_ctransform->accel = Vector2Add(
+            p_ctransform->accel,
+            Vector2Multiply(p_ctransform->fric_coeff, p_ctransform->velocity)
+        );
 
 
         // Zero out acceleration for contacts with sturdy entites and tiles

@@ -34,6 +34,7 @@ typedef struct _CTransform_t
     Vector2 position;
     Vector2 velocity;
     Vector2 accel;
+    Vector2 fric_coeff;
 }CTransform_t;
 
 typedef struct _CMovementState_t

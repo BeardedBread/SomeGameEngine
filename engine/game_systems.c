@@ -334,11 +334,11 @@ void player_movement_input_system(Scene_t* scene)
                 p_cjump->jumps--;
                 if (!in_water)
                 {
-                    p_ctransform->velocity.y -= p_cjump->jump_speed;
+                    p_ctransform->velocity.y = -p_cjump->jump_speed;
                 }
                 else
                 {
-                    p_ctransform->velocity.y -= p_cjump->jump_speed / 1.75;
+                    p_ctransform->velocity.y = -p_cjump->jump_speed / 1.75;
                 }
 
                 p_cjump->jumped = true;

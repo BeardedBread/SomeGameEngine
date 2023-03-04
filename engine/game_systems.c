@@ -113,7 +113,6 @@ static bool check_collision_and_move(EntityManager_t* p_manager, TileGrid_t* til
         // Store collision event here
         // Check collision on x or y axis
         // Encode key and value, -ve is left and up, +ve is right and down
-        uint8_t dir_to_move = 0;
         Vector2 offset = {0, 0};
         if (fabs(prev_overlap.y) > fabs(prev_overlap.x))
         {
@@ -122,7 +121,6 @@ static bool check_collision_and_move(EntityManager_t* p_manager, TileGrid_t* til
         }
         else if (fabs(prev_overlap.x) > fabs(prev_overlap.y))
         {
-            dir_to_move = 1;
             offset.y = overlap.y;
             *collision_value = (((overlap.y > 0?3:2)<< 14) | ( (uint16_t)(fabs(overlap.y)) ));
         }
@@ -133,7 +131,6 @@ static bool check_collision_and_move(EntityManager_t* p_manager, TileGrid_t* til
         }
         else
         {
-            dir_to_move = 1;
             offset.y = overlap.y;
             *collision_value = (((overlap.y > 0?3:2)<< 14) | ( (uint16_t)(fabs(overlap.y)) ));
         }
@@ -144,15 +141,6 @@ static bool check_collision_and_move(EntityManager_t* p_manager, TileGrid_t* til
         if (other_solid)
         {
             p_ct->position = Vector2Add(p_ct->position, offset);
-            if (dir_to_move == 0)
-            //if (offset.x != 0)
-            {
-                p_ct->velocity.x = 0;
-            }
-            else
-            {
-                p_ct->velocity.y = 0;
-            }
         }
         return true;
     }
@@ -446,6 +434,52 @@ void tile_collision_system(Scene_t *scene)
             }
         }
 
+        CollideEntity_t ent = 
+        {
+            .idx = ent_idx,
+            .bbox = (Rectangle){p_ctransform->position.x - 1, p_ctransform->position.y, p_bbox->size.x, p_bbox->size.y},
+            .area = (TileArea_t){
+                .tile_x1 = (p_ctransform->position.x - 1) / TILE_SIZE,
+                .tile_y1 = (p_ctransform->position.y) / TILE_SIZE,
+                .tile_x2 = (p_ctransform->position.x - 1) / TILE_SIZE,
+                .tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE,
+            }
+        };
+        if (check_collision(&ent, &data->tilemap, &scene->ent_manager))
+        {
+            //if (p_ctransform->accel.x < 0) p_ctransform->accel.x = 0;
+            if (p_ctransform->velocity.x < 0) p_ctransform->velocity.x = 0;
+        }
+
+        ent.bbox.x += 2; // 2 to account for the previous subtraction
+        ent.area.tile_x1 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
+        ent.area.tile_x2 = ent.area.tile_x1;
+        if (check_collision(&ent, &data->tilemap, &scene->ent_manager))
+        {
+            //if (p_ctransform->accel.x > 0) p_ctransform->accel.x = 0;
+            if (p_ctransform->velocity.x > 0) p_ctransform->velocity.x = 0;
+        }
+        ent.bbox.x -= 2;
+        ent.bbox.y--;
+        ent.area.tile_x1 = (p_ctransform->position.x) / TILE_SIZE,
+        ent.area.tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE,
+        ent.area.tile_y1 = (p_ctransform->position.y - 1) / TILE_SIZE,
+        ent.area.tile_y2 = ent.area.tile_y1;
+        if (check_collision(&ent, &data->tilemap, &scene->ent_manager))
+        {
+            //if (p_ctransform->accel.y < 0) p_ctransform->accel.y = 0;
+            if (p_ctransform->velocity.y < 0) p_ctransform->velocity.y = 0;
+        }
+
+        ent.bbox.y += 2;
+        ent.area.tile_y1 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE,
+        ent.area.tile_y2 = ent.area.tile_y1;
+        if (check_collision(&ent, &data->tilemap, &scene->ent_manager))
+        {
+            //if (p_ctransform->accel.y > 0) p_ctransform->accel.y = 0;
+            if (p_ctransform->velocity.y > 0) p_ctransform->velocity.y = 0;
+        }
+
         // TODO: Resolve all collision events
         //uint32_t collision_key;
         //sc_map_foreach(&data->collision_events, collision_key, collision_value)
@@ -584,25 +618,40 @@ void global_external_forces_system(Scene_t *scene)
                 .tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE,
             }
         };
-        if (check_collision(&ent, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.x < 0) p_ctransform->accel.x = 0;
+        if (check_collision(&ent, &data->tilemap, &scene->ent_manager))
+        {
+            if (p_ctransform->accel.x < 0) p_ctransform->accel.x = 0;
+            //if (p_ctransform->velocity.x < 0) p_ctransform->velocity.x = 0;
+        }
 
         ent.bbox.x += 2; // 2 to account for the previous subtraction
-        ent.area.tile_x1 = (p_ctransform->position.x + p_bbox->size.x + 1) / TILE_SIZE;
+        ent.area.tile_x1 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
         ent.area.tile_x2 = ent.area.tile_x1;
-        if (check_collision(&ent, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.x > 0) p_ctransform->accel.x = 0;
-
+        if (check_collision(&ent, &data->tilemap, &scene->ent_manager))
+        {
+            if (p_ctransform->accel.x > 0) p_ctransform->accel.x = 0;
+            //if (p_ctransform->velocity.x > 0) p_ctransform->velocity.x = 0;
+        }
         ent.bbox.x -= 2;
         ent.bbox.y--;
         ent.area.tile_x1 = (p_ctransform->position.x) / TILE_SIZE,
-        ent.area.tile_x2 = (p_ctransform->position.x - 1) / TILE_SIZE,
+        ent.area.tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE,
         ent.area.tile_y1 = (p_ctransform->position.y - 1) / TILE_SIZE,
-        ent.area.tile_y1 = ent.area.tile_y2;
-        if (check_collision(&ent, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.y < 0) p_ctransform->accel.y = 0;
+        ent.area.tile_y2 = ent.area.tile_y1;
+        if (check_collision(&ent, &data->tilemap, &scene->ent_manager))
+        {
+            if (p_ctransform->accel.y < 0) p_ctransform->accel.y = 0;
+            //if (p_ctransform->velocity.y < 0) p_ctransform->velocity.y = 0;
+        }
 
         ent.bbox.y += 2;
-        ent.area.tile_y1 = (p_ctransform->position.y + p_bbox->size.y + 1) / TILE_SIZE,
-        ent.area.tile_y1 = ent.area.tile_y2;
-        if (check_collision(&ent, &data->tilemap, &scene->ent_manager) && p_ctransform->accel.y > 0) p_ctransform->accel.y = 0;
+        ent.area.tile_y1 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE,
+        ent.area.tile_y2 = ent.area.tile_y1;
+        if (check_collision(&ent, &data->tilemap, &scene->ent_manager))
+        {
+            if (p_ctransform->accel.y > 0) p_ctransform->accel.y = 0;
+            //if (p_ctransform->velocity.y > 0) p_ctransform->velocity.y = 0;
+        }
 
     }
 }

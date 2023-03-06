@@ -192,17 +192,17 @@ static void spawn_player(Scene_t *scene)
     p_hitbox->n_boxes = 2;
     p_hitbox->boxes[0] = (Rectangle)
     {
-        .x = p_bbox->size.x / 4,
+        .x = 0,
         .y = -1,
-        .width = p_bbox->size.x / 2,
+        .width = p_bbox->size.x - 1,
         .height = p_bbox->size.y + 2,
     };
     p_hitbox->boxes[1] = (Rectangle)
     {
         .x =  -1,
-        .y = p_bbox->size.y / 4,
-        .width = p_bbox->size.x + 2 ,
-        .height = p_bbox->size.y / 2,
+        .y = 0,
+        .width = p_bbox->size.x + 2,
+        .height = p_bbox->size.y - 1,
     };
 }
 

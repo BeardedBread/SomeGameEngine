@@ -406,8 +406,8 @@ void player_bbox_update_system(Scene_t *scene)
 
         CHitBoxes_t* p_hitbox = get_component(&scene->ent_manager, p_player, CHITBOXES_T);
         p_hitbox->boxes[0].height = p_bbox->size.y + 2;
-        p_hitbox->boxes[1].y = p_bbox->size.y / 4;
-        p_hitbox->boxes[1].height = p_bbox->size.y / 2;
+        //p_hitbox->boxes[1].y = p_bbox->size.y / 4;
+        p_hitbox->boxes[1].height = p_bbox->size.y - 1;
     }
 }
 

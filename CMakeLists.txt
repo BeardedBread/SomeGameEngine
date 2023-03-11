@@ -118,3 +118,21 @@ target_link_libraries(menu_test
     ${GAME_LIBS}
 )
 
+add_executable(assets_test
+    assets_test.c
+)
+target_include_directories(assets_test
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${RAYLIB_DIR}/include
+)
+target_compile_options(assets_test PRIVATE -fsanitize=address -gdwarf-4)
+target_link_options(assets_test PRIVATE -fsanitize=address -gdwarf-4)
+target_link_directories(assets_test
+    PRIVATE
+    ${RAYLIB_DIR}/lib
+)
+target_link_libraries(assets_test
+    ${GAME_LIBS}
+)
+

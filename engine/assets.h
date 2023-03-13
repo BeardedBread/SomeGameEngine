@@ -1,20 +1,8 @@
 #ifndef __ASSETS_H
 #define __ASSETS_H
 #include "sc/map/sc_map.h"
+#include "components.h"
 #include "raylib.h"
-
-// Credits to bedroomcoders.co.uk for this
-typedef struct Sprite
-{
-    Texture2D* texture;
-    Vector2 frame_size;
-    Vector2 origin;
-    int frame_count;
-    int current_frame;
-    int elapsed;
-    int speed;
-    char* name;
-}Sprite_t;
 
 typedef struct Assets
 {

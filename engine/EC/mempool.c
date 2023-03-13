@@ -14,13 +14,8 @@ static CPlayerState_t cplayerstate_buffer[1]; // Only player is expected to have
 static CContainer_t ccontainer_buffer[MAX_COMP_POOL_SIZE];
 static CHitBoxes_t chitboxes_buffer[MAX_COMP_POOL_SIZE];
 static CHurtbox_t churtbox_buffer[MAX_COMP_POOL_SIZE];
+static CSprite_t csprite_buffer[MAX_COMP_POOL_SIZE];
 
-// Use hashmap as a Set
-// Use list will be used to check if an object exist
-// The alternative method to check the free list if idx is not there
-// requires bound checking
-// It's just easier on the mind overall
-// If need to optimise memory, replace free_list with set and remove use_list
 typedef struct MemPool
 {
     void * const buffer;
@@ -42,6 +37,7 @@ static MemPool_t comp_mempools[N_COMPONENTS] =
     {ccontainer_buffer, MAX_COMP_POOL_SIZE, sizeof(CContainer_t), NULL, {0}},
     {chitboxes_buffer, MAX_COMP_POOL_SIZE, sizeof(CHitBoxes_t), NULL, {0}},
     {churtbox_buffer, MAX_COMP_POOL_SIZE, sizeof(CHurtbox_t), NULL, {0}},
+    {csprite_buffer, MAX_COMP_POOL_SIZE, sizeof(CSprite_t), NULL, {0}},
 };
 static MemPool_t ent_mempool = {entity_buffer, MAX_COMP_POOL_SIZE, sizeof(Entity_t), NULL, {0}};
 

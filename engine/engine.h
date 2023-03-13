@@ -3,6 +3,8 @@
 #include "entManager.h"
 #include "actions.h"
 #include "sc/array/sc_array.h"
+#include "assets.h"
+
 typedef struct Scene Scene_t;
 
 typedef struct GameEngine
@@ -10,6 +12,7 @@ typedef struct GameEngine
     Scene_t **scenes;
     unsigned int max_scenes;
     unsigned int curr_scene;
+    Assets_t assets;
 }GameEngine_t;
 void change_scene(GameEngine_t *engine, unsigned int idx);
 

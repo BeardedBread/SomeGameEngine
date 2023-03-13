@@ -92,6 +92,12 @@ static void level_scene_render_func(Scene_t* scene)
             };
             DrawRectangleLinesEx(rec, 1.5, PURPLE);
         }
+        CSprite_t* p_cspr = get_component(&scene->ent_manager, p_ent, CSPRITE_T);
+        if (p_cspr != NULL)
+        {
+            Vector2 pos = Vector2Add(p_ct->position, p_cspr->offset);
+            draw_sprite(p_cspr->sprite, pos);
+        }
     }
 
     for (size_t i=0; i<tilemap.n_tiles;++i)
@@ -204,6 +210,8 @@ static void spawn_player(Scene_t *scene)
         .width = p_bbox->size.x + 2,
         .height = p_bbox->size.y - 1,
     };
+    CSprite_t* p_cspr = add_component(&scene->ent_manager, p_ent, CSPRITE_T);
+    p_cspr->sprite = get_sprite(&scene->engine->assets, "plr_stand");
 }
 
 static void toggle_block_system(Scene_t *scene)

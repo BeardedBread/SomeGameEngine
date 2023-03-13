@@ -4,8 +4,8 @@
 #include <stdint.h>
 // TODO: Look at sc to use macros to auto generate functions
 
-#define N_COMPONENTS 9
-enum ComponentEnum
+#define N_COMPONENTS 10
+typedef enum ComponentEnum
 {
     CBBOX_COMP_T,
     CTRANSFORM_COMP_T,
@@ -16,8 +16,8 @@ enum ComponentEnum
     CCONTAINER_T,
     CHITBOXES_T,
     CHURTBOX_T,
-};
-typedef enum ComponentEnum ComponentEnum_t;
+    CSPRITE_T,
+}ComponentEnum_t;
 
 typedef struct _CBBox_t
 {
@@ -111,6 +111,25 @@ typedef struct _CHurtbox_t
     Vector2 size;
     bool fragile;
 }CHurtbox_t;
+
+// Credits to bedroomcoders.co.uk for this
+typedef struct Sprite
+{
+    Texture2D* texture;
+    Vector2 frame_size;
+    Vector2 origin;
+    int frame_count;
+    int current_frame;
+    int elapsed;
+    int speed;
+    char* name;
+}Sprite_t;
+
+typedef struct _CSprite_t
+{
+    Sprite_t* sprite;
+    Vector2 offset;
+}CSprite_t;
 
 static inline void set_bbox(CBBox_t* p_bbox, unsigned int x, unsigned int y)
 {

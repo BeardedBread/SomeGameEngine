@@ -1,6 +1,7 @@
 #include "scene_impl.h"
 #include "game_systems.h"
 #include "constants.h"
+#include "assets_maps.h"
 #include "raylib.h"
 #include "raymath.h"
 #include <stdio.h>
@@ -212,6 +213,8 @@ static void spawn_player(Scene_t *scene)
     };
     CSprite_t* p_cspr = add_component(&scene->ent_manager, p_ent, CSPRITE_T);
     p_cspr->sprite = get_sprite(&scene->engine->assets, "plr_stand");
+    p_cspr->sprites_map = player_sprite_map;
+    p_cspr->transition_func = &player_sprite_transition_func;
 }
 
 static void toggle_block_system(Scene_t *scene)
@@ -336,6 +339,7 @@ void init_level_scene(LevelScene_t *scene)
     //sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &state_transition_update_system);
     sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
+    sc_array_add(&scene->scene.systems, &sprite_animation_system);
     sc_array_add(&scene->scene.systems, &toggle_block_system);
 
     // This avoid graphical glitch, not essential

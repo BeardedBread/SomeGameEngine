@@ -2,6 +2,7 @@
 #define __COMPONENTS_H
 #include "raylib.h"
 #include <stdint.h>
+#include "entity.h"
 // TODO: Look at sc to use macros to auto generate functions
 
 #define N_COMPONENTS 10
@@ -125,10 +126,14 @@ typedef struct Sprite
     char* name;
 }Sprite_t;
 
+typedef unsigned int (*sprite_transition_func_t)(Entity_t *ent); // Transition requires knowledge of the entity
 typedef struct _CSprite_t
 {
+    const char * const *sprites_map; //Array of all sprite names associated
     Sprite_t* sprite;
+    sprite_transition_func_t transition_func;
     Vector2 offset;
+    unsigned int current_idx;
 }CSprite_t;
 
 static inline void set_bbox(CBBox_t* p_bbox, unsigned int x, unsigned int y)

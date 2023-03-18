@@ -1,6 +1,7 @@
 #include "game_systems.h"
 #include "AABB.h"
 #include "constants.h"
+#include "assets_maps.h"
 #include <stdio.h>
 
 static const Vector2 TILE_SZ = {TILE_SIZE, TILE_SIZE};
@@ -888,6 +889,39 @@ void hitbox_update_system(Scene_t *scene)
     }
 }
 
+void sprite_animation_system(Scene_t *scene)
+{
+    unsigned int ent_idx;
+    CSprite_t* p_cspr;
+    sc_map_foreach(&scene->ent_manager.component_map[CSPRITE_T], ent_idx, p_cspr)
+    {
+        Entity_t *p_ent =  get_entity(&scene->ent_manager, ent_idx);
+        // Update animation state
+        if (p_cspr->transition_func != NULL)
+        {
+            unsigned int spr_idx = p_cspr->transition_func(p_ent);
+            if (p_cspr->current_idx != spr_idx)
+            {
+                Sprite_t* new_spr = get_sprite(&scene->engine->assets, p_cspr->sprites_map[spr_idx]);
+                if (new_spr != NULL)
+                {
+                    p_cspr->sprite = new_spr;
+                    p_cspr->current_idx = spr_idx;
+                    p_cspr->sprite->current_frame = 0;
+                }
+            }
+        }
+        // Animate it (handle frame count)
+        p_cspr->sprite->elapsed++;
+        if (p_cspr->sprite->elapsed == p_cspr->sprite->speed)
+        {
+            p_cspr->sprite->current_frame++;
+            p_cspr->sprite->current_frame %= p_cspr->sprite->frame_count;
+            p_cspr->sprite->elapsed = 0;
+        }
+    }
+}
+
 void init_level_scene_data(LevelSceneData_t *data)
 {
     sc_map_init_32(&data->collision_events, 128, 0);
@@ -896,4 +930,9 @@ void init_level_scene_data(LevelSceneData_t *data)
 void term_level_scene_data(LevelSceneData_t *data)
 {
     sc_map_term_32(&data->collision_events);
+}
+
+unsigned int player_sprite_transition_func(Entity_t* ent)
+{
+    return SPR_PLAYER_RUN;
 }

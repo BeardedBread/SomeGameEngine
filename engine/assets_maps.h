@@ -8,6 +8,6 @@ enum PlayerSpriteEnum
     SPR_PLAYER_RUN
 };
 
-extern const char * const player_sprite_map[N_PLAYER_SPRITES];
+extern const char* const player_sprite_map[N_PLAYER_SPRITES];
 
 #endif // __ASSETS_MAPS_H

@@ -9,8 +9,7 @@
 #define MAX_N_TILES 4096
 static Tile_t all_tiles[MAX_N_TILES] = {0};
 
-enum EntitySpawnSelection
-{
+enum EntitySpawnSelection {
     TOGGLE_TILE = 0,
     SPAWN_CRATE,
     SPAWN_METAL_CRATE,
@@ -27,12 +26,12 @@ static inline unsigned int get_tile_idx(int x, int y, unsigned int tilemap_width
 
 static void level_scene_render_func(Scene_t* scene)
 {
-    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
+    LevelSceneData_t* data = (LevelSceneData_t *)scene->scene_data;
     TileGrid_t tilemap = data->tilemap;
 
-    Entity_t *p_ent;
+    Entity_t* p_ent;
 
-    for (size_t i=0; i<tilemap.n_tiles;++i)
+    for (size_t i = 0; i < tilemap.n_tiles; ++i)
     {
         char buffer[6] = {0};
         int x = (i % tilemap.width) * TILE_SIZE;
@@ -72,7 +71,7 @@ static void level_scene_render_func(Scene_t* scene)
         CHitBoxes_t* p_hitbox = get_component(&scene->ent_manager, p_ent, CHITBOXES_T);
         if (p_hitbox != NULL)
         {
-            for (uint8_t i=0;i<p_hitbox->n_boxes;++i)
+            for (uint8_t i = 0;i < p_hitbox->n_boxes; ++i)
             {
                 Rectangle rec = {
                     .x = p_ct->position.x + p_hitbox->boxes[i].x,
@@ -101,7 +100,7 @@ static void level_scene_render_func(Scene_t* scene)
         }
     }
 
-    for (size_t i=0; i<tilemap.n_tiles;++i)
+    for (size_t i = 0; i < tilemap.n_tiles; ++i)
     {
         int x = (i % tilemap.width) * TILE_SIZE;
         int y = (i / tilemap.width) * TILE_SIZE;
@@ -119,12 +118,12 @@ static void level_scene_render_func(Scene_t* scene)
     }
 
     // Draw tile grid
-    for (size_t i=0; i<tilemap.width;++i)
+    for (size_t i = 0; i < tilemap.width; ++i)
     {
         int x = (i+1)*TILE_SIZE;
         DrawLine(x, 0, x, tilemap.height * TILE_SIZE, BLACK);
     }
-    for (size_t i=0; i<tilemap.height;++i)
+    for (size_t i = 0; i < tilemap.height;++i)
     {
         int y = (i+1)*TILE_SIZE;
         DrawLine(0, y, tilemap.width * TILE_SIZE, y, BLACK);
@@ -162,15 +161,17 @@ static void level_scene_render_func(Scene_t* scene)
     DrawText(mempool_stats, tilemap.width * TILE_SIZE + 1, 350, 12, BLACK);
 }
 
-static void spawn_crate(Scene_t *scene, unsigned int tile_idx, bool metal)
+static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal)
 {
-    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
-    Entity_t *p_crate = add_entity(&scene->ent_manager, CRATES_ENT_TAG);
-    CBBox_t *p_bbox = add_component(&scene->ent_manager, p_crate, CBBOX_COMP_T);
+    LevelSceneData_t* data = (LevelSceneData_t*)scene->scene_data;
+    Entity_t* p_crate = add_entity(&scene->ent_manager, CRATES_ENT_TAG);
+    CBBox_t* p_bbox = add_component(&scene->ent_manager, p_crate, CBBOX_COMP_T);
+
     set_bbox(p_bbox, TILE_SIZE, TILE_SIZE);
     p_bbox->solid = true;
     p_bbox->fragile = !metal;
-    CTransform_t *p_ctransform = add_component(&scene->ent_manager, p_crate, CTRANSFORM_COMP_T);
+
+    CTransform_t* p_ctransform = add_component(&scene->ent_manager, p_crate, CTRANSFORM_COMP_T);
     p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
     p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
     add_component(&scene->ent_manager, p_crate, CMOVEMENTSTATE_T);
@@ -180,14 +181,15 @@ static void spawn_crate(Scene_t *scene, unsigned int tile_idx, bool metal)
     p_hurtbox->fragile = !metal;
 }
 
-static void spawn_player(Scene_t *scene)
+static void spawn_player(Scene_t* scene)
 {
-    Entity_t *p_ent = add_entity(&scene->ent_manager, PLAYER_ENT_TAG);
+    Entity_t* p_ent = add_entity(&scene->ent_manager, PLAYER_ENT_TAG);
+    CBBox_t* p_bbox = add_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
 
-    CBBox_t *p_bbox = add_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
     set_bbox(p_bbox, PLAYER_WIDTH, PLAYER_HEIGHT);
     add_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-    CJump_t *p_cjump = add_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
+
+    CJump_t* p_cjump = add_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
     p_cjump->jump_speed = 680;
     p_cjump->jumps = 1;
     p_cjump->max_jumps = 1;
@@ -197,15 +199,13 @@ static void spawn_player(Scene_t *scene)
     add_component(&scene->ent_manager, p_ent, CMOVEMENTSTATE_T);
     CHitBoxes_t* p_hitbox = add_component(&scene->ent_manager, p_ent, CHITBOXES_T);
     p_hitbox->n_boxes = 2;
-    p_hitbox->boxes[0] = (Rectangle)
-    {
+    p_hitbox->boxes[0] = (Rectangle) {
         .x = 0,
         .y = -1,
         .width = p_bbox->size.x - 1,
         .height = p_bbox->size.y + 2,
     };
-    p_hitbox->boxes[1] = (Rectangle)
-    {
+    p_hitbox->boxes[1] = (Rectangle) {
         .x =  -1,
         .y = 0,
         .width = p_bbox->size.x + 2,
@@ -217,7 +217,7 @@ static void spawn_player(Scene_t *scene)
     p_cspr->transition_func = &player_sprite_transition_func;
 }
 
-static void toggle_block_system(Scene_t *scene)
+static void toggle_block_system(Scene_t* scene)
 {
     // TODO: This system is not good as the interface between raw input and actions is broken
     static unsigned int last_tile_idx = MAX_N_TILES;
@@ -269,9 +269,9 @@ static void toggle_block_system(Scene_t *scene)
     }
 }
 
-void level_do_action(Scene_t *scene, ActionType_t action, bool pressed)
+void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
-    CPlayerState_t *p_playerstate;
+    CPlayerState_t* p_playerstate;
     sc_map_foreach_value(&scene->ent_manager.component_map[CPLAYERSTATE_T], p_playerstate)
     {
         switch(action)
@@ -321,7 +321,7 @@ void level_do_action(Scene_t *scene, ActionType_t action, bool pressed)
     }
 }
 
-void init_level_scene(LevelScene_t *scene)
+void init_level_scene(LevelScene_t* scene)
 {
     init_scene(&scene->scene, LEVEL_SCENE, &level_scene_render_func, &level_do_action);
     scene->scene.scene_data = &scene->data;
@@ -359,12 +359,12 @@ void init_level_scene(LevelScene_t *scene)
     scene->data.tilemap.n_tiles = scene->data.tilemap.width * scene->data.tilemap.height;
     assert(scene->data.tilemap.n_tiles <= MAX_N_TILES);
     scene->data.tilemap.tiles = all_tiles;
-    for (size_t i=0; i<MAX_N_TILES;i++)
+    for (size_t i = 0; i < MAX_N_TILES;i++)
     {
         all_tiles[i].solid = 0;
         sc_map_init_64(&all_tiles[i].entities_set, 16, 0);
     }
-    for (size_t i=0; i<scene->data.tilemap.width; ++i)
+    for (size_t i = 0; i < scene->data.tilemap.width; ++i)
     {
         unsigned int tile_idx = (scene->data.tilemap.height - 1) * scene->data.tilemap.width + i;
         all_tiles[tile_idx].solid = true; // for testing
@@ -374,10 +374,10 @@ void init_level_scene(LevelScene_t *scene)
     update_entity_manager(&scene->scene.ent_manager);
 }
 
-void free_level_scene(LevelScene_t *scene)
+void free_level_scene(LevelScene_t* scene)
 {
     free_scene(&scene->scene);
-    for (size_t i=0; i<MAX_N_TILES;i++)
+    for (size_t i = 0; i < MAX_N_TILES;i++)
     {
         all_tiles[i].solid = 0;
         sc_map_term_64(&all_tiles[i].entities_set);
@@ -385,6 +385,6 @@ void free_level_scene(LevelScene_t *scene)
     term_level_scene_data(&scene->data);
 }
 
-void reload_level_scene(LevelScene_t *scene)
+void reload_level_scene(LevelScene_t* scene)
 {
 }

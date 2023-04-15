@@ -1,21 +1,21 @@
 #include "entManager.h"
 
-void init_entity_manager(EntityManager_t *p_manager)
+void init_entity_manager(EntityManager_t* p_manager)
 {
     sc_map_init_64v(&p_manager->entities, MAX_COMP_POOL_SIZE, 0);
-    for (size_t i=0; i<N_COMPONENTS; ++i)
+    for (size_t i = 0; i < N_COMPONENTS; ++i)
     {
         sc_map_init_64v(p_manager->component_map + i, MAX_COMP_POOL_SIZE, 0);
     }
-    for (size_t i=0; i<N_TAGS; ++i)
+    for (size_t i = 0; i < N_TAGS; ++i)
     {
         sc_map_init_64v(p_manager->entities_map + i, MAX_COMP_POOL_SIZE, 0);
     }
     sc_queue_init(&p_manager->to_add);
     sc_queue_init(&p_manager->to_remove);
 }
-;
-void update_entity_manager(EntityManager_t *p_manager)
+
+void update_entity_manager(EntityManager_t* p_manager)
 {
     // This will only update the entity map of the manager
     // It does not make new entities, but will free entity
@@ -46,13 +46,12 @@ void update_entity_manager(EntityManager_t *p_manager)
         sc_map_put_64v(&p_manager->entities_map[p_entity->m_tag], e_idx, (void *)p_entity);
     }
     sc_queue_clear(&p_manager->to_add);
-
 }
 
-void clear_entity_manager(EntityManager_t *p_manager)
+void clear_entity_manager(EntityManager_t* p_manager)
 {
     unsigned long e_id;
-    Entity_t *p_ent;
+    Entity_t* p_ent;
     sc_map_foreach (&p_manager->entities, e_id, p_ent) 
     {
         remove_entity(p_manager, e_id);
@@ -60,15 +59,15 @@ void clear_entity_manager(EntityManager_t *p_manager)
     update_entity_manager(p_manager);
 }
 
-void free_entity_manager(EntityManager_t *p_manager)
+void free_entity_manager(EntityManager_t* p_manager)
 {
     clear_entity_manager(p_manager);
     sc_map_term_64v(&p_manager->entities);
-    for (size_t i=0; i<N_COMPONENTS; ++i)
+    for (size_t i = 0; i < N_COMPONENTS; ++i)
     {
         sc_map_term_64v(p_manager->component_map + i);
     }
-    for (size_t i=0; i<N_TAGS; ++i)
+    for (size_t i = 0; i < N_TAGS; ++i)
     {
         sc_map_term_64v(p_manager->entities_map + i);
     }
@@ -76,10 +75,10 @@ void free_entity_manager(EntityManager_t *p_manager)
     sc_queue_term(&p_manager->to_remove);
 }
 
-Entity_t *add_entity(EntityManager_t *p_manager, EntityTag_t tag)
+Entity_t *add_entity(EntityManager_t* p_manager, EntityTag_t tag)
 {
     unsigned long e_idx = 0;
-    Entity_t * p_ent = new_entity_from_mempool(&e_idx);
+    Entity_t* p_ent = new_entity_from_mempool(&e_idx);
     p_ent->m_tag = tag;
     if (p_ent)
     {
@@ -88,9 +87,9 @@ Entity_t *add_entity(EntityManager_t *p_manager, EntityTag_t tag)
     return p_ent;
 }
 
-void remove_entity(EntityManager_t *p_manager, unsigned long id)
+void remove_entity(EntityManager_t* p_manager, unsigned long id)
 {
-    Entity_t *p_entity = sc_map_get_64v(&p_manager->entities, id);
+    Entity_t* p_entity = sc_map_get_64v(&p_manager->entities, id);
     if(!sc_map_found(&p_manager->entities)) return;
     // This only marks the entity for deletion
     // Does not free entity. This is done during the update
@@ -101,20 +100,20 @@ void remove_entity(EntityManager_t *p_manager, unsigned long id)
     }
 }
 
-Entity_t *get_entity(EntityManager_t *p_manager, unsigned long id)
+Entity_t* get_entity(EntityManager_t* p_manager, unsigned long id)
 {
-    Entity_t *p_entity = sc_map_get_64v(&p_manager->entities, id);
+    Entity_t* p_entity = sc_map_get_64v(&p_manager->entities, id);
     if(!sc_map_found(&p_manager->entities)) return NULL;
     return p_entity;
 }
 
 // Components are not expected to be removed
 // So, no need to extra steps to deal with iterator invalidation
-void *add_component(EntityManager_t *p_manager, Entity_t *p_entity, ComponentEnum_t comp_type)
+void* add_component(EntityManager_t* p_manager, Entity_t* p_entity, ComponentEnum_t comp_type)
 {
     unsigned long comp_type_idx = (unsigned long)comp_type;
     unsigned long comp_idx = 0;
-    void * p_comp = new_component_from_mempool(comp_type, &comp_idx);
+    void* p_comp = new_component_from_mempool(comp_type, &comp_idx);
     if (p_comp)
     {
         sc_map_put_64(&p_entity->components, comp_type_idx, comp_idx);
@@ -123,7 +122,7 @@ void *add_component(EntityManager_t *p_manager, Entity_t *p_entity, ComponentEnu
     return p_comp;
 }
 
-void *get_component(EntityManager_t *p_manager, Entity_t *p_entity, ComponentEnum_t comp_type)
+void* get_component(EntityManager_t *p_manager, Entity_t *p_entity, ComponentEnum_t comp_type)
 {
     unsigned long comp_type_idx = (unsigned long)comp_type;
     void * p_comp = sc_map_get_64v(&p_manager->component_map[comp_type_idx], p_entity->m_id);

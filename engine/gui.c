@@ -119,7 +119,7 @@ int GuiGetStyle(int control, int property)
     return guiStyle[control*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED) + property];
 }
 
-static int GetTextWidth(const char *text)
+static int GetTextWidth(const char* text)
 {
     #if !defined(ICON_TEXT_PADDING)
         #define ICON_TEXT_PADDING   4
@@ -178,7 +178,7 @@ static int GetTextWidth(const char *text)
 
     return (int)textSize.x;
 }
-const char **GetTextLines(const char *text, int *count)
+const char** GetTextLines(const char* text, int* count)
 {
     #define RAYGUI_MAX_TEXT_LINES   128
 
@@ -228,7 +228,7 @@ static void GuiDrawRectangle(Rectangle rec, int borderWidth, Color borderColor, 
     }
 }
 
-static void GuiDrawText(const char *text, Rectangle bounds, int alignment, Color tint)
+static void GuiDrawText(const char* text, Rectangle bounds, int alignment, Color tint)
 {
     #define TEXT_VALIGN_PIXEL_OFFSET(h)  ((int)h%2)     // Vertical alignment for pixel perfect
 
@@ -362,7 +362,7 @@ static Rectangle GetTextBounds(int control, Rectangle bounds)
 //------- End of raygui section---------//
 
 
-void UI_button(const UIComp_t *comp, const char *text)
+void UI_button(const UIComp_t* comp, const char* text)
 {
     GuiDrawRectangle(comp->bbox, GuiGetStyle(BUTTON, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(BUTTON, BORDER + (comp->state*3))), comp->alpha), Fade(GetColor(GuiGetStyle(BUTTON, BASE + (comp->state*3))), comp->alpha));
     GuiDrawText(text, GetTextBounds(BUTTON, comp->bbox), GuiGetStyle(BUTTON, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(BUTTON, TEXT + (comp->state*3))), comp->alpha));

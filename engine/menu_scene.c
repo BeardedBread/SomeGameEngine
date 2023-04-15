@@ -3,18 +3,18 @@
 #include <stdio.h>
 
 
-static void menu_scene_render_func(Scene_t *scene)
+static void menu_scene_render_func(Scene_t* scene)
 {
-    MenuSceneData_t *data = (MenuSceneData_t *)scene->scene_data;
+    MenuSceneData_t* data = (MenuSceneData_t*)scene->scene_data;
     DrawText("This is a game", 25, 220, 12, BLACK);
     UI_button(data->buttons, "Start");
     UI_button(data->buttons + 1, "Continue");
     UI_button(data->buttons + 2, "Exit");
 }
 
-static void menu_do_action(Scene_t *scene, ActionType_t action, bool pressed)
+static void menu_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
-    MenuSceneData_t *data = (MenuSceneData_t *)scene->scene_data;
+    MenuSceneData_t* data = (MenuSceneData_t*)scene->scene_data;
     int new_selection = data->selected_comp;
     if (!pressed)
     {
@@ -63,7 +63,7 @@ static void menu_do_action(Scene_t *scene, ActionType_t action, bool pressed)
 
 static void gui_loop(Scene_t* scene)
 {
-    MenuSceneData_t *data = (MenuSceneData_t *)scene->scene_data;
+    MenuSceneData_t* data = (MenuSceneData_t*)scene->scene_data;
     if (Vector2LengthSqr(GetMouseDelta()) > 1)
     {
         data->mode = MOUSE_MODE;
@@ -74,7 +74,7 @@ static void gui_loop(Scene_t* scene)
     else
     {
         data->buttons[data->selected_comp].state = STATE_NORMAL;
-        for (size_t i=0;i<data->max_comp;i++)
+        for (size_t i = 0;i < data->max_comp; i++)
         {
            if ((data->buttons[i].state != STATE_DISABLED))
             {
@@ -110,32 +110,28 @@ static void gui_loop(Scene_t* scene)
                 }
             }
         }
-        
     }
 }
 
-void init_menu_scene(MenuScene_t *scene)
+void init_menu_scene(MenuScene_t* scene)
 {
     init_scene(&scene->scene, MENU_SCENE, &menu_scene_render_func, &menu_do_action);
     scene->scene.scene_data = &scene->data;
 
     sc_array_add(&scene->scene.systems, &gui_loop);
     
-    scene->data.buttons[0] = (UIComp_t)
-    {
+    scene->data.buttons[0] = (UIComp_t) {
         .bbox = {25,255,125,30},
         .state = STATE_NORMAL,
         .alpha = 1.0
     };
 
-    scene->data.buttons[1] = (UIComp_t)
-    {
+    scene->data.buttons[1] = (UIComp_t) {
         .bbox = {25,300,125,30},
         .state = STATE_NORMAL,
         .alpha = 1.0
     };
-    scene->data.buttons[2] = (UIComp_t)
-    {
+    scene->data.buttons[2] = (UIComp_t) {
         .bbox = {25,345,125,30},
         .state = STATE_NORMAL,
         .alpha = 1.0
@@ -151,7 +147,7 @@ void init_menu_scene(MenuScene_t *scene)
     sc_map_put_64(&scene->scene.action_map, KEY_ENTER, ACTION_CONFIRM);
 }
 
-void free_menu_scene(MenuScene_t *scene)
+void free_menu_scene(MenuScene_t* scene)
 {
     free_scene(&scene->scene);
 }

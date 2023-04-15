@@ -22,7 +22,7 @@ int main(void)
 
         unsigned int sz = sc_queue_size(&key_buffer);
         // Process any existing pressed key
-        for (size_t i=0; i<sz; i++)
+        for (size_t i = 0; i < sz; i++)
         {
             int button = sc_queue_del_first(&key_buffer);
             ActionType_t action = sc_map_get_64(&scene.scene.action_map, button);

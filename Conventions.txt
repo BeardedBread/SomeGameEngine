@@ -2,8 +2,21 @@ Trivial Variables: i,n,c,etc... (Only one letter. If one letter isn't clear, the
 Local Variables: snake_case
 Global Variables: g_snake_case
 Const Variables: ALL_CAPS
-Pointer Variables: add a p_ to the prefix. For global variables it would be gp_var, for local variables p_var, for const variables p_VAR. If far pointers are used then use an fp_ instead of p_.
 Typedef Values: suffix _t
+Pointer type: do type* var not type *var or type * var.
+
+Braces for statements:
+func(type arg)
+{
+...
+}
+
+Braces for struct Variable definition
+struct var = {
+    .var1 = val1,
+    .var2 = val2
+}
+Single line is fine, though not recommended for struct with more than 4 fields.
 
 Structs: PascalCase
 Enums: PascalCase

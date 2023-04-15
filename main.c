@@ -4,8 +4,7 @@
 #define N_SCENES 3
 
 Scene_t *scenes[N_SCENES];
-static GameEngine_t engine =
-{
+static GameEngine_t engine = {
     .scenes = scenes,
     .max_scenes = 2,
     .curr_scene = 0
@@ -47,11 +46,11 @@ int main(void)
     {
         // This entire key processing relies on the assumption that a pressed key will
         // appear in the polling of raylib
-        Scene_t * curr_scene = engine.scenes[engine.curr_scene];
+        Scene_t* curr_scene = engine.scenes[engine.curr_scene];
 
         unsigned int sz = sc_queue_size(&key_buffer);
         // Process any existing pressed key
-        for (size_t i=0; i<sz; i++)
+        for (size_t i = 0; i < sz; i++)
         {
             int button = sc_queue_del_first(&key_buffer);
             ActionType_t action = sc_map_get_64(&curr_scene->action_map, button);

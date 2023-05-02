@@ -7,8 +7,24 @@
 #include "engine.h"
 #include "gui.h"
 
+typedef enum TileType {
+    EMPTY_TILE = 0,
+    SOLID_TILE,
+    ONEWAY_TILE,
+    LADDER
+} TileType_t;
+
+typedef enum SolidType
+{
+    NOT_SOLID = 0,
+    SOLID,
+    ONE_WAY,
+}SolidType_t;
+
+
 typedef struct Tile {
-    bool solid;
+    TileType_t tile_type;
+    SolidType_t solid;
     unsigned int water_level;
     struct sc_map_64 entities_set;
 }Tile_t;

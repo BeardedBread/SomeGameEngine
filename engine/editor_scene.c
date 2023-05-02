@@ -11,10 +11,11 @@ static Tile_t all_tiles[MAX_N_TILES] = {0};
 
 enum EntitySpawnSelection {
     TOGGLE_TILE = 0,
+    TOGGLE_ONEWAY,
     SPAWN_CRATE,
     SPAWN_METAL_CRATE,
 };
-#define MAX_SPAWN_TYPE 3
+#define MAX_SPAWN_TYPE 4
 static unsigned int current_spawn_selection = 0;
 
 static inline unsigned int get_tile_idx(int x, int y, unsigned int tilemap_width)
@@ -38,9 +39,13 @@ static void level_scene_render_func(Scene_t* scene)
         int y = (i / tilemap.width) * TILE_SIZE;
         sprintf(buffer, "%u", sc_map_size_64(&tilemap.tiles[i].entities_set));
 
-        if (tilemap.tiles[i].solid)
+        if (tilemap.tiles[i].tile_type == SOLID_TILE)
         {
             DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
+        }
+        else if (tilemap.tiles[i].tile_type == ONEWAY_TILE)
+        {
+            DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BROWN);
         }
         else if (tilemap.tiles[i].water_level > 0)
         {
@@ -106,7 +111,7 @@ static void level_scene_render_func(Scene_t* scene)
         int y = (i / tilemap.width) * TILE_SIZE;
         sprintf(buffer, "%u", sc_map_size_64(&tilemap.tiles[i].entities_set));
 
-        if (tilemap.tiles[i].solid)
+        if (tilemap.tiles[i].solid > 0)
         {
             DrawText(buffer, x, y, 10, WHITE);
         }
@@ -233,8 +238,30 @@ static void toggle_block_system(Scene_t* scene)
             switch (sel)
             {
                 case TOGGLE_TILE:
-                        tilemap.tiles[tile_idx].solid = !tilemap.tiles[tile_idx].solid;
-                        tilemap.tiles[tile_idx].water_level = 0;
+                    if (tilemap.tiles[tile_idx].tile_type == SOLID_TILE)
+                    {
+                        tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
+                        tilemap.tiles[tile_idx].solid = NOT_SOLID;
+                    }
+                    else
+                    {
+                        tilemap.tiles[tile_idx].tile_type = SOLID_TILE;
+                        tilemap.tiles[tile_idx].solid = SOLID;
+                    }
+                    tilemap.tiles[tile_idx].water_level = 0;
+                break;
+                case TOGGLE_ONEWAY:
+                    if (tilemap.tiles[tile_idx].tile_type == ONEWAY_TILE)
+                    {
+                        tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
+                        tilemap.tiles[tile_idx].solid = NOT_SOLID;
+                    }
+                    else
+                    {
+                        tilemap.tiles[tile_idx].tile_type = ONEWAY_TILE;
+                        tilemap.tiles[tile_idx].solid = ONE_WAY;
+                    }
+                    tilemap.tiles[tile_idx].water_level = 0;
                 break;
                 case SPAWN_CRATE:
                     spawn_crate(scene, tile_idx, false);
@@ -361,13 +388,15 @@ void init_level_scene(LevelScene_t* scene)
     scene->data.tilemap.tiles = all_tiles;
     for (size_t i = 0; i < MAX_N_TILES;i++)
     {
-        all_tiles[i].solid = 0;
+        all_tiles[i].solid = NOT_SOLID;
+        all_tiles[i].tile_type = EMPTY_TILE;
         sc_map_init_64(&all_tiles[i].entities_set, 16, 0);
     }
     for (size_t i = 0; i < scene->data.tilemap.width; ++i)
     {
         unsigned int tile_idx = (scene->data.tilemap.height - 1) * scene->data.tilemap.width + i;
-        all_tiles[tile_idx].solid = true; // for testing
+        all_tiles[tile_idx].solid = SOLID; // for testing
+        all_tiles[tile_idx].tile_type = SOLID_TILE; // for testing
     }
 
     spawn_player(&scene->scene);

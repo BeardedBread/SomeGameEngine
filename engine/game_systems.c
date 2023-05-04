@@ -36,11 +36,12 @@ typedef struct TileArea {
 typedef struct CollideEntity {
     unsigned int idx;
     Rectangle bbox;
+    Rectangle prev_bbox;
     TileArea_t area;
 } CollideEntity_t;
 
 // ------------------------- Collision functions ------------------------------------
-static bool check_collision(const CollideEntity_t* ent, TileGrid_t* grid, EntityManager_t* p_manager)
+static bool check_collision(const CollideEntity_t* ent, TileGrid_t* grid, EntityManager_t* p_manager, bool check_oneway)
 {
     for(unsigned int tile_y = ent->area.tile_y1; tile_y <= ent->area.tile_y2; tile_y++)
     {
@@ -48,7 +49,19 @@ static bool check_collision(const CollideEntity_t* ent, TileGrid_t* grid, Entity
         {
             unsigned int tile_idx = tile_y*grid->width + tile_x;
             if (grid->tiles[tile_idx].solid == SOLID) return true;
-            //TODO: For one-way platform, check for collision, only return true for up direction
+
+            Vector2 overlap;
+            if (check_oneway && grid->tiles[tile_idx].solid == ONE_WAY)
+            {
+                find_AABB_overlap(
+                    (Vector2){ent->bbox.x, ent->bbox.y},
+                    (Vector2){ent->bbox.width, ent->bbox.height},
+                    (Vector2){tile_x * TILE_SIZE, tile_y * TILE_SIZE}, TILE_SZ, &overlap
+                );
+
+                //For one-way platform, check for vectical collision, only return true for up direction
+                if (overlap.y != 0 && ent->prev_bbox.y + ent->prev_bbox.height - 1 < tile_y * TILE_SIZE) return true;
+            }
             unsigned int ent_idx;
             sc_map_foreach_value(&grid->tiles[tile_idx].entities_set, ent_idx)
             {
@@ -56,7 +69,6 @@ static bool check_collision(const CollideEntity_t* ent, TileGrid_t* grid, Entity
                 Entity_t * p_ent = get_entity(p_manager, ent_idx);
                 CTransform_t *p_ctransform = get_component(p_manager, p_ent, CTRANSFORM_COMP_T);
                 CBBox_t *p_bbox = get_component(p_manager, p_ent, CBBOX_COMP_T);
-                Vector2 overlap;
                 if (p_bbox == NULL || p_ctransform == NULL) continue;
                 //if (p_bbox->solid && !p_bbox->fragile)
                 if (p_bbox->solid)
@@ -89,6 +101,7 @@ static bool check_collision_at(
     CollideEntity_t ent = {
         .idx = ent_idx,
         .bbox = (Rectangle){new_pos.x, new_pos.y, bbox_sz.x, bbox_sz.y},
+        .prev_bbox = (Rectangle){pos.x, pos.y, bbox_sz.x, bbox_sz.y},
         .area = (TileArea_t){
             .tile_x1 = (new_pos.x) / TILE_SIZE,
             .tile_y1 = (new_pos.y) / TILE_SIZE,
@@ -97,15 +110,29 @@ static bool check_collision_at(
         }
     };
     
-    return check_collision(&ent, grid, p_manager);
+    return check_collision(&ent, grid, p_manager, false);
 }
 
 static inline bool check_on_ground(
-    unsigned int ent_idx, Vector2 pos, Vector2 bbox_sz,
+    unsigned int ent_idx, Vector2 pos, Vector2 prev_pos, Vector2 bbox_sz,
     TileGrid_t* grid, EntityManager_t* p_manager
 )
 {
-    return check_collision_at(ent_idx, pos, bbox_sz, grid, (Vector2){0, 1}, p_manager);
+    //return check_collision_at(ent_idx, pos, bbox_sz, grid, (Vector2){0, 1}, p_manager);
+    Vector2 new_pos = Vector2Add(pos, (Vector2){0, 1});
+    CollideEntity_t ent = {
+        .idx = ent_idx,
+        .bbox = (Rectangle){new_pos.x, new_pos.y + bbox_sz.y - 1, bbox_sz.x, 1},
+        .prev_bbox = (Rectangle){prev_pos.x, prev_pos.y, bbox_sz.x, bbox_sz.y},
+        .area = (TileArea_t){
+            .tile_x1 = (new_pos.x) / TILE_SIZE,
+            .tile_y1 = (new_pos.y + bbox_sz.y - 1) / TILE_SIZE,
+            .tile_x2 = (new_pos.x + bbox_sz.x - 1) / TILE_SIZE,
+            .tile_y2 = (new_pos.y + bbox_sz.y - 1) / TILE_SIZE
+        }
+    };
+    
+    return check_collision(&ent, grid, p_manager, true);
 }
 
 static bool check_collision_and_move(
@@ -146,7 +173,7 @@ static bool check_collision_and_move(
         // also check for empty to prevent creating new collision. Not fool-proof, but good enough
         //if (other_solid && !check_collision_at(ent_idx, p_ct->position, sz, tilemap, offset, p_manager))
         if ( other_solid == SOLID
-            || (other_solid == ONE_WAY && offset.y  < 0)
+            || (other_solid == ONE_WAY && offset.y  < 0 && (p_ct->prev_position.y + sz.y - 1 < other_pos.y))
         )
         {
             p_ct->position = Vector2Add(p_ct->position, offset);
@@ -158,7 +185,7 @@ static bool check_collision_and_move(
 
 static uint8_t check_bbox_edges(
     EntityManager_t* p_manager, TileGrid_t* tilemap,
-    unsigned int ent_idx, Vector2 pos, Vector2 bbox
+    unsigned int ent_idx, Vector2 pos, Vector2 prev_pos, Vector2 bbox
 )
 {
     uint8_t detected = 0;
@@ -166,6 +193,7 @@ static uint8_t check_bbox_edges(
     {
         .idx = ent_idx,
         .bbox = (Rectangle){pos.x - 1, pos.y, bbox.x, bbox.y},
+        .prev_bbox = (Rectangle){pos.x, pos.y, bbox.x, bbox.y},
         .area = (TileArea_t){
             .tile_x1 = (pos.x - 1) / TILE_SIZE,
             .tile_y1 = (pos.y) / TILE_SIZE,
@@ -173,14 +201,17 @@ static uint8_t check_bbox_edges(
             .tile_y2 = (pos.y + bbox.y - 1) / TILE_SIZE,
         }
     };
+
+
+    // TODO: Handle one-way platform
     // Left
-    detected |= (check_collision(&ent, tilemap, p_manager) ? 1 : 0) << 3;
+    detected |= (check_collision(&ent, tilemap, p_manager, false) ? 1 : 0) << 3;
 
     //Right
     ent.bbox.x += 2; // 2 to account for the previous subtraction
     ent.area.tile_x1 = (pos.x + bbox.x) / TILE_SIZE;
     ent.area.tile_x2 = ent.area.tile_x1;
-    detected |= (check_collision(&ent, tilemap, p_manager) ? 1 : 0) << 2;
+    detected |= (check_collision(&ent, tilemap, p_manager, false) ? 1 : 0) << 2;
 
     // Up
     ent.bbox.x -= 2;
@@ -189,13 +220,13 @@ static uint8_t check_bbox_edges(
     ent.area.tile_x2 = (pos.x + bbox.x - 1) / TILE_SIZE,
     ent.area.tile_y1 = (pos.y - 1) / TILE_SIZE,
     ent.area.tile_y2 = ent.area.tile_y1;
-    detected |= (check_collision(&ent, tilemap, p_manager) ? 1 : 0) << 1;
+    detected |= (check_collision(&ent, tilemap, p_manager, false) ? 1 : 0) << 1;
 
     // Down
     ent.bbox.y += 2;
     ent.area.tile_y1 = (pos.y + bbox.y) / TILE_SIZE,
     ent.area.tile_y2 = ent.area.tile_y1;
-    detected |= (check_collision(&ent, tilemap, p_manager) ? 1 : 0);
+    detected |= (check_collision(&ent, tilemap, p_manager, true) ? 1 : 0);
     return detected;
 }
 
@@ -490,7 +521,7 @@ void tile_collision_system(Scene_t* scene)
         // Post movement edge check to zero out velocity
         uint8_t edges = check_bbox_edges(
             &scene->ent_manager, &data->tilemap, ent_idx,
-            p_ctransform->position, p_bbox->size
+            p_ctransform->position, p_ctransform->prev_position, p_bbox->size
         );
         if (edges & (1<<3))
         {
@@ -652,7 +683,7 @@ void global_external_forces_system(Scene_t* scene)
         // Zero out acceleration for contacts with sturdy entites and tiles
         uint8_t edges = check_bbox_edges(
             &scene->ent_manager, &data->tilemap, ent_idx,
-            p_ctransform->position, p_bbox->size
+            p_ctransform->position, p_ctransform->prev_position, p_bbox->size
         );
         if (edges & (1<<3))
         {
@@ -755,7 +786,7 @@ void state_transition_update_system(Scene_t* scene)
         if (p_ctransform == NULL || p_bbox == NULL) continue;
 
         bool on_ground = check_on_ground(
-            ent_idx, p_ctransform->position, p_bbox->size,
+            ent_idx, p_ctransform->position, p_ctransform->prev_position, p_bbox->size,
             &data->tilemap, &scene->ent_manager
         );
         bool in_water = false;

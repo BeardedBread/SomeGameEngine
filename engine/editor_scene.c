@@ -45,7 +45,7 @@ static void level_scene_render_func(Scene_t* scene)
         }
         else if (tilemap.tiles[i].tile_type == ONEWAY_TILE)
         {
-            DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BROWN);
+            DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, MAROON);
         }
         else if (tilemap.tiles[i].water_level > 0)
         {

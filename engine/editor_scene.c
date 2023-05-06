@@ -52,10 +52,12 @@ static void level_scene_render_func(Scene_t* scene)
         {
             DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, ORANGE);
         }
-        else if (tilemap.tiles[i].water_level > 0)
+
+        if (tilemap.tiles[i].water_level > 0)
         {
             // Draw water tile
-            DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLUE);
+            Color water_colour = ColorAlpha(BLUE, 0.5);
+            DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
         }
     }
 
@@ -158,6 +160,8 @@ static void level_scene_render_func(Scene_t* scene)
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 90, 12, BLACK);
         sprintf(buffer, "Water: %s", p_mstate->water_state & 1? "YES":"NO");
         DrawText(buffer, tilemap.width * TILE_SIZE + 1, 120, 12, BLACK);
+        sprintf(buffer, "Ladder: %u", p_pstate->ladder_state);
+        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 150, 12, BLACK);
     }
     sprintf(buffer, "Spawn Entity: %u", current_spawn_selection);
     DrawText(buffer, tilemap.width * TILE_SIZE + 1, 240, 12, BLACK);
@@ -266,7 +270,6 @@ static void toggle_block_system(Scene_t* scene)
                         tilemap.tiles[tile_idx].tile_type = ONEWAY_TILE;
                         tilemap.tiles[tile_idx].solid = ONE_WAY;
                     }
-                    tilemap.tiles[tile_idx].water_level = 0;
                 break;
                 case TOGGLE_LADDER:
                     if (tilemap.tiles[tile_idx].tile_type == LADDER)
@@ -292,7 +295,6 @@ static void toggle_block_system(Scene_t* scene)
                     {
                         tilemap.tiles[down_tile].solid = (tilemap.tiles[tile_idx].tile_type != LADDER)? ONE_WAY : NOT_SOLID;
                     }
-                    tilemap.tiles[tile_idx].water_level = 0;
                 break;
                 case SPAWN_CRATE:
                     spawn_crate(scene, tile_idx, false);
@@ -339,7 +341,6 @@ void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             break;
             case ACTION_DOWN:
                 p_playerstate->player_dir.y = (pressed)? 1 : 0;
-                //p_playerstate->is_crouch |= (pressed)? 0b10 : 0;
             break;
             case ACTION_LEFT:
                 p_playerstate->player_dir.x = (pressed)? -1 : 0;

@@ -38,7 +38,6 @@ typedef struct _CTransform_t {
 typedef struct _CMovementState_t {
     uint8_t ground_state;
     uint8_t water_state;
-    bool ladder_state;
 } CMovementState_t;
 
 // This is to store the occupying tiles
@@ -67,6 +66,7 @@ typedef struct _CPlayerState_t {
     Vector2 player_dir;
     uint8_t jump_pressed;
     uint8_t is_crouch;
+    bool ladder_state;
 } CPlayerState_t;
 
 typedef enum ContainerItem {

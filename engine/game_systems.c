@@ -313,10 +313,85 @@ void player_movement_input_system(Scene_t* scene)
         CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
         CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_player, CMOVEMENTSTATE_T);
 
+        // Ladder handling
+        if (!p_pstate->ladder_state)
+        {
+            if (p_pstate->player_dir.y < 0)
+            {
+                unsigned int tile_idx = get_tile_idx(
+                    p_ctransform->position.x + p_bbox->half_size.x,
+                    p_ctransform->position.y + p_bbox->half_size.y,
+                    data->tilemap.width
+                );
+                if (tilemap.tiles[tile_idx].tile_type == LADDER)
+                {
+                    p_pstate->ladder_state = true;
+                    
+                    //p_ctransform->position.x = (tile_idx % tilemap.width) * TILE_SIZE;
+                    if (p_mstate->ground_state & 1)
+                    {
+                        p_ctransform->position.y--;
+                    }
+                }
+            }
+            else if (p_pstate->player_dir.y > 0)
+            {
+                unsigned int tile_idx;
+
+                if (p_mstate->ground_state & 1)
+                {
+                    tile_idx = get_tile_idx(
+                        p_ctransform->position.x + p_bbox->half_size.x,
+                        p_ctransform->position.y + p_bbox->size.y,
+                        data->tilemap.width
+                    );
+                }
+                else
+                {
+                    tile_idx = get_tile_idx(
+                        p_ctransform->position.x + p_bbox->half_size.x,
+                        p_ctransform->position.y + p_bbox->half_size.y,
+                        data->tilemap.width
+                    );
+                }
+                if (tile_idx < tilemap.n_tiles && tilemap.tiles[tile_idx].tile_type == LADDER)
+                {
+                    p_pstate->ladder_state = true;
+                    //p_ctransform->position.x = (tile_idx % tilemap.width) * TILE_SIZE;
+                    if (p_mstate->ground_state & 1)
+                    {
+                        p_ctransform->position.y += TILE_SIZE / 2;
+                    }
+                }
+            }
+        }
+        else
+        {
+            unsigned int tile_x = (p_ctransform->position.x + p_bbox->half_size.x) / TILE_SIZE;
+            unsigned int tile_y1 = (p_ctransform->position.y + p_bbox->half_size.y) / TILE_SIZE;
+            unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
+            
+            p_pstate->ladder_state = false;
+            if (!(p_mstate->ground_state & 1))
+            {
+                for(unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
+                {
+                    unsigned int tile_idx = tile_y * tilemap.width + tile_x;
+                    p_pstate->ladder_state |= tilemap.tiles[tile_idx].tile_type == LADDER;
+                }
+            }
+            if (p_pstate->ladder_state)
+            {
+                p_ctransform->velocity.y = p_pstate->player_dir.y * 150;
+                p_ctransform->velocity.x = p_pstate->player_dir.x * 40;
+            }
+        }
+
         bool in_water = (p_mstate->water_state & 1);
+        p_pstate->is_crouch |= (p_pstate->player_dir.y > 0)? 0b10 : 0;
         if (!in_water)
         {
-            p_pstate->is_crouch |= (p_pstate->player_dir.y > 0)? 0b10 : 0;
+
             p_pstate->player_dir.y = 0;
             p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL);
         }
@@ -368,10 +443,18 @@ void player_movement_input_system(Scene_t* scene)
         // Check if possible to jump when jump is pressed
         if (p_pstate->jump_pressed && p_cjump->jumps > 0 && p_cjump->jump_ready)
         {
+            p_pstate->ladder_state = false;
             p_cjump->jumps--;
             if (!in_water)
             {
-                p_ctransform->velocity.y = -p_cjump->jump_speed;
+                if (p_mstate->ground_state & 1)
+                {
+                    p_ctransform->velocity.y = -p_cjump->jump_speed;
+                }
+                else
+                {
+                    p_ctransform->velocity.y = -p_cjump->jump_speed / 1.4;
+                }
             }
             else
             {
@@ -419,7 +502,7 @@ void player_bbox_update_system(Scene_t* scene)
         }
         else
         {
-            if (p_mstate->water_state & 1)
+            if ((p_mstate->water_state & 1) && !p_pstate->ladder_state)
             {
                 new_bbox.x = PLAYER_C_WIDTH;
                 new_bbox.y = PLAYER_C_HEIGHT;
@@ -704,6 +787,16 @@ void global_external_forces_system(Scene_t* scene)
         }
 
     }
+    CPlayerState_t* p_pstate;
+    sc_map_foreach(&scene->ent_manager.component_map[CPLAYERSTATE_T], ent_idx, p_pstate)
+    {
+        Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
+        CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
+        if (p_pstate->ladder_state)
+        {
+            p_ctransform->accel = (Vector2){0,0};
+        }
+    }
 }
 
 void movement_update_system(Scene_t* scene)
@@ -753,7 +846,7 @@ void player_ground_air_transition_system(Scene_t* scene)
         // Handle Ground<->Air Transition
         bool in_water = (p_mstate->water_state & 1);
         // Landing or in water
-        if ((p_mstate->ground_state & 1 || in_water) && !p_pstate->jump_pressed )
+        if ((p_mstate->ground_state & 1 || in_water || p_pstate->ladder_state) && !p_pstate->jump_pressed )
         {
             // Recover jumps
             p_cjump->jumps = p_cjump->max_jumps;

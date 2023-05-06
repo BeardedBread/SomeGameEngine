@@ -316,6 +316,7 @@ void player_movement_input_system(Scene_t* scene)
         bool in_water = (p_mstate->water_state & 1);
         if (!in_water)
         {
+            p_pstate->is_crouch |= (p_pstate->player_dir.y > 0)? 0b10 : 0;
             p_pstate->player_dir.y = 0;
             p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL);
         }

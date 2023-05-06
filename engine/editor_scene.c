@@ -287,6 +287,11 @@ static void toggle_block_system(Scene_t* scene)
                             tilemap.tiles[tile_idx].solid = NOT_SOLID;
                         }
                     }
+                    int down_tile = tile_idx + tilemap.width;
+                    if (down_tile < MAX_N_TILES && tilemap.tiles[down_tile].tile_type == LADDER)
+                    {
+                        tilemap.tiles[down_tile].solid = (tilemap.tiles[tile_idx].tile_type != LADDER)? ONE_WAY : NOT_SOLID;
+                    }
                     tilemap.tiles[tile_idx].water_level = 0;
                 break;
                 case SPAWN_CRATE:
@@ -334,7 +339,7 @@ void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             break;
             case ACTION_DOWN:
                 p_playerstate->player_dir.y = (pressed)? 1 : 0;
-                p_playerstate->is_crouch |= (pressed)? 0b10 : 0;
+                //p_playerstate->is_crouch |= (pressed)? 0b10 : 0;
             break;
             case ACTION_LEFT:
                 p_playerstate->player_dir.x = (pressed)? -1 : 0;

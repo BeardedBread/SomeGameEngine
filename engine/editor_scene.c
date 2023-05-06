@@ -12,6 +12,7 @@ static Tile_t all_tiles[MAX_N_TILES] = {0};
 enum EntitySpawnSelection {
     TOGGLE_TILE = 0,
     TOGGLE_ONEWAY,
+    TOGGLE_LADDER,
     SPAWN_CRATE,
     SPAWN_METAL_CRATE,
 };
@@ -46,6 +47,10 @@ static void level_scene_render_func(Scene_t* scene)
         else if (tilemap.tiles[i].tile_type == ONEWAY_TILE)
         {
             DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, MAROON);
+        }
+        else if (tilemap.tiles[i].tile_type == LADDER)
+        {
+            DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, ORANGE);
         }
         else if (tilemap.tiles[i].water_level > 0)
         {
@@ -260,6 +265,27 @@ static void toggle_block_system(Scene_t* scene)
                     {
                         tilemap.tiles[tile_idx].tile_type = ONEWAY_TILE;
                         tilemap.tiles[tile_idx].solid = ONE_WAY;
+                    }
+                    tilemap.tiles[tile_idx].water_level = 0;
+                break;
+                case TOGGLE_LADDER:
+                    if (tilemap.tiles[tile_idx].tile_type == LADDER)
+                    {
+                        tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
+                        tilemap.tiles[tile_idx].solid = NOT_SOLID;
+                    }
+                    else
+                    {
+                        tilemap.tiles[tile_idx].tile_type = LADDER;
+                        int up_tile = tile_idx - tilemap.width;
+                        if (up_tile > 0 && tilemap.tiles[up_tile].tile_type != LADDER)
+                        {
+                            tilemap.tiles[tile_idx].solid = ONE_WAY;
+                        }
+                        else
+                        {
+                            tilemap.tiles[tile_idx].solid = NOT_SOLID;
+                        }
                     }
                     tilemap.tiles[tile_idx].water_level = 0;
                 break;

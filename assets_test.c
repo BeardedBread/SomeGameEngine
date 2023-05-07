@@ -56,6 +56,6 @@ int main(void)
             spr2->elapsed = 0;
         }
     } 
-    CloseWindow();
     term_assets(&assets);
+    CloseWindow();
 }

@@ -77,13 +77,11 @@ int main(void)
         update_scene(&scene.scene);
         update_entity_manager(&scene.scene.ent_manager);
         // This is needed to advance time delta
-        BeginDrawing();
-            render_scene(&scene.scene);
-            ClearBackground(RAYWHITE);
-        EndDrawing();
+        render_scene(&scene.scene);
         if (WindowShouldClose()) break;
     } 
-    CloseWindow();
     free_level_scene(&scene);
     sc_queue_term(&key_buffer);
+    term_assets(&engine.assets);
+    CloseWindow();
 }

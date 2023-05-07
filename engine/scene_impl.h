@@ -7,6 +7,10 @@
 #include "engine.h"
 #include "gui.h"
 
+#define container_of(ptr, type, member) ({         \
+    const typeof( ((type *)0)->member ) *__mptr = (ptr); \
+    (type *)( (char *)__mptr - offsetof(type,member) );})
+
 typedef enum TileType {
     EMPTY_TILE = 0,
     SOLID_TILE,
@@ -38,7 +42,8 @@ typedef struct TileGrid {
 
 typedef struct LevelSceneData {
     TileGrid_t tilemap;
-    struct sc_map_32 collision_events;
+    RenderTexture2D game_viewport;
+    Vector2 game_sz;
 }LevelSceneData_t;
 
 typedef struct LevelScene {

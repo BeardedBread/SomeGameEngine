@@ -6,10 +6,13 @@
 static void menu_scene_render_func(Scene_t* scene)
 {
     MenuSceneData_t* data = (MenuSceneData_t*)scene->scene_data;
-    DrawText("This is a game", 25, 220, 12, BLACK);
-    UI_button(data->buttons, "Start");
-    UI_button(data->buttons + 1, "Continue");
-    UI_button(data->buttons + 2, "Exit");
+    BeginDrawing();
+        ClearBackground(RAYWHITE);
+        DrawText("This is a game", 25, 220, 12, BLACK);
+        UI_button(data->buttons, "Start");
+        UI_button(data->buttons + 1, "Continue");
+        UI_button(data->buttons + 2, "Exit");
+    EndDrawing();
 }
 
 static void menu_do_action(Scene_t* scene, ActionType_t action, bool pressed)

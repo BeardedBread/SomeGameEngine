@@ -28,151 +28,163 @@ static inline unsigned int get_tile_idx(int x, int y, unsigned int tilemap_width
 
 static void level_scene_render_func(Scene_t* scene)
 {
-    LevelSceneData_t* data = (LevelSceneData_t *)scene->scene_data;
-    TileGrid_t tilemap = data->tilemap;
+    LevelScene_t* lvl_scene = container_of(scene, LevelScene_t, scene);
+    TileGrid_t tilemap = lvl_scene->data.tilemap;
 
     Entity_t* p_ent;
 
-    for (size_t i = 0; i < tilemap.n_tiles; ++i)
-    {
-        char buffer[6] = {0};
-        int x = (i % tilemap.width) * TILE_SIZE;
-        int y = (i / tilemap.width) * TILE_SIZE;
-        sprintf(buffer, "%u", sc_map_size_64(&tilemap.tiles[i].entities_set));
+    BeginTextureMode(lvl_scene->data.game_viewport);
+        ClearBackground(RAYWHITE);
+        for (size_t i = 0; i < tilemap.n_tiles; ++i)
+        {
+            char buffer[6] = {0};
+            int x = (i % tilemap.width) * TILE_SIZE;
+            int y = (i / tilemap.width) * TILE_SIZE;
+            sprintf(buffer, "%u", sc_map_size_64(&tilemap.tiles[i].entities_set));
 
-        if (tilemap.tiles[i].tile_type == SOLID_TILE)
-        {
-            DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
-        }
-        else if (tilemap.tiles[i].tile_type == ONEWAY_TILE)
-        {
-            DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, MAROON);
-        }
-        else if (tilemap.tiles[i].tile_type == LADDER)
-        {
-            DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, ORANGE);
-        }
-
-        if (tilemap.tiles[i].water_level > 0)
-        {
-            // Draw water tile
-            Color water_colour = ColorAlpha(BLUE, 0.5);
-            DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
-        }
-    }
-
-    char buffer[64] = {0};
-    sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
-    {
-        CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
-        Color colour;
-        switch(p_ent->m_tag)
-        {
-            case PLAYER_ENT_TAG:
-                colour = RED;
-            break;
-            case CRATES_ENT_TAG:
-                colour = p_bbox->fragile? BROWN : GRAY;
-            break;
-            default:
-                colour = BLACK;
-        }
-        DrawRectangle(p_ct->position.x, p_ct->position.y, p_bbox->size.x, p_bbox->size.y, colour);
-        CHurtbox_t* p_hurtbox = get_component(&scene->ent_manager, p_ent, CHURTBOX_T);
-        CHitBoxes_t* p_hitbox = get_component(&scene->ent_manager, p_ent, CHITBOXES_T);
-        if (p_hitbox != NULL)
-        {
-            for (uint8_t i = 0;i < p_hitbox->n_boxes; ++i)
+            if (tilemap.tiles[i].tile_type == SOLID_TILE)
             {
-                Rectangle rec = {
-                    .x = p_ct->position.x + p_hitbox->boxes[i].x,
-                    .y = p_ct->position.y + p_hitbox->boxes[i].y,
-                    .width = p_hitbox->boxes[i].width,
-                    .height = p_hitbox->boxes[i].height,
-                };
-                DrawRectangleLinesEx(rec, 1.5, ORANGE);
+                DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
+            }
+            else if (tilemap.tiles[i].tile_type == ONEWAY_TILE)
+            {
+                DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, MAROON);
+            }
+            else if (tilemap.tiles[i].tile_type == LADDER)
+            {
+                DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, ORANGE);
+            }
+
+            if (tilemap.tiles[i].water_level > 0)
+            {
+                // Draw water tile
+                Color water_colour = ColorAlpha(BLUE, 0.5);
+                DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
             }
         }
-        if (p_hurtbox != NULL)
+
+        char buffer[64] = {0};
+        sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
         {
-            Rectangle rec = {
-                .x = p_ct->position.x + p_hurtbox->offset.x,
-                .y = p_ct->position.y + p_hurtbox->offset.y,
-                .width = p_hurtbox->size.x,
-                .height = p_hurtbox->size.y,
-            };
-            DrawRectangleLinesEx(rec, 1.5, PURPLE);
+            CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
+            CBBox_t* p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
+            Color colour;
+            switch(p_ent->m_tag)
+            {
+                case PLAYER_ENT_TAG:
+                    colour = RED;
+                break;
+                case CRATES_ENT_TAG:
+                    colour = p_bbox->fragile? BROWN : GRAY;
+                break;
+                default:
+                    colour = BLACK;
+            }
+            DrawRectangle(p_ct->position.x, p_ct->position.y, p_bbox->size.x, p_bbox->size.y, colour);
+            CHurtbox_t* p_hurtbox = get_component(&scene->ent_manager, p_ent, CHURTBOX_T);
+            CHitBoxes_t* p_hitbox = get_component(&scene->ent_manager, p_ent, CHITBOXES_T);
+            if (p_hitbox != NULL)
+            {
+                for (uint8_t i = 0;i < p_hitbox->n_boxes; ++i)
+                {
+                    Rectangle rec = {
+                        .x = p_ct->position.x + p_hitbox->boxes[i].x,
+                        .y = p_ct->position.y + p_hitbox->boxes[i].y,
+                        .width = p_hitbox->boxes[i].width,
+                        .height = p_hitbox->boxes[i].height,
+                    };
+                    DrawRectangleLinesEx(rec, 1.5, ORANGE);
+                }
+            }
+            if (p_hurtbox != NULL)
+            {
+                Rectangle rec = {
+                    .x = p_ct->position.x + p_hurtbox->offset.x,
+                    .y = p_ct->position.y + p_hurtbox->offset.y,
+                    .width = p_hurtbox->size.x,
+                    .height = p_hurtbox->size.y,
+                };
+                DrawRectangleLinesEx(rec, 1.5, PURPLE);
+            }
+            CSprite_t* p_cspr = get_component(&scene->ent_manager, p_ent, CSPRITE_T);
+            if (p_cspr != NULL)
+            {
+                Vector2 pos = Vector2Add(p_ct->position, p_cspr->offset);
+                draw_sprite(p_cspr->sprite, pos);
+            }
         }
-        CSprite_t* p_cspr = get_component(&scene->ent_manager, p_ent, CSPRITE_T);
-        if (p_cspr != NULL)
+
+        for (size_t i = 0; i < tilemap.n_tiles; ++i)
         {
-            Vector2 pos = Vector2Add(p_ct->position, p_cspr->offset);
-            draw_sprite(p_cspr->sprite, pos);
+            int x = (i % tilemap.width) * TILE_SIZE;
+            int y = (i / tilemap.width) * TILE_SIZE;
+            sprintf(buffer, "%u", sc_map_size_64(&tilemap.tiles[i].entities_set));
+
+            if (tilemap.tiles[i].solid > 0)
+            {
+                DrawText(buffer, x, y, 10, WHITE);
+            }
+            else
+            {
+                // Draw water tile
+                DrawText(buffer, x, y, 10, BLACK);
+            }
         }
-    }
 
-    for (size_t i = 0; i < tilemap.n_tiles; ++i)
-    {
-        int x = (i % tilemap.width) * TILE_SIZE;
-        int y = (i / tilemap.width) * TILE_SIZE;
-        sprintf(buffer, "%u", sc_map_size_64(&tilemap.tiles[i].entities_set));
-
-        if (tilemap.tiles[i].solid > 0)
+        // Draw tile grid
+        for (size_t i = 0; i < tilemap.width; ++i)
         {
-            DrawText(buffer, x, y, 10, WHITE);
+            int x = (i+1)*TILE_SIZE;
+            DrawLine(x, 0, x, tilemap.height * TILE_SIZE, BLACK);
         }
-        else
+        for (size_t i = 0; i < tilemap.height;++i)
         {
-            // Draw water tile
-            DrawText(buffer, x, y, 10, BLACK);
+            int y = (i+1)*TILE_SIZE;
+            DrawLine(0, y, tilemap.width * TILE_SIZE, y, BLACK);
         }
-    }
+    EndTextureMode();
 
-    // Draw tile grid
-    for (size_t i = 0; i < tilemap.width; ++i)
-    {
-        int x = (i+1)*TILE_SIZE;
-        DrawLine(x, 0, x, tilemap.height * TILE_SIZE, BLACK);
-    }
-    for (size_t i = 0; i < tilemap.height;++i)
-    {
-        int y = (i+1)*TILE_SIZE;
-        DrawLine(0, y, tilemap.width * TILE_SIZE, y, BLACK);
-    }
+    BeginDrawing();
+        ClearBackground(SKYBLUE);
+        DrawTextureRec(
+            lvl_scene->data.game_viewport.texture,
+            (Rectangle){0, 0, lvl_scene->data.game_sz.x, -lvl_scene->data.game_sz.y},
+            (Vector2){ 0, 0 },
+            WHITE
+        );
+        // For DEBUG
+        sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
+        {
+            CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
+            CJump_t* p_cjump = get_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
+            CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
+            CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_ent, CMOVEMENTSTATE_T);
+            sprintf(buffer, "Pos: %.3f\n %.3f", p_ct->position.x, p_ct->position.y);
+            DrawText(buffer, tilemap.width * TILE_SIZE + 1, 15, 12, BLACK);
+            sprintf(buffer, "Vel: %.3f\n %.3f", p_ct->velocity.x, p_ct->velocity.y);
+            DrawText(buffer, tilemap.width * TILE_SIZE + 128, 15, 12, BLACK);
+            //sprintf(buffer, "Accel: %.3f\n %.3f", p_ct->accel.x, p_ct->accel.y);
+            //DrawText(buffer, tilemap.width * TILE_SIZE + 128, 60, 12, BLACK);
+            sprintf(buffer, "Jumps: %u", p_cjump->jumps);
+            DrawText(buffer, tilemap.width * TILE_SIZE + 1, 60, 12, BLACK);
+            sprintf(buffer, "Crouch: %u", p_pstate->is_crouch);
+            DrawText(buffer, tilemap.width * TILE_SIZE + 1, 90, 12, BLACK);
+            sprintf(buffer, "Water: %s", p_mstate->water_state & 1? "YES":"NO");
+            DrawText(buffer, tilemap.width * TILE_SIZE + 1, 120, 12, BLACK);
+            sprintf(buffer, "Ladder: %u", p_pstate->ladder_state);
+            DrawText(buffer, tilemap.width * TILE_SIZE + 1, 150, 12, BLACK);
+        }
+        sprintf(buffer, "Spawn Entity: %u", current_spawn_selection);
+        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 240, 12, BLACK);
+        sprintf(buffer, "Number of Entities: %u", sc_map_size_64v(&scene->ent_manager.entities));
+        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 270, 12, BLACK);
+        sprintf(buffer, "FPS: %u", GetFPS());
+        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 320, 12, BLACK);
 
-    // For DEBUG
-    sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
-    {
-        CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-        CJump_t* p_cjump = get_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
-        CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
-        CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_ent, CMOVEMENTSTATE_T);
-        sprintf(buffer, "Pos: %.3f\n %.3f", p_ct->position.x, p_ct->position.y);
-        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 15, 12, BLACK);
-        sprintf(buffer, "Vel: %.3f\n %.3f", p_ct->velocity.x, p_ct->velocity.y);
-        DrawText(buffer, tilemap.width * TILE_SIZE + 128, 15, 12, BLACK);
-        //sprintf(buffer, "Accel: %.3f\n %.3f", p_ct->accel.x, p_ct->accel.y);
-        //DrawText(buffer, tilemap.width * TILE_SIZE + 128, 60, 12, BLACK);
-        sprintf(buffer, "Jumps: %u", p_cjump->jumps);
-        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 60, 12, BLACK);
-        sprintf(buffer, "Crouch: %u", p_pstate->is_crouch);
-        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 90, 12, BLACK);
-        sprintf(buffer, "Water: %s", p_mstate->water_state & 1? "YES":"NO");
-        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 120, 12, BLACK);
-        sprintf(buffer, "Ladder: %u", p_pstate->ladder_state);
-        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 150, 12, BLACK);
-    }
-    sprintf(buffer, "Spawn Entity: %u", current_spawn_selection);
-    DrawText(buffer, tilemap.width * TILE_SIZE + 1, 240, 12, BLACK);
-    sprintf(buffer, "Number of Entities: %u", sc_map_size_64v(&scene->ent_manager.entities));
-    DrawText(buffer, tilemap.width * TILE_SIZE + 1, 270, 12, BLACK);
-    sprintf(buffer, "FPS: %u", GetFPS());
-    DrawText(buffer, tilemap.width * TILE_SIZE + 1, 320, 12, BLACK);
-
-    static char mempool_stats[512];
-    print_mempool_stats(mempool_stats);
-    DrawText(mempool_stats, tilemap.width * TILE_SIZE + 1, 350, 12, BLACK);
+        static char mempool_stats[512];
+        print_mempool_stats(mempool_stats);
+        DrawText(mempool_stats, tilemap.width * TILE_SIZE + 1, 350, 12, BLACK);
+    EndDrawing();
 }
 
 static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal)

@@ -57,7 +57,7 @@ int main(void)
         EndDrawing();
         if (WindowShouldClose()) break;
     } 
-    CloseWindow();
     free_menu_scene(&scene);
     sc_queue_term(&key_buffer);
+    CloseWindow();
 }

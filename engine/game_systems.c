@@ -634,7 +634,7 @@ void tile_collision_system(Scene_t* scene)
         //    Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
         //    if (!p_ent->m_alive || !p_other_ent->m_alive) continue;
         //}
-        sc_map_clear_32(&data->collision_events);
+        //sc_map_clear_32(&data->collision_events);
 
         // Level boundary collision
         unsigned int level_width = tilemap.width * TILE_SIZE;
@@ -1094,12 +1094,15 @@ void sprite_animation_system(Scene_t* scene)
 
 void init_level_scene_data(LevelSceneData_t* data)
 {
-    sc_map_init_32(&data->collision_events, 128, 0);
+    //sc_map_init_32(&data->collision_events, 128, 0);
+    data->game_viewport = LoadRenderTexture(32*TILE_SIZE, 16*TILE_SIZE);
+    data->game_sz = (Vector2){32*TILE_SIZE, 16*TILE_SIZE};
 }
 
 void term_level_scene_data(LevelSceneData_t* data)
 {
-    sc_map_term_32(&data->collision_events);
+    //sc_map_term_32(&data->collision_events);
+    UnloadRenderTexture(data->game_viewport); // Unload render texture
 }
 
 unsigned int player_sprite_transition_func(Entity_t* ent)

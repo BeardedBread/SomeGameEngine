@@ -7,7 +7,7 @@
 #include "engine.h"
 #include "gui.h"
 
-#define container_of(ptr, type, member) ({         \
+#define CONTAINER_OF(ptr, type, member) ({         \
     const typeof( ((type *)0)->member ) *__mptr = (ptr); \
     (type *)( (char *)__mptr - offsetof(type,member) );})
 
@@ -43,7 +43,8 @@ typedef struct TileGrid {
 typedef struct LevelSceneData {
     TileGrid_t tilemap;
     RenderTexture2D game_viewport;
-    Vector2 game_sz;
+    Rectangle game_rec;
+    Camera2D cam;
 }LevelSceneData_t;
 
 typedef struct LevelScene {

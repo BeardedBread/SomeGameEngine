@@ -1092,11 +1092,41 @@ void sprite_animation_system(Scene_t* scene)
     }
 }
 
+void camera_update_system(Scene_t* scene)
+{
+    LevelScene_t* lvl_scene = CONTAINER_OF(scene, LevelScene_t, scene);
+    Entity_t* p_player;
+    const int width = lvl_scene->data.game_rec.width;
+    const int height = lvl_scene->data.game_rec.height;
+    sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
+    {
+        CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
+        lvl_scene->data.cam.offset = (Vector2){ width/2.0f, height/2.0f };
+        lvl_scene->data.cam.target = p_ctransform->position;
+    }
+    Vector2 max = GetWorldToScreen2D(
+        (Vector2){
+            lvl_scene->data.tilemap.width * TILE_SIZE,
+            lvl_scene->data.tilemap.height * TILE_SIZE
+        },
+        lvl_scene->data.cam
+    );
+    Vector2 min = GetWorldToScreen2D((Vector2){0, 0}, lvl_scene->data.cam);
+
+    if (max.x < width) lvl_scene->data.cam.offset.x = width - (max.x - width/2.0f);
+    if (max.y < height) lvl_scene->data.cam.offset.y = height - (max.y - height/2.0f);
+    if (min.x > 0) lvl_scene->data.cam.offset.x = width/2.0f - min.x;
+    if (min.y > 0) lvl_scene->data.cam.offset.y = height/2.0f - min.y;
+}
+
 void init_level_scene_data(LevelSceneData_t* data)
 {
     //sc_map_init_32(&data->collision_events, 128, 0);
-    data->game_viewport = LoadRenderTexture(32*TILE_SIZE, 16*TILE_SIZE);
-    data->game_sz = (Vector2){32*TILE_SIZE, 16*TILE_SIZE};
+    data->game_viewport = LoadRenderTexture(VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE);
+    data->game_rec = (Rectangle){25, 25, VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE};
+    data->cam = (Camera2D){0};
+    data->cam.rotation = 0.0f;
+    data->cam.zoom = 1.0f;
 }
 
 void term_level_scene_data(LevelSceneData_t* data)

@@ -16,25 +16,32 @@ enum EntitySpawnSelection {
     SPAWN_CRATE,
     SPAWN_METAL_CRATE,
 };
-#define MAX_SPAWN_TYPE 4
+#define MAX_SPAWN_TYPE 5
 static unsigned int current_spawn_selection = 0;
 
-static inline unsigned int get_tile_idx(int x, int y, unsigned int tilemap_width)
+static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
 {
     unsigned int tile_x = x / TILE_SIZE;
     unsigned int tile_y = y / TILE_SIZE;
-    return tile_y * tilemap_width + tile_x;
+
+    if (tile_x < tilemap->width && tile_y < tilemap->height)
+    {
+        return tile_y * tilemap->width + tile_x;
+    }
+
+    return MAX_N_TILES;
 }
 
 static void level_scene_render_func(Scene_t* scene)
 {
-    LevelScene_t* lvl_scene = container_of(scene, LevelScene_t, scene);
+    LevelScene_t* lvl_scene = CONTAINER_OF(scene, LevelScene_t, scene);
     TileGrid_t tilemap = lvl_scene->data.tilemap;
 
     Entity_t* p_ent;
 
     BeginTextureMode(lvl_scene->data.game_viewport);
         ClearBackground(RAYWHITE);
+        BeginMode2D(lvl_scene->data.cam);
         for (size_t i = 0; i < tilemap.n_tiles; ++i)
         {
             char buffer[6] = {0};
@@ -142,17 +149,23 @@ static void level_scene_render_func(Scene_t* scene)
             int y = (i+1)*TILE_SIZE;
             DrawLine(0, y, tilemap.width * TILE_SIZE, y, BLACK);
         }
+        EndMode2D();
     EndTextureMode();
 
+    Rectangle draw_rec = lvl_scene->data.game_rec;
+    draw_rec.x = 0;
+    draw_rec.y = 0;
+    draw_rec.height *= -1;
     BeginDrawing();
         ClearBackground(SKYBLUE);
         DrawTextureRec(
             lvl_scene->data.game_viewport.texture,
-            (Rectangle){0, 0, lvl_scene->data.game_sz.x, -lvl_scene->data.game_sz.y},
-            (Vector2){ 0, 0 },
+            draw_rec,
+            (Vector2){lvl_scene->data.game_rec.x, lvl_scene->data.game_rec.y},
             WHITE
         );
         // For DEBUG
+        const int gui_x = lvl_scene->data.game_rec.x + lvl_scene->data.game_rec.width + 10;
         sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
         {
             CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
@@ -160,30 +173,30 @@ static void level_scene_render_func(Scene_t* scene)
             CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
             CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_ent, CMOVEMENTSTATE_T);
             sprintf(buffer, "Pos: %.3f\n %.3f", p_ct->position.x, p_ct->position.y);
-            DrawText(buffer, tilemap.width * TILE_SIZE + 1, 15, 12, BLACK);
+            DrawText(buffer, gui_x, 15, 12, BLACK);
             sprintf(buffer, "Vel: %.3f\n %.3f", p_ct->velocity.x, p_ct->velocity.y);
-            DrawText(buffer, tilemap.width * TILE_SIZE + 128, 15, 12, BLACK);
+            DrawText(buffer, gui_x + 80, 15, 12, BLACK);
             //sprintf(buffer, "Accel: %.3f\n %.3f", p_ct->accel.x, p_ct->accel.y);
             //DrawText(buffer, tilemap.width * TILE_SIZE + 128, 60, 12, BLACK);
             sprintf(buffer, "Jumps: %u", p_cjump->jumps);
-            DrawText(buffer, tilemap.width * TILE_SIZE + 1, 60, 12, BLACK);
+            DrawText(buffer, gui_x, 60, 12, BLACK);
             sprintf(buffer, "Crouch: %u", p_pstate->is_crouch);
-            DrawText(buffer, tilemap.width * TILE_SIZE + 1, 90, 12, BLACK);
+            DrawText(buffer, gui_x, 90, 12, BLACK);
             sprintf(buffer, "Water: %s", p_mstate->water_state & 1? "YES":"NO");
-            DrawText(buffer, tilemap.width * TILE_SIZE + 1, 120, 12, BLACK);
+            DrawText(buffer, gui_x, 120, 12, BLACK);
             sprintf(buffer, "Ladder: %u", p_pstate->ladder_state);
-            DrawText(buffer, tilemap.width * TILE_SIZE + 1, 150, 12, BLACK);
+            DrawText(buffer, gui_x, 150, 12, BLACK);
         }
         sprintf(buffer, "Spawn Entity: %u", current_spawn_selection);
-        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 240, 12, BLACK);
+        DrawText(buffer, gui_x, 240, 12, BLACK);
         sprintf(buffer, "Number of Entities: %u", sc_map_size_64v(&scene->ent_manager.entities));
-        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 270, 12, BLACK);
+        DrawText(buffer, gui_x, 270, 12, BLACK);
         sprintf(buffer, "FPS: %u", GetFPS());
-        DrawText(buffer, tilemap.width * TILE_SIZE + 1, 320, 12, BLACK);
+        DrawText(buffer, gui_x, 320, 12, BLACK);
 
         static char mempool_stats[512];
         print_mempool_stats(mempool_stats);
-        DrawText(mempool_stats, tilemap.width * TILE_SIZE + 1, 350, 12, BLACK);
+        DrawText(mempool_stats, gui_x, 350, 12, BLACK);
     EndDrawing();
 }
 
@@ -249,10 +262,18 @@ static void toggle_block_system(Scene_t* scene)
     static unsigned int last_tile_idx = MAX_N_TILES;
     LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
     TileGrid_t tilemap = data->tilemap;
+    Vector2 raw_mouse_pos = {GetMouseX(), GetMouseY()};
+    raw_mouse_pos = Vector2Subtract(raw_mouse_pos, (Vector2){data->game_rec.x, data->game_rec.y});
 
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
     {
-        unsigned int tile_idx = get_tile_idx(GetMouseX(), GetMouseY(), tilemap.width);
+        if (
+            raw_mouse_pos.x > data->game_rec.width
+            || raw_mouse_pos.y > data->game_rec.height
+        ) return;
+        Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data->cam);
+        
+        unsigned int tile_idx = get_tile_idx(mouse_pos.x, mouse_pos.y, &tilemap);
         enum EntitySpawnSelection sel = (enum EntitySpawnSelection)current_spawn_selection;
         if (tile_idx != last_tile_idx)
         {
@@ -321,7 +342,13 @@ static void toggle_block_system(Scene_t* scene)
     // TODO: Check for right click to change to water, also update above
     else if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
     {
-        unsigned int tile_idx = get_tile_idx(GetMouseX(), GetMouseY(), tilemap.width);
+        if (
+            raw_mouse_pos.x > data->game_rec.width
+            || raw_mouse_pos.y > data->game_rec.height
+        ) return;
+        Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data->cam);
+        
+        unsigned int tile_idx = get_tile_idx(mouse_pos.x, mouse_pos.y, &tilemap);
         if (tile_idx != last_tile_idx)
         {
             if (tilemap.tiles[tile_idx].water_level == 0)
@@ -411,6 +438,7 @@ void init_level_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &state_transition_update_system);
     sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
     sc_array_add(&scene->scene.systems, &sprite_animation_system);
+    sc_array_add(&scene->scene.systems, &camera_update_system);
     sc_array_add(&scene->scene.systems, &toggle_block_system);
 
     // This avoid graphical glitch, not essential

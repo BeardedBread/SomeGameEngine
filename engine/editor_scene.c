@@ -157,7 +157,7 @@ static void level_scene_render_func(Scene_t* scene)
     draw_rec.y = 0;
     draw_rec.height *= -1;
     BeginDrawing();
-        ClearBackground(SKYBLUE);
+        ClearBackground(LIGHTGRAY);
         DrawTextureRec(
             lvl_scene->data.game_viewport.texture,
             draw_rec,
@@ -202,7 +202,7 @@ static void level_scene_render_func(Scene_t* scene)
 
 static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal)
 {
-    LevelSceneData_t* data = (LevelSceneData_t*)scene->scene_data;
+    LevelSceneData_t data = CONTAINER_OF(scene, LevelScene_t, scene)->data;
     Entity_t* p_crate = add_entity(&scene->ent_manager, CRATES_ENT_TAG);
     CBBox_t* p_bbox = add_component(&scene->ent_manager, p_crate, CBBOX_COMP_T);
 
@@ -211,8 +211,8 @@ static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal)
     p_bbox->fragile = !metal;
 
     CTransform_t* p_ctransform = add_component(&scene->ent_manager, p_crate, CTRANSFORM_COMP_T);
-    p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
-    p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
+    p_ctransform->position.x = (tile_idx % data.tilemap.width) * TILE_SIZE;
+    p_ctransform->position.y = (tile_idx / data.tilemap.width) * TILE_SIZE;
     add_component(&scene->ent_manager, p_crate, CMOVEMENTSTATE_T);
     add_component(&scene->ent_manager, p_crate, CTILECOORD_COMP_T);
     CHurtbox_t* p_hurtbox = add_component(&scene->ent_manager, p_crate, CHURTBOX_T);
@@ -260,20 +260,21 @@ static void toggle_block_system(Scene_t* scene)
 {
     // TODO: This system is not good as the interface between raw input and actions is broken
     static unsigned int last_tile_idx = MAX_N_TILES;
-    LevelSceneData_t *data = (LevelSceneData_t *)scene->scene_data;
-    TileGrid_t tilemap = data->tilemap;
+    LevelSceneData_t data = CONTAINER_OF(scene, LevelScene_t, scene)->data;
+    TileGrid_t tilemap = data.tilemap;
     Vector2 raw_mouse_pos = {GetMouseX(), GetMouseY()};
-    raw_mouse_pos = Vector2Subtract(raw_mouse_pos, (Vector2){data->game_rec.x, data->game_rec.y});
+    raw_mouse_pos = Vector2Subtract(raw_mouse_pos, (Vector2){data.game_rec.x, data.game_rec.y});
 
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
     {
         if (
-            raw_mouse_pos.x > data->game_rec.width
-            || raw_mouse_pos.y > data->game_rec.height
+            raw_mouse_pos.x > data.game_rec.width
+            || raw_mouse_pos.y > data.game_rec.height
         ) return;
-        Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data->cam);
+        Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data.cam);
         
         unsigned int tile_idx = get_tile_idx(mouse_pos.x, mouse_pos.y, &tilemap);
+        if (tile_idx >= MAX_N_TILES) return;
         enum EntitySpawnSelection sel = (enum EntitySpawnSelection)current_spawn_selection;
         if (tile_idx != last_tile_idx)
         {
@@ -339,16 +340,16 @@ static void toggle_block_system(Scene_t* scene)
             last_tile_idx = tile_idx;
         }
     }
-    // TODO: Check for right click to change to water, also update above
     else if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
     {
         if (
-            raw_mouse_pos.x > data->game_rec.width
-            || raw_mouse_pos.y > data->game_rec.height
+            raw_mouse_pos.x > data.game_rec.width
+            || raw_mouse_pos.y > data.game_rec.height
         ) return;
-        Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data->cam);
+        Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data.cam);
         
         unsigned int tile_idx = get_tile_idx(mouse_pos.x, mouse_pos.y, &tilemap);
+        if (tile_idx >= MAX_N_TILES) return;
         if (tile_idx != last_tile_idx)
         {
             if (tilemap.tiles[tile_idx].water_level == 0)

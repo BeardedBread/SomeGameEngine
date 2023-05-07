@@ -34,14 +34,14 @@ static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
 
 static void level_scene_render_func(Scene_t* scene)
 {
-    LevelScene_t* lvl_scene = CONTAINER_OF(scene, LevelScene_t, scene);
-    TileGrid_t tilemap = lvl_scene->data.tilemap;
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    TileGrid_t tilemap = data->tilemap;
 
     Entity_t* p_ent;
 
-    BeginTextureMode(lvl_scene->data.game_viewport);
+    BeginTextureMode(data->game_viewport);
         ClearBackground(RAYWHITE);
-        BeginMode2D(lvl_scene->data.cam);
+        BeginMode2D(data->cam);
         for (size_t i = 0; i < tilemap.n_tiles; ++i)
         {
             char buffer[6] = {0};
@@ -152,20 +152,20 @@ static void level_scene_render_func(Scene_t* scene)
         EndMode2D();
     EndTextureMode();
 
-    Rectangle draw_rec = lvl_scene->data.game_rec;
+    Rectangle draw_rec = data->game_rec;
     draw_rec.x = 0;
     draw_rec.y = 0;
     draw_rec.height *= -1;
     BeginDrawing();
         ClearBackground(LIGHTGRAY);
         DrawTextureRec(
-            lvl_scene->data.game_viewport.texture,
+            data->game_viewport.texture,
             draw_rec,
-            (Vector2){lvl_scene->data.game_rec.x, lvl_scene->data.game_rec.y},
+            (Vector2){data->game_rec.x, data->game_rec.y},
             WHITE
         );
         // For DEBUG
-        const int gui_x = lvl_scene->data.game_rec.x + lvl_scene->data.game_rec.width + 10;
+        const int gui_x = data->game_rec.x + data->game_rec.width + 10;
         sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
         {
             CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
@@ -202,7 +202,7 @@ static void level_scene_render_func(Scene_t* scene)
 
 static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal)
 {
-    LevelSceneData_t data = CONTAINER_OF(scene, LevelScene_t, scene)->data;
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     Entity_t* p_crate = add_entity(&scene->ent_manager, CRATES_ENT_TAG);
     CBBox_t* p_bbox = add_component(&scene->ent_manager, p_crate, CBBOX_COMP_T);
 
@@ -211,8 +211,8 @@ static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal)
     p_bbox->fragile = !metal;
 
     CTransform_t* p_ctransform = add_component(&scene->ent_manager, p_crate, CTRANSFORM_COMP_T);
-    p_ctransform->position.x = (tile_idx % data.tilemap.width) * TILE_SIZE;
-    p_ctransform->position.y = (tile_idx / data.tilemap.width) * TILE_SIZE;
+    p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
+    p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
     add_component(&scene->ent_manager, p_crate, CMOVEMENTSTATE_T);
     add_component(&scene->ent_manager, p_crate, CTILECOORD_COMP_T);
     CHurtbox_t* p_hurtbox = add_component(&scene->ent_manager, p_crate, CHURTBOX_T);
@@ -260,18 +260,18 @@ static void toggle_block_system(Scene_t* scene)
 {
     // TODO: This system is not good as the interface between raw input and actions is broken
     static unsigned int last_tile_idx = MAX_N_TILES;
-    LevelSceneData_t data = CONTAINER_OF(scene, LevelScene_t, scene)->data;
-    TileGrid_t tilemap = data.tilemap;
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    TileGrid_t tilemap = data->tilemap;
     Vector2 raw_mouse_pos = {GetMouseX(), GetMouseY()};
-    raw_mouse_pos = Vector2Subtract(raw_mouse_pos, (Vector2){data.game_rec.x, data.game_rec.y});
+    raw_mouse_pos = Vector2Subtract(raw_mouse_pos, (Vector2){data->game_rec.x, data->game_rec.y});
 
     if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
     {
         if (
-            raw_mouse_pos.x > data.game_rec.width
-            || raw_mouse_pos.y > data.game_rec.height
+            raw_mouse_pos.x > data->game_rec.width
+            || raw_mouse_pos.y > data->game_rec.height
         ) return;
-        Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data.cam);
+        Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data->cam);
         
         unsigned int tile_idx = get_tile_idx(mouse_pos.x, mouse_pos.y, &tilemap);
         if (tile_idx >= MAX_N_TILES) return;
@@ -343,10 +343,10 @@ static void toggle_block_system(Scene_t* scene)
     else if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
     {
         if (
-            raw_mouse_pos.x > data.game_rec.width
-            || raw_mouse_pos.y > data.game_rec.height
+            raw_mouse_pos.x > data->game_rec.width
+            || raw_mouse_pos.y > data->game_rec.height
         ) return;
-        Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data.cam);
+        Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data->cam);
         
         unsigned int tile_idx = get_tile_idx(mouse_pos.x, mouse_pos.y, &tilemap);
         if (tile_idx >= MAX_N_TILES) return;
@@ -423,7 +423,6 @@ void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 void init_level_scene(LevelScene_t* scene)
 {
     init_scene(&scene->scene, LEVEL_SCENE, &level_scene_render_func, &level_do_action);
-    scene->scene.scene_data = &scene->data;
 
     init_level_scene_data(&scene->data);
     // insert level scene systems

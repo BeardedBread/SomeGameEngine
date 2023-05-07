@@ -299,7 +299,7 @@ static Vector2 shift_bbox(Vector2 bbox, Vector2 new_bbox, AnchorPoint_t anchor)
 
 void player_movement_input_system(Scene_t* scene)
 {
-    LevelSceneData_t* data = (LevelSceneData_t*)scene->scene_data;
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     TileGrid_t tilemap = data->tilemap;
 
     // Deal with player acceleration/velocity via inputs first
@@ -472,7 +472,7 @@ void player_movement_input_system(Scene_t* scene)
 
 void player_bbox_update_system(Scene_t* scene)
 {
-    LevelSceneData_t* data = (LevelSceneData_t*)scene->scene_data;
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     TileGrid_t tilemap = data->tilemap;
 
     Entity_t* p_player;
@@ -538,7 +538,7 @@ void tile_collision_system(Scene_t* scene)
 {
     static bool checked_entities[MAX_COMP_POOL_SIZE] = {0};
 
-    LevelSceneData_t* data = (LevelSceneData_t*)scene->scene_data;
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     TileGrid_t tilemap = data->tilemap;
 
 
@@ -728,7 +728,7 @@ void friction_coefficient_update_system(Scene_t* scene)
 
 void global_external_forces_system(Scene_t* scene)
 {
-    LevelSceneData_t* data = (LevelSceneData_t*)scene->scene_data;
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     CMovementState_t* p_mstate;
     unsigned long ent_idx;
     sc_map_foreach(&scene->ent_manager.component_map[CMOVEMENTSTATE_T], ent_idx, p_mstate)
@@ -867,7 +867,7 @@ void player_ground_air_transition_system(Scene_t* scene)
 
 void state_transition_update_system(Scene_t* scene)
 {
-    LevelSceneData_t* data = (LevelSceneData_t*)scene->scene_data;
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     //Entity_t* p_ent;
 
     CMovementState_t* p_mstate;
@@ -920,7 +920,7 @@ void state_transition_update_system(Scene_t* scene)
 
 void update_tilemap_system(Scene_t* scene)
 {
-    LevelSceneData_t* data = (LevelSceneData_t*)scene->scene_data;
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     TileGrid_t tilemap = data->tilemap;
 
     CTileCoord_t* p_tilecoord;
@@ -966,7 +966,7 @@ void hitbox_update_system(Scene_t* scene)
 {
     static bool checked_entities[MAX_COMP_POOL_SIZE] = {0};
 
-    LevelSceneData_t* data = (LevelSceneData_t*)scene->scene_data;
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     TileGrid_t tilemap = data->tilemap;
 
     unsigned int ent_idx;

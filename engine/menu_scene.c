@@ -5,7 +5,7 @@
 
 static void menu_scene_render_func(Scene_t* scene)
 {
-    MenuSceneData_t* data = (MenuSceneData_t*)scene->scene_data;
+    MenuSceneData_t* data = &(CONTAINER_OF(scene, MenuScene_t, scene)->data);
     BeginDrawing();
         ClearBackground(RAYWHITE);
         DrawText("This is a game", 25, 220, 12, BLACK);
@@ -17,7 +17,7 @@ static void menu_scene_render_func(Scene_t* scene)
 
 static void menu_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
-    MenuSceneData_t* data = (MenuSceneData_t*)scene->scene_data;
+    MenuSceneData_t* data = &(CONTAINER_OF(scene, MenuScene_t, scene)->data);
     int new_selection = data->selected_comp;
     if (!pressed)
     {
@@ -66,7 +66,7 @@ static void menu_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 
 static void gui_loop(Scene_t* scene)
 {
-    MenuSceneData_t* data = (MenuSceneData_t*)scene->scene_data;
+    MenuSceneData_t* data = &(CONTAINER_OF(scene, MenuScene_t, scene)->data);
     if (Vector2LengthSqr(GetMouseDelta()) > 1)
     {
         data->mode = MOUSE_MODE;
@@ -119,7 +119,6 @@ static void gui_loop(Scene_t* scene)
 void init_menu_scene(MenuScene_t* scene)
 {
     init_scene(&scene->scene, MENU_SCENE, &menu_scene_render_func, &menu_do_action);
-    scene->scene.scene_data = &scene->data;
 
     sc_array_add(&scene->scene.systems, &gui_loop);
     

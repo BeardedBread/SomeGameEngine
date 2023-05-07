@@ -38,7 +38,6 @@ struct Scene {
     EntityManager_t ent_manager;
     SceneType_t scene_type;
     SceneState_t state;
-    void * scene_data;
     GameEngine_t *engine;
 };
 

@@ -7,7 +7,8 @@ Scene_t *scenes[N_SCENES];
 static GameEngine_t engine = {
     .scenes = scenes,
     .max_scenes = 2,
-    .curr_scene = 0
+    .curr_scene = 0,
+    .assets = {0}
 };
 
 const int screenWidth = 1280;
@@ -15,6 +16,16 @@ const int screenHeight = 640;
 
 static void load_assets(void)
 {
+    Texture2D* tex = add_texture(&engine.assets, "plr_tex", "res/test_tex.png");
+    Sprite_t* spr = add_sprite(&engine.assets, "plr_stand", tex);
+    spr->origin = (Vector2){0, 0};
+    spr->frame_size = (Vector2){32, 32};
+
+    spr = add_sprite(&engine.assets, "plr_run", tex);
+    spr->frame_count = 4;
+    spr->origin = (Vector2){0, 0};
+    spr->frame_size = (Vector2){32, 32};
+    spr->speed = 15;
 }
 
 // Maintain own queue to handle key presses
@@ -28,16 +39,20 @@ int main(void)
     InitWindow(screenWidth, screenHeight, "raylib");
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     init_memory_pools();
+
+    init_assets(&engine.assets);
+    load_assets();
+
     LevelScene_t level_scene;
-    init_level_scene(&level_scene);
     level_scene.scene.engine = &engine;
+    init_level_scene(&level_scene);
     MenuScene_t menu_scene;
-    init_menu_scene(&menu_scene);
     menu_scene.scene.engine = &engine;
+    init_menu_scene(&menu_scene);
     scenes[0] = &menu_scene.scene;
     scenes[1] = &level_scene.scene;
-    load_assets();
     change_scene(&engine, 0);
+
     //Camera2D camera = { 0 };
     //camera.offset = (Vector2){0,0};
     //camera.rotation = 0.0f;
@@ -79,18 +94,16 @@ int main(void)
         update_scene(curr_scene);
         update_entity_manager(&curr_scene->ent_manager);
         // This is needed to advance time delta
-        BeginDrawing();
-            render_scene(curr_scene);
-            ClearBackground(RAYWHITE);
-        EndDrawing();
+        render_scene(curr_scene);
 
         if (curr_scene->state != SCENE_PLAYING)
         {
             sc_queue_clear(&key_buffer);
         }
     }
-    CloseWindow(); 
     free_level_scene(&level_scene);
     free_menu_scene(&menu_scene);
     sc_queue_term(&key_buffer);
+    term_assets(&engine.assets);
+    CloseWindow(); 
 }

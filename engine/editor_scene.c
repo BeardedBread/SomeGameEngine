@@ -40,7 +40,7 @@ static void level_scene_render_func(Scene_t* scene)
     Entity_t* p_ent;
 
     BeginTextureMode(data->game_viewport);
-        ClearBackground(RAYWHITE);
+        ClearBackground(WHITE);
         BeginMode2D(data->cam);
         for (size_t i = 0; i < tilemap.n_tiles; ++i)
         {
@@ -252,6 +252,7 @@ static void spawn_player(Scene_t* scene)
     };
     CSprite_t* p_cspr = add_component(&scene->ent_manager, p_ent, CSPRITE_T);
     p_cspr->sprite = get_sprite(&scene->engine->assets, "plr_stand");
+    p_cspr->offset = (Vector2){0, -20};
     p_cspr->sprites_map = player_sprite_map;
     p_cspr->transition_func = &player_sprite_transition_func;
 }

@@ -23,16 +23,16 @@ int main(void)
     init_memory_pools();
 
     init_assets(&engine.assets);
-    Texture2D* tex = add_texture(&engine.assets, "plr_tex", "res/test_tex.png");
+    Texture2D* tex = add_texture(&engine.assets, "plr_tex", "res/bunny_stand.png");
     Sprite_t* spr = add_sprite(&engine.assets, "plr_stand", tex);
     spr->origin = (Vector2){0, 0};
-    spr->frame_size = (Vector2){32, 32};
+    spr->frame_size = (Vector2){32, 64};
 
     spr = add_sprite(&engine.assets, "plr_run", tex);
-    spr->frame_count = 4;
+    spr->frame_count = 1;
     spr->origin = (Vector2){0, 0};
-    spr->frame_size = (Vector2){32, 32};
-    spr->speed = 15;
+    spr->frame_size = (Vector2){32, 64};
+    spr->speed = 30;
 
     LevelScene_t scene;
     scene.scene.engine = &engine;

@@ -4,7 +4,7 @@
 #ifndef TILE16_SIZE
 #define TILE_SIZE 32
 #define DEFAULT_MAP_WIDTH 48
-#define DEFAULT_MAP_HEIGHT 16
+#define DEFAULT_MAP_HEIGHT 22
 #define VIEWABLE_MAP_WIDTH 32
 #define VIEWABLE_MAP_HEIGHT 16
 #else
@@ -22,7 +22,7 @@
 
 #ifndef TILE16_SIZE
 #define PLAYER_WIDTH 30
-#define PLAYER_HEIGHT 55
+#define PLAYER_HEIGHT 42
 #define PLAYER_C_WIDTH 30
 #define PLAYER_C_HEIGHT 30
 #else

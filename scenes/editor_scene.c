@@ -203,21 +203,11 @@ static void level_scene_render_func(Scene_t* scene)
 static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
-    Entity_t* p_crate = add_entity(&scene->ent_manager, CRATES_ENT_TAG);
-    CBBox_t* p_bbox = add_component(&scene->ent_manager, p_crate, CBBOX_COMP_T);
+    Entity_t* p_crate = create_crate(&scene->ent_manager, &scene->engine->assets, metal);
 
-    set_bbox(p_bbox, TILE_SIZE, TILE_SIZE);
-    p_bbox->solid = true;
-    p_bbox->fragile = !metal;
-
-    CTransform_t* p_ctransform = add_component(&scene->ent_manager, p_crate, CTRANSFORM_COMP_T);
+    CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_crate, CTRANSFORM_COMP_T);
     p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
     p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
-    add_component(&scene->ent_manager, p_crate, CMOVEMENTSTATE_T);
-    add_component(&scene->ent_manager, p_crate, CTILECOORD_COMP_T);
-    CHurtbox_t* p_hurtbox = add_component(&scene->ent_manager, p_crate, CHURTBOX_T);
-    p_hurtbox->size = p_bbox->size;
-    p_hurtbox->fragile = !metal;
 }
 
 static void toggle_block_system(Scene_t* scene)

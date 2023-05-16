@@ -1,6 +1,7 @@
 add_subdirectory(engine)
 add_library(lib_scenes STATIC
     player_ent.c
+    items_ent.c
     editor_scene.c
     menu_scene.c
     game_systems.c

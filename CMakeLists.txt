@@ -11,17 +11,11 @@ if (${CMAKE_BUILD_TYPE} STREQUAL tile16)
 endif()
 
 set(GAME_LIBS
-    lib_EC
     lib_scenes
-    sc_queue
-    sc_map
-    sc_array
-    raylib
-    m
 )
 
 
-add_subdirectory(engine)
+add_subdirectory(scenes)
 add_executable(${PROJECT_NAME}
     main.c
 )
@@ -29,11 +23,6 @@ add_executable(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${RAYLIB_DIR}/include
-)
-target_link_directories(${PROJECT_NAME}
-    PRIVATE
-    ${RAYLIB_DIR}/lib
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -48,17 +37,9 @@ target_link_options(EntManager_test PRIVATE -fsanitize=address -gdwarf-4)
 target_include_directories(EntManager_test
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${RAYLIB_DIR}/include
-)
-target_link_directories(EntManager_test
-    PRIVATE
-    ${RAYLIB_DIR}/lib
 )
 target_link_libraries(EntManager_test
-    lib_EC
-    lib_scenes
-    sc_queue
-    sc_map
+    ${GAME_LIBS}
 )
 
 add_executable(scene_test
@@ -68,16 +49,10 @@ add_executable(scene_test
 target_include_directories(scene_test
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${RAYLIB_DIR}/include
 )
 
 target_compile_options(scene_test PRIVATE -fsanitize=address -gdwarf-4)
 target_link_options(scene_test PRIVATE -fsanitize=address -gdwarf-4)
-
-target_link_directories(scene_test
-    PRIVATE
-    ${RAYLIB_DIR}/lib
-)
 
 target_link_libraries(scene_test
     ${GAME_LIBS}
@@ -89,13 +64,9 @@ add_executable(scene_test_mem
 target_include_directories(scene_test_mem
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${RAYLIB_DIR}/include
 )
 target_link_options(scene_test_mem PRIVATE -Xlinker -Map=scene_test.map)
-target_link_directories(scene_test_mem
-    PRIVATE
-    ${RAYLIB_DIR}/lib
-)
+
 target_link_libraries(scene_test_mem
     ${GAME_LIBS}
 )
@@ -106,14 +77,9 @@ add_executable(menu_test
 target_include_directories(menu_test
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${RAYLIB_DIR}/include
 )
 target_compile_options(menu_test PRIVATE -fsanitize=address -gdwarf-4)
 target_link_options(menu_test PRIVATE -fsanitize=address -gdwarf-4)
-target_link_directories(menu_test
-    PRIVATE
-    ${RAYLIB_DIR}/lib
-)
 target_link_libraries(menu_test
     ${GAME_LIBS}
 )
@@ -124,14 +90,9 @@ add_executable(assets_test
 target_include_directories(assets_test
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${RAYLIB_DIR}/include
 )
 target_compile_options(assets_test PRIVATE -fsanitize=address -gdwarf-4)
 target_link_options(assets_test PRIVATE -fsanitize=address -gdwarf-4)
-target_link_directories(assets_test
-    PRIVATE
-    ${RAYLIB_DIR}/lib
-)
 target_link_libraries(assets_test
     ${GAME_LIBS}
 )

@@ -15,10 +15,10 @@ typedef struct GameEngine {
 } GameEngine_t;
 void change_scene(GameEngine_t* engine, unsigned int idx);
 
-typedef enum SceneType {
-    LEVEL_SCENE = 0,
-    MENU_SCENE,
-}SceneType_t;
+//typedef enum SceneType {
+//    LEVEL_SCENE = 0,
+//    MENU_SCENE,
+//}SceneType_t;
 
 typedef enum SceneState {
     SCENE_PLAYING = 0,
@@ -36,7 +36,7 @@ struct Scene {
     system_func_t render_function;
     action_func_t action_function;
     EntityManager_t ent_manager;
-    SceneType_t scene_type;
+    //SceneType_t scene_type;
     SceneState_t state;
     GameEngine_t *engine;
 };
@@ -46,7 +46,8 @@ extern void update_scene(Scene_t* scene);
 extern void render_scene(Scene_t* scene);
 extern void do_action(Scene_t* scene, ActionType_t action, bool pressed);
 
-void init_scene(Scene_t* scene, SceneType_t scene_type, system_func_t render_func, action_func_t action_func);
+//void init_scene(Scene_t* scene, SceneType_t scene_type, system_func_t render_func, action_func_t action_func);
+void init_scene(Scene_t* scene, system_func_t render_func, action_func_t action_func);
 void free_scene(Scene_t* scene);
 
 #endif // __ENGINE_H

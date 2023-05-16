@@ -1,21 +1,15 @@
-add_subdirectory(EC)
+add_subdirectory(engine)
 add_library(lib_scenes STATIC
-    engine.c
-    assets.c
     assets_maps.c
     editor_scene.c
     menu_scene.c
     game_systems.c
-    AABB.c
-    gui.c
 )
 target_include_directories(lib_scenes
     PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}
-    ${RAYLIB_DIR}/include
 )
 target_link_libraries(lib_scenes
-    PRIVATE
-    lib_EC
-    raylib
+    PUBLIC
+    lib_engine
 )

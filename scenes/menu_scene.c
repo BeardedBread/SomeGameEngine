@@ -118,7 +118,8 @@ static void gui_loop(Scene_t* scene)
 
 void init_menu_scene(MenuScene_t* scene)
 {
-    init_scene(&scene->scene, MENU_SCENE, &menu_scene_render_func, &menu_do_action);
+    //init_scene(&scene->scene, MENU_SCENE, &menu_scene_render_func, &menu_do_action);
+    init_scene(&scene->scene, &menu_scene_render_func, &menu_do_action);
 
     sc_array_add(&scene->scene.systems, &gui_loop);
     

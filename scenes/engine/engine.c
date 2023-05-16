@@ -7,13 +7,14 @@ void change_scene(GameEngine_t* engine, unsigned int idx)
     engine->scenes[engine->curr_scene]->state = SCENE_PLAYING;
 }
 
-void init_scene(Scene_t* scene, SceneType_t scene_type, system_func_t render_func, action_func_t action_func)
+//void init_scene(Scene_t* scene, SceneType_t scene_type, system_func_t render_func, action_func_t action_func)
+void init_scene(Scene_t* scene, system_func_t render_func, action_func_t action_func)
 {
     sc_map_init_64(&scene->action_map, 32, 0);
     sc_array_init(&scene->systems);
     init_entity_manager(&scene->ent_manager);
 
-    scene->scene_type = scene_type;
+    //scene->scene_type = scene_type;
     scene->render_function = render_func;
     scene->action_function = action_func;
     scene->state = SCENE_ENDED;

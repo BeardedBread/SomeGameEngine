@@ -423,7 +423,8 @@ void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 
 void init_level_scene(LevelScene_t* scene)
 {
-    init_scene(&scene->scene, LEVEL_SCENE, &level_scene_render_func, &level_do_action);
+    //init_scene(&scene->scene, LEVEL_SCENE, &level_scene_render_func, &level_do_action);
+    init_scene(&scene->scene, &level_scene_render_func, &level_do_action);
 
     init_level_scene_data(&scene->data);
     // insert level scene systems

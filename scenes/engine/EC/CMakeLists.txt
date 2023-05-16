@@ -8,7 +8,16 @@ target_include_directories(lib_EC
     ${CMAKE_CURRENT_LIST_DIR}
     ${RAYLIB_DIR}/include
 )
+
+target_link_directories(lib_EC
+    PUBLIC
+    ${RAYLIB_DIR}/lib
+)
 target_link_libraries(lib_EC
-    PRIVATE
+    PUBLIC
     raylib
+    sc_queue
+    sc_map
+    sc_array
+    m
 )

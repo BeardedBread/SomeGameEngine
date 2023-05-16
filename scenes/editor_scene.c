@@ -1,7 +1,7 @@
 #include "scene_impl.h"
 #include "game_systems.h"
 #include "constants.h"
-#include "assets_maps.h"
+#include "ent_impl.h"
 #include "raylib.h"
 #include "raymath.h"
 #include <stdio.h>
@@ -220,43 +220,6 @@ static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal)
     p_hurtbox->fragile = !metal;
 }
 
-static void spawn_player(Scene_t* scene)
-{
-    Entity_t* p_ent = add_entity(&scene->ent_manager, PLAYER_ENT_TAG);
-    CBBox_t* p_bbox = add_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
-
-    set_bbox(p_bbox, PLAYER_WIDTH, PLAYER_HEIGHT);
-    add_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-
-    CJump_t* p_cjump = add_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
-    p_cjump->jump_speed = 680;
-    p_cjump->jumps = 1;
-    p_cjump->max_jumps = 1;
-    p_cjump->jump_ready = true;
-    add_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
-    add_component(&scene->ent_manager, p_ent, CTILECOORD_COMP_T);
-    add_component(&scene->ent_manager, p_ent, CMOVEMENTSTATE_T);
-    CHitBoxes_t* p_hitbox = add_component(&scene->ent_manager, p_ent, CHITBOXES_T);
-    p_hitbox->n_boxes = 2;
-    p_hitbox->boxes[0] = (Rectangle) {
-        .x = 0,
-        .y = -1,
-        .width = p_bbox->size.x - 1,
-        .height = p_bbox->size.y + 2,
-    };
-    p_hitbox->boxes[1] = (Rectangle) {
-        .x =  -1,
-        .y = 0,
-        .width = p_bbox->size.x + 2,
-        .height = p_bbox->size.y - 1,
-    };
-    CSprite_t* p_cspr = add_component(&scene->ent_manager, p_ent, CSPRITE_T);
-    p_cspr->sprite = get_sprite(&scene->engine->assets, "plr_stand");
-    p_cspr->offset = (Vector2){0, -20};
-    p_cspr->sprites_map = player_sprite_map;
-    p_cspr->transition_func = &player_sprite_transition_func;
-}
-
 static void toggle_block_system(Scene_t* scene)
 {
     // TODO: This system is not good as the interface between raw input and actions is broken
@@ -473,7 +436,7 @@ void init_level_scene(LevelScene_t* scene)
         all_tiles[tile_idx].tile_type = SOLID_TILE; // for testing
     }
 
-    spawn_player(&scene->scene);
+    create_player(&scene->scene.ent_manager, &scene->scene.engine->assets);
     update_entity_manager(&scene->scene.ent_manager);
 }
 

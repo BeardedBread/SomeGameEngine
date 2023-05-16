@@ -1,7 +1,6 @@
 #include "game_systems.h"
 #include "AABB.h"
 #include "constants.h"
-#include "assets_maps.h"
 #include <stdio.h>
 
 static const Vector2 TILE_SZ = {TILE_SIZE, TILE_SIZE};
@@ -1133,9 +1132,4 @@ void term_level_scene_data(LevelSceneData_t* data)
 {
     //sc_map_term_32(&data->collision_events);
     UnloadRenderTexture(data->game_viewport); // Unload render texture
-}
-
-unsigned int player_sprite_transition_func(Entity_t* ent)
-{
-    return SPR_PLAYER_RUN;
 }

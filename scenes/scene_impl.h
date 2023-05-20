@@ -17,7 +17,7 @@ typedef enum TileType {
     ONEWAY_TILE,
     LADDER
 } TileType_t;
-
+#define MAX_TILE_TYPES 4
 typedef enum SolidType
 {
     NOT_SOLID = 0,
@@ -45,6 +45,7 @@ typedef struct LevelSceneData {
     RenderTexture2D game_viewport;
     Rectangle game_rec;
     Camera2D cam;
+    Sprite_t* tile_sprites[MAX_TILE_TYPES];
 }LevelSceneData_t;
 
 typedef struct LevelScene {

@@ -114,11 +114,17 @@ typedef struct Sprite {
 } Sprite_t;
 
 typedef unsigned int (*sprite_transition_func_t)(Entity_t *ent); // Transition requires knowledge of the entity
-typedef struct _CSprite_t {
-    const char * const *sprites_map; //Array of all sprite names associated
+typedef struct _SpriteRenderInfo
+{
     Sprite_t* sprite;
-    sprite_transition_func_t transition_func;
     Vector2 offset;
+    bool flip_x;
+    bool flip_y;
+} SpriteRenderInfo_t;
+
+typedef struct _CSprite_t {
+    SpriteRenderInfo_t* sprites;
+    sprite_transition_func_t transition_func;
     unsigned int current_idx;
 } CSprite_t;
 

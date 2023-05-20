@@ -8,10 +8,7 @@ enum PlayerSpriteEnum
     SPR_PLAYER_RUN
 };
 
-static const char* const player_sprite_map[N_PLAYER_SPRITES] = {
-    "plr_stand",
-    "plr_run",
-};
+static SpriteRenderInfo_t player_sprite_map[N_PLAYER_SPRITES] = {0};
 
 static unsigned int player_sprite_transition_func(Entity_t* ent)
 {
@@ -49,9 +46,11 @@ Entity_t* create_player(EntityManager_t* ent_manager, Assets_t* assets)
         .height = p_bbox->size.y - 1,
     };
     CSprite_t* p_cspr = add_component(ent_manager, p_ent, CSPRITE_T);
-    p_cspr->sprite = get_sprite(assets, "plr_stand");
-    p_cspr->offset = (Vector2){0, -20};
-    p_cspr->sprites_map = player_sprite_map;
+    p_cspr->sprites = player_sprite_map;
+    p_cspr->sprites[0].sprite = get_sprite(assets, "plr_stand");
+    p_cspr->sprites[0].offset = (Vector2){0, -20};
+    p_cspr->sprites[1].sprite = get_sprite(assets, "plr_stand");
+    p_cspr->sprites[1].offset = (Vector2){0, -20};
     p_cspr->transition_func = &player_sprite_transition_func;
 
     return p_ent;

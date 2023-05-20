@@ -29,6 +29,8 @@ int main(void)
     LevelScene_t scene;
     scene.scene.engine = &engine;
     init_level_scene(&scene);
+    scene.data.tile_sprites[ONEWAY_TILE] = get_sprite(&engine.assets, "tl_owp");
+    scene.data.tile_sprites[LADDER] = get_sprite(&engine.assets, "tl_ldr");
     scenes[0] = &scene.scene;
     change_scene(&engine, 0);
 

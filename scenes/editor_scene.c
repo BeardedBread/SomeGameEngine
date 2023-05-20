@@ -16,6 +16,7 @@ enum EntitySpawnSelection {
     SPAWN_CRATE,
     SPAWN_METAL_CRATE,
 };
+
 #define MAX_SPAWN_TYPE 5
 static unsigned int current_spawn_selection = 0;
 
@@ -49,7 +50,11 @@ static void level_scene_render_func(Scene_t* scene)
             int y = (i / tilemap.width) * TILE_SIZE;
             sprintf(buffer, "%u", sc_map_size_64(&tilemap.tiles[i].entities_set));
 
-            if (tilemap.tiles[i].tile_type == SOLID_TILE)
+            if (data->tile_sprites[tilemap.tiles[i].tile_type] != NULL)
+            {
+                draw_sprite(data->tile_sprites[tilemap.tiles[i].tile_type], (Vector2){x,y});
+            }
+            else if (tilemap.tiles[i].tile_type == SOLID_TILE)
             {
                 DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
             }
@@ -116,8 +121,12 @@ static void level_scene_render_func(Scene_t* scene)
             CSprite_t* p_cspr = get_component(&scene->ent_manager, p_ent, CSPRITE_T);
             if (p_cspr != NULL)
             {
-                Vector2 pos = Vector2Add(p_ct->position, p_cspr->offset);
-                draw_sprite(p_cspr->sprite, pos);
+                const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
+                if (spr.sprite != NULL)
+                {
+                    Vector2 pos = Vector2Add(p_ct->position, spr.offset);
+                    draw_sprite(spr.sprite, pos);
+                }
             }
         }
 
@@ -413,6 +422,7 @@ void init_level_scene(LevelScene_t* scene)
     scene->data.tilemap.n_tiles = scene->data.tilemap.width * scene->data.tilemap.height;
     assert(scene->data.tilemap.n_tiles <= MAX_N_TILES);
     scene->data.tilemap.tiles = all_tiles;
+    memset(scene->data.tile_sprites, 0, sizeof(scene->data.tile_sprites));
     for (size_t i = 0; i < MAX_N_TILES;i++)
     {
         all_tiles[i].solid = NOT_SOLID;

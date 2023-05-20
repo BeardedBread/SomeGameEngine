@@ -1071,22 +1071,18 @@ void sprite_animation_system(Scene_t* scene)
             unsigned int spr_idx = p_cspr->transition_func(p_ent);
             if (p_cspr->current_idx != spr_idx)
             {
-                Sprite_t* new_spr = get_sprite(&scene->engine->assets, p_cspr->sprites_map[spr_idx]);
-                if (new_spr != NULL)
-                {
-                    p_cspr->sprite = new_spr;
-                    p_cspr->current_idx = spr_idx;
-                    p_cspr->sprite->current_frame = 0;
-                }
+                p_cspr->current_idx = spr_idx;
+                p_cspr->sprites[spr_idx].sprite->current_frame = 0;
             }
         }
+        SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
         // Animate it (handle frame count)
-        p_cspr->sprite->elapsed++;
-        if (p_cspr->sprite->elapsed == p_cspr->sprite->speed)
+        spr.sprite->elapsed++;
+        if (spr.sprite->elapsed == spr.sprite->speed)
         {
-            p_cspr->sprite->current_frame++;
-            p_cspr->sprite->current_frame %= p_cspr->sprite->frame_count;
-            p_cspr->sprite->elapsed = 0;
+            spr.sprite->current_frame++;
+            spr.sprite->current_frame %= spr.sprite->frame_count;
+            spr.sprite->elapsed = 0;
         }
     }
 }

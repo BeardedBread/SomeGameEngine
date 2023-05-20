@@ -1,5 +1,6 @@
 #include "mempool.h"
 #include "scene_impl.h"
+#include "assets_loader.h"
 #include <stdio.h>
 #include <unistd.h>
 
@@ -23,16 +24,7 @@ int main(void)
     init_memory_pools();
 
     init_assets(&engine.assets);
-    Texture2D* tex = add_texture(&engine.assets, "plr_tex", "res/bunny_stand.png");
-    Sprite_t* spr = add_sprite(&engine.assets, "plr_stand", tex);
-    spr->origin = (Vector2){0, 0};
-    spr->frame_size = (Vector2){32, 64};
-
-    spr = add_sprite(&engine.assets, "plr_run", tex);
-    spr->frame_count = 1;
-    spr->origin = (Vector2){0, 0};
-    spr->frame_size = (Vector2){32, 64};
-    spr->speed = 30;
+    load_from_infofile("res/assets.info", &engine.assets);
 
     LevelScene_t scene;
     scene.scene.engine = &engine;

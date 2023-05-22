@@ -1,5 +1,7 @@
 #include "ent_impl.h"
 #include "constants.h"
+#include <stdio.h>
+#include <string.h>
 
 #define N_PLAYER_SPRITES 2
 enum PlayerSpriteEnum
@@ -47,11 +49,58 @@ Entity_t* create_player(EntityManager_t* ent_manager, Assets_t* assets)
     };
     CSprite_t* p_cspr = add_component(ent_manager, p_ent, CSPRITE_T);
     p_cspr->sprites = player_sprite_map;
-    p_cspr->sprites[0].sprite = get_sprite(assets, "plr_stand");
-    p_cspr->sprites[0].offset = (Vector2){0, -20};
-    p_cspr->sprites[1].sprite = get_sprite(assets, "plr_stand");
-    p_cspr->sprites[1].offset = (Vector2){0, -20};
     p_cspr->transition_func = &player_sprite_transition_func;
 
     return p_ent;
+}
+
+bool init_player_creation(const char* info_file, Assets_t* assets)
+{
+    static bool already_init = false;
+
+    if (already_init) return false;
+
+    FILE* in_file = fopen(info_file, "r");
+    if (in_file == NULL)
+    {
+        printf("Unable to open file %s\n", info_file);
+        return false;
+    }
+
+    char buffer[256];
+    char* tmp;
+    size_t line_num = 0;
+    uint8_t i = 0;
+    while (true)
+    {
+        tmp = fgets(buffer, 256, in_file);
+        if (tmp == NULL) break;
+        tmp[strcspn(tmp, "\r\n")] = '\0';
+
+        if (i == N_PLAYER_SPRITES)  break;
+
+        char* name = strtok(buffer, ":");
+        char* info_str = strtok(NULL, ":");
+        if (name == NULL || info_str == NULL) return false;
+
+        while(*name == ' ' || *name == '\t') name++;
+        while(*info_str == ' ' || *info_str == '\t') info_str++;
+
+        Vector2 offset;
+        int data_count = sscanf(
+            info_str, "%f,%f",
+            &offset.x, &offset.y
+        );
+        if (data_count !=2)
+        {
+            printf("Unable to parse info for player at line %lu\n", line_num);
+            return false;
+        }
+        Sprite_t* spr = get_sprite(assets, name);
+        player_sprite_map[i].sprite = spr;
+        player_sprite_map[i].offset = offset;
+        i++;
+    }
+    already_init = true;
+    return true;
 }

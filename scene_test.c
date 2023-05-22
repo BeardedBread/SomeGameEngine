@@ -1,5 +1,6 @@
 #include "mempool.h"
 #include "scene_impl.h"
+#include "ent_impl.h"
 #include "assets_loader.h"
 #include <stdio.h>
 #include <unistd.h>
@@ -25,6 +26,7 @@ int main(void)
 
     init_assets(&engine.assets);
     load_from_infofile("res/assets.info", &engine.assets);
+    init_player_creation("res/player_spr.info", &engine.assets);
 
     LevelScene_t scene;
     scene.scene.engine = &engine;
@@ -33,6 +35,7 @@ int main(void)
     scene.data.tile_sprites[LADDER] = get_sprite(&engine.assets, "tl_ldr");
     scenes[0] = &scene.scene;
     change_scene(&engine, 0);
+
 
     while(true)
     {

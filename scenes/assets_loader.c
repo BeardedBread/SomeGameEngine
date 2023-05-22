@@ -42,9 +42,8 @@ bool load_from_infofile(const char* file, Assets_t* assets)
         return false;
     }
     
-    static char buffer[256];
+    char buffer[256];
     char* tmp;
-    char tmp2[32];
     size_t line_num = 0;
     AssetInfoType_t info_type = INVALID_INFO;
 

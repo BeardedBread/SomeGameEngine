@@ -21,20 +21,19 @@ void update_entity_manager(EntityManager_t* p_manager)
     // It does not make new entities, but will free entity
     // New entities are assigned during add_entity
 	unsigned long e_idx;
-	unsigned long comp_type_idx;
-	unsigned long comp_idx;
     
     sc_queue_foreach (&p_manager->to_remove, e_idx)
     {
         Entity_t *p_entity = (Entity_t *)sc_map_get_64v(&p_manager->entities, e_idx);
         if (!p_entity) continue;
-        sc_map_foreach (&p_entity->components, comp_type_idx, comp_idx)
+        for (size_t i = 0; i < N_COMPONENTS; ++i)
         {
-            free_component_to_mempool((ComponentEnum_t)comp_type_idx, comp_idx);
-            sc_map_del_64v(&p_manager->component_map[comp_type_idx], e_idx);
+            if (p_entity->components[i] == MAX_COMP_POOL_SIZE) continue;
+
+            free_component_to_mempool((ComponentEnum_t)i, p_entity->components[i]);
+            sc_map_del_64v(&p_manager->component_map[i], e_idx);
             sc_map_del_64v(&p_manager->entities_map[p_entity->m_tag], e_idx);
         }
-        sc_map_clear_64(&p_entity->components);
         free_entity_to_mempool(e_idx);
         sc_map_del_64v(&p_manager->entities, e_idx);
     }
@@ -116,7 +115,7 @@ void* add_component(EntityManager_t* p_manager, Entity_t* p_entity, ComponentEnu
     void* p_comp = new_component_from_mempool(comp_type, &comp_idx);
     if (p_comp)
     {
-        sc_map_put_64(&p_entity->components, comp_type_idx, comp_idx);
+        p_entity->components[comp_type] = comp_idx;
         sc_map_put_64v(&p_manager->component_map[comp_type_idx], p_entity->m_id, p_comp);
     }
     return p_comp;
@@ -126,7 +125,6 @@ void* get_component(EntityManager_t *p_manager, Entity_t *p_entity, ComponentEnu
 {
     unsigned long comp_type_idx = (unsigned long)comp_type;
     void * p_comp = sc_map_get_64v(&p_manager->component_map[comp_type_idx], p_entity->m_id);
-    //unsigned long comp_idx = sc_map_get_64(&p_entity->components, comp_type_idx);
     if (!sc_map_found(&p_manager->component_map[comp_type_idx])) return NULL;
     return p_comp;
 }
@@ -134,8 +132,7 @@ void* get_component(EntityManager_t *p_manager, Entity_t *p_entity, ComponentEnu
 void remove_component(EntityManager_t *p_manager, Entity_t *p_entity, ComponentEnum_t comp_type)
 {
     unsigned long comp_type_idx = (unsigned long)comp_type;
-    unsigned long comp_idx = sc_map_del_64(&p_entity->components, comp_type_idx);
-    if (!sc_map_found(&p_entity->components)) return;
+    if (p_entity->components[comp_type] == MAX_COMP_POOL_SIZE) return;
     sc_map_del_64v(&p_manager->component_map[comp_type_idx], p_entity->m_id);
-    free_component_to_mempool(comp_type, comp_idx);
+    free_component_to_mempool(comp_type, p_entity->components[comp_type]);
 }

@@ -5,7 +5,6 @@
 #include "entity.h"
 // TODO: Look at sc to use macros to auto generate functions
 
-#define N_COMPONENTS 10
 typedef enum ComponentEnum {
     CBBOX_COMP_T,
     CTRANSFORM_COMP_T,

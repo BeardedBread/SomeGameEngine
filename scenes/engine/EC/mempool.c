@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 
 // Static allocate buffers
 static Entity_t entity_buffer[MAX_COMP_POOL_SIZE];
@@ -118,7 +119,6 @@ void init_memory_pools(void)
         for (size_t i = 0; i < ent_mempool.max_size; ++i)
         {
             entity_buffer[i].m_id = i;
-            sc_map_init_64(&entity_buffer[i].components, 16 ,0);
             ent_mempool.free_list.buffer[i] = i;
         }
         ent_mempool.free_list.count = ent_mempool.max_size;
@@ -138,10 +138,6 @@ void free_memory_pools(void)
         free(ent_mempool.use_list);
         cb_free(&ent_mempool.free_list);
 
-        for (int i = 0; i < MAX_COMP_POOL_SIZE; ++i)
-        {
-            sc_map_term_64(&entity_buffer[i].components);
-        }
         pool_inited = false;
     }
 }
@@ -154,7 +150,10 @@ Entity_t* new_entity_from_mempool(unsigned long* e_idx_ptr)
     *e_idx_ptr = e_idx;
     ent_mempool.use_list[e_idx] = true;
     Entity_t* ent = entity_buffer + e_idx;
-    sc_map_clear_64(&ent->components);
+    for (size_t j = 0; j< N_COMPONENTS; j++)
+    {
+        ent->components[j] = MAX_COMP_POOL_SIZE;
+    }
     ent->m_alive = true;
     ent->m_tag = NO_ENT_TAG;
     return ent;

@@ -1,9 +1,9 @@
 #ifndef __ENTITY_H
 #define __ENTITY_H
 #include <stdbool.h>
-#include "sc/map/sc_map.h"
 
 #define N_TAGS 4
+#define N_COMPONENTS 10
 typedef enum EntityTag {
     NO_ENT_TAG,
     PLAYER_ENT_TAG,
@@ -15,6 +15,7 @@ typedef struct Entity {
     unsigned long m_id;
     EntityTag_t m_tag;
     bool m_alive;
-    struct sc_map_64 components;
+    unsigned long components[N_COMPONENTS];
+
 } Entity_t;
 #endif // __ENTITY_H

@@ -2,6 +2,7 @@
 #include "constants.h"
 #include <stdio.h>
 #include <string.h>
+#include "raymath.h"
 
 #define N_PLAYER_SPRITES 2
 enum PlayerSpriteEnum
@@ -14,7 +15,12 @@ static SpriteRenderInfo_t player_sprite_map[N_PLAYER_SPRITES] = {0};
 
 static unsigned int player_sprite_transition_func(Entity_t* ent)
 {
-    return SPR_PLAYER_RUN;
+    CTransform_t* p_ctrans = get_component(ent, CTRANSFORM_COMP_T);
+    if (Vector2LengthSqr(p_ctrans->velocity) > 10000.0f)
+    {
+        return SPR_PLAYER_RUN;
+    }
+    return SPR_PLAYER_STAND;
 }
 
 Entity_t* create_player(EntityManager_t* ent_manager, Assets_t* assets)

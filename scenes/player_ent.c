@@ -4,11 +4,13 @@
 #include <string.h>
 #include "raymath.h"
 
-#define N_PLAYER_SPRITES 2
+#define N_PLAYER_SPRITES 4
 enum PlayerSpriteEnum
 {
     SPR_PLAYER_STAND = 0,
-    SPR_PLAYER_RUN
+    SPR_PLAYER_RUN,
+    SPR_PLAYER_JUMP,
+    SPR_PLAYER_FALL,
 };
 
 static SpriteRenderInfo_t player_sprite_map[N_PLAYER_SPRITES] = {0};
@@ -16,14 +18,20 @@ static SpriteRenderInfo_t player_sprite_map[N_PLAYER_SPRITES] = {0};
 static unsigned int player_sprite_transition_func(Entity_t* ent)
 {
     CTransform_t* p_ctrans = get_component(ent, CTRANSFORM_COMP_T);
+    CMovementState_t* p_move = get_component(ent, CMOVEMENTSTATE_T);
     CSprite_t* p_spr = get_component(ent, CSPRITE_T);
     if (p_ctrans->velocity.x > 0) p_spr->flip_x = true;
     else if (p_ctrans->velocity.x < 0) p_spr->flip_x = false;
-    if (Vector2LengthSqr(p_ctrans->velocity) > 10000.0f)
+
+    if (p_move->ground_state & 1)
     {
-        return SPR_PLAYER_RUN;
+        if (Vector2LengthSqr(p_ctrans->velocity) > 1000.0f)
+        {
+            return SPR_PLAYER_RUN;
+        }
+        return SPR_PLAYER_STAND;
     }
-    return SPR_PLAYER_STAND;
+    return (p_ctrans->velocity.y < 0) ? SPR_PLAYER_JUMP : SPR_PLAYER_FALL;
 }
 
 Entity_t* create_player(EntityManager_t* ent_manager, Assets_t* assets)

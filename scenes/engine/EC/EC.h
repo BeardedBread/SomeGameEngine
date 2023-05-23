@@ -153,7 +153,8 @@ struct Entity {
     unsigned long m_id;
     EntityTag_t m_tag;
     bool m_alive;
-    unsigned long components[N_COMPONENTS];
+    unsigned long components[N_COMPONENTS]; 
+    EntityManager_t* manager;
 };
 
 struct EntityManager {
@@ -174,8 +175,8 @@ Entity_t* add_entity(EntityManager_t* p_manager, EntityTag_t tag);
 void remove_entity(EntityManager_t* p_manager, unsigned long id);
 Entity_t *get_entity(EntityManager_t* p_manager, unsigned long id);
 
-void* add_component(EntityManager_t* p_manager, Entity_t *entity, ComponentEnum_t comp_type);
-void* get_component(EntityManager_t* p_manager, Entity_t *entity, ComponentEnum_t comp_type);
-void remove_component(EntityManager_t* p_manager, Entity_t* entity, ComponentEnum_t comp_type);
+void* add_component(Entity_t *entity, ComponentEnum_t comp_type);
+void* get_component(Entity_t *entity, ComponentEnum_t comp_type);
+void remove_component(Entity_t* entity, ComponentEnum_t comp_type);
 
 #endif // __ENTITY_H

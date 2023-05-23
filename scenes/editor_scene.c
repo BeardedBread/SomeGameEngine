@@ -2,6 +2,7 @@
 #include "game_systems.h"
 #include "constants.h"
 #include "ent_impl.h"
+#include "mempool.h"
 #include "raylib.h"
 #include "raymath.h"
 #include <stdio.h>
@@ -78,8 +79,8 @@ static void level_scene_render_func(Scene_t* scene)
         char buffer[64] = {0};
         sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
         {
-            CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-            CBBox_t* p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
+            CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
+            CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
             Color colour;
             switch(p_ent->m_tag)
             {
@@ -93,8 +94,8 @@ static void level_scene_render_func(Scene_t* scene)
                     colour = BLACK;
             }
             DrawRectangle(p_ct->position.x, p_ct->position.y, p_bbox->size.x, p_bbox->size.y, colour);
-            CHurtbox_t* p_hurtbox = get_component(&scene->ent_manager, p_ent, CHURTBOX_T);
-            CHitBoxes_t* p_hitbox = get_component(&scene->ent_manager, p_ent, CHITBOXES_T);
+            CHurtbox_t* p_hurtbox = get_component(p_ent, CHURTBOX_T);
+            CHitBoxes_t* p_hitbox = get_component(p_ent, CHITBOXES_T);
             if (p_hitbox != NULL)
             {
                 for (uint8_t i = 0;i < p_hitbox->n_boxes; ++i)
@@ -118,7 +119,7 @@ static void level_scene_render_func(Scene_t* scene)
                 };
                 DrawRectangleLinesEx(rec, 1.5, PURPLE);
             }
-            CSprite_t* p_cspr = get_component(&scene->ent_manager, p_ent, CSPRITE_T);
+            CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
             if (p_cspr != NULL)
             {
                 const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
@@ -177,10 +178,10 @@ static void level_scene_render_func(Scene_t* scene)
         const int gui_x = data->game_rec.x + data->game_rec.width + 10;
         sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
         {
-            CTransform_t* p_ct = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-            CJump_t* p_cjump = get_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
-            CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
-            CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_ent, CMOVEMENTSTATE_T);
+            CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
+            CJump_t* p_cjump = get_component(p_ent, CJUMP_COMP_T);
+            CPlayerState_t* p_pstate = get_component(p_ent, CPLAYERSTATE_T);
+            CMovementState_t* p_mstate = get_component(p_ent, CMOVEMENTSTATE_T);
             sprintf(buffer, "Pos: %.3f\n %.3f", p_ct->position.x, p_ct->position.y);
             DrawText(buffer, gui_x, 15, 12, BLACK);
             sprintf(buffer, "Vel: %.3f\n %.3f", p_ct->velocity.x, p_ct->velocity.y);
@@ -214,7 +215,7 @@ static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal)
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     Entity_t* p_crate = create_crate(&scene->ent_manager, &scene->engine->assets, metal);
 
-    CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_crate, CTRANSFORM_COMP_T);
+    CTransform_t* p_ctransform = get_component(p_crate, CTRANSFORM_COMP_T);
     p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
     p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
 }

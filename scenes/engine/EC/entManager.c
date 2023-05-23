@@ -83,6 +83,7 @@ Entity_t *add_entity(EntityManager_t* p_manager, EntityTag_t tag)
     {
         sc_queue_add_last(&p_manager->to_add, e_idx);
     }
+    p_ent->manager = p_manager;
     return p_ent;
 }
 
@@ -108,7 +109,7 @@ Entity_t* get_entity(EntityManager_t* p_manager, unsigned long id)
 
 // Components are not expected to be removed
 // So, no need to extra steps to deal with iterator invalidation
-void* add_component(EntityManager_t* p_manager, Entity_t* p_entity, ComponentEnum_t comp_type)
+void* add_component(Entity_t* p_entity, ComponentEnum_t comp_type)
 {
     unsigned long comp_type_idx = (unsigned long)comp_type;
     unsigned long comp_idx = 0;
@@ -116,23 +117,23 @@ void* add_component(EntityManager_t* p_manager, Entity_t* p_entity, ComponentEnu
     if (p_comp)
     {
         p_entity->components[comp_type] = comp_idx;
-        sc_map_put_64v(&p_manager->component_map[comp_type_idx], p_entity->m_id, p_comp);
+        sc_map_put_64v(&p_entity->manager->component_map[comp_type_idx], p_entity->m_id, p_comp);
     }
     return p_comp;
 }
 
-void* get_component(EntityManager_t *p_manager, Entity_t *p_entity, ComponentEnum_t comp_type)
+void* get_component(Entity_t *p_entity, ComponentEnum_t comp_type)
 {
     unsigned long comp_type_idx = (unsigned long)comp_type;
-    void * p_comp = sc_map_get_64v(&p_manager->component_map[comp_type_idx], p_entity->m_id);
-    if (!sc_map_found(&p_manager->component_map[comp_type_idx])) return NULL;
+    void * p_comp = sc_map_get_64v(&p_entity->manager->component_map[comp_type_idx], p_entity->m_id);
+    if (!sc_map_found(&p_entity->manager->component_map[comp_type_idx])) return NULL;
     return p_comp;
 }
 
-void remove_component(EntityManager_t *p_manager, Entity_t *p_entity, ComponentEnum_t comp_type)
+void remove_component(Entity_t *p_entity, ComponentEnum_t comp_type)
 {
     unsigned long comp_type_idx = (unsigned long)comp_type;
     if (p_entity->components[comp_type] == MAX_COMP_POOL_SIZE) return;
-    sc_map_del_64v(&p_manager->component_map[comp_type_idx], p_entity->m_id);
+    sc_map_del_64v(&p_entity->manager->component_map[comp_type_idx], p_entity->m_id);
     free_component_to_mempool(comp_type, p_entity->components[comp_type]);
 }

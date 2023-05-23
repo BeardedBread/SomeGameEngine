@@ -67,8 +67,8 @@ static bool check_collision(const CollideEntity_t* ent, TileGrid_t* grid, Entity
             {
                 if (ent->idx == ent_idx) continue;
                 Entity_t * p_ent = get_entity(p_manager, ent_idx);
-                CTransform_t *p_ctransform = get_component(p_manager, p_ent, CTRANSFORM_COMP_T);
-                CBBox_t *p_bbox = get_component(p_manager, p_ent, CBBOX_COMP_T);
+                CTransform_t *p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
+                CBBox_t *p_bbox = get_component(p_ent, CBBOX_COMP_T);
                 if (p_bbox == NULL || p_ctransform == NULL) continue;
                 //if (p_bbox->solid && !p_bbox->fragile)
                 if (p_bbox->solid)
@@ -308,10 +308,10 @@ void player_movement_input_system(Scene_t* scene)
     sc_map_foreach(&scene->ent_manager.component_map[CPLAYERSTATE_T], ent_idx, p_pstate)
     {
         Entity_t* p_player = get_entity(&scene->ent_manager, ent_idx);
-        CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
-        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
-        CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
-        CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_player, CMOVEMENTSTATE_T);
+        CTransform_t* p_ctransform = get_component(p_player, CTRANSFORM_COMP_T);
+        CBBox_t* p_bbox = get_component(p_player, CBBOX_COMP_T);
+        CJump_t* p_cjump = get_component(p_player, CJUMP_COMP_T);
+        CMovementState_t* p_mstate = get_component(p_player, CMOVEMENTSTATE_T);
 
         // Ladder handling
         if (!p_pstate->ladder_state)
@@ -478,10 +478,10 @@ void player_bbox_update_system(Scene_t* scene)
     Entity_t* p_player;
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
-        CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
-        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_player, CBBOX_COMP_T);
-        CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_player, CPLAYERSTATE_T);
-        CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_player, CMOVEMENTSTATE_T);
+        CTransform_t* p_ctransform = get_component(p_player, CTRANSFORM_COMP_T);
+        CBBox_t* p_bbox = get_component(p_player, CBBOX_COMP_T);
+        CPlayerState_t* p_pstate = get_component(p_player, CPLAYERSTATE_T);
+        CMovementState_t* p_mstate = get_component(p_player, CMOVEMENTSTATE_T);
 
         Vector2 new_bbox;
         Vector2 offset;
@@ -527,7 +527,7 @@ void player_bbox_update_system(Scene_t* scene)
             p_ctransform->position = Vector2Add(p_ctransform->position, offset);
         }
 
-        CHitBoxes_t* p_hitbox = get_component(&scene->ent_manager, p_player, CHITBOXES_T);
+        CHitBoxes_t* p_hitbox = get_component(p_player, CHITBOXES_T);
         p_hitbox->boxes[0].height = p_bbox->size.y + 2;
         //p_hitbox->boxes[1].y = p_bbox->size.y / 4;
         p_hitbox->boxes[1].height = p_bbox->size.y - 1;
@@ -548,7 +548,7 @@ void tile_collision_system(Scene_t* scene)
     sc_map_foreach(&scene->ent_manager.component_map[CBBOX_COMP_T], ent_idx, p_bbox)
     {
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
-        CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
+        CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
         // Get the occupied tiles
         // For each tile, loop through the entities, check collision and move
         // exclude self
@@ -588,10 +588,10 @@ void tile_collision_system(Scene_t* scene)
                         Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
                         if (!p_other_ent->m_alive) continue; // To only allow one way collision check
                         if (p_other_ent->m_tag < p_ent->m_tag) continue; // To only allow one way collision check
-                        CBBox_t *p_other_bbox = get_component(&scene->ent_manager, p_other_ent, CBBOX_COMP_T);
+                        CBBox_t *p_other_bbox = get_component(p_other_ent, CBBOX_COMP_T);
                         if (p_other_bbox == NULL) continue;
 
-                        CTransform_t *p_other_ct = get_component(&scene->ent_manager, p_other_ent, CTRANSFORM_COMP_T);
+                        CTransform_t *p_other_ct = get_component(p_other_ent, CTRANSFORM_COMP_T);
                         check_collision_and_move(
                             &scene->ent_manager, &tilemap, ent_idx,
                             p_ctransform, p_bbox->size, p_other_ct->position,
@@ -699,7 +699,7 @@ void friction_coefficient_update_system(Scene_t* scene)
     sc_map_foreach(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], ent_idx, p_ct)
     {
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
-        CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_ent, CMOVEMENTSTATE_T);
+        CMovementState_t* p_mstate = get_component(p_ent, CMOVEMENTSTATE_T);
 
 
         // Friction
@@ -718,7 +718,7 @@ void friction_coefficient_update_system(Scene_t* scene)
             p_ct->fric_coeff = (Vector2){-3.3, -1};
         }
 
-        CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
+        CPlayerState_t* p_pstate = get_component(p_ent, CPLAYERSTATE_T);
         if (p_pstate != NULL && (p_pstate->is_crouch & 1))
         {
             p_ct->fric_coeff.x -= 4;
@@ -734,8 +734,8 @@ void global_external_forces_system(Scene_t* scene)
     sc_map_foreach(&scene->ent_manager.component_map[CMOVEMENTSTATE_T], ent_idx, p_mstate)
     {
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
-        CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
+        CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
+        CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
 
         if (!(p_mstate->ground_state & 1))
         {
@@ -791,7 +791,7 @@ void global_external_forces_system(Scene_t* scene)
     sc_map_foreach(&scene->ent_manager.component_map[CPLAYERSTATE_T], ent_idx, p_pstate)
     {
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
-        CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
+        CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
         if (p_pstate->ladder_state)
         {
             p_ctransform->accel = (Vector2){0,0};
@@ -839,9 +839,9 @@ void player_ground_air_transition_system(Scene_t* scene)
     Entity_t* p_player;
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
-        CJump_t* p_cjump = get_component(&scene->ent_manager, p_player, CJUMP_COMP_T);
-        CMovementState_t* p_mstate = get_component(&scene->ent_manager, p_player, CMOVEMENTSTATE_T);
-        CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_player, CPLAYERSTATE_T);
+        CJump_t* p_cjump = get_component(p_player, CJUMP_COMP_T);
+        CMovementState_t* p_mstate = get_component(p_player, CMOVEMENTSTATE_T);
+        CPlayerState_t* p_pstate = get_component(p_player, CPLAYERSTATE_T);
 
         // Handle Ground<->Air Transition
         bool in_water = (p_mstate->water_state & 1);
@@ -875,8 +875,8 @@ void state_transition_update_system(Scene_t* scene)
     sc_map_foreach(&scene->ent_manager.component_map[CMOVEMENTSTATE_T], ent_idx, p_mstate)
     {
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
-        CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
-        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
+        CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
+        CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
         if (p_ctransform == NULL || p_bbox == NULL) continue;
 
         bool on_ground = check_on_ground(
@@ -928,9 +928,9 @@ void update_tilemap_system(Scene_t* scene)
     sc_map_foreach(&scene->ent_manager.component_map[CTILECOORD_COMP_T], ent_idx, p_tilecoord)
     {
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
-        CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
+        CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
         if (p_ctransform == NULL) continue;
-        CBBox_t* p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
+        CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
         if (p_bbox == NULL) continue;
 
         // Update tilemap position
@@ -975,7 +975,7 @@ void hitbox_update_system(Scene_t* scene)
     sc_map_foreach(&scene->ent_manager.component_map[CHITBOXES_T], ent_idx, p_hitbox)
     {
         Entity_t *p_ent =  get_entity(&scene->ent_manager, ent_idx);
-        CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_ent, CTRANSFORM_COMP_T);
+        CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
         for (uint8_t i = 0; i < p_hitbox->n_boxes; ++i)
         {
             Vector2 hitbox_pos = {
@@ -1004,9 +1004,9 @@ void hitbox_update_system(Scene_t* scene)
                         if (!p_other_ent->m_alive) continue; // To only allow one way collision check
                         if (p_other_ent->m_tag < p_ent->m_tag) continue; // To only allow one way collision check
 
-                        CHurtbox_t* p_other_hurtbox = get_component(&scene->ent_manager, p_other_ent, CHURTBOX_T);
+                        CHurtbox_t* p_other_hurtbox = get_component(p_other_ent, CHURTBOX_T);
                         if (p_other_hurtbox == NULL) continue;
-                        CTransform_t* p_other_ct = get_component(&scene->ent_manager, p_other_ent, CTRANSFORM_COMP_T);
+                        CTransform_t* p_other_ct = get_component(p_other_ent, CTRANSFORM_COMP_T);
                         Vector2 hurtbox_pos = Vector2Add(p_other_ct->position, p_other_hurtbox->offset);
 
                         Vector2 overlap;
@@ -1021,8 +1021,8 @@ void hitbox_update_system(Scene_t* scene)
                             if (p_other_ent->m_tag == CRATES_ENT_TAG)
                             {
 
-                                CBBox_t* p_bbox = get_component(&scene->ent_manager, p_ent, CBBOX_COMP_T);
-                                CPlayerState_t* p_pstate = get_component(&scene->ent_manager, p_ent, CPLAYERSTATE_T);
+                                CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+                                CPlayerState_t* p_pstate = get_component(p_ent, CPLAYERSTATE_T);
                                 if (
                                     // TODO: Check Material of the crates
                                     p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y
@@ -1032,14 +1032,14 @@ void hitbox_update_system(Scene_t* scene)
                                     if (p_pstate->jump_pressed)
                                     {
                                         p_ctransform->velocity.y = -600;
-                                        CJump_t * p_cjump = get_component(&scene->ent_manager, p_ent, CJUMP_COMP_T);
+                                        CJump_t * p_cjump = get_component(p_ent, CJUMP_COMP_T);
                                         p_cjump->short_hop = false;
                                         p_cjump->jumped = true;
                                     }
                                 }
 
                                 CTileCoord_t* p_tilecoord = get_component(
-                                    &scene->ent_manager, p_other_ent, CTILECOORD_COMP_T
+                                    p_other_ent, CTILECOORD_COMP_T
                                 );
 
                                 for (size_t i = 0;i < p_tilecoord->n_tiles; ++i)
@@ -1096,7 +1096,7 @@ void camera_update_system(Scene_t* scene)
     const int height = lvl_scene->data.game_rec.height;
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
-        CTransform_t* p_ctransform = get_component(&scene->ent_manager, p_player, CTRANSFORM_COMP_T);
+        CTransform_t* p_ctransform = get_component(p_player, CTRANSFORM_COMP_T);
         lvl_scene->data.cam.offset = (Vector2){ width/2.0f, height/2.0f };
         lvl_scene->data.cam.target = p_ctransform->position;
     }

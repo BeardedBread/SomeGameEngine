@@ -1,7 +1,7 @@
 #ifndef __ASSETS_H
 #define __ASSETS_H
 #include "sc/map/sc_map.h"
-#include "components.h"
+#include "EC.h"
 #include "raylib.h"
 
 typedef struct Assets

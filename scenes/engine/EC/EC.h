@@ -1,9 +1,16 @@
-#ifndef __COMPONENTS_H
-#define __COMPONENTS_H
-#include "raylib.h"
+#ifndef __ENTITY_H
+#define __ENTITY_H
 #include <stdint.h>
-#include "entity.h"
-// TODO: Look at sc to use macros to auto generate functions
+#include <stdbool.h>
+#include "raylib.h"
+#include "sc/map/sc_map.h"
+#include "sc/queue/sc_queue.h"
+
+#define N_TAGS 4
+#define N_COMPONENTS 10
+#define MAX_COMP_POOL_SIZE 1024
+typedef struct EntityManager EntityManager_t;
+typedef struct Entity Entity_t;
 
 typedef enum ComponentEnum {
     CBBOX_COMP_T,
@@ -134,4 +141,41 @@ static inline void set_bbox(CBBox_t* p_bbox, unsigned int x, unsigned int y)
     p_bbox->half_size.x = (unsigned int)(x / 2);
     p_bbox->half_size.y = (unsigned int)(y / 2);
 }
-#endif // __COMPONENTS_H
+
+typedef enum EntityTag {
+    NO_ENT_TAG,
+    PLAYER_ENT_TAG,
+    ENEMY_ENT_TAG,
+    CRATES_ENT_TAG,
+} EntityTag_t;
+
+struct Entity {
+    unsigned long m_id;
+    EntityTag_t m_tag;
+    bool m_alive;
+    unsigned long components[N_COMPONENTS];
+};
+
+struct EntityManager {
+    // All fields are Read-Only
+    struct sc_map_64v entities; // ent id : entity
+    struct sc_map_64v entities_map[N_TAGS]; // [{ent id: ent}]
+    struct sc_map_64v component_map[N_COMPONENTS]; // [{ent id: comp}, ...]
+    struct sc_queue_uint to_add;
+    struct sc_queue_uint to_remove;
+};
+
+void init_entity_manager(EntityManager_t* p_manager);
+void update_entity_manager(EntityManager_t* p_manager);
+void clear_entity_manager(EntityManager_t* p_manager);
+void free_entity_manager(EntityManager_t* p_manager);
+
+Entity_t* add_entity(EntityManager_t* p_manager, EntityTag_t tag);
+void remove_entity(EntityManager_t* p_manager, unsigned long id);
+Entity_t *get_entity(EntityManager_t* p_manager, unsigned long id);
+
+void* add_component(EntityManager_t* p_manager, Entity_t *entity, ComponentEnum_t comp_type);
+void* get_component(EntityManager_t* p_manager, Entity_t *entity, ComponentEnum_t comp_type);
+void remove_component(EntityManager_t* p_manager, Entity_t* entity, ComponentEnum_t comp_type);
+
+#endif // __ENTITY_H

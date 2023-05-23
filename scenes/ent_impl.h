@@ -1,6 +1,5 @@
 #ifndef __ENT_IMPL_H
 #define __ENT_IMPL_H
-#include "entManager.h"
 #include "assets.h"
 
 bool init_player_creation(const char* info_file, Assets_t* assets);

@@ -1,6 +1,5 @@
 #ifndef __ENGINE_H
 #define __ENGINE_H
-#include "entManager.h"
 #include "actions.h"
 #include "sc/array/sc_array.h"
 #include "assets.h"

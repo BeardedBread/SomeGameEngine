@@ -1,8 +1,6 @@
 #ifndef __MEMPOOL_H
 #define __MEMPOOL_H
-#include "entity.h"
-#include "components.h"
-#define MAX_COMP_POOL_SIZE 1024
+#include "EC.h"
 void init_memory_pools(void);
 void free_memory_pools(void);
 

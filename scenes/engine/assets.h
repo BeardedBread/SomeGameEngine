@@ -28,5 +28,5 @@ Sprite_t* get_sprite(Assets_t* assets, const char* name);
 Sound* get_sound(Assets_t* assets, const char* name);
 Font* get_font(Assets_t* assets, const char* name);
 
-void draw_sprite(Sprite_t* spr, Vector2 pos);
+void draw_sprite(Sprite_t* spr, Vector2 pos, bool flip_x);
 #endif // __ASSETS_H

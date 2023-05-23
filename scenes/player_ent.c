@@ -16,6 +16,9 @@ static SpriteRenderInfo_t player_sprite_map[N_PLAYER_SPRITES] = {0};
 static unsigned int player_sprite_transition_func(Entity_t* ent)
 {
     CTransform_t* p_ctrans = get_component(ent, CTRANSFORM_COMP_T);
+    CSprite_t* p_spr = get_component(ent, CSPRITE_T);
+    if (p_ctrans->velocity.x > 0) p_spr->flip_x = true;
+    else if (p_ctrans->velocity.x < 0) p_spr->flip_x = false;
     if (Vector2LengthSqr(p_ctrans->velocity) > 10000.0f)
     {
         return SPR_PLAYER_RUN;

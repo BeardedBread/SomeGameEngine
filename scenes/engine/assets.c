@@ -151,12 +151,12 @@ Font* get_font(Assets_t* assets, const char* name)
     return NULL;
 }
 
-void draw_sprite(Sprite_t* spr, Vector2 pos)
+void draw_sprite(Sprite_t* spr, Vector2 pos, bool flip_x)
 {
     Rectangle rec = {
         spr->origin.x + spr->frame_size.x * spr->current_frame,
         spr->origin.y,
-        spr->frame_size.x,
+        spr->frame_size.x * (flip_x ? -1:1),
         spr->frame_size.y
     };
     DrawTextureRec(*spr->texture, rec, pos, WHITE);

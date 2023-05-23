@@ -124,14 +124,14 @@ typedef struct _SpriteRenderInfo
 {
     Sprite_t* sprite;
     Vector2 offset;
-    bool flip_x;
-    bool flip_y;
 } SpriteRenderInfo_t;
 
 typedef struct _CSprite_t {
     SpriteRenderInfo_t* sprites;
     sprite_transition_func_t transition_func;
     unsigned int current_idx;
+    bool flip_x;
+    bool flip_y;
 } CSprite_t;
 
 static inline void set_bbox(CBBox_t* p_bbox, unsigned int x, unsigned int y)

@@ -132,6 +132,7 @@ typedef struct _CSprite_t {
     unsigned int current_idx;
     bool flip_x;
     bool flip_y;
+    bool pause;
 } CSprite_t;
 
 static inline void set_bbox(CBBox_t* p_bbox, unsigned int x, unsigned int y)

@@ -27,6 +27,8 @@ static unsigned int player_sprite_transition_func(Entity_t* ent)
     if (p_ctrans->velocity.x > 0) p_spr->flip_x = true;
     else if (p_ctrans->velocity.x < 0) p_spr->flip_x = false;
 
+    p_spr->pause = false;
+
     if (p_move->ground_state & 1)
     {
         if (p_plr->is_crouch)
@@ -44,6 +46,7 @@ static unsigned int player_sprite_transition_func(Entity_t* ent)
     }
     else if (p_plr->ladder_state)
     {
+        p_spr->pause = Vector2LengthSqr(p_ctrans->velocity) < 10.0f;
         return SPR_PLAYER_LADDER;
     }
     else if (p_move->water_state & 1)

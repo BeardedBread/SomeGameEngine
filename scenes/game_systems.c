@@ -1076,6 +1076,7 @@ void sprite_animation_system(Scene_t* scene)
                 p_cspr->sprites[spr_idx].sprite->current_frame = 0;
             }
         }
+        if (p_cspr->pause) return;
         SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
         // Animate it (handle frame count)
         spr.sprite->elapsed++;

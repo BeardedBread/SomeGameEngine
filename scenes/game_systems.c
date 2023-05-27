@@ -1067,17 +1067,21 @@ void sprite_animation_system(Scene_t* scene)
     {
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         // Update animation state
+        unsigned int next_idx = p_cspr->current_idx;
         if (p_cspr->transition_func != NULL)
         {
-            unsigned int spr_idx = p_cspr->transition_func(p_ent);
-            if (p_cspr->current_idx != spr_idx)
-            {
-                p_cspr->current_idx = spr_idx;
-                p_cspr->sprites[spr_idx].sprite->current_frame = 0;
-            }
+            next_idx = p_cspr->transition_func(p_ent);
         }
         if (p_cspr->pause) return;
+
+        bool reset = p_cspr->current_idx != next_idx;
+        p_cspr->current_idx = next_idx;
+
         SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
+        if (spr.sprite == NULL) continue;
+
+        if (reset) spr.sprite->current_frame = 0;
+
         // Animate it (handle frame count)
         spr.sprite->elapsed++;
         if (spr.sprite->elapsed == spr.sprite->speed)

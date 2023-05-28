@@ -4,7 +4,7 @@ set(CMAKE_C_FLAGS "-Wall")
 cmake_minimum_required(VERSION 3.22.1)
 project(${PROJECT_NAME} C)
 set(CMAKE_C_STANDARD 99)
-set(RAYLIB_DIR $ENV{HOME}/Documents/Coding/raylib/out/)
+set(RAYLIB_DIR /usr/local/lib CACHE FILEPATH "directory to Raylib")
 
 if (${CMAKE_BUILD_TYPE} STREQUAL tile16)
     set_directory_properties(PROPERTIES COMPILE_DEFINITIONS TILE16_SIZE)

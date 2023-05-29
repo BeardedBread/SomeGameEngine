@@ -6,8 +6,8 @@
 #include "sc/map/sc_map.h"
 #include "sc/queue/sc_queue.h"
 
-#define N_TAGS 4
-#define N_COMPONENTS 10
+#define N_TAGS 5
+#define N_COMPONENTS 11
 #define MAX_COMP_POOL_SIZE 1024
 typedef struct EntityManager EntityManager_t;
 typedef struct Entity Entity_t;
@@ -23,6 +23,7 @@ typedef enum ComponentEnum {
     CHITBOXES_T,
     CHURTBOX_T,
     CSPRITE_T,
+    CMOVEABLE_T,
 } ComponentEnum_t;
 
 typedef struct _CBBox_t {
@@ -135,6 +136,13 @@ typedef struct _CSprite_t {
     bool pause;
 } CSprite_t;
 
+typedef struct _CMoveable_t {
+    uint16_t move_speed;
+    Vector2 prev_pos;
+    Vector2 target_pos;
+    bool gridmove;
+} CMoveable_t;
+
 static inline void set_bbox(CBBox_t* p_bbox, unsigned int x, unsigned int y)
 {
     p_bbox->size.x = x;
@@ -148,6 +156,7 @@ typedef enum EntityTag {
     PLAYER_ENT_TAG,
     ENEMY_ENT_TAG,
     CRATES_ENT_TAG,
+    BOULDER_ENT_TAG,
 } EntityTag_t;
 
 struct Entity {

@@ -16,9 +16,10 @@ enum EntitySpawnSelection {
     TOGGLE_LADDER,
     SPAWN_CRATE,
     SPAWN_METAL_CRATE,
+    SPAWN_BOULDER,
 };
 
-#define MAX_SPAWN_TYPE 5
+#define MAX_SPAWN_TYPE 6
 static unsigned int current_spawn_selection = 0;
 
 static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
@@ -90,10 +91,22 @@ static void level_scene_render_func(Scene_t* scene)
                 case CRATES_ENT_TAG:
                     colour = p_bbox->fragile? BROWN : GRAY;
                 break;
+                case BOULDER_ENT_TAG:
+                    colour = GRAY;
+                break;
                 default:
                     colour = BLACK;
+                break;
             }
-            DrawRectangle(p_ct->position.x, p_ct->position.y, p_bbox->size.x, p_bbox->size.y, colour);
+
+            if (p_ent->m_tag == BOULDER_ENT_TAG)
+            {
+                DrawCircleV(Vector2Add(p_ct->position, p_bbox->half_size), p_bbox->half_size.x, colour);
+            }
+            else
+            {
+                DrawRectangle(p_ct->position.x, p_ct->position.y, p_bbox->size.x, p_bbox->size.y, colour);
+            }
             CHurtbox_t* p_hurtbox = get_component(p_ent, CHURTBOX_T);
             CHitBoxes_t* p_hitbox = get_component(p_ent, CHITBOXES_T);
             if (p_hitbox != NULL)
@@ -220,6 +233,16 @@ static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal)
     p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
 }
 
+static void spawn_boulder(Scene_t* scene, unsigned int tile_idx)
+{
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    Entity_t* p_boulder = create_boulder(&scene->ent_manager, &scene->engine->assets);
+
+    CTransform_t* p_ctransform = get_component(p_boulder, CTRANSFORM_COMP_T);
+    p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
+    p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
+}
+
 static void toggle_block_system(Scene_t* scene)
 {
     // TODO: This system is not good as the interface between raw input and actions is broken
@@ -299,6 +322,9 @@ static void toggle_block_system(Scene_t* scene)
                 break;
                 case SPAWN_METAL_CRATE:
                     spawn_crate(scene, tile_idx, true);
+                break;
+                case SPAWN_BOULDER:
+                    spawn_boulder(scene, tile_idx);
                 break;
             }
             last_tile_idx = tile_idx;

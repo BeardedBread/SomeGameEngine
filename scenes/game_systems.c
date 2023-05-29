@@ -1,4 +1,5 @@
 #include "game_systems.h"
+#include "ent_impl.h"
 #include "AABB.h"
 #include "EC.h"
 #include "constants.h"

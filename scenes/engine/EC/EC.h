@@ -151,17 +151,9 @@ static inline void set_bbox(CBBox_t* p_bbox, unsigned int x, unsigned int y)
     p_bbox->half_size.y = (unsigned int)(y / 2);
 }
 
-typedef enum EntityTag {
-    NO_ENT_TAG,
-    PLAYER_ENT_TAG,
-    ENEMY_ENT_TAG,
-    CRATES_ENT_TAG,
-    BOULDER_ENT_TAG,
-} EntityTag_t;
-
 struct Entity {
     unsigned long m_id;
-    EntityTag_t m_tag;
+    unsigned int m_tag;
     bool m_alive;
     unsigned long components[N_COMPONENTS]; 
     EntityManager_t* manager;
@@ -181,7 +173,7 @@ void update_entity_manager(EntityManager_t* p_manager);
 void clear_entity_manager(EntityManager_t* p_manager);
 void free_entity_manager(EntityManager_t* p_manager);
 
-Entity_t* add_entity(EntityManager_t* p_manager, EntityTag_t tag);
+Entity_t* add_entity(EntityManager_t* p_manager, unsigned int tag);
 void remove_entity(EntityManager_t* p_manager, unsigned long id);
 Entity_t *get_entity(EntityManager_t* p_manager, unsigned long id);
 

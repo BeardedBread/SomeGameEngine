@@ -74,7 +74,7 @@ void free_entity_manager(EntityManager_t* p_manager)
     sc_queue_term(&p_manager->to_remove);
 }
 
-Entity_t *add_entity(EntityManager_t* p_manager, EntityTag_t tag)
+Entity_t *add_entity(EntityManager_t* p_manager, unsigned int tag)
 {
     unsigned long e_idx = 0;
     Entity_t* p_ent = new_entity_from_mempool(&e_idx);

@@ -157,7 +157,7 @@ Entity_t* new_entity_from_mempool(unsigned long* e_idx_ptr)
         ent->components[j] = MAX_COMP_POOL_SIZE;
     }
     ent->m_alive = true;
-    ent->m_tag = NO_ENT_TAG;
+    ent->m_tag = 0;
     return ent;
 }
 

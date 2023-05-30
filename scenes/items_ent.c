@@ -31,7 +31,8 @@ Entity_t* create_boulder(EntityManager_t* ent_manager, Assets_t* assets)
     add_component(p_boulder, CTRANSFORM_COMP_T);
     add_component(p_boulder, CMOVEMENTSTATE_T);
     add_component(p_boulder, CTILECOORD_COMP_T);
-    add_component(p_boulder, CMOVEABLE_T);
+    CMoveable_t* p_cmove = add_component(p_boulder, CMOVEABLE_T);
+    p_cmove->move_speed = 4;
     CHurtbox_t* p_hurtbox = add_component(p_boulder, CHURTBOX_T);
     p_hurtbox->size = p_bbox->size;
     p_hurtbox->fragile = false;

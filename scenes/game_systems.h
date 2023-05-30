@@ -6,8 +6,10 @@ void term_level_scene_data(LevelSceneData_t* data);
 
 void player_movement_input_system(Scene_t* scene);
 void player_bbox_update_system(Scene_t* scene);
+void player_pushing_system(Scene_t* scene);
 void tile_collision_system(Scene_t* scene);
 void friction_coefficient_update_system(Scene_t* scene);
+void moveable_update_system(Scene_t* scene);
 void global_external_forces_system(Scene_t* scene);
 void movement_update_system(Scene_t* scene);
 void player_ground_air_transition_system(Scene_t* scene);

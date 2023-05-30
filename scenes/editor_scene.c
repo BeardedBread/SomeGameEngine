@@ -421,8 +421,10 @@ void init_level_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &player_bbox_update_system);
     sc_array_add(&scene->scene.systems, &friction_coefficient_update_system);
     sc_array_add(&scene->scene.systems, &global_external_forces_system);
+    sc_array_add(&scene->scene.systems, &moveable_update_system);
     sc_array_add(&scene->scene.systems, &movement_update_system);
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
+    sc_array_add(&scene->scene.systems, &player_pushing_system);
     sc_array_add(&scene->scene.systems, &tile_collision_system);
     sc_array_add(&scene->scene.systems, &hitbox_update_system);
     //sc_array_add(&scene->scene.systems, &update_tilemap_system);

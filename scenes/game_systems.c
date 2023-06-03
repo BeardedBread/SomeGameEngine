@@ -298,6 +298,17 @@ static Vector2 shift_bbox(Vector2 bbox, Vector2 new_bbox, AnchorPoint_t anchor)
     return offset;
 }
 
+void player_dir_reset_system(Scene_t* scene)
+{
+    CPlayerState_t* p_pstate;
+    unsigned int ent_idx;
+    sc_map_foreach(&scene->ent_manager.component_map[CPLAYERSTATE_T], ent_idx, p_pstate)
+    {
+        p_pstate->player_dir.x = 0;
+        p_pstate->player_dir.y = 0;
+    }
+}
+
 void player_movement_input_system(Scene_t* scene)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
@@ -466,8 +477,6 @@ void player_movement_input_system(Scene_t* scene)
             p_cjump->jump_ready = false;
         }
 
-        p_pstate->player_dir.x = 0;
-        p_pstate->player_dir.y = 0;
     }
 }
 
@@ -830,56 +839,60 @@ void player_pushing_system(Scene_t* scene)
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
         CMovementState_t* p_movement = get_component(p_player, CMOVEMENTSTATE_T);
+        CPlayerState_t* p_pstate = get_component(p_player, CPLAYERSTATE_T);
         if (!(p_movement->ground_state & 1)) continue;
 
         CTransform_t* p_ctransform = get_component(p_player, CTRANSFORM_COMP_T);
         CBBox_t* p_bbox = get_component(p_player, CBBOX_COMP_T);
+        Vector2 point_to_check = p_ctransform->position;
+        point_to_check.y += p_bbox->half_size.y;
+        if (p_pstate->player_dir.x > 0)
+        {
+            point_to_check.x += p_bbox->size.x + 1;
+        }
+        else
+        {
+            point_to_check.x -= 1;
+        }
+        //CHitBoxes_t* p_hitbox = get_component(p_player, CHITBOXES_T);
         // Get the occupied tiles
         // For each tile, loop through the entities, check collision and move
         // exclude self
-        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
-        unsigned int tile_y1 = (p_ctransform->position.y + 1) / TILE_SIZE;
-        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
-        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE;
+        unsigned int tile_x = (point_to_check.x) / TILE_SIZE;
+        unsigned int tile_y = (point_to_check.y) / TILE_SIZE;
+        unsigned int tile_idx = tile_y * tilemap.width + tile_x;
+        if(tilemap.tiles[tile_idx].tile_type != EMPTY_TILE) continue;
 
-        for (unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
+        unsigned int other_ent_idx;
+        sc_map_foreach_key(&tilemap.tiles[tile_idx].entities_set, other_ent_idx)
         {
-            for (unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
+            if (other_ent_idx == p_player->m_id) continue;
+
+            Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
+            if (!p_other_ent->m_alive) continue; // To only allow one way collision check
+
+            CMoveable_t *p_other_moveable = get_component(p_other_ent, CMOVEABLE_T);
+            if (p_other_moveable == NULL) continue;
+
+            CTransform_t *p_other_ct = get_component(p_other_ent, CTRANSFORM_COMP_T);
+            CBBox_t *p_other_bbox = get_component(p_other_ent, CBBOX_COMP_T);
+            Rectangle box = {
+                .x = p_other_ct->position.x,
+                .y = p_other_ct->position.y,
+                .width = p_other_bbox->size.x,
+                .height = p_other_bbox->size.y
+            };
+            if (point_in_AABB(point_to_check, box))
             {
-                unsigned int tile_idx = tile_y * tilemap.width + tile_x;
-                if(tilemap.tiles[tile_idx].tile_type != EMPTY_TILE) continue;
-
-                unsigned int other_ent_idx;
-                sc_map_foreach_key(&tilemap.tiles[tile_idx].entities_set, other_ent_idx)
+                p_other_moveable->gridmove = true;
+                p_other_moveable->target_pos = p_other_ct->position;
+                if (p_ctransform->position.x < p_other_ct->position.x)
                 {
-                    if (other_ent_idx == p_player->m_id) continue;
-
-                    Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
-                    if (!p_other_ent->m_alive) continue; // To only allow one way collision check
-
-                    CMoveable_t *p_other_moveable = get_component(p_other_ent, CMOVEABLE_T);
-                    if (p_other_moveable == NULL) continue;
-
-                    CTransform_t *p_other_ct = get_component(p_other_ent, CTRANSFORM_COMP_T);
-                    CBBox_t *p_other_bbox = get_component(p_other_ent, CBBOX_COMP_T);
-                    if (check_collision_and_move(
-                            &scene->ent_manager, &tilemap, p_player->m_id,
-                            p_ctransform, p_bbox->size, p_other_ct->position,
-                            p_other_bbox->size, false
-                        )
-                    )
-                    {
-                        p_other_moveable->gridmove = true;
-                        p_other_moveable->target_pos = p_other_ct->position;
-                        if (p_ctransform->position.x < p_other_ct->position.x)
-                        {
-                            p_other_moveable->target_pos.x = p_other_ct->position.x + TILE_SIZE;
-                        }
-                        else
-                        {
-                            p_other_moveable->target_pos.x = p_other_ct->position.x - TILE_SIZE;
-                        }
-                    }
+                    p_other_moveable->target_pos.x = p_other_ct->position.x + TILE_SIZE;
+                }
+                else
+                {
+                    p_other_moveable->target_pos.x = p_other_ct->position.x - TILE_SIZE;
                 }
             }
         }

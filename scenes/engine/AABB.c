@@ -44,3 +44,13 @@ bool find_AABB_overlap(const Vector2 tl1, const Vector2 sz1, const Vector2 tl2, 
 
     return overlap_x && overlap_y;
 }
+
+bool point_in_AABB(Vector2 point, Rectangle box)
+{
+    return (
+        point.x > box.x
+        && point.y > box.y
+        && point.x < box.x + box.width
+        && point.y < box.y + box.height
+    );
+}

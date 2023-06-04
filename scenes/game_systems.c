@@ -812,6 +812,69 @@ void moveable_update_system(Scene_t* scene)
             p_ctransform->position = p_moveable->target_pos;
             p_moveable->gridmove = false;
         }
+        else
+        {
+            if (p_ctransform->prev_velocity.y <= 0) continue;
+            //if (p_ctransform->prev_position.y < p_ctransform->position.y) continue;
+
+            TileGrid_t tilemap = (CONTAINER_OF(scene, LevelScene_t, scene)->data).tilemap;
+            CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+            Vector2 point_to_check = p_ctransform->position;
+            int tile_x = (p_ctransform->position.x + p_bbox->half_size.x) / TILE_SIZE;
+            int tile_y = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
+            if (tile_y >= tilemap.height) continue;
+
+            int tile_idx = tile_y * tilemap.width + tile_x;
+            unsigned int other_ent_idx;
+            sc_map_foreach_key(&tilemap.tiles[tile_idx].entities_set, other_ent_idx)
+            {
+                if (other_ent_idx == ent_idx) continue;
+                sc_map_get_64v(&scene->ent_manager.component_map[CMOVEABLE_T], other_ent_idx);
+                if (sc_map_found(&scene->ent_manager.component_map[CMOVEABLE_T]))
+                {
+                    tile_x = (p_ctransform->position.x) / TILE_SIZE - 1;
+                    int tile_y2 = tile_y - 1;
+
+                    if (tile_x >= 0 && tile_x < tilemap.width)
+                    {
+                        unsigned int tile_idx1 = tile_y * tilemap.width + tile_x;
+                        unsigned int tile_idx2 = tile_y2 * tilemap.width + tile_x;
+                        if (tilemap.tiles[tile_idx1].tile_type == EMPTY_TILE
+                            && sc_map_size_64(&tilemap.tiles[tile_idx1].entities_set) == 0
+                            && tilemap.tiles[tile_idx2].tile_type == EMPTY_TILE
+                            && sc_map_size_64(&tilemap.tiles[tile_idx2].entities_set) == 0
+                        )
+                        {
+                            p_moveable->gridmove = true;
+                            p_moveable->prev_pos = p_ctransform->position;
+                            p_moveable->target_pos = p_ctransform->position; 
+                            p_moveable->target_pos.x -= TILE_SIZE;
+                            continue;
+                        }
+                    }
+
+                    tile_x += 2;
+                    if (tile_x >= 0 && tile_x < tilemap.width)
+                    {
+                        unsigned int tile_idx1 = tile_y * tilemap.width + tile_x;
+                        unsigned int tile_idx2 = tile_y2 * tilemap.width + tile_x;
+                        if (tilemap.tiles[tile_idx1].tile_type == EMPTY_TILE
+                            && sc_map_size_64(&tilemap.tiles[tile_idx1].entities_set) == 0
+                            && tilemap.tiles[tile_idx2].tile_type == EMPTY_TILE
+                            && sc_map_size_64(&tilemap.tiles[tile_idx2].entities_set) == 0
+                        )
+                        {
+                            p_moveable->gridmove = true;
+                            p_moveable->prev_pos = p_ctransform->position;
+                            p_moveable->target_pos = p_ctransform->position; 
+                            p_moveable->target_pos.x += TILE_SIZE;
+                            continue;
+                        }
+                    }
+                }
+            }
+
+        }
 
     }
 
@@ -908,6 +971,7 @@ void movement_update_system(Scene_t* scene)
     CTransform_t * p_ctransform;
     sc_map_foreach_value(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], p_ctransform)
     {
+        p_ctransform->prev_velocity = p_ctransform->velocity;
         p_ctransform->velocity =
             Vector2Add(
                 p_ctransform->velocity,
@@ -925,8 +989,7 @@ void movement_update_system(Scene_t* scene)
         if (fabs(p_ctransform->velocity.y) < 1e-3) p_ctransform->velocity.y = 0;
 
         // Store previous position before update
-        p_ctransform->prev_position.x = p_ctransform->position.x;
-        p_ctransform->prev_position.y = p_ctransform->position.y;
+        p_ctransform->prev_position = p_ctransform->position;
         p_ctransform->position = Vector2Add(
             p_ctransform->position,
             Vector2Scale(p_ctransform->velocity, delta_time)

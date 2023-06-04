@@ -38,6 +38,7 @@ typedef struct _CTransform_t {
     Vector2 prev_position;
     Vector2 position;
     Vector2 velocity;
+    Vector2 prev_velocity;
     Vector2 accel;
     Vector2 fric_coeff;
 } CTransform_t;

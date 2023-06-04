@@ -884,15 +884,30 @@ void player_pushing_system(Scene_t* scene)
             };
             if (point_in_AABB(point_to_check, box))
             {
-                p_other_moveable->gridmove = true;
-                p_other_moveable->target_pos = p_other_ct->position;
+                Vector2 target_pos = p_other_ct->position;
                 if (p_ctransform->position.x < p_other_ct->position.x)
                 {
-                    p_other_moveable->target_pos.x = p_other_ct->position.x + TILE_SIZE;
+                    target_pos.x += TILE_SIZE;
+                    tile_x++;
                 }
                 else
                 {
-                    p_other_moveable->target_pos.x = p_other_ct->position.x - TILE_SIZE;
+                    target_pos.x -= TILE_SIZE;
+                    tile_x--;
+                }
+
+                if (tile_x >= 0 && tile_x < tilemap.width)
+                {
+                    unsigned int target_tile_idx = tile_y * tilemap.width + tile_x;
+                    if (
+                        tilemap.tiles[target_tile_idx].tile_type == EMPTY_TILE
+                        && sc_map_size_64(&tilemap.tiles[target_tile_idx].entities_set) == 0
+                    )
+                    {
+                        p_other_moveable->gridmove = true;
+                        p_other_moveable->prev_pos = p_other_ct->position;
+                        p_other_moveable->target_pos = target_pos;
+                    }
                 }
             }
         }

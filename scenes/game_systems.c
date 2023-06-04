@@ -596,8 +596,7 @@ void tile_collision_system(Scene_t* scene)
 
                         checked_entities[other_ent_idx] = true;
                         Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
-                        if (!p_other_ent->m_alive) continue; // To only allow one way collision check
-                        if (p_other_ent->m_tag < p_ent->m_tag) continue; // To only allow one way collision check
+                        if (!p_other_ent->m_alive) continue; // No need to move if other is dead
                         CBBox_t *p_other_bbox = get_component(p_other_ent, CBBOX_COMP_T);
                         if (p_other_bbox == NULL) continue;
 
@@ -633,18 +632,6 @@ void tile_collision_system(Scene_t* scene)
         {
             if (p_ctransform->velocity.y > 0) p_ctransform->velocity.y = 0;
         }
-
-        // TODO: Resolve all collision events
-        //uint32_t collision_key;
-        //sc_map_foreach(&data->collision_events, collision_key, collision_value)
-        //{
-        //    ent_idx = (collision_key >> 16);
-        //    uint other_ent_idx = (collision_key & 0xFFFF);
-        //    Entity_t *p_ent = get_entity(&scene->ent_manager, ent_idx);
-        //    Entity_t *p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
-        //    if (!p_ent->m_alive || !p_other_ent->m_alive) continue;
-        //}
-        //sc_map_clear_32(&data->collision_events);
 
         // Level boundary collision
         unsigned int level_width = tilemap.width * TILE_SIZE;

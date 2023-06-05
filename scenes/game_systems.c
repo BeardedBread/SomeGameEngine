@@ -43,14 +43,16 @@ typedef struct CollideEntity {
 
 // ------------------------- Collision functions ------------------------------------
 // Do not subtract one for the size for any collision check, just pass normally. The extra one is important for AABB test
-static bool check_collision(const CollideEntity_t* ent, TileGrid_t* grid, bool check_oneway)
+static uint8_t check_collision(const CollideEntity_t* ent, TileGrid_t* grid, bool check_oneway)
 {
     for(unsigned int tile_y = ent->area.tile_y1; tile_y <= ent->area.tile_y2; tile_y++)
     {
+        if (tile_y >= grid->height) return 0;
         for(unsigned int tile_x = ent->area.tile_x1; tile_x <= ent->area.tile_x2; tile_x++)
         {
+            if (tile_x >= grid->width) return 0;
             unsigned int tile_idx = tile_y*grid->width + tile_x;
-            if (grid->tiles[tile_idx].solid == SOLID) return true;
+            if (grid->tiles[tile_idx].solid == SOLID) return 1;
 
             Vector2 overlap;
             if (check_oneway && grid->tiles[tile_idx].solid == ONE_WAY)
@@ -62,7 +64,7 @@ static bool check_collision(const CollideEntity_t* ent, TileGrid_t* grid, bool c
                 );
 
                 //For one-way platform, check for vectical collision, only return true for up direction
-                if (overlap.y != 0 && ent->prev_bbox.y + ent->prev_bbox.height - 1 < tile_y * TILE_SIZE) return true;
+                if (overlap.y != 0 && ent->prev_bbox.y + ent->prev_bbox.height - 1 < tile_y * TILE_SIZE) return 1;
             }
 
             Entity_t* p_other_ent;
@@ -84,13 +86,13 @@ static bool check_collision(const CollideEntity_t* ent, TileGrid_t* grid, bool c
                         )
                     )
                     {
-                        return true;
+                        return (p_bbox->fragile) ? 2 : 1;
                     }
                 }
             }
         }
     }
-    return false;
+    return 0;
 }
 
 // TODO: This should be a point collision check, not an  AABB check
@@ -619,7 +621,7 @@ void player_crushing_system(Scene_t* scene)
                 .tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE,
             },
         };
-        if (check_collision(&ent, &tilemap, false))
+        if (check_collision(&ent, &tilemap, false) == 1)
         {
             memset(&p_ctransform->position, 0, sizeof(p_ctransform->position));
             memset(&p_ctransform->velocity, 0, sizeof(p_ctransform->velocity));
@@ -1189,7 +1191,6 @@ void state_transition_update_system(Scene_t* scene)
                 p_ctransform->position.y + p_bbox->half_size.y,
                 data->tilemap.width
             );
-
             in_water =  (data->tilemap.tiles[tile_idx].water_level > 0);
         }
         else

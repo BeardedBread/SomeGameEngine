@@ -804,20 +804,33 @@ void moveable_update_system(Scene_t* scene)
     {
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
+        CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
 
         if (p_moveable->gridmove)
         {
             memset(&p_ctransform->velocity, 0, sizeof(p_ctransform->velocity));
             memset(&p_ctransform->accel, 0, sizeof(p_ctransform->velocity));
-            p_ctransform->position = p_moveable->target_pos;
-            p_moveable->gridmove = false;
+            float remaining_distance = p_moveable->target_pos.x - p_ctransform->position.x;
+            if (fabs(remaining_distance) < 0.1)
+            {
+                p_ctransform->position = p_moveable->target_pos;
+                p_moveable->gridmove = false;
+                p_bbox->solid = true;
+            }
+            else if (remaining_distance > 0.1)
+            {
+                p_ctransform->position.x +=  (remaining_distance > p_moveable->move_speed) ? p_moveable->move_speed : remaining_distance;
+            }
+            else
+            {
+                p_ctransform->position.x +=  (remaining_distance < -p_moveable->move_speed) ? -p_moveable->move_speed : remaining_distance;
+            }
         }
         else
         {
             if (p_ctransform->prev_velocity.y <= 0) continue;
 
             TileGrid_t tilemap = (CONTAINER_OF(scene, LevelScene_t, scene)->data).tilemap;
-            CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
             int tile_x = (p_ctransform->position.x + p_bbox->half_size.x) / TILE_SIZE;
             int tile_y = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
             if (tile_y >= tilemap.height) continue;
@@ -899,6 +912,7 @@ void moveable_update_system(Scene_t* scene)
             if (can_move)
             {
                 p_moveable->gridmove = true;
+                p_bbox->solid = false;
                 p_moveable->prev_pos = p_ctransform->position;
                 p_moveable->target_pos = Vector2Scale((Vector2){tile_x,tile_y2}, TILE_SIZE); 
             }
@@ -919,7 +933,7 @@ void player_pushing_system(Scene_t* scene)
     {
         CMovementState_t* p_movement = get_component(p_player, CMOVEMENTSTATE_T);
         CPlayerState_t* p_pstate = get_component(p_player, CPLAYERSTATE_T);
-        if (!(p_movement->ground_state & 1)) continue;
+        if (!(p_movement->ground_state & 1) || p_pstate->player_dir.x == 0) continue;
 
         CTransform_t* p_ctransform = get_component(p_player, CTRANSFORM_COMP_T);
         CBBox_t* p_bbox = get_component(p_player, CBBOX_COMP_T);

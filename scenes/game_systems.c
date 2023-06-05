@@ -42,6 +42,7 @@ typedef struct CollideEntity {
 } CollideEntity_t;
 
 // ------------------------- Collision functions ------------------------------------
+// Do not subtract one for the size for any collision check, just pass normally. The extra one is important for AABB test
 static bool check_collision(const CollideEntity_t* ent, TileGrid_t* grid, bool check_oneway)
 {
     for(unsigned int tile_y = ent->area.tile_y1; tile_y <= ent->area.tile_y2; tile_y++)
@@ -91,7 +92,6 @@ static bool check_collision(const CollideEntity_t* ent, TileGrid_t* grid, bool c
     }
     return false;
 }
-
 
 // TODO: This should be a point collision check, not an  AABB check
 static bool check_collision_at(
@@ -146,7 +146,8 @@ static bool check_collision_and_move(
     CBBox_t* p_bbox = get_component(ent, CBBOX_COMP_T);
     Vector2 overlap = {0,0};
     Vector2 prev_overlap = {0,0};
-    if (find_AABB_overlap(p_ct->position, p_bbox->size, *other_pos, other_bbox, &overlap))
+    uint8_t overlap_mode = find_AABB_overlap(p_ct->position, p_bbox->size, *other_pos, other_bbox, &overlap);
+    if (overlap_mode == 1)
     {
         // If there is collision, use previous overlap to determine direction
         find_AABB_overlap(p_ct->prev_position, p_bbox->size, *other_pos, other_bbox, &prev_overlap);
@@ -191,9 +192,49 @@ static bool check_collision_and_move(
                 //*other_pos = Vector2Subtract(*other_pos, offset);
             }
         }
-        return true;
     }
-    return false;
+    else if (overlap_mode == 2)
+    {
+        if ( other_solid != SOLID ) goto collision_end;
+        // On complete overlap, find a free space in this order: top, left, right, bottom
+        Vector2 point_to_test = {0};
+        point_to_test.x = p_ct->position.x;
+        point_to_test.y = other_pos->y - p_bbox->size.y;
+        if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
+        {
+            p_ct->position = point_to_test;
+            goto collision_end;
+        }
+
+        point_to_test.x = other_pos->x - p_bbox->size.x;
+        point_to_test.y = p_ct->position.y;
+        if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
+        {
+            p_ct->position = point_to_test;
+            goto collision_end;
+        }
+
+        point_to_test.x = other_pos->x + other_bbox.x;
+        point_to_test.y = p_ct->position.y;
+        if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
+        {
+            p_ct->position = point_to_test;
+            goto collision_end;
+        }
+
+        point_to_test.x = p_ct->position.x;
+        point_to_test.y = other_pos->y + other_bbox.y;
+        if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
+        {
+            p_ct->position = point_to_test;
+            goto collision_end;
+        }
+        // If no free space, Move up no matter what
+        p_ct->position.x = p_ct->position.x;
+        p_ct->position.y = other_pos->y - p_bbox->size.y;
+    }
+collision_end:
+    return overlap_mode > 0;
 }
 
 static uint8_t check_bbox_edges(
@@ -676,36 +717,6 @@ void tile_collision_system(Scene_t* scene)
             if (p_ctransform->velocity.y > 0) p_ctransform->velocity.y = 0;
         }
 
-        // Level boundary collision
-        unsigned int level_width = tilemap.width * TILE_SIZE;
-        if(p_ctransform->position.x < 0 || p_ctransform->position.x + p_bbox->size.x > level_width)
-        {
-            p_ctransform->position.x = (p_ctransform->position.x < 0) ? 0 : p_ctransform->position.x;
-            if (p_ctransform->position.x + p_bbox->size.x > level_width)
-            {
-                p_ctransform->position.x =  level_width - p_bbox->size.x;
-            }
-            else
-            {
-                p_ctransform->position.x = p_ctransform->position.x;
-            }
-            p_ctransform->velocity.x *= -1;
-        }
-        
-        unsigned int level_height = tilemap.height * TILE_SIZE;
-        if(p_ctransform->position.y < 0 || p_ctransform->position.y + p_bbox->size.y > level_height)
-        {
-            p_ctransform->position.y = (p_ctransform->position.y < 0) ? 0 : p_ctransform->position.y;
-            if (p_ctransform->position.y + p_bbox->size.y > level_height)
-            {
-                p_ctransform->position.y = level_height - p_bbox->size.y;
-            }
-            else
-            {
-                p_ctransform->position.y = p_ctransform->position.y;
-            }
-            p_ctransform->velocity.y *= -1;
-        }
         // Deal with float precision, by rounding when it is near to an integer enough by 2 dp
         float decimal;
         float fractional = modff(p_ctransform->position.x, &decimal);
@@ -1052,10 +1063,13 @@ void player_pushing_system(Scene_t* scene)
 
 void movement_update_system(Scene_t* scene)
 {
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    TileGrid_t tilemap = data->tilemap;
     // Update movement
     float delta_time = 0.017; // TODO: Will need to think about delta time handling
     CTransform_t * p_ctransform;
-    sc_map_foreach_value(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], p_ctransform)
+    unsigned long ent_idx;
+    sc_map_foreach(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], ent_idx, p_ctransform)
     {
         p_ctransform->prev_velocity = p_ctransform->velocity;
         p_ctransform->velocity =
@@ -1082,6 +1096,39 @@ void movement_update_system(Scene_t* scene)
         );
         p_ctransform->accel.x = 0;
         p_ctransform->accel.y = 0;
+
+        // Level boundary collision
+        Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
+        CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+        unsigned int level_width = tilemap.width * TILE_SIZE;
+        if(p_ctransform->position.x < 0 || p_ctransform->position.x + p_bbox->size.x > level_width)
+        {
+            p_ctransform->position.x = (p_ctransform->position.x < 0) ? 0 : p_ctransform->position.x;
+            if (p_ctransform->position.x + p_bbox->size.x > level_width)
+            {
+                p_ctransform->position.x =  level_width - p_bbox->size.x;
+            }
+            else
+            {
+                p_ctransform->position.x = p_ctransform->position.x;
+            }
+            p_ctransform->velocity.x = 0;
+        }
+        
+        unsigned int level_height = tilemap.height * TILE_SIZE;
+        if(p_ctransform->position.y < 0 || p_ctransform->position.y + p_bbox->size.y > level_height)
+        {
+            p_ctransform->position.y = (p_ctransform->position.y < 0) ? 0 : p_ctransform->position.y;
+            if (p_ctransform->position.y + p_bbox->size.y > level_height)
+            {
+                p_ctransform->position.y = level_height - p_bbox->size.y;
+            }
+            else
+            {
+                p_ctransform->position.y = p_ctransform->position.y;
+            }
+            p_ctransform->velocity.y = 0;
+        }
     }
 }
 

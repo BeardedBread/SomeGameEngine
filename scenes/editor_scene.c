@@ -50,7 +50,7 @@ static void level_scene_render_func(Scene_t* scene)
             char buffer[6] = {0};
             int x = (i % tilemap.width) * TILE_SIZE;
             int y = (i / tilemap.width) * TILE_SIZE;
-            sprintf(buffer, "%u", sc_map_size_64(&tilemap.tiles[i].entities_set));
+            sprintf(buffer, "%u", sc_map_size_64v(&tilemap.tiles[i].entities_set));
 
             if (data->tile_sprites[tilemap.tiles[i].tile_type] != NULL)
             {
@@ -148,7 +148,7 @@ static void level_scene_render_func(Scene_t* scene)
         {
             int x = (i % tilemap.width) * TILE_SIZE;
             int y = (i / tilemap.width) * TILE_SIZE;
-            sprintf(buffer, "%u", sc_map_size_64(&tilemap.tiles[i].entities_set));
+            sprintf(buffer, "%u", sc_map_size_64v(&tilemap.tiles[i].entities_set));
 
             if (tilemap.tiles[i].solid > 0)
             {
@@ -458,7 +458,7 @@ void init_level_scene(LevelScene_t* scene)
     {
         all_tiles[i].solid = NOT_SOLID;
         all_tiles[i].tile_type = EMPTY_TILE;
-        sc_map_init_64(&all_tiles[i].entities_set, 16, 0);
+        sc_map_init_64v(&all_tiles[i].entities_set, 16, 0);
     }
     for (size_t i = 0; i < scene->data.tilemap.width; ++i)
     {
@@ -477,7 +477,7 @@ void free_level_scene(LevelScene_t* scene)
     for (size_t i = 0; i < MAX_N_TILES;i++)
     {
         all_tiles[i].solid = 0;
-        sc_map_term_64(&all_tiles[i].entities_set);
+        sc_map_term_64v(&all_tiles[i].entities_set);
     }
     term_level_scene_data(&scene->data);
 }

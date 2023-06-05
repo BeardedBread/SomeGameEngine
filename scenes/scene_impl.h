@@ -30,7 +30,7 @@ typedef struct Tile {
     TileType_t tile_type;
     SolidType_t solid;
     unsigned int water_level;
-    struct sc_map_64 entities_set;
+    struct sc_map_64v entities_set;
 }Tile_t;
 
 typedef struct TileGrid {

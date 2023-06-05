@@ -815,63 +815,92 @@ void moveable_update_system(Scene_t* scene)
         else
         {
             if (p_ctransform->prev_velocity.y <= 0) continue;
-            //if (p_ctransform->prev_position.y < p_ctransform->position.y) continue;
 
             TileGrid_t tilemap = (CONTAINER_OF(scene, LevelScene_t, scene)->data).tilemap;
             CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
-            Vector2 point_to_check = p_ctransform->position;
             int tile_x = (p_ctransform->position.x + p_bbox->half_size.x) / TILE_SIZE;
             int tile_y = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
             if (tile_y >= tilemap.height) continue;
 
             int tile_idx = tile_y * tilemap.width + tile_x;
             unsigned int other_ent_idx;
+            bool can_move = false;
+            int tile_y2 = tile_y - 1;
             sc_map_foreach_key(&tilemap.tiles[tile_idx].entities_set, other_ent_idx)
             {
                 if (other_ent_idx == ent_idx) continue;
                 sc_map_get_64v(&scene->ent_manager.component_map[CMOVEABLE_T], other_ent_idx);
-                if (sc_map_found(&scene->ent_manager.component_map[CMOVEABLE_T]))
+                if (!sc_map_found(&scene->ent_manager.component_map[CMOVEABLE_T])) continue;
+
+                tile_x = (p_ctransform->position.x) / TILE_SIZE - 1;
+
+                if (tile_x >= 0 && tile_x < tilemap.width)
                 {
-                    tile_x = (p_ctransform->position.x) / TILE_SIZE - 1;
-                    int tile_y2 = tile_y - 1;
-
-                    if (tile_x >= 0 && tile_x < tilemap.width)
+                    unsigned int tile_idx1 = tile_y * tilemap.width + tile_x;
+                    unsigned int tile_idx2 = tile_y2 * tilemap.width + tile_x;
+                    if (
+                        tilemap.tiles[tile_idx1].tile_type == EMPTY_TILE
+                        && tilemap.tiles[tile_idx2].tile_type == EMPTY_TILE
+                    )
                     {
-                        unsigned int tile_idx1 = tile_y * tilemap.width + tile_x;
-                        unsigned int tile_idx2 = tile_y2 * tilemap.width + tile_x;
-                        if (tilemap.tiles[tile_idx1].tile_type == EMPTY_TILE
-                            && sc_map_size_64(&tilemap.tiles[tile_idx1].entities_set) == 0
-                            && tilemap.tiles[tile_idx2].tile_type == EMPTY_TILE
-                            && sc_map_size_64(&tilemap.tiles[tile_idx2].entities_set) == 0
-                        )
+                        bool any_solid = false;
+                        unsigned int idx_to_check;
+                        sc_map_foreach_key(&tilemap.tiles[tile_idx1].entities_set, idx_to_check)
                         {
-                            p_moveable->gridmove = true;
-                            p_moveable->prev_pos = p_ctransform->position;
-                            p_moveable->target_pos = p_ctransform->position; 
-                            p_moveable->target_pos.x -= TILE_SIZE;
-                            continue;
+                            Entity_t* other_ent = get_entity(&scene->ent_manager, idx_to_check);
+                            CBBox_t* p_other_bbox = get_component(other_ent, CBBOX_COMP_T);
+                            any_solid |= p_other_bbox->solid;
                         }
-                    }
-
-                    tile_x += 2;
-                    if (tile_x >= 0 && tile_x < tilemap.width)
-                    {
-                        unsigned int tile_idx1 = tile_y * tilemap.width + tile_x;
-                        unsigned int tile_idx2 = tile_y2 * tilemap.width + tile_x;
-                        if (tilemap.tiles[tile_idx1].tile_type == EMPTY_TILE
-                            && sc_map_size_64(&tilemap.tiles[tile_idx1].entities_set) == 0
-                            && tilemap.tiles[tile_idx2].tile_type == EMPTY_TILE
-                            && sc_map_size_64(&tilemap.tiles[tile_idx2].entities_set) == 0
-                        )
+                        sc_map_foreach_key(&tilemap.tiles[tile_idx2].entities_set, idx_to_check)
                         {
-                            p_moveable->gridmove = true;
-                            p_moveable->prev_pos = p_ctransform->position;
-                            p_moveable->target_pos = p_ctransform->position; 
-                            p_moveable->target_pos.x += TILE_SIZE;
-                            continue;
+                            Entity_t* other_ent = get_entity(&scene->ent_manager, idx_to_check);
+                            CBBox_t* p_other_bbox = get_component(other_ent, CBBOX_COMP_T);
+                            any_solid |= p_other_bbox->solid;
+                        }
+                        if (!any_solid)
+                        {
+                            can_move = true;
+                            break;
                         }
                     }
                 }
+
+                tile_x += 2;
+                if (tile_x >= 0 && tile_x < tilemap.width)
+                {
+                    unsigned int tile_idx1 = tile_y * tilemap.width + tile_x;
+                    unsigned int tile_idx2 = tile_y2 * tilemap.width + tile_x;
+                    if (tilemap.tiles[tile_idx1].tile_type == EMPTY_TILE
+                        && tilemap.tiles[tile_idx2].tile_type == EMPTY_TILE
+                    )
+                    {
+                        bool any_solid = false;
+                        unsigned int idx_to_check;
+                        sc_map_foreach_key(&tilemap.tiles[tile_idx1].entities_set, idx_to_check)
+                        {
+                            Entity_t* other_ent = get_entity(&scene->ent_manager, idx_to_check);
+                            CBBox_t* p_other_bbox = get_component(other_ent, CBBOX_COMP_T);
+                            any_solid |= p_other_bbox->solid;
+                        }
+                        sc_map_foreach_key(&tilemap.tiles[tile_idx2].entities_set, idx_to_check)
+                        {
+                            Entity_t* other_ent = get_entity(&scene->ent_manager, idx_to_check);
+                            CBBox_t* p_other_bbox = get_component(other_ent, CBBOX_COMP_T);
+                            any_solid |= p_other_bbox->solid;
+                        }
+                        if (!any_solid)
+                        {
+                            can_move = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (can_move)
+            {
+                p_moveable->gridmove = true;
+                p_moveable->prev_pos = p_ctransform->position;
+                p_moveable->target_pos = Vector2Scale((Vector2){tile_x,tile_y2}, TILE_SIZE); 
             }
 
         }

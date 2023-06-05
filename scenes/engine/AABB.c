@@ -9,10 +9,26 @@ bool find_1D_overlap(Vector2 l1, Vector2 l2, float* overlap)
     {
         // Complete Overlap, not sure what to do tbh
         //*overlap = l2.y-l2.x + l1.y-l1.x;
-        float l1_mag = Vector2Length(l1);
-        float l2_mag = Vector2Length(l2);
-        *overlap = (l1_mag > l2_mag) ? l2_mag : l1_mag;
-        //if (l2.y - l1.y < l1.x - l2.x) *overlap *= -1;
+        float l1_mag = l1.y - l2.x;
+        float l2_mag = l2.y - l2.x;
+        float c1 = l2.y - l1.y;
+        float c2 = l1.x - l2.x;
+        float len_to_add = l1_mag;
+        if (l1_mag > l2_mag)
+        {
+            len_to_add = l2_mag;
+            c1 *= -1;
+            c2 *= -1;
+        }
+
+        if (c1 < c2)
+        {
+            *overlap = -len_to_add - c1;
+        }
+        else
+        {
+            *overlap = len_to_add + c2;
+        }
     }
     else
     {

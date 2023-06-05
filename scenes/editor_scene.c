@@ -428,6 +428,7 @@ void init_level_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &tile_collision_system);
     sc_array_add(&scene->scene.systems, &hitbox_update_system);
+    sc_array_add(&scene->scene.systems, &player_crushing_system);
     //sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &state_transition_update_system);
     sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);

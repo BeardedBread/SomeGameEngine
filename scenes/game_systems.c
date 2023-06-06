@@ -184,11 +184,11 @@ static bool check_collision_and_move(
                 && (p_ct->prev_position.y + p_bbox->size.y - 1 < other_pos->y))
         )
         {
-            if (!check_collision_at(ent, p_ct->position, p_bbox->size, tilemap, offset))
+            //if (!check_collision_at(ent, p_ct->position, p_bbox->size, tilemap, offset))
             {
                 p_ct->position = Vector2Add(p_ct->position, offset);
             }
-            else 
+            //else 
             {
             
                 //*other_pos = Vector2Subtract(*other_pos, offset);
@@ -201,14 +201,14 @@ static bool check_collision_and_move(
         // On complete overlap, find a free space in this order: top, left, right, bottom
         Vector2 point_to_test = {0};
         point_to_test.x = p_ct->position.x;
-        point_to_test.y = other_pos->y - p_bbox->size.y;
+        point_to_test.y = other_pos->y - p_bbox->size.y + 1;
         if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
         {
             p_ct->position = point_to_test;
             goto collision_end;
         }
 
-        point_to_test.x = other_pos->x - p_bbox->size.x;
+        point_to_test.x = other_pos->x - p_bbox->size.x + 1;
         point_to_test.y = p_ct->position.y;
         if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
         {
@@ -216,7 +216,7 @@ static bool check_collision_and_move(
             goto collision_end;
         }
 
-        point_to_test.x = other_pos->x + other_bbox.x;
+        point_to_test.x = other_pos->x + other_bbox.x - 1;
         point_to_test.y = p_ct->position.y;
         if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
         {
@@ -225,7 +225,7 @@ static bool check_collision_and_move(
         }
 
         point_to_test.x = p_ct->position.x;
-        point_to_test.y = other_pos->y + other_bbox.y;
+        point_to_test.y = other_pos->y + other_bbox.y - 1;
         if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
         {
             p_ct->position = point_to_test;
@@ -233,7 +233,7 @@ static bool check_collision_and_move(
         }
         // If no free space, Move up no matter what
         p_ct->position.x = p_ct->position.x;
-        p_ct->position.y = other_pos->y - p_bbox->size.y;
+        p_ct->position.y = other_pos->y - p_bbox->size.y + 1;
     }
 collision_end:
     return overlap_mode > 0;
@@ -649,10 +649,12 @@ void tile_collision_system(Scene_t* scene)
         // Get the occupied tiles
         // For each tile, loop through the entities, check collision and move
         // exclude self
+        // This has an extra pixel when gathering potential collision, just to avoid missing any
+        // This is only done here, collision methods do not have this
         unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
         unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
-        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
-        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE;
+        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
+        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
 
         for (unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
         {

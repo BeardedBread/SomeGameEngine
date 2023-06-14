@@ -832,6 +832,12 @@ void global_external_forces_system(Scene_t* scene)
         CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
         CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
 
+        if (p_ctransform->grav_timer > 0)
+        {
+            p_ctransform->grav_timer--;
+            continue;
+        }
+
         if (!(p_mstate->ground_state & 1))
         {
             // Only apply upthrust if center is in water
@@ -1225,6 +1231,12 @@ void state_transition_update_system(Scene_t* scene)
             p_ent, p_ctransform->position, p_ctransform->prev_position, p_bbox->size,
             &data->tilemap
         );
+
+        if (on_ground)
+        {
+            p_ctransform->grav_timer = p_ctransform->grav_delay;
+        }
+
         bool in_water = false;
         if (!(p_mstate->water_state & 1))
         {

@@ -41,6 +41,8 @@ typedef struct _CTransform_t {
     Vector2 prev_velocity;
     Vector2 accel;
     Vector2 fric_coeff;
+    int8_t grav_delay;
+    int8_t grav_timer;
 } CTransform_t;
 
 typedef struct _CMovementState_t {

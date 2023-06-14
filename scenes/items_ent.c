@@ -10,7 +10,8 @@ Entity_t* create_crate(EntityManager_t* ent_manager, Assets_t* assets, bool meta
     p_bbox->solid = true;
     p_bbox->fragile = !metal;
 
-    add_component(p_crate, CTRANSFORM_COMP_T);
+    CTransform_t* p_ctransform = add_component(p_crate, CTRANSFORM_COMP_T);
+    p_ctransform->grav_delay = 5;
     add_component(p_crate, CMOVEMENTSTATE_T);
     add_component(p_crate, CTILECOORD_COMP_T);
     CHurtbox_t* p_hurtbox = add_component(p_crate, CHURTBOX_T);
@@ -28,7 +29,8 @@ Entity_t* create_boulder(EntityManager_t* ent_manager, Assets_t* assets)
     p_bbox->solid = true;
     p_bbox->fragile = false;
 
-    add_component(p_boulder, CTRANSFORM_COMP_T);
+    CTransform_t* p_ctransform = add_component(p_boulder, CTRANSFORM_COMP_T);
+    p_ctransform->grav_delay = 5;
     add_component(p_boulder, CMOVEMENTSTATE_T);
     add_component(p_boulder, CTILECOORD_COMP_T);
     CMoveable_t* p_cmove = add_component(p_boulder, CMOVEABLE_T);

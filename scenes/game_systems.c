@@ -96,7 +96,7 @@ static uint8_t check_collision(const CollideEntity_t* ent, TileGrid_t* grid, boo
 }
 
 // TODO: This should be a point collision check, not an  AABB check
-static bool check_collision_at(
+static bool check_collision_offset(
     Entity_t* p_ent, Vector2 pos, Vector2 bbox_sz,
     TileGrid_t* grid, Vector2 offset 
 )
@@ -202,7 +202,7 @@ static bool check_collision_and_move(
         Vector2 point_to_test = {0};
         point_to_test.x = p_ct->position.x;
         point_to_test.y = other_pos->y - p_bbox->size.y + 1;
-        if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
+        if (!check_collision_offset(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
         {
             p_ct->position = point_to_test;
             goto collision_end;
@@ -210,7 +210,7 @@ static bool check_collision_and_move(
 
         point_to_test.x = other_pos->x - p_bbox->size.x + 1;
         point_to_test.y = p_ct->position.y;
-        if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
+        if (!check_collision_offset(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
         {
             p_ct->position = point_to_test;
             goto collision_end;
@@ -218,7 +218,7 @@ static bool check_collision_and_move(
 
         point_to_test.x = other_pos->x + other_bbox.x - 1;
         point_to_test.y = p_ct->position.y;
-        if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
+        if (!check_collision_offset(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
         {
             p_ct->position = point_to_test;
             goto collision_end;
@@ -226,7 +226,7 @@ static bool check_collision_and_move(
 
         point_to_test.x = p_ct->position.x;
         point_to_test.y = other_pos->y + other_bbox.y - 1;
-        if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
+        if (!check_collision_offset(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
         {
             p_ct->position = point_to_test;
             goto collision_end;
@@ -577,7 +577,7 @@ void player_bbox_update_system(Scene_t* scene)
         }
 
         if (
-            !check_collision_at(
+            !check_collision_offset(
                 p_player, p_ctransform->position, new_bbox,
                 &tilemap, offset 
             )
@@ -612,11 +612,44 @@ void player_crushing_system(Scene_t* scene)
             .area = (TileArea_t){
                 .tile_x1 = (p_ctransform->position.x) / TILE_SIZE,
                 .tile_y1 = (p_ctransform->position.y) / TILE_SIZE,
-                .tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE,
+                .tile_x2 = (p_ctransform->position.x) / TILE_SIZE,
                 .tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE,
             },
         };
-        if (check_collision(&ent, &tilemap, false) == 1)
+
+        // Mostly identical to edge check function
+        // Except we want collision instead of just touching
+        uint8_t detected = 0;
+        // Left
+        detected |= (check_collision(&ent, &tilemap, false) ? 1 : 0);
+
+        //Right
+        ent.area.tile_x1 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
+        ent.area.tile_x2 = ent.area.tile_x1;
+        detected |= (check_collision(&ent, &tilemap, false) ? 1 : 0) << 1;
+
+        if (detected == 0b11)
+        {
+            memset(&p_ctransform->position, 0, sizeof(p_ctransform->position));
+            memset(&p_ctransform->velocity, 0, sizeof(p_ctransform->velocity));
+            memset(&p_ctransform->accel, 0, sizeof(p_ctransform->accel));
+            return;
+        }
+
+        detected = 0;
+        // Up
+        ent.area.tile_x1 = (p_ctransform->position.x) / TILE_SIZE,
+        ent.area.tile_y1 = (p_ctransform->position.y - 1) / TILE_SIZE,
+        ent.area.tile_y2 = ent.area.tile_y1;
+        detected |= (check_collision(&ent, &tilemap, false) ? 1 : 0) << 1;
+
+        // Down
+        ent.area.tile_y1 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE,
+        ent.area.tile_y2 = ent.area.tile_y1;
+        detected |= (check_collision(&ent, &tilemap, true) ? 1 : 0);
+
+        //if (check_collision(&ent, &tilemap, false) == 1)
+        if (detected == 0b11)
         {
             memset(&p_ctransform->position, 0, sizeof(p_ctransform->position));
             memset(&p_ctransform->velocity, 0, sizeof(p_ctransform->velocity));

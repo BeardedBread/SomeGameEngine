@@ -353,6 +353,22 @@ static Vector2 shift_bbox(Vector2 bbox, Vector2 new_bbox, AnchorPoint_t anchor)
     return offset;
 }
 
+void player_respawn_system(Scene_t* scene)
+{
+    Entity_t* p_player;
+    sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
+    {
+        if (!p_player->m_alive)
+        {
+            p_player->m_alive = true;
+            CTransform_t* p_ctransform = get_component(p_player, CTRANSFORM_COMP_T);
+            memset(&p_ctransform->position, 0, sizeof(p_ctransform->position));
+            memset(&p_ctransform->velocity, 0, sizeof(p_ctransform->velocity));
+            memset(&p_ctransform->accel, 0, sizeof(p_ctransform->accel));
+        }
+    }
+}
+
 void player_dir_reset_system(Scene_t* scene)
 {
     CPlayerState_t* p_pstate;
@@ -630,9 +646,7 @@ void player_crushing_system(Scene_t* scene)
 
         if (detected == 0b11)
         {
-            memset(&p_ctransform->position, 0, sizeof(p_ctransform->position));
-            memset(&p_ctransform->velocity, 0, sizeof(p_ctransform->velocity));
-            memset(&p_ctransform->accel, 0, sizeof(p_ctransform->accel));
+            p_player->m_alive = false;
             return;
         }
 
@@ -651,9 +665,7 @@ void player_crushing_system(Scene_t* scene)
         //if (check_collision(&ent, &tilemap, false) == 1)
         if (detected == 0b11)
         {
-            memset(&p_ctransform->position, 0, sizeof(p_ctransform->position));
-            memset(&p_ctransform->velocity, 0, sizeof(p_ctransform->velocity));
-            memset(&p_ctransform->accel, 0, sizeof(p_ctransform->accel));
+            p_player->m_alive = false;
             return;
         }
     }

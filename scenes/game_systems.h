@@ -20,4 +20,5 @@ void hitbox_update_system(Scene_t* scene);
 void sprite_animation_system(Scene_t* scene);
 void camera_update_system(Scene_t* scene);
 void player_dir_reset_system(Scene_t* scene);
+void player_respawn_system(Scene_t* scene);
 #endif // __GAME_SYSTEMS_H

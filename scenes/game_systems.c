@@ -390,15 +390,10 @@ void player_movement_input_system(Scene_t* scene)
                     p_ctransform->position.y + p_bbox->half_size.y,
                     data->tilemap.width
                 );
-                if (tilemap.tiles[tile_idx].tile_type == LADDER)
+                if (tilemap.tiles[tile_idx].tile_type == LADDER && p_ctransform->velocity.y >= 0)
                 {
                     p_pstate->ladder_state = true;
-                    
-                    //p_ctransform->position.x = (tile_idx % tilemap.width) * TILE_SIZE;
-                    if (p_mstate->ground_state & 1)
-                    {
-                        p_ctransform->position.y--;
-                    }
+                    p_ctransform->position.y--;
                 }
             }
             else if (p_pstate->player_dir.y > 0)
@@ -424,11 +419,7 @@ void player_movement_input_system(Scene_t* scene)
                 if (tile_idx < tilemap.n_tiles && tilemap.tiles[tile_idx].tile_type == LADDER)
                 {
                     p_pstate->ladder_state = true;
-                    //p_ctransform->position.x = (tile_idx % tilemap.width) * TILE_SIZE;
-                    if (p_mstate->ground_state & 1)
-                    {
-                        p_ctransform->position.y += TILE_SIZE / 2;
-                    }
+                    p_ctransform->position.y++;
                 }
             }
         }
@@ -451,6 +442,10 @@ void player_movement_input_system(Scene_t* scene)
             {
                 p_ctransform->velocity.y = p_pstate->player_dir.y * 150;
                 p_ctransform->velocity.x = p_pstate->player_dir.x * 40;
+                if (p_pstate->player_dir.y != 0)
+                {
+                    p_ctransform->position.x = tile_x * TILE_SIZE + 1;
+                }
             }
         }
 

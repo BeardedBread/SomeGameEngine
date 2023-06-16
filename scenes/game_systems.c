@@ -802,7 +802,7 @@ void friction_coefficient_update_system(Scene_t* scene)
         {
             // Apply water friction
             // Consistent in all direction
-            p_ct->fric_coeff = (Vector2){-5.5, -5.5};
+            p_ct->fric_coeff = (Vector2){-WATER_FRICTION, -WATER_FRICTION};
         }
         else
         {
@@ -810,7 +810,7 @@ void friction_coefficient_update_system(Scene_t* scene)
             // x is set to ground resistance (even in air)
             // If not, then player is can go faster by bunny hopping
             // which is fun but not quite beneficial here
-            p_ct->fric_coeff = (Vector2){-3.3, -1};
+            p_ct->fric_coeff = (Vector2){-GROUND_X_FRICTION, -GROUND_Y_FRICTION};
         }
 
         CPlayerState_t* p_pstate = get_component(p_ent, CPLAYERSTATE_T);

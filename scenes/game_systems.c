@@ -935,8 +935,12 @@ void moveable_update_system(Scene_t* scene)
             if (p_ctransform->prev_velocity.y <= 0) continue;
 
             TileGrid_t tilemap = (CONTAINER_OF(scene, LevelScene_t, scene)->data).tilemap;
-            int tile_x = (p_ctransform->position.x + p_bbox->half_size.x) / TILE_SIZE;
-            int tile_y = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
+            Vector2 point_to_check = {
+                .x = p_ctransform->position.x + p_bbox->half_size.x,
+                .y = p_ctransform->position.y + p_bbox->size.y + 1
+            };
+            int tile_x = point_to_check.x / TILE_SIZE;
+            int tile_y = point_to_check.y / TILE_SIZE;
             if (tile_y >= tilemap.height) continue;
 
             int tile_idx = tile_y * tilemap.width + tile_x;
@@ -948,6 +952,14 @@ void moveable_update_system(Scene_t* scene)
                 if (other_ent_idx == ent_idx) continue;
                 sc_map_get_64v(&scene->ent_manager.component_map[CMOVEABLE_T], other_ent_idx);
                 if (!sc_map_found(&scene->ent_manager.component_map[CMOVEABLE_T])) continue;
+
+                {
+                    Entity_t* other_ent = get_entity(&scene->ent_manager, other_ent_idx);
+                    CBBox_t* p_other_bbox = get_component(other_ent, CBBOX_COMP_T);
+                    CTransform_t* p_other_ct = get_component(other_ent, CTRANSFORM_COMP_T);
+                    Rectangle box = {p_other_ct->position.x, p_other_ct->position.y, p_other_bbox->size.x, p_other_bbox->size.y};
+                    if (!point_in_AABB(point_to_check, box)) continue;
+                }
 
                 tile_x = (p_ctransform->position.x) / TILE_SIZE - 1;
 

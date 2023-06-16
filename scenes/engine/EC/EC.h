@@ -26,6 +26,11 @@ typedef enum ComponentEnum {
     CMOVEABLE_T,
 } ComponentEnum_t;
 
+typedef enum MovementMode {
+    REGULAR_MOVEMENT = 0,
+    KINEMATIC_MOVEMENT,
+}MovementMode_t;
+
 typedef struct _CBBox_t {
     Vector2 size;
     Vector2 offset;
@@ -36,13 +41,14 @@ typedef struct _CBBox_t {
 
 typedef struct _CTransform_t {
     Vector2 prev_position;
+    Vector2 prev_velocity;
     Vector2 position;
     Vector2 velocity;
-    Vector2 prev_velocity;
     Vector2 accel;
     Vector2 fric_coeff;
     int8_t grav_delay;
     int8_t grav_timer;
+    MovementMode_t movement_mode;
 } CTransform_t;
 
 typedef struct _CMovementState_t {

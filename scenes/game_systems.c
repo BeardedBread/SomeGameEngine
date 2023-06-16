@@ -912,8 +912,6 @@ void moveable_update_system(Scene_t* scene)
 
         if (p_moveable->gridmove)
         {
-            memset(&p_ctransform->velocity, 0, sizeof(p_ctransform->velocity));
-            memset(&p_ctransform->accel, 0, sizeof(p_ctransform->velocity));
             float remaining_distance = p_moveable->target_pos.x - p_ctransform->position.x;
             if (fabs(remaining_distance) < 0.1)
             {
@@ -921,6 +919,7 @@ void moveable_update_system(Scene_t* scene)
                 p_ctransform->position = p_moveable->target_pos;
                 p_moveable->gridmove = false;
                 p_bbox->solid = true;
+                p_ctransform->movement_mode = REGULAR_MOVEMENT;
             }
             else if (remaining_distance > 0.1)
             {
@@ -929,6 +928,7 @@ void moveable_update_system(Scene_t* scene)
             else
             {
                 p_ctransform->position.x +=  (remaining_distance < -p_moveable->move_speed) ? -p_moveable->move_speed : remaining_distance;
+                memset(&p_ctransform->velocity, 0, sizeof(p_ctransform->velocity));
             }
         }
 
@@ -1035,6 +1035,9 @@ void moveable_update_system(Scene_t* scene)
                 p_bbox->solid = false;
                 p_moveable->prev_pos = p_ctransform->position;
                 p_moveable->target_pos = Vector2Scale((Vector2){tile_x,tile_y2}, TILE_SIZE); 
+                memset(&p_ctransform->velocity, 0, sizeof(p_ctransform->velocity));
+                memset(&p_ctransform->accel, 0, sizeof(p_ctransform->accel));
+                p_ctransform->movement_mode = KINEMATIC_MOVEMENT;
             }
 
         }
@@ -1119,6 +1122,9 @@ void player_pushing_system(Scene_t* scene)
                         p_other_moveable->gridmove = true;
                         p_other_moveable->prev_pos = p_other_ct->position;
                         p_other_moveable->target_pos = target_pos;
+                        memset(&p_ctransform->velocity, 0, sizeof(p_ctransform->velocity));
+                        memset(&p_ctransform->accel, 0, sizeof(p_ctransform->accel));
+                        p_other_ct->movement_mode = KINEMATIC_MOVEMENT;
                     }
                 }
             }
@@ -1137,11 +1143,15 @@ void movement_update_system(Scene_t* scene)
     sc_map_foreach(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], ent_idx, p_ctransform)
     {
         p_ctransform->prev_velocity = p_ctransform->velocity;
-        p_ctransform->velocity =
-            Vector2Add(
-                p_ctransform->velocity,
-                Vector2Scale(p_ctransform->accel, delta_time)
-            );
+
+        if (p_ctransform->movement_mode == REGULAR_MOVEMENT)
+        {
+            p_ctransform->velocity =
+                Vector2Add(
+                    p_ctransform->velocity,
+                    Vector2Scale(p_ctransform->accel, delta_time)
+                );
+        }
 
         float mag = Vector2Length(p_ctransform->velocity);
         p_ctransform->velocity = Vector2Scale(
@@ -1159,8 +1169,7 @@ void movement_update_system(Scene_t* scene)
             p_ctransform->position,
             Vector2Scale(p_ctransform->velocity, delta_time)
         );
-        p_ctransform->accel.x = 0;
-        p_ctransform->accel.y = 0;
+        memset(&p_ctransform->accel, 0, sizeof(p_ctransform->accel));
 
         // Level boundary collision
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);

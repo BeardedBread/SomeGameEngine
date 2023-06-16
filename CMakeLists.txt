@@ -97,3 +97,8 @@ target_link_libraries(assets_test
     ${GAME_LIBS}
 )
 
+if (UNIT_TESTING)
+     find_package(cmocka 1.1.0 REQUIRED)
+     add_subdirectory(tests)
+endif()
+

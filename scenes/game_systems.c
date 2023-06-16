@@ -917,6 +917,7 @@ void moveable_update_system(Scene_t* scene)
             float remaining_distance = p_moveable->target_pos.x - p_ctransform->position.x;
             if (fabs(remaining_distance) < 0.1)
             {
+                p_ctransform->prev_position = p_moveable->prev_pos;
                 p_ctransform->position = p_moveable->target_pos;
                 p_moveable->gridmove = false;
                 p_bbox->solid = true;
@@ -930,14 +931,16 @@ void moveable_update_system(Scene_t* scene)
                 p_ctransform->position.x +=  (remaining_distance < -p_moveable->move_speed) ? -p_moveable->move_speed : remaining_distance;
             }
         }
-        else
+
+        // Intentional. Want this check even after a gridmove to allow gridmove after that
+        if (!p_moveable->gridmove)
         {
-            if (p_ctransform->prev_velocity.y <= 0) continue;
+            if (p_ctransform->prev_velocity.y <= 0 && p_ctransform->prev_position.x == p_ctransform->position.x) continue;
 
             TileGrid_t tilemap = (CONTAINER_OF(scene, LevelScene_t, scene)->data).tilemap;
             Vector2 point_to_check = {
                 .x = p_ctransform->position.x + p_bbox->half_size.x,
-                .y = p_ctransform->position.y + p_bbox->size.y + 1
+                .y = p_ctransform->position.y + p_bbox->size.y + 5 // 5 is arbitrary, just to make sure there's a little gap
             };
             int tile_x = point_to_check.x / TILE_SIZE;
             int tile_y = point_to_check.y / TILE_SIZE;

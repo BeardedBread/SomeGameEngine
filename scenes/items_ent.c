@@ -16,7 +16,7 @@ Entity_t* create_crate(EntityManager_t* ent_manager, Assets_t* assets, bool meta
     add_component(p_crate, CTILECOORD_COMP_T);
     CHurtbox_t* p_hurtbox = add_component(p_crate, CHURTBOX_T);
     p_hurtbox->size = p_bbox->size;
-    p_hurtbox->fragile = !metal;
+    p_hurtbox->def = metal ? 2 : 1;
     return p_crate;
 }
 
@@ -37,6 +37,6 @@ Entity_t* create_boulder(EntityManager_t* ent_manager, Assets_t* assets)
     p_cmove->move_speed = 8;
     CHurtbox_t* p_hurtbox = add_component(p_boulder, CHURTBOX_T);
     p_hurtbox->size = p_bbox->size;
-    p_hurtbox->fragile = false;
+    p_hurtbox->def = 2;
     return p_boulder;
 }

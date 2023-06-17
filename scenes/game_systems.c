@@ -1386,6 +1386,7 @@ void hitbox_update_system(Scene_t* scene)
                         if (p_other_hurtbox == NULL) continue;
                         CTransform_t* p_other_ct = get_component(p_other_ent, CTRANSFORM_COMP_T);
                         Vector2 hurtbox_pos = Vector2Add(p_other_ct->position, p_other_hurtbox->offset);
+                        if (p_hitbox->atk <= p_other_hurtbox->def) continue;
 
                         Vector2 overlap;
                         if (
@@ -1395,14 +1396,12 @@ void hitbox_update_system(Scene_t* scene)
                             )
                         )
                         {
-                            if (!p_other_hurtbox->fragile) continue;
                             //if (p_other_ent->m_tag == CRATES_ENT_TAG)
                             {
 
                                 CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
                                 CPlayerState_t* p_pstate = get_component(p_ent, CPLAYERSTATE_T);
                                 if (
-                                    // TODO: Check Material of the crates
                                     p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y
                                 )
                                 {

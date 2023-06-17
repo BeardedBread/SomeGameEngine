@@ -108,13 +108,13 @@ typedef struct _CContainer_t {
 typedef struct _CHitBoxes_t {
     Rectangle boxes[2];
     uint8_t n_boxes;
-    bool strong;
+    uint8_t atk;
 } CHitBoxes_t;
 
 typedef struct _CHurtbox_t {
     Vector2 offset;
     Vector2 size;
-    bool fragile;
+    uint8_t def;
 } CHurtbox_t;
 
 // Credits to bedroomcoders.co.uk for this

@@ -83,6 +83,7 @@ Entity_t* create_player(EntityManager_t* ent_manager, Assets_t* assets)
         .width = p_bbox->size.x + 2,
         .height = p_bbox->size.y - 1,
     };
+    p_hitbox->atk = 2;
     CSprite_t* p_cspr = add_component(p_ent, CSPRITE_T);
     p_cspr->sprites = player_sprite_map;
     p_cspr->transition_func = &player_sprite_transition_func;

@@ -1212,8 +1212,8 @@ void player_ground_air_transition_system(Scene_t* scene)
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
         CJump_t* p_cjump = get_component(p_player, CJUMP_COMP_T);
-        CMovementState_t* p_mstate = get_component(p_player, CMOVEMENTSTATE_T);
-        CPlayerState_t* p_pstate = get_component(p_player, CPLAYERSTATE_T);
+        const CMovementState_t* p_mstate = get_component(p_player, CMOVEMENTSTATE_T);
+        const CPlayerState_t* p_pstate = get_component(p_player, CPLAYERSTATE_T);
 
         // Handle Ground<->Air Transition
         bool in_water = (p_mstate->water_state & 1);
@@ -1240,7 +1240,6 @@ void player_ground_air_transition_system(Scene_t* scene)
 void state_transition_update_system(Scene_t* scene)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
-    //Entity_t* p_ent;
 
     CMovementState_t* p_mstate;
     unsigned long ent_idx;
@@ -1536,7 +1535,6 @@ void camera_update_system(Scene_t* scene)
 
 void init_level_scene_data(LevelSceneData_t* data)
 {
-    //sc_map_init_32(&data->collision_events, 128, 0);
     data->game_viewport = LoadRenderTexture(VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE);
     data->game_rec = (Rectangle){25, 25, VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE};
     data->cam = (Camera2D){0};
@@ -1546,6 +1544,5 @@ void init_level_scene_data(LevelSceneData_t* data)
 
 void term_level_scene_data(LevelSceneData_t* data)
 {
-    //sc_map_term_32(&data->collision_events);
     UnloadRenderTexture(data->game_viewport); // Unload render texture
 }

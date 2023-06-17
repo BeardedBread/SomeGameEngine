@@ -425,6 +425,7 @@ void init_level_scene(LevelScene_t* scene)
 
     sc_array_add(&scene->scene.systems, &moveable_update_system);
     sc_array_add(&scene->scene.systems, &movement_update_system);
+    sc_array_add(&scene->scene.systems, &boulder_destroy_wooden_tile_system);
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &tile_collision_system);
     sc_array_add(&scene->scene.systems, &update_tilemap_system);

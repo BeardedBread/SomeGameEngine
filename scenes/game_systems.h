@@ -18,6 +18,7 @@ void state_transition_update_system(Scene_t* scene);
 void update_tilemap_system(Scene_t* scene);
 void hitbox_update_system(Scene_t* scene);
 void sprite_animation_system(Scene_t* scene);
+void boulder_destroy_wooden_tile_system(Scene_t* scene);
 void camera_update_system(Scene_t* scene);
 void player_dir_reset_system(Scene_t* scene);
 void player_respawn_system(Scene_t* scene);

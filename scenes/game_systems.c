@@ -1437,6 +1437,43 @@ void hitbox_update_system(Scene_t* scene)
     }
 }
 
+void boulder_destroy_wooden_tile_system(Scene_t* scene)
+{
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    TileGrid_t tilemap = data->tilemap;
+    Entity_t* p_boulder;
+    sc_map_foreach_value(&scene->ent_manager.entities_map[BOULDER_ENT_TAG], p_boulder)
+    {
+        const CTransform_t* p_ctransform = get_component(p_boulder, CTRANSFORM_COMP_T);
+        const CBBox_t* p_bbox = get_component(p_boulder, CBBOX_COMP_T);
+
+        if (p_ctransform->velocity.y <= 0) continue;
+
+        unsigned int tile_idx = get_tile_idx(
+                p_ctransform->position.x + p_bbox->half_size.x,
+                p_ctransform->position.y + p_bbox->size.y,
+                tilemap.width
+        );
+        unsigned int tile_x = (p_ctransform->position.x + p_bbox->half_size.x) / TILE_SIZE;
+
+        if (tilemap.tiles[tile_idx].tile_type == ONEWAY_TILE)
+        {
+            tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
+            tilemap.tiles[tile_idx].solid = NOT_SOLID;
+            if (tile_x > 0 && tilemap.tiles[tile_idx - 1].tile_type == ONEWAY_TILE)
+            {
+                tilemap.tiles[tile_idx - 1].tile_type = EMPTY_TILE;
+                tilemap.tiles[tile_idx - 1].solid = NOT_SOLID;
+            }
+            if (tile_x < tilemap.width && tilemap.tiles[tile_idx + 1].tile_type == ONEWAY_TILE)
+            {
+                tilemap.tiles[tile_idx + 1].tile_type = EMPTY_TILE;
+                tilemap.tiles[tile_idx + 1].solid = NOT_SOLID;
+            }
+        }
+    }
+}
+
 void sprite_animation_system(Scene_t* scene)
 {
     unsigned int ent_idx;

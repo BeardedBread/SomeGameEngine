@@ -31,6 +31,8 @@ typedef struct Tile {
     SolidType_t solid;
     unsigned int water_level;
     struct sc_map_64v entities_set;
+    Vector2 offset;
+    Vector2 size;
 }Tile_t;
 
 typedef struct TileGrid {

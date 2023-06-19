@@ -5,7 +5,6 @@
 #include "constants.h"
 #include <stdio.h>
 
-static const Vector2 TILE_SZ = {TILE_SIZE, TILE_SIZE};
 static const Vector2 GRAVITY = {0, GRAV_ACCEL};
 static const Vector2 UPTHRUST = {0, -GRAV_ACCEL * 1.1};
 typedef enum AnchorPoint {
@@ -60,7 +59,9 @@ static uint8_t check_collision(const CollideEntity_t* ent, TileGrid_t* grid, boo
                 find_AABB_overlap(
                     (Vector2){ent->bbox.x, ent->bbox.y},
                     (Vector2){ent->bbox.width, ent->bbox.height},
-                    (Vector2){tile_x * TILE_SIZE, tile_y * TILE_SIZE}, TILE_SZ, &overlap
+                    (Vector2){tile_x * TILE_SIZE + grid->tiles[tile_idx].offset.x, tile_y * TILE_SIZE + grid->tiles[tile_idx].offset.y},
+                    grid->tiles[tile_idx].size,
+                    &overlap
                 );
 
                 //For one-way platform, check for vectical collision, only return true for up direction
@@ -704,12 +705,12 @@ void tile_collision_system(Scene_t* scene)
                 if(tilemap.tiles[tile_idx].tile_type != EMPTY_TILE)
                 {
                     Vector2 other;
-                    other.x = (tile_idx % tilemap.width) * TILE_SIZE;
-                    other.y = (tile_idx / tilemap.width) * TILE_SIZE; // Precision loss is intentional
+                    other.x = (tile_idx % tilemap.width) * TILE_SIZE + tilemap.tiles[tile_idx].offset.x;
+                    other.y = (tile_idx / tilemap.width) * TILE_SIZE + tilemap.tiles[tile_idx].offset.y; // Precision loss is intentional
 
                     check_collision_and_move(
                         &tilemap, p_ent,
-                        &other, TILE_SZ, tilemap.tiles[tile_idx].solid
+                        &other, tilemap.tiles[tile_idx].size, tilemap.tiles[tile_idx].solid
                     );
 
                 }

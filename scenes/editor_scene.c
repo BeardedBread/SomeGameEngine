@@ -14,12 +14,13 @@ enum EntitySpawnSelection {
     TOGGLE_TILE = 0,
     TOGGLE_ONEWAY,
     TOGGLE_LADDER,
+    TOGGLE_SPIKE,
     SPAWN_CRATE,
     SPAWN_METAL_CRATE,
     SPAWN_BOULDER,
 };
 
-#define MAX_SPAWN_TYPE 6
+#define MAX_SPAWN_TYPE 7
 static unsigned int current_spawn_selection = 0;
 
 static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
@@ -67,6 +68,13 @@ static void level_scene_render_func(Scene_t* scene)
             else if (tilemap.tiles[i].tile_type == LADDER)
             {
                 DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, ORANGE);
+            }
+            else if (tilemap.tiles[i].tile_type == SPIKES)
+            {
+                DrawRectangle(
+                    x + tilemap.tiles[i].offset.x, y + tilemap.tiles[i].offset.y,
+                    tilemap.tiles[i].size.x, tilemap.tiles[i].size.y, RED
+                );
             }
 
             if (tilemap.tiles[i].water_level > 0)
@@ -317,6 +325,17 @@ static void toggle_block_system(Scene_t* scene)
                         tilemap.tiles[down_tile].solid = (tilemap.tiles[tile_idx].tile_type != LADDER)? ONE_WAY : NOT_SOLID;
                     }
                 break;
+                case TOGGLE_SPIKE:
+                    if (tilemap.tiles[tile_idx].tile_type == SPIKES)
+                    {
+                        tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
+                    }
+                    else
+                    {
+                        tilemap.tiles[tile_idx].tile_type = SPIKES;
+                    }
+                    tilemap.tiles[tile_idx].solid = NOT_SOLID;
+                break;
                 case SPAWN_CRATE:
                     spawn_crate(scene, tile_idx, false);
                 break;
@@ -326,6 +345,34 @@ static void toggle_block_system(Scene_t* scene)
                 case SPAWN_BOULDER:
                     spawn_boulder(scene, tile_idx);
                 break;
+            }
+            if (tilemap.tiles[tile_idx].tile_type == SPIKES)
+            {
+                if (tile_idx - tilemap.width >= 0 && tilemap.tiles[tile_idx-tilemap.width].tile_type == SOLID_TILE)
+                {
+                    tilemap.tiles[tile_idx].offset = (Vector2){0,0};
+                    tilemap.tiles[tile_idx].size = (Vector2){32,16};
+                }
+                else if (tile_idx % tilemap.width != 0 && tile_idx > 0 && tilemap.tiles[tile_idx-1].tile_type == SOLID_TILE)
+                {
+                    tilemap.tiles[tile_idx].offset = (Vector2){0,0};
+                    tilemap.tiles[tile_idx].size = (Vector2){16,32};
+                }
+                else if (tile_idx % tilemap.width + 1 != 0 && tile_idx < MAX_N_TILES - 1 && tilemap.tiles[tile_idx+1].tile_type == SOLID_TILE)
+                {
+                    tilemap.tiles[tile_idx].offset = (Vector2){16,0};
+                    tilemap.tiles[tile_idx].size = (Vector2){16,32};
+                }
+                else
+                {
+                    tilemap.tiles[tile_idx].offset = (Vector2){0,16};
+                    tilemap.tiles[tile_idx].size = (Vector2){32,16};
+                }
+            }
+            else
+            {
+                tilemap.tiles[tile_idx].offset = (Vector2){0,0};
+                tilemap.tiles[tile_idx].size = (Vector2){32,32};
             }
             last_tile_idx = tile_idx;
         }

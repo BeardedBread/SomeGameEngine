@@ -15,9 +15,10 @@ typedef enum TileType {
     EMPTY_TILE = 0,
     SOLID_TILE,
     ONEWAY_TILE,
-    LADDER
+    LADDER,
+    SPIKES,
 } TileType_t;
-#define MAX_TILE_TYPES 4
+#define MAX_TILE_TYPES 5
 typedef enum SolidType
 {
     NOT_SOLID = 0,

@@ -6,6 +6,44 @@
 #include <setjmp.h>
 #include <cmocka.h>
 
+static void test_line_AABB(void **state)
+{
+    (void) state;
+
+    Vector2 p1 = {0, 0};
+    Vector2 p2 = {20, 20};
+
+    Rectangle box = {5, 0, 10, 20};
+    assert_true(line_in_AABB(p1, p2, box));
+
+    p1.y = 20;
+    assert_false(line_in_AABB(p1, p2, box));
+
+    p1.y = 19;
+    p2 = (Vector2){19, 19};
+    assert_true(line_in_AABB(p1, p2, box));
+
+    p1.y = 0;
+    p2.y = 0;
+    assert_true(line_in_AABB(p1, p2, box));
+
+    p1 = (Vector2){5, 0};
+    p2 = (Vector2){5, 10};
+    assert_true(line_in_AABB(p1, p2, box));
+
+    p1 = (Vector2){14, 0};
+    p2 = (Vector2){14, 10};
+    assert_true(line_in_AABB(p1, p2, box));
+
+    p1 = (Vector2){15, 0};
+    p2 = (Vector2){15, 10};
+    assert_false(line_in_AABB(p1, p2, box));
+
+    p1 = (Vector2){0, 30};
+    p2 = (Vector2){6, 35};
+    assert_false(line_in_AABB(p1, p2, box));
+}
+
 static void test_point_AABB(void **state)
 {
     (void) state;
@@ -86,6 +124,7 @@ int main(void)
         cmocka_unit_test(test_1D_overlap),
         cmocka_unit_test(test_AABB_overlap),
         cmocka_unit_test(test_point_AABB),
+        cmocka_unit_test(test_line_AABB),
     };
 
     return cmocka_run_group_tests(tests, NULL, NULL);

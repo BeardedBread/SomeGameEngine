@@ -49,3 +49,45 @@ bool point_in_AABB(Vector2 point, Rectangle box)
         && point.y < box.y + box.height
     );
 }
+
+bool line_in_AABB(Vector2 p1, Vector2 p2, Rectangle box)
+{
+    float A = p2.y - p1.y;
+    float B = p1.x - p2.x;
+    float C = (p2.x * p1.y) - (p1.x * p2.y);
+
+    Vector2 corners[3] = 
+    {
+        {box.x + box.width - 1, box.y},
+        {box.x + box.width - 1, box.y + box.height - 1},
+        {box.x, box.y + box.height - 1},
+    };
+
+    float F = (A * box.x + B * box.y + C);
+    uint8_t last_mode = 0;
+    if (fabs(F) < 1e-3)
+    {
+        last_mode = 0;
+    }
+    else
+    {
+        last_mode = (F > 0) ? 1 : 2;
+    }
+    for (uint8_t i = 0; i < 3; ++i)
+    {
+
+        F = (A * corners[i].x + B * corners[i].y + C);
+        uint8_t mode = 0;
+        if (fabs(F) < 1e-3)
+        {
+            mode = 0;
+        }
+        else
+        {
+            mode = (F > 0) ? 1 : 2;
+        }
+        if (mode != last_mode) return true;
+        last_mode = mode;
+    }
+    return false;
+}

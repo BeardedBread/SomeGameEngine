@@ -96,6 +96,62 @@ static uint8_t check_collision(const CollideEntity_t* ent, TileGrid_t* grid, boo
     return 0;
 }
 
+static uint8_t check_collision_line(const CollideEntity_t* ent, TileGrid_t* grid, bool check_oneway)
+{
+    Vector2 p1 = {ent->bbox.x, ent->bbox.y};
+    Vector2 p2 = {ent->bbox.x + ent->bbox.width - 1, ent->bbox.y + ent->bbox.height - 1};
+    for(unsigned int tile_y = ent->area.tile_y1; tile_y <= ent->area.tile_y2; tile_y++)
+    {
+        if (tile_y >= grid->height) return 0;
+        for(unsigned int tile_x = ent->area.tile_x1; tile_x <= ent->area.tile_x2; tile_x++)
+        {
+            if (tile_x >= grid->width) return 0;
+            unsigned int tile_idx = tile_y*grid->width + tile_x;
+            if (grid->tiles[tile_idx].solid == SOLID) return 1;
+
+            if (check_oneway && grid->tiles[tile_idx].solid == ONE_WAY)
+            {
+                Rectangle tile_rec = {
+                    .x = tile_x * TILE_SIZE + grid->tiles[tile_idx].offset.x,
+                    .y = tile_y * TILE_SIZE + grid->tiles[tile_idx].offset.y,
+                    .width = grid->tiles[tile_idx].size.x,
+                    .height = grid->tiles[tile_idx].size.y
+                };
+                bool collide = line_in_AABB(p1, p2, tile_rec);
+
+                //For one-way platform, check for vectical collision, only return true for up direction
+                if (collide && ent->prev_bbox.y + ent->prev_bbox.height - 1 < tile_y * TILE_SIZE) return 1;
+            }
+
+            Entity_t* p_other_ent;
+            sc_map_foreach_value(&grid->tiles[tile_idx].entities_set, p_other_ent)
+            {
+                if (ent->p_ent->m_id == p_other_ent->m_id) continue;
+                if (!ent->p_ent->m_alive) continue;
+                CTransform_t *p_ctransform = get_component(p_other_ent, CTRANSFORM_COMP_T);
+                CBBox_t *p_bbox = get_component(p_other_ent, CBBOX_COMP_T);
+                if (p_bbox == NULL || p_ctransform == NULL) continue;
+                //if (p_bbox->solid && !p_bbox->fragile)
+                if (p_bbox->solid)
+                {
+                    Rectangle box = {
+                        .x = p_ctransform->position.x,
+                        .y = p_ctransform->position.y,
+                        .width = p_bbox->size.x,
+                        .height = p_bbox->size.y,
+                    };
+                    if ( line_in_AABB(p1, p2, box) )
+                    {
+                        return (p_bbox->fragile) ? 2 : 1;
+                    }
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+
 // TODO: This should be a point collision check, not an  AABB check
 static bool check_collision_offset(
     Entity_t* p_ent, Vector2 pos, Vector2 bbox_sz,
@@ -249,7 +305,7 @@ static uint8_t check_bbox_edges(
     CollideEntity_t ent = 
     {
         .p_ent = p_ent,
-        .bbox = (Rectangle){pos.x - 1, pos.y, bbox.x, bbox.y},
+        .bbox = (Rectangle){pos.x - 1, pos.y, 1, bbox.y},
         .prev_bbox = (Rectangle){pos.x, pos.y, bbox.x, bbox.y},
         .area = (TileArea_t){
             .tile_x1 = (pos.x - 1) / TILE_SIZE,
@@ -262,28 +318,30 @@ static uint8_t check_bbox_edges(
 
     // TODO: Handle one-way platform
     // Left
-    detected |= (check_collision(&ent, tilemap, false) ? 1 : 0) << 3;
+    detected |= (check_collision_line(&ent, tilemap, false) ? 1 : 0) << 3;
 
     //Right
-    ent.bbox.x += 2; // 2 to account for the previous subtraction
+    ent.bbox.x = pos.x + bbox.x; // 2 to account for the previous subtraction
     ent.area.tile_x1 = (pos.x + bbox.x) / TILE_SIZE;
     ent.area.tile_x2 = ent.area.tile_x1;
-    detected |= (check_collision(&ent, tilemap, false) ? 1 : 0) << 2;
+    detected |= (check_collision_line(&ent, tilemap, false) ? 1 : 0) << 2;
 
     // Up
-    ent.bbox.x -= 2;
+    ent.bbox.x = pos.x;
     ent.bbox.y--;
+    ent.bbox.width = bbox.x;
+    ent.bbox.height = 1;
     ent.area.tile_x1 = (pos.x) / TILE_SIZE,
     ent.area.tile_x2 = (pos.x + bbox.x - 1) / TILE_SIZE,
     ent.area.tile_y1 = (pos.y - 1) / TILE_SIZE,
     ent.area.tile_y2 = ent.area.tile_y1;
-    detected |= (check_collision(&ent, tilemap, false) ? 1 : 0) << 1;
+    detected |= (check_collision_line(&ent, tilemap, false) ? 1 : 0) << 1;
 
     // Down
-    ent.bbox.y += 2;
+    ent.bbox.y = pos.y + bbox.y;
     ent.area.tile_y1 = (pos.y + bbox.y) / TILE_SIZE,
     ent.area.tile_y2 = ent.area.tile_y1;
-    detected |= (check_collision(&ent, tilemap, true) ? 1 : 0);
+    detected |= (check_collision_line(&ent, tilemap, true) ? 1 : 0);
     return detected;
 }
 

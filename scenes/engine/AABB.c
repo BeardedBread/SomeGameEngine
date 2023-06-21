@@ -14,7 +14,7 @@ uint8_t find_1D_overlap(Vector2 l1, Vector2 l2, float* overlap)
     }
     //Partial overlap
     // x is p1, y is p2
-    *overlap =  (l2.y >= l1.y)? l2.x - l1.y - 1 : l2.y - l1.x + 1;
+    *overlap =  (l2.y >= l1.y)? l2.x - l1.y : l2.y - l1.x;
     return 1;
 }
 
@@ -25,15 +25,15 @@ uint8_t find_AABB_overlap(const Vector2 tl1, const Vector2 sz1, const Vector2 tl
     Vector2 l1, l2;
     uint8_t overlap_x, overlap_y;
     l1.x = tl1.x;
-    l1.y = tl1.x + sz1.x - 1;
+    l1.y = tl1.x + sz1.x;
     l2.x = tl2.x;
-    l2.y = tl2.x + sz2.x - 1;
+    l2.y = tl2.x + sz2.x;
 
     overlap_x = find_1D_overlap(l1, l2, &overlap->x);
     l1.x = tl1.y;
-    l1.y = tl1.y + sz1.y - 1;
+    l1.y = tl1.y + sz1.y;
     l2.x = tl2.y;
-    l2.y = tl2.y + sz2.y - 1;
+    l2.y = tl2.y + sz2.y;
     overlap_y = find_1D_overlap(l1, l2, &overlap->y);
 
     if (overlap_x == 2 && overlap_y == 2) return 2;

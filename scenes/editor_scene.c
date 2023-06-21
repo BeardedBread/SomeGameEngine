@@ -36,6 +36,21 @@ static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
     return MAX_N_TILES;
 }
 
+static char* get_spawn_selection_string(enum EntitySpawnSelection sel)
+{
+    switch(sel)
+    {
+        case TOGGLE_TILE: return "solid tile";
+        case TOGGLE_ONEWAY: return "wooden tile";
+        case TOGGLE_LADDER: return "ladder";
+        case TOGGLE_SPIKE: return "spike";
+        case SPAWN_CRATE: return "wooden crate";
+        case SPAWN_METAL_CRATE: return "metal crate";
+        case SPAWN_BOULDER: return "boulder";
+        default: return "unknown";
+    }
+}
+
 static void level_scene_render_func(Scene_t* scene)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
@@ -218,7 +233,7 @@ static void level_scene_render_func(Scene_t* scene)
             sprintf(buffer, "Ladder: %u", p_pstate->ladder_state);
             DrawText(buffer, gui_x, 150, 12, BLACK);
         }
-        sprintf(buffer, "Spawn Entity: %u", current_spawn_selection);
+        sprintf(buffer, "Spawn Entity: %s", get_spawn_selection_string(current_spawn_selection));
         DrawText(buffer, gui_x, 240, 12, BLACK);
         sprintf(buffer, "Number of Entities: %u", sc_map_size_64v(&scene->ent_manager.entities));
         DrawText(buffer, gui_x, 270, 12, BLACK);

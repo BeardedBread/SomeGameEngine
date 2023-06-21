@@ -697,6 +697,45 @@ void player_crushing_system(Scene_t* scene)
     }
 }
 
+void player_spike_collision_system(Scene_t* scene)
+{
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    TileGrid_t tilemap = data->tilemap;
+    Entity_t* p_player;
+    sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
+    {
+        CTransform_t* p_ctransform = get_component(p_player, CTRANSFORM_COMP_T);
+        CBBox_t* p_bbox = get_component(p_player, CBBOX_COMP_T);
+        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
+        unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
+        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
+        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE;
+        Vector2 overlap;
+        for (unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
+        {
+            for (unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
+            {
+                unsigned int tile_idx = tile_y * tilemap.width + tile_x;
+                if(tilemap.tiles[tile_idx].tile_type == SPIKES)
+                {
+                    if (find_AABB_overlap(
+                        p_ctransform->position, p_bbox->size, 
+                        (Vector2){
+                            tile_x * TILE_SIZE + tilemap.tiles[tile_idx].offset.x,
+                            tile_y * TILE_SIZE + tilemap.tiles[tile_idx].offset.y
+                        },
+                    tilemap.tiles[tile_idx].size,
+                    &overlap))
+                    {
+                        p_player->m_alive = false;
+                        return;
+                    }
+                }
+            }
+        }
+    }
+}
+
 void tile_collision_system(Scene_t* scene)
 {
     static bool checked_entities[MAX_COMP_POOL_SIZE] = {0};

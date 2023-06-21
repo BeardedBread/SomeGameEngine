@@ -22,4 +22,5 @@ void boulder_destroy_wooden_tile_system(Scene_t* scene);
 void camera_update_system(Scene_t* scene);
 void player_dir_reset_system(Scene_t* scene);
 void player_respawn_system(Scene_t* scene);
+void player_spike_collision_system(Scene_t* scene);
 #endif // __GAME_SYSTEMS_H

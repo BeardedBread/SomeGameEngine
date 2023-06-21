@@ -3,7 +3,7 @@
 uint8_t find_1D_overlap(Vector2 l1, Vector2 l2, float* overlap)
 {
    // No Overlap
-    if (l1.y < l2.x || l2.y < l1.x) return 0;
+    if (l1.y <= l2.x || l2.y <= l1.x) return 0;
 
     if (l1.x >= l2.x && l1.y <= l2.y)
     {
@@ -14,7 +14,7 @@ uint8_t find_1D_overlap(Vector2 l1, Vector2 l2, float* overlap)
     }
     //Partial overlap
     // x is p1, y is p2
-    *overlap =  (l2.y >= l1.y)? l2.x - l1.y : l2.y - l1.x;
+    *overlap =  (l2.y > l1.y)? l2.x - l1.y : l2.y - l1.x;
     return 1;
 }
 

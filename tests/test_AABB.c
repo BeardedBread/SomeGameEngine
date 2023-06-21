@@ -102,16 +102,14 @@ static void test_1D_overlap(void **state)
     assert_int_equal(find_1D_overlap(a, b, &overlap), 0);
 
     a.y = 6;
+    assert_int_equal(find_1D_overlap(a, b, &overlap), 0);
+    assert_int_equal(find_1D_overlap(b, a, &overlap), 0);
+
+    a.y = 7;
     assert_int_equal(find_1D_overlap(a, b, &overlap), 1);
     assert_float_equal(overlap, -1, 1e-5);
     assert_int_equal(find_1D_overlap(b, a, &overlap), 1);
     assert_float_equal(overlap, 1, 1e-5);
-
-    a.y = 7;
-    assert_int_equal(find_1D_overlap(a, b, &overlap), 1);
-    assert_float_equal(overlap, -2, 1e-5);
-    assert_int_equal(find_1D_overlap(b, a, &overlap), 1);
-    assert_float_equal(overlap, 2, 1e-5);
     
     a.x = 7;
     a.y = 9;

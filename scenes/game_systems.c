@@ -308,18 +308,15 @@ collision_end:
 static uint8_t check_bbox_edges(
     TileGrid_t* tilemap,
     Entity_t* p_ent, Vector2 pos, Vector2 prev_pos, Vector2 bbox,
-    int8_t len_reduction
+    bool ignore_fragile
 )
 {
     uint8_t detected = 0;
 
-    bbox.x -= 2 * len_reduction;
-    bbox.y -= 2 * len_reduction;
-
     CollideEntity_t ent = 
     {
         .p_ent = p_ent,
-        .bbox = (Rectangle){pos.x - 1, pos.y + len_reduction, 1, bbox.y},
+        .bbox = (Rectangle){pos.x - 1, pos.y, 1, bbox.y},
         .prev_bbox = (Rectangle){pos.x, pos.y, bbox.x, bbox.y},
         .area = (TileArea_t){
             .tile_x1 = (pos.x - 1) / TILE_SIZE,
@@ -332,16 +329,24 @@ static uint8_t check_bbox_edges(
 
     // TODO: Handle one-way platform
     // Left
-    detected |= (check_collision_line(&ent, tilemap, false) ? 1 : 0) << 3;
+    uint8_t collide_type = check_collision_line(&ent, tilemap, false);
+    if (collide_type == 1 || (collide_type == 2 && !ignore_fragile))
+    {
+        detected |= 1 << 3;
+    }
 
     //Right
     ent.bbox.x = pos.x + bbox.x + 1; // 2 to account for the previous subtraction
     //ent.area.tile_x1 = (pos.x + bbox.x) / TILE_SIZE;
     //ent.area.tile_x2 = ent.area.tile_x1;
-    detected |= (check_collision_line(&ent, tilemap, false) ? 1 : 0) << 2;
+    collide_type = check_collision_line(&ent, tilemap, false);
+    if (collide_type == 1 || (collide_type == 2 && !ignore_fragile))
+    {
+        detected |= 1 << 2;
+    }
 
     // Up
-    ent.bbox.x = pos.x + len_reduction;
+    ent.bbox.x = pos.x;
     ent.bbox.y = pos.y - 1;
     ent.bbox.width = bbox.x;
     ent.bbox.height = 1;
@@ -349,13 +354,21 @@ static uint8_t check_bbox_edges(
     //ent.area.tile_x2 = (pos.x + bbox.x - 1) / TILE_SIZE,
     //ent.area.tile_y1 = (pos.y - 1) / TILE_SIZE,
     //ent.area.tile_y2 = ent.area.tile_y1;
-    detected |= (check_collision_line(&ent, tilemap, false) ? 1 : 0) << 1;
+    collide_type = check_collision_line(&ent, tilemap, false);
+    if (collide_type == 1 || (collide_type == 2 && !ignore_fragile))
+    {
+        detected |= 1 << 1;
+    }
 
     // Down
     ent.bbox.y = pos.y + bbox.y + 1;
     //ent.area.tile_y1 = (pos.y + bbox.y) / TILE_SIZE,
     //ent.area.tile_y2 = ent.area.tile_y1;
-    detected |= (check_collision_line(&ent, tilemap, true) ? 1 : 0);
+    collide_type = check_collision_line(&ent, tilemap, false);
+    if (collide_type == 1 || (collide_type == 2 && !ignore_fragile))
+    {
+        detected |= 1;
+    }
     return detected;
 }
 
@@ -695,7 +708,7 @@ void player_crushing_system(Scene_t* scene)
 
         uint8_t edges = check_bbox_edges(
             &data->tilemap, p_player,
-            p_ctransform->position, p_ctransform->prev_position, p_bbox->size, 0
+            p_ctransform->position, p_ctransform->prev_position, p_bbox->size, true
         );
 
         if ((edges & 0b1100) == 0b1100 || (edges & 0b0011) == 0b0011)
@@ -816,7 +829,7 @@ void tile_collision_system(Scene_t* scene)
         // Post movement edge check to zero out velocity
         uint8_t edges = check_bbox_edges(
             &data->tilemap, p_ent,
-            p_ctransform->position, p_ctransform->prev_position, p_bbox->size, 0
+            p_ctransform->position, p_ctransform->prev_position, p_bbox->size, false
         );
         if (edges & (1<<3))
         {
@@ -942,7 +955,7 @@ void global_external_forces_system(Scene_t* scene)
         // Zero out acceleration for contacts with sturdy entites and tiles
         uint8_t edges = check_bbox_edges(
             &data->tilemap, p_ent,
-            p_ctransform->position, p_ctransform->prev_position, p_bbox->size, 0
+            p_ctransform->position, p_ctransform->prev_position, p_bbox->size, false
         );
         if (edges & (1<<3))
         {

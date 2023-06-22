@@ -107,7 +107,16 @@ static uint8_t check_collision_line(const CollideEntity_t* ent, TileGrid_t* grid
         {
             if (tile_x >= grid->width) return 0;
             unsigned int tile_idx = tile_y*grid->width + tile_x;
-            if (grid->tiles[tile_idx].solid == SOLID) return 1;
+            if (grid->tiles[tile_idx].solid == SOLID)
+            {
+                Rectangle tile_rec = {
+                    .x = tile_x * TILE_SIZE + grid->tiles[tile_idx].offset.x,
+                    .y = tile_y * TILE_SIZE + grid->tiles[tile_idx].offset.y,
+                    .width = grid->tiles[tile_idx].size.x,
+                    .height = grid->tiles[tile_idx].size.y
+                };
+                if ( line_in_AABB(p1, p2, tile_rec) ) return 1;
+            }
 
             if (check_oneway && grid->tiles[tile_idx].solid == ONE_WAY)
             {
@@ -241,7 +250,7 @@ static bool check_collision_and_move(
                 && (p_ct->prev_position.y + p_bbox->size.y - 1 < other_pos->y))
         )
         {
-            //if (!check_collision_at(ent, p_ct->position, p_bbox->size, tilemap, offset))
+            //if (!check_collision_offset(ent, p_ct->position, p_bbox->size, tilemap, offset))
             {
                 p_ct->position = Vector2Add(p_ct->position, offset);
             }
@@ -314,9 +323,9 @@ static uint8_t check_bbox_edges(
         .prev_bbox = (Rectangle){pos.x, pos.y, bbox.x, bbox.y},
         .area = (TileArea_t){
             .tile_x1 = (pos.x - 1) / TILE_SIZE,
-            .tile_y1 = (pos.y) / TILE_SIZE,
-            .tile_x2 = (pos.x - 1) / TILE_SIZE,
-            .tile_y2 = (pos.y + bbox.y - 1) / TILE_SIZE,
+            .tile_y1 = (pos.y - 1) / TILE_SIZE,
+            .tile_x2 = (pos.x + bbox.x) / TILE_SIZE,
+            .tile_y2 = (pos.y + bbox.y) / TILE_SIZE,
         }
     };
 
@@ -326,9 +335,9 @@ static uint8_t check_bbox_edges(
     detected |= (check_collision_line(&ent, tilemap, false) ? 1 : 0) << 3;
 
     //Right
-    ent.bbox.x = pos.x + bbox.x; // 2 to account for the previous subtraction
-    ent.area.tile_x1 = (pos.x + bbox.x) / TILE_SIZE;
-    ent.area.tile_x2 = ent.area.tile_x1;
+    ent.bbox.x = pos.x + bbox.x + 1; // 2 to account for the previous subtraction
+    //ent.area.tile_x1 = (pos.x + bbox.x) / TILE_SIZE;
+    //ent.area.tile_x2 = ent.area.tile_x1;
     detected |= (check_collision_line(&ent, tilemap, false) ? 1 : 0) << 2;
 
     // Up
@@ -336,16 +345,16 @@ static uint8_t check_bbox_edges(
     ent.bbox.y = pos.y - 1;
     ent.bbox.width = bbox.x;
     ent.bbox.height = 1;
-    ent.area.tile_x1 = (pos.x) / TILE_SIZE,
-    ent.area.tile_x2 = (pos.x + bbox.x - 1) / TILE_SIZE,
-    ent.area.tile_y1 = (pos.y - 1) / TILE_SIZE,
-    ent.area.tile_y2 = ent.area.tile_y1;
+    //ent.area.tile_x1 = (pos.x) / TILE_SIZE,
+    //ent.area.tile_x2 = (pos.x + bbox.x - 1) / TILE_SIZE,
+    //ent.area.tile_y1 = (pos.y - 1) / TILE_SIZE,
+    //ent.area.tile_y2 = ent.area.tile_y1;
     detected |= (check_collision_line(&ent, tilemap, false) ? 1 : 0) << 1;
 
     // Down
-    ent.bbox.y = pos.y + bbox.y;
-    ent.area.tile_y1 = (pos.y + bbox.y) / TILE_SIZE,
-    ent.area.tile_y2 = ent.area.tile_y1;
+    ent.bbox.y = pos.y + bbox.y + 1;
+    //ent.area.tile_y1 = (pos.y + bbox.y) / TILE_SIZE,
+    //ent.area.tile_y2 = ent.area.tile_y1;
     detected |= (check_collision_line(&ent, tilemap, true) ? 1 : 0);
     return detected;
 }
@@ -686,7 +695,7 @@ void player_crushing_system(Scene_t* scene)
 
         uint8_t edges = check_bbox_edges(
             &data->tilemap, p_player,
-            p_ctransform->position, p_ctransform->prev_position, p_bbox->size, 2
+            p_ctransform->position, p_ctransform->prev_position, p_bbox->size, 0
         );
 
         if ((edges & 0b1100) == 0b1100 || (edges & 0b0011) == 0b0011)

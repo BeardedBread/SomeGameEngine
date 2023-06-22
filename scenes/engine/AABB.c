@@ -58,12 +58,14 @@ bool line_in_AABB(Vector2 p1, Vector2 p2, Rectangle box)
 
     Vector2 corners[3] = 
     {
-        {box.x + box.width - 1, box.y},
-        {box.x + box.width - 1, box.y + box.height - 1},
-        {box.x, box.y + box.height - 1},
+        {box.x + box.width, box.y},
+        {box.x + box.width, box.y + box.height},
+        {box.x, box.y + box.height},
     };
 
     float F = (A * box.x + B * box.y + C);
+
+    bool collide = false;
     uint8_t last_mode = 0;
     if (fabs(F) < 1e-3)
     {
@@ -86,8 +88,29 @@ bool line_in_AABB(Vector2 p1, Vector2 p2, Rectangle box)
         {
             mode = (F > 0) ? 1 : 2;
         }
-        if (mode != last_mode) return true;
+        if (mode != last_mode)
+        {
+            collide = true;
+            break;
+        }
         last_mode = mode;
     }
-    return false;
+    if (!collide) return false;
+
+    //Projection check
+    Vector2 overlap = {0};
+    Vector2 l1, l2;
+    l1.x = p1.x;
+    l1.y = p2.x;
+    l2.x = box.x;
+    l2.y = box.x + box.width;
+
+    find_1D_overlap(l1, l2, &overlap.x);
+    l1.x = p1.y;
+    l1.y = p2.y;
+    l2.x = box.y;
+    l2.y = box.y + box.height;
+    find_1D_overlap(l1, l2, &overlap.y);
+
+    return (overlap.x != 0 && overlap.y != 0);
 }

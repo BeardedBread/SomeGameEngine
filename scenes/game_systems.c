@@ -51,9 +51,22 @@ static uint8_t check_collision(const CollideEntity_t* ent, TileGrid_t* grid, boo
         {
             if (tile_x >= grid->width) return 0;
             unsigned int tile_idx = tile_y*grid->width + tile_x;
-            if (grid->tiles[tile_idx].solid == SOLID) return 1;
 
             Vector2 overlap;
+            if (grid->tiles[tile_idx].solid == SOLID)
+            {
+                if (find_AABB_overlap(
+                    (Vector2){ent->bbox.x, ent->bbox.y},
+                    (Vector2){ent->bbox.width, ent->bbox.height},
+                    (Vector2){tile_x * TILE_SIZE + grid->tiles[tile_idx].offset.x, tile_y * TILE_SIZE + grid->tiles[tile_idx].offset.y},
+                    grid->tiles[tile_idx].size,
+                    &overlap
+                ))
+                {
+                    return 1;
+                }
+            }
+
             if (check_oneway && grid->tiles[tile_idx].solid == ONE_WAY)
             {
                 find_AABB_overlap(

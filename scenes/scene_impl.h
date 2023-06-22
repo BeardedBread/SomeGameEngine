@@ -34,6 +34,7 @@ typedef struct Tile {
     struct sc_map_64v entities_set;
     Vector2 offset;
     Vector2 size;
+    bool moveable;
 }Tile_t;
 
 typedef struct TileGrid {

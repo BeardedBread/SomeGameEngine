@@ -98,6 +98,12 @@ static void level_scene_render_func(Scene_t* scene)
                 Color water_colour = ColorAlpha(BLUE, 0.5);
                 DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
             }
+            if (tilemap.tiles[i].moveable)
+            {
+                // Draw water tile
+                Color water_colour = ColorAlpha(GREEN, 0.2);
+                DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
+            }
         }
 
         char buffer[64] = {0};
@@ -390,6 +396,10 @@ static void toggle_block_system(Scene_t* scene)
                 tilemap.tiles[tile_idx].size = (Vector2){32,32};
             }
             last_tile_idx = tile_idx;
+            tilemap.tiles[tile_idx].moveable = (
+                tilemap.tiles[tile_idx].tile_type == EMPTY_TILE
+                || tilemap.tiles[tile_idx].tile_type == SPIKES
+            );
         }
     }
     else if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
@@ -493,7 +503,7 @@ void init_level_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &hitbox_update_system);
     sc_array_add(&scene->scene.systems, &player_crushing_system);
-    sc_array_add(&scene->scene.systems, &player_spike_collision_system);
+    sc_array_add(&scene->scene.systems, &spike_collision_system);
     sc_array_add(&scene->scene.systems, &state_transition_update_system);
     sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
     sc_array_add(&scene->scene.systems, &sprite_animation_system);
@@ -524,6 +534,7 @@ void init_level_scene(LevelScene_t* scene)
     {
         all_tiles[i].solid = NOT_SOLID;
         all_tiles[i].tile_type = EMPTY_TILE;
+        all_tiles[i].moveable = true;
         sc_map_init_64v(&all_tiles[i].entities_set, 16, 0);
         all_tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
     }
@@ -532,6 +543,7 @@ void init_level_scene(LevelScene_t* scene)
         unsigned int tile_idx = (scene->data.tilemap.height - 1) * scene->data.tilemap.width + i;
         all_tiles[tile_idx].solid = SOLID; // for testing
         all_tiles[tile_idx].tile_type = SOLID_TILE; // for testing
+        all_tiles[tile_idx].moveable = false;
     }
 
     create_player(&scene->scene.ent_manager, &scene->scene.engine->assets);

@@ -732,15 +732,17 @@ void player_crushing_system(Scene_t* scene)
     }
 }
 
-void player_spike_collision_system(Scene_t* scene)
+void spike_collision_system(Scene_t* scene)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     TileGrid_t tilemap = data->tilemap;
-    Entity_t* p_player;
-    sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
+    //Entity_t* p_player;
+    CBBox_t* p_bbox;
+    unsigned int ent_idx;
+    sc_map_foreach(&scene->ent_manager.component_map[CBBOX_COMP_T], ent_idx, p_bbox)
     {
-        CTransform_t* p_ctransform = get_component(p_player, CTRANSFORM_COMP_T);
-        CBBox_t* p_bbox = get_component(p_player, CBBOX_COMP_T);
+        Entity_t* p_ent = get_entity(&scene->ent_manager, ent_idx);
+        CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
         unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
         unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
         unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
@@ -753,17 +755,26 @@ void player_spike_collision_system(Scene_t* scene)
                 unsigned int tile_idx = tile_y * tilemap.width + tile_x;
                 if(tilemap.tiles[tile_idx].tile_type == SPIKES)
                 {
-                    if (find_AABB_overlap(
+                    uint8_t collide = find_AABB_overlap(
                         p_ctransform->position, p_bbox->size, 
                         (Vector2){
                             tile_x * TILE_SIZE + tilemap.tiles[tile_idx].offset.x,
                             tile_y * TILE_SIZE + tilemap.tiles[tile_idx].offset.y
                         },
                     tilemap.tiles[tile_idx].size,
-                    &overlap))
+                    &overlap);
+
+                    if (collide)
                     {
-                        p_player->m_alive = false;
-                        return;
+                        if (p_ent->m_tag == PLAYER_ENT_TAG)
+                        {
+                            p_ent->m_alive = false;
+                            return;
+                        }
+                        else
+                        {
+                            tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
+                        }
                     }
                 }
             }
@@ -1070,10 +1081,7 @@ void moveable_update_system(Scene_t* scene)
                 {
                     unsigned int tile_idx1 = tile_y * tilemap.width + tile_x;
                     unsigned int tile_idx2 = tile_y2 * tilemap.width + tile_x;
-                    if (
-                        tilemap.tiles[tile_idx1].tile_type == EMPTY_TILE
-                        && tilemap.tiles[tile_idx2].tile_type == EMPTY_TILE
-                    )
+                    if ( tilemap.tiles[tile_idx1].moveable && tilemap.tiles[tile_idx2].moveable )
                     {
                         bool any_solid = false;
                         unsigned int idx_to_check;
@@ -1102,9 +1110,7 @@ void moveable_update_system(Scene_t* scene)
                 {
                     unsigned int tile_idx1 = tile_y * tilemap.width + tile_x;
                     unsigned int tile_idx2 = tile_y2 * tilemap.width + tile_x;
-                    if (tilemap.tiles[tile_idx1].tile_type == EMPTY_TILE
-                        && tilemap.tiles[tile_idx2].tile_type == EMPTY_TILE
-                    )
+                    if ( tilemap.tiles[tile_idx1].moveable && tilemap.tiles[tile_idx2].moveable )
                     {
                         bool any_solid = false;
                         unsigned int idx_to_check;
@@ -1215,7 +1221,7 @@ void player_pushing_system(Scene_t* scene)
                 {
                     unsigned int target_tile_idx = tile_y * tilemap.width + tile_x;
                     if (
-                        tilemap.tiles[target_tile_idx].tile_type == EMPTY_TILE
+                        tilemap.tiles[target_tile_idx].moveable
                         && sc_map_size_64v(&tilemap.tiles[target_tile_idx].entities_set) == 0
                     )
                     {
@@ -1558,15 +1564,18 @@ void boulder_destroy_wooden_tile_system(Scene_t* scene)
         {
             tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
             tilemap.tiles[tile_idx].solid = NOT_SOLID;
+            tilemap.tiles[tile_idx].moveable = true;
             if (tile_x > 0 && tilemap.tiles[tile_idx - 1].tile_type == ONEWAY_TILE)
             {
                 tilemap.tiles[tile_idx - 1].tile_type = EMPTY_TILE;
                 tilemap.tiles[tile_idx - 1].solid = NOT_SOLID;
+                tilemap.tiles[tile_idx - 1].moveable = true;
             }
             if (tile_x < tilemap.width && tilemap.tiles[tile_idx + 1].tile_type == ONEWAY_TILE)
             {
                 tilemap.tiles[tile_idx + 1].tile_type = EMPTY_TILE;
                 tilemap.tiles[tile_idx + 1].solid = NOT_SOLID;
+                tilemap.tiles[tile_idx + 1].moveable = true;
             }
         }
     }

@@ -794,8 +794,8 @@ void tile_collision_system(Scene_t* scene)
         // exclude self
         // This has an extra pixel when gathering potential collision, just to avoid missing any
         // This is only done here, collision methods do not have this
-        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
-        unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
+        unsigned int tile_x1 = (p_ctransform->position.x - 1) / TILE_SIZE;
+        unsigned int tile_y1 = (p_ctransform->position.y - 1) / TILE_SIZE;
         unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
         unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
 

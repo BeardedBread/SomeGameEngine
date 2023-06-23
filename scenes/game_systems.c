@@ -326,6 +326,7 @@ static uint8_t check_bbox_edges(
 {
     uint8_t detected = 0;
 
+    // Too lazy to adjust the tile area to check, so just make a big one
     CollideEntity_t ent = 
     {
         .p_ent = p_ent,
@@ -340,7 +341,6 @@ static uint8_t check_bbox_edges(
     };
 
 
-    // TODO: Handle one-way platform
     // Left
     uint8_t collide_type = check_collision_line(&ent, tilemap, false);
     if (collide_type == 1 || (collide_type == 2 && !ignore_fragile))
@@ -350,8 +350,6 @@ static uint8_t check_bbox_edges(
 
     //Right
     ent.bbox.x = pos.x + bbox.x + 1; // 2 to account for the previous subtraction
-    //ent.area.tile_x1 = (pos.x + bbox.x) / TILE_SIZE;
-    //ent.area.tile_x2 = ent.area.tile_x1;
     collide_type = check_collision_line(&ent, tilemap, false);
     if (collide_type == 1 || (collide_type == 2 && !ignore_fragile))
     {
@@ -363,10 +361,6 @@ static uint8_t check_bbox_edges(
     ent.bbox.y = pos.y - 1;
     ent.bbox.width = bbox.x;
     ent.bbox.height = 1;
-    //ent.area.tile_x1 = (pos.x) / TILE_SIZE,
-    //ent.area.tile_x2 = (pos.x + bbox.x - 1) / TILE_SIZE,
-    //ent.area.tile_y1 = (pos.y - 1) / TILE_SIZE,
-    //ent.area.tile_y2 = ent.area.tile_y1;
     collide_type = check_collision_line(&ent, tilemap, false);
     if (collide_type == 1 || (collide_type == 2 && !ignore_fragile))
     {
@@ -375,9 +369,7 @@ static uint8_t check_bbox_edges(
 
     // Down
     ent.bbox.y = pos.y + bbox.y + 1;
-    //ent.area.tile_y1 = (pos.y + bbox.y) / TILE_SIZE,
-    //ent.area.tile_y2 = ent.area.tile_y1;
-    collide_type = check_collision_line(&ent, tilemap, false);
+    collide_type = check_collision_line(&ent, tilemap, true);
     if (collide_type == 1 || (collide_type == 2 && !ignore_fragile))
     {
         detected |= 1;

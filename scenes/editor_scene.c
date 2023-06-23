@@ -369,17 +369,23 @@ static void toggle_block_system(Scene_t* scene)
             }
             if (tilemap.tiles[tile_idx].tile_type == SPIKES)
             {
-                if (tile_idx - tilemap.width >= 0 && tilemap.tiles[tile_idx-tilemap.width].tile_type == SOLID_TILE)
+                // Priority: Down, Up, Left, Right
+                if (tile_idx + tilemap.width < MAX_N_TILES && tilemap.tiles[tile_idx + tilemap.width].tile_type == SOLID_TILE)
+                {
+                    tilemap.tiles[tile_idx].offset = (Vector2){0,16};
+                    tilemap.tiles[tile_idx].size = (Vector2){32,16};
+                }
+                else if (tile_idx - tilemap.width >= 0 && tilemap.tiles[tile_idx - tilemap.width].tile_type == SOLID_TILE)
                 {
                     tilemap.tiles[tile_idx].offset = (Vector2){0,0};
                     tilemap.tiles[tile_idx].size = (Vector2){32,16};
                 }
-                else if (tile_idx % tilemap.width != 0 && tile_idx > 0 && tilemap.tiles[tile_idx-1].tile_type == SOLID_TILE)
+                else if (tile_idx % tilemap.width != 0 && tilemap.tiles[tile_idx - 1].tile_type == SOLID_TILE)
                 {
                     tilemap.tiles[tile_idx].offset = (Vector2){0,0};
                     tilemap.tiles[tile_idx].size = (Vector2){16,32};
                 }
-                else if (tile_idx % tilemap.width + 1 != 0 && tile_idx < MAX_N_TILES - 1 && tilemap.tiles[tile_idx+1].tile_type == SOLID_TILE)
+                else if ((tile_idx + 1) % tilemap.width != 0 && tilemap.tiles[tile_idx + 1].tile_type == SOLID_TILE)
                 {
                     tilemap.tiles[tile_idx].offset = (Vector2){16,0};
                     tilemap.tiles[tile_idx].size = (Vector2){16,32};

@@ -716,10 +716,83 @@ void player_crushing_system(Scene_t* scene)
             p_ctransform->position, p_ctransform->prev_position, p_bbox->size, true
         );
 
-        if ((edges & 0b1100) == 0b1100 || (edges & 0b0011) == 0b0011)
+        // There is a second check for to ensure that there is an solid entity/tile overlapping the player bbox
+        // This is to prevent crushing by perfectly fitting in a gap (imagine a size 32 player in between two tiles)
+        // or any scenario where the edge check is just fringing, not overlapping
+        if ((edges & 0b0011) == 0b0011)
         {
-            p_player->m_alive = false;
-            return;
+            uint8_t collide = 0;
+            CollideEntity_t ent = 
+            {
+                .p_ent = p_player,
+                .bbox = (Rectangle){p_ctransform->position.x, p_ctransform->position.y, p_bbox->size.x, 1},
+                .prev_bbox = (Rectangle){p_ctransform->position.x, p_ctransform->position.y, p_bbox->size.x, p_bbox->size.y},
+                .area = (TileArea_t){
+                    .tile_x1 = (p_ctransform->position.x) / TILE_SIZE,
+                    .tile_y1 = (p_ctransform->position.y) / TILE_SIZE,
+                    .tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE,
+                    .tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE,
+                }
+            };
+            
+            
+            uint8_t collide_type = check_collision_line(&ent, &data->tilemap, false);
+            if (collide_type == 1)
+            {
+                collide |= 1 << 1;
+            }
+            
+            ent.bbox.y = p_ctransform->position.y + p_bbox->size.y;
+            collide_type = check_collision_line(&ent, &data->tilemap, true);
+            if (collide_type == 1)
+            {
+                collide |= 1;
+            }
+
+            if (collide != 0)
+            {
+                p_player->m_alive = false;
+                return;
+            }
+        }
+
+        if ((edges & 0b1100) == 0b1100)
+        {
+            uint8_t collide = 0;
+            CollideEntity_t ent = 
+            {
+                .p_ent = p_player,
+                .bbox = (Rectangle){p_ctransform->position.x, p_ctransform->position.y, 1, p_bbox->size.y},
+                .prev_bbox = (Rectangle){p_ctransform->position.x, p_ctransform->position.y, p_bbox->size.x, p_bbox->size.y},
+                .area = (TileArea_t){
+                    .tile_x1 = (p_ctransform->position.x) / TILE_SIZE,
+                    .tile_y1 = (p_ctransform->position.y) / TILE_SIZE,
+                    .tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE,
+                    .tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE,
+                }
+            };
+
+
+            // Left
+            uint8_t collide_type = check_collision_line(&ent, &data->tilemap, false);
+            if (collide_type == 1)
+            {
+                collide |= 1 << 1;
+            }
+
+            //Right
+            ent.bbox.x = p_ctransform->position.x + p_bbox->size.x; // 2 to account for the previous subtraction
+            collide_type = check_collision_line(&ent, &data->tilemap, false);
+            if (collide_type == 1)
+            {
+                collide |= 1;
+            }
+
+            if (collide != 0)
+            {
+                p_player->m_alive = false;
+                return;
+            }
         }
     }
 }

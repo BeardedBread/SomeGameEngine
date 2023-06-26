@@ -862,6 +862,7 @@ void tile_collision_system(Scene_t* scene)
     {
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
+        if (!p_ctransform->active) continue;
         // Get the occupied tiles
         // For each tile, loop through the entities, check collision and move
         // exclude self
@@ -1313,6 +1314,12 @@ void movement_update_system(Scene_t* scene)
     unsigned long ent_idx;
     sc_map_foreach(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], ent_idx, p_ctransform)
     {
+        if (!p_ctransform->active)
+        {
+            memset(&p_ctransform->velocity, 0, sizeof(Vector2));
+            memset(&p_ctransform->accel, 0, sizeof(Vector2));
+            continue;
+        }
         p_ctransform->prev_velocity = p_ctransform->velocity;
 
         if (p_ctransform->movement_mode == REGULAR_MOVEMENT)
@@ -1462,6 +1469,11 @@ void state_transition_update_system(Scene_t* scene)
         p_mstate->water_state <<= 1;
         p_mstate->water_state |= in_water? 1:0;
         p_mstate->water_state &= 3;
+
+        if (p_mstate->ground_state == 0b10)
+        {
+            p_ctransform->active = true;
+        }
     }
 }
 

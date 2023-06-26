@@ -59,7 +59,8 @@ Entity_t* create_player(EntityManager_t* ent_manager, Assets_t* assets)
     CBBox_t* p_bbox = add_component(p_ent, CBBOX_COMP_T);
 
     set_bbox(p_bbox, PLAYER_WIDTH, PLAYER_HEIGHT);
-    add_component(p_ent, CTRANSFORM_COMP_T);
+    CTransform_t* p_ct = add_component(p_ent, CTRANSFORM_COMP_T);
+    p_ct->active = true;
 
     CJump_t* p_cjump = add_component(p_ent, CJUMP_COMP_T);
     p_cjump->jump_speed = 680;

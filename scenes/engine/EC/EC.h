@@ -49,6 +49,7 @@ typedef struct _CTransform_t {
     int8_t grav_delay;
     int8_t grav_timer;
     MovementMode_t movement_mode;
+    bool active;
 } CTransform_t;
 
 typedef struct _CMovementState_t {

@@ -31,6 +31,7 @@ Entity_t* create_boulder(EntityManager_t* ent_manager, Assets_t* assets)
 
     CTransform_t* p_ctransform = add_component(p_boulder, CTRANSFORM_COMP_T);
     p_ctransform->grav_delay = 5;
+    p_ctransform->active = true;
     add_component(p_boulder, CMOVEMENTSTATE_T);
     add_component(p_boulder, CTILECOORD_COMP_T);
     CMoveable_t* p_cmove = add_component(p_boulder, CMOVEABLE_T);

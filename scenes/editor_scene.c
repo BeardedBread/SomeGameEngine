@@ -98,10 +98,10 @@ static void level_scene_render_func(Scene_t* scene)
                 Color water_colour = ColorAlpha(BLUE, 0.5);
                 DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
             }
-            if (tilemap.tiles[i].moveable)
+            if (!tilemap.tiles[i].moveable)
             {
                 // Draw water tile
-                Color water_colour = ColorAlpha(GREEN, 0.2);
+                Color water_colour = ColorAlpha(RED, 0.2);
                 DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
             }
         }

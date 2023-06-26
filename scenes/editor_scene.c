@@ -291,135 +291,135 @@ static void toggle_block_system(Scene_t* scene)
     Vector2 raw_mouse_pos = {GetMouseX(), GetMouseY()};
     raw_mouse_pos = Vector2Subtract(raw_mouse_pos, (Vector2){data->game_rec.x, data->game_rec.y});
 
-    if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+    if (
+        raw_mouse_pos.x < data->game_rec.width
+        && raw_mouse_pos.y < data->game_rec.height
+    ) 
     {
-        if (
-            raw_mouse_pos.x > data->game_rec.width
-            || raw_mouse_pos.y > data->game_rec.height
-        ) return;
         Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data->cam);
-        
         unsigned int tile_idx = get_tile_idx(mouse_pos.x, mouse_pos.y, &tilemap);
         if (tile_idx >= MAX_N_TILES) return;
-        enum EntitySpawnSelection sel = (enum EntitySpawnSelection)current_spawn_selection;
-        if (tile_idx != last_tile_idx)
+        if (tile_idx == last_tile_idx) return;
+        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
         {
+            enum EntitySpawnSelection sel = (enum EntitySpawnSelection)current_spawn_selection;
             switch (sel)
             {
-                case TOGGLE_TILE:
-                    if (tilemap.tiles[tile_idx].tile_type == SOLID_TILE)
-                    {
-                        tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
-                        tilemap.tiles[tile_idx].solid = NOT_SOLID;
-                    }
-                    else
-                    {
-                        tilemap.tiles[tile_idx].tile_type = SOLID_TILE;
-                        tilemap.tiles[tile_idx].solid = SOLID;
-                    }
-                    tilemap.tiles[tile_idx].water_level = 0;
-                break;
-                case TOGGLE_ONEWAY:
-                    if (tilemap.tiles[tile_idx].tile_type == ONEWAY_TILE)
-                    {
-                        tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
-                        tilemap.tiles[tile_idx].solid = NOT_SOLID;
-                    }
-                    else
-                    {
-                        tilemap.tiles[tile_idx].tile_type = ONEWAY_TILE;
-                        tilemap.tiles[tile_idx].solid = ONE_WAY;
-                    }
-                break;
-                case TOGGLE_LADDER:
-                    if (tilemap.tiles[tile_idx].tile_type == LADDER)
-                    {
-                        tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
-                        tilemap.tiles[tile_idx].solid = NOT_SOLID;
-                    }
-                    else
-                    {
-                        tilemap.tiles[tile_idx].tile_type = LADDER;
-                        int up_tile = tile_idx - tilemap.width;
-                        if (up_tile > 0 && tilemap.tiles[up_tile].tile_type != LADDER)
-                        {
-                            tilemap.tiles[tile_idx].solid = ONE_WAY;
-                        }
-                        else
-                        {
-                            tilemap.tiles[tile_idx].solid = NOT_SOLID;
-                        }
-                    }
-                    int down_tile = tile_idx + tilemap.width;
-                    if (down_tile < MAX_N_TILES && tilemap.tiles[down_tile].tile_type == LADDER)
-                    {
-                        tilemap.tiles[down_tile].solid = (tilemap.tiles[tile_idx].tile_type != LADDER)? ONE_WAY : NOT_SOLID;
-                    }
-                break;
-                case TOGGLE_SPIKE:
-                    if (tilemap.tiles[tile_idx].tile_type == SPIKES)
-                    {
-                        tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
-                    }
-                    else
-                    {
-                        tilemap.tiles[tile_idx].tile_type = SPIKES;
-                    }
+            case TOGGLE_TILE:
+                if (tilemap.tiles[tile_idx].tile_type == SOLID_TILE)
+                {
+                    tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
                     tilemap.tiles[tile_idx].solid = NOT_SOLID;
-                break;
-                case TOGGLE_WATER:
-                    if (tilemap.tiles[tile_idx].water_level == 0)
-                    {
-                        tilemap.tiles[tile_idx].water_level = MAX_WATER_LEVEL;
-                    }
-                    else
-                    {
-                        tilemap.tiles[tile_idx].water_level = 0;
-                    }
-                break;
-                case SPAWN_CRATE:
-                    spawn_crate(scene, tile_idx, false);
-                break;
-                case SPAWN_METAL_CRATE:
-                    spawn_crate(scene, tile_idx, true);
-                break;
-                case SPAWN_BOULDER:
-                    spawn_boulder(scene, tile_idx);
-                break;
-            }
-            if (tilemap.tiles[tile_idx].tile_type == SPIKES)
-            {
-                // Priority: Down, Up, Left, Right
-                if (tile_idx + tilemap.width < MAX_N_TILES && tilemap.tiles[tile_idx + tilemap.width].tile_type == SOLID_TILE)
-                {
-                    tilemap.tiles[tile_idx].offset = (Vector2){0,16};
-                    tilemap.tiles[tile_idx].size = (Vector2){32,16};
-                }
-                else if (tile_idx - tilemap.width >= 0 && tilemap.tiles[tile_idx - tilemap.width].tile_type == SOLID_TILE)
-                {
-                    tilemap.tiles[tile_idx].offset = (Vector2){0,0};
-                    tilemap.tiles[tile_idx].size = (Vector2){32,16};
-                }
-                else if (tile_idx % tilemap.width != 0 && tilemap.tiles[tile_idx - 1].tile_type == SOLID_TILE)
-                {
-                    tilemap.tiles[tile_idx].offset = (Vector2){0,0};
-                    tilemap.tiles[tile_idx].size = (Vector2){16,32};
-                }
-                else if ((tile_idx + 1) % tilemap.width != 0 && tilemap.tiles[tile_idx + 1].tile_type == SOLID_TILE)
-                {
-                    tilemap.tiles[tile_idx].offset = (Vector2){16,0};
-                    tilemap.tiles[tile_idx].size = (Vector2){16,32};
                 }
                 else
                 {
-                    tilemap.tiles[tile_idx].offset = (Vector2){0,16};
-                    tilemap.tiles[tile_idx].size = (Vector2){32,16};
+                    tilemap.tiles[tile_idx].tile_type = SOLID_TILE;
+                    tilemap.tiles[tile_idx].solid = SOLID;
                 }
+                tilemap.tiles[tile_idx].water_level = 0;
+            break;
+            case TOGGLE_ONEWAY:
+                if (tilemap.tiles[tile_idx].tile_type == ONEWAY_TILE)
+                {
+                    tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
+                    tilemap.tiles[tile_idx].solid = NOT_SOLID;
+                }
+                else
+                {
+                    tilemap.tiles[tile_idx].tile_type = ONEWAY_TILE;
+                    tilemap.tiles[tile_idx].solid = ONE_WAY;
+                }
+            break;
+            case TOGGLE_LADDER:
+                if (tilemap.tiles[tile_idx].tile_type == LADDER)
+                {
+                    tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
+                    tilemap.tiles[tile_idx].solid = NOT_SOLID;
+                }
+                else
+                {
+                    tilemap.tiles[tile_idx].tile_type = LADDER;
+                    int up_tile = tile_idx - tilemap.width;
+                    if (up_tile > 0 && tilemap.tiles[up_tile].tile_type != LADDER)
+                    {
+                        tilemap.tiles[tile_idx].solid = ONE_WAY;
+                    }
+                    else
+                    {
+                        tilemap.tiles[tile_idx].solid = NOT_SOLID;
+                    }
+                }
+                int down_tile = tile_idx + tilemap.width;
+                if (down_tile < MAX_N_TILES && tilemap.tiles[down_tile].tile_type == LADDER)
+                {
+                    tilemap.tiles[down_tile].solid = (tilemap.tiles[tile_idx].tile_type != LADDER)? ONE_WAY : NOT_SOLID;
+                }
+            break;
+            case TOGGLE_SPIKE:
+                if (tilemap.tiles[tile_idx].tile_type == SPIKES)
+                {
+                    tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
+                }
+                else
+                {
+                    tilemap.tiles[tile_idx].tile_type = SPIKES;
+                }
+                tilemap.tiles[tile_idx].solid = NOT_SOLID;
+            break;
+            case TOGGLE_WATER:
+                if (tilemap.tiles[tile_idx].water_level == 0)
+                {
+                    tilemap.tiles[tile_idx].water_level = MAX_WATER_LEVEL;
+                }
+                else
+                {
+                    tilemap.tiles[tile_idx].water_level = 0;
+                }
+            break;
+            case SPAWN_CRATE:
+                spawn_crate(scene, tile_idx, false);
+            break;
+            case SPAWN_METAL_CRATE:
+                spawn_crate(scene, tile_idx, true);
+            break;
+            case SPAWN_BOULDER:
+                spawn_boulder(scene, tile_idx);
+            break;
+            }
+
+            if (tilemap.tiles[tile_idx].tile_type == SPIKES)
+            {
+            // Priority: Down, Up, Left, Right
+            if (tile_idx + tilemap.width < MAX_N_TILES && tilemap.tiles[tile_idx + tilemap.width].tile_type == SOLID_TILE)
+            {
+                tilemap.tiles[tile_idx].offset = (Vector2){0,16};
+                tilemap.tiles[tile_idx].size = (Vector2){32,16};
+            }
+            else if (tile_idx - tilemap.width >= 0 && tilemap.tiles[tile_idx - tilemap.width].tile_type == SOLID_TILE)
+            {
+                tilemap.tiles[tile_idx].offset = (Vector2){0,0};
+                tilemap.tiles[tile_idx].size = (Vector2){32,16};
+            }
+            else if (tile_idx % tilemap.width != 0 && tilemap.tiles[tile_idx - 1].tile_type == SOLID_TILE)
+            {
+                tilemap.tiles[tile_idx].offset = (Vector2){0,0};
+                tilemap.tiles[tile_idx].size = (Vector2){16,32};
+            }
+            else if ((tile_idx + 1) % tilemap.width != 0 && tilemap.tiles[tile_idx + 1].tile_type == SOLID_TILE)
+            {
+                tilemap.tiles[tile_idx].offset = (Vector2){16,0};
+                tilemap.tiles[tile_idx].size = (Vector2){16,32};
             }
             else
             {
-                tilemap.tiles[tile_idx].offset = (Vector2){0,0};
-                tilemap.tiles[tile_idx].size = (Vector2){32,32};
+                tilemap.tiles[tile_idx].offset = (Vector2){0,16};
+                tilemap.tiles[tile_idx].size = (Vector2){32,16};
+            }
+            }
+            else
+            {
+            tilemap.tiles[tile_idx].offset = (Vector2){0,0};
+            tilemap.tiles[tile_idx].size = (Vector2){32,32};
             }
             last_tile_idx = tile_idx;
             tilemap.tiles[tile_idx].moveable = (
@@ -427,28 +427,36 @@ static void toggle_block_system(Scene_t* scene)
                 || tilemap.tiles[tile_idx].tile_type == SPIKES
             );
         }
-    }
-    else if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
-    {
-        if (
-            raw_mouse_pos.x > data->game_rec.width
-            || raw_mouse_pos.y > data->game_rec.height
-        ) return;
-        Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data->cam);
-        
-        unsigned int tile_idx = get_tile_idx(mouse_pos.x, mouse_pos.y, &tilemap);
-        if (tile_idx >= MAX_N_TILES) return;
-        if (tile_idx != last_tile_idx)
+        else if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
         {
             tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
             tilemap.tiles[tile_idx].solid = NOT_SOLID;
             tilemap.tiles[tile_idx].water_level = 0;
             tilemap.tiles[tile_idx].moveable = true;
+
+            Entity_t* ent;
+            unsigned int m_id;
+            sc_map_foreach(&tilemap.tiles[tile_idx].entities_set, m_id, ent)
+            {
+                if (ent->m_tag == PLAYER_ENT_TAG) continue;
+                CTileCoord_t* p_tilecoord = get_component(
+                    ent, CTILECOORD_COMP_T
+                );
+
+                for (size_t i = 0;i < p_tilecoord->n_tiles; ++i)
+                {
+                    // Use previously store tile position
+                    // Clear from those positions
+                    unsigned int tile_idx = p_tilecoord->tiles[i];
+                    sc_map_del_64v(&(tilemap.tiles[tile_idx].entities_set), m_id);
+                }
+                remove_entity(&scene->ent_manager, m_id);
+            }
         }
-    }
-    else
-    {
-        last_tile_idx = MAX_N_TILES;
+        else
+        {
+            last_tile_idx = MAX_N_TILES;
+        }
     }
 }
 

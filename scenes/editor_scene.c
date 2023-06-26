@@ -24,6 +24,13 @@ enum EntitySpawnSelection {
 #define MAX_SPAWN_TYPE 8
 static unsigned int current_spawn_selection = 0;
 
+#define SELECTION_TILE_SIZE 32
+#define SELECTION_TILE_HALFSIZE (SELECTION_TILE_SIZE >> 1)
+#define SELECTION_GAP 5
+#define SELECTION_REGION_WIDTH (SELECTION_TILE_SIZE * MAX_SPAWN_TYPE)
+#define SELECTION_REGION_HEIGHT SELECTION_TILE_SIZE
+
+
 static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
 {
     unsigned int tile_x = x / TILE_SIZE;
@@ -70,6 +77,13 @@ static void level_scene_render_func(Scene_t* scene)
             int y = (i / tilemap.width) * TILE_SIZE;
             sprintf(buffer, "%u", sc_map_size_64v(&tilemap.tiles[i].entities_set));
 
+            if (!tilemap.tiles[i].moveable)
+            {
+                // Draw water tile
+                Color water_colour = ColorAlpha(RED, 0.2);
+                DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
+            }
+
             if (data->tile_sprites[tilemap.tiles[i].tile_type] != NULL)
             {
                 draw_sprite(data->tile_sprites[tilemap.tiles[i].tile_type], (Vector2){x,y}, false);
@@ -98,12 +112,6 @@ static void level_scene_render_func(Scene_t* scene)
             {
                 // Draw water tile
                 Color water_colour = ColorAlpha(BLUE, 0.5);
-                DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
-            }
-            if (!tilemap.tiles[i].moveable)
-            {
-                // Draw water tile
-                Color water_colour = ColorAlpha(RED, 0.2);
                 DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
             }
         }
@@ -219,11 +227,46 @@ static void level_scene_render_func(Scene_t* scene)
             WHITE
         );
 
+        Vector2 draw_pos = {data->game_rec.x, data->game_rec.y + data->game_rec.height + SELECTION_GAP};
+        const Color draw_colour[MAX_SPAWN_TYPE] = {BLACK, MAROON, ORANGE, ColorAlpha(RAYWHITE, 0.5), ColorAlpha(BLUE, 0.5), BROWN, GRAY, ColorAlpha(RAYWHITE, 0.5)};
         for (uint8_t i = 0; i < MAX_SPAWN_TYPE; ++i)
         {
-            DrawRectangle(data->game_rec.x + i * 32, data->game_rec.y + data->game_rec.height + 5, 32, 32, (i == current_spawn_selection) ? GREEN : RAYWHITE );
-            sprintf(buffer, "%u", i);
-            DrawText(buffer, data->game_rec.x + i * 32, data->game_rec.y + data->game_rec.height + 5, 12, BLACK);
+            if (i != current_spawn_selection)
+            {
+                DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, draw_colour[i]);
+                switch (i)
+                {
+                    case 3:
+                        DrawRectangle(draw_pos.x, draw_pos.y + SELECTION_TILE_HALFSIZE, SELECTION_TILE_SIZE, SELECTION_TILE_HALFSIZE, RED);
+                    break;
+                    case 7:
+                    {
+                        Vector2 half_size = {SELECTION_TILE_HALFSIZE, SELECTION_TILE_HALFSIZE};
+                        DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, GRAY);
+                    }
+                    break;
+                }
+            }
+            draw_pos.x += SELECTION_TILE_SIZE;
+        }
+
+        draw_pos.x = data->game_rec.x + current_spawn_selection * SELECTION_TILE_SIZE;
+        DrawRectangle(
+            draw_pos.x - 2, draw_pos.y - 2,
+            SELECTION_TILE_SIZE + 4, SELECTION_TILE_SIZE + 4, GREEN
+        );
+        DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, draw_colour[current_spawn_selection]);
+        switch (current_spawn_selection)
+        {
+            case 3:
+                DrawRectangle(draw_pos.x, draw_pos.y + SELECTION_TILE_HALFSIZE, SELECTION_TILE_SIZE, SELECTION_TILE_HALFSIZE, RED);
+            break;
+            case 7:
+            {
+                const Vector2 half_size = {SELECTION_TILE_HALFSIZE, SELECTION_TILE_HALFSIZE};
+                DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, GRAY);
+            }
+            break;
         }
 
         // For DEBUG
@@ -456,6 +499,19 @@ static void toggle_block_system(Scene_t* scene)
         else
         {
             last_tile_idx = MAX_N_TILES;
+        }
+        return;
+    }
+
+    raw_mouse_pos = Vector2Subtract(raw_mouse_pos, (Vector2){0, data->game_rec.height});
+    if (
+        raw_mouse_pos.x < SELECTION_REGION_WIDTH
+        && raw_mouse_pos.y < SELECTION_REGION_HEIGHT
+    )
+    {
+        if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+        {
+            current_spawn_selection = ((int)raw_mouse_pos.x / SELECTION_TILE_SIZE);
         }
     }
 }

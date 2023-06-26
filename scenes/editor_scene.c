@@ -15,12 +15,13 @@ enum EntitySpawnSelection {
     TOGGLE_ONEWAY,
     TOGGLE_LADDER,
     TOGGLE_SPIKE,
+    TOGGLE_WATER,
     SPAWN_CRATE,
     SPAWN_METAL_CRATE,
     SPAWN_BOULDER,
 };
 
-#define MAX_SPAWN_TYPE 7
+#define MAX_SPAWN_TYPE 8
 static unsigned int current_spawn_selection = 0;
 
 static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
@@ -44,6 +45,7 @@ static char* get_spawn_selection_string(enum EntitySpawnSelection sel)
         case TOGGLE_ONEWAY: return "wooden tile";
         case TOGGLE_LADDER: return "ladder";
         case TOGGLE_SPIKE: return "spike";
+        case TOGGLE_WATER: return "water";
         case SPAWN_CRATE: return "wooden crate";
         case SPAWN_METAL_CRATE: return "metal crate";
         case SPAWN_BOULDER: return "boulder";
@@ -216,6 +218,14 @@ static void level_scene_render_func(Scene_t* scene)
             (Vector2){data->game_rec.x, data->game_rec.y},
             WHITE
         );
+
+        for (uint8_t i = 0; i < MAX_SPAWN_TYPE; ++i)
+        {
+            DrawRectangle(data->game_rec.x + i * 32, data->game_rec.y + data->game_rec.height + 5, 32, 32, (i == current_spawn_selection) ? GREEN : RAYWHITE );
+            sprintf(buffer, "%u", i);
+            DrawText(buffer, data->game_rec.x + i * 32, data->game_rec.y + data->game_rec.height + 5, 12, BLACK);
+        }
+
         // For DEBUG
         const int gui_x = data->game_rec.x + data->game_rec.width + 10;
         sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
@@ -357,6 +367,16 @@ static void toggle_block_system(Scene_t* scene)
                     }
                     tilemap.tiles[tile_idx].solid = NOT_SOLID;
                 break;
+                case TOGGLE_WATER:
+                    if (tilemap.tiles[tile_idx].water_level == 0)
+                    {
+                        tilemap.tiles[tile_idx].water_level = MAX_WATER_LEVEL;
+                    }
+                    else
+                    {
+                        tilemap.tiles[tile_idx].water_level = 0;
+                    }
+                break;
                 case SPAWN_CRATE:
                     spawn_crate(scene, tile_idx, false);
                 break;
@@ -420,15 +440,10 @@ static void toggle_block_system(Scene_t* scene)
         if (tile_idx >= MAX_N_TILES) return;
         if (tile_idx != last_tile_idx)
         {
-            if (tilemap.tiles[tile_idx].water_level == 0)
-            {
-                tilemap.tiles[tile_idx].water_level = MAX_WATER_LEVEL;
-            }
-            else
-            {
-                tilemap.tiles[tile_idx].water_level = 0;
-            }
-            last_tile_idx = tile_idx;
+            tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
+            tilemap.tiles[tile_idx].solid = NOT_SOLID;
+            tilemap.tiles[tile_idx].water_level = 0;
+            tilemap.tiles[tile_idx].moveable = true;
         }
     }
     else

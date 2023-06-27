@@ -975,7 +975,7 @@ void friction_coefficient_update_system(Scene_t* scene)
 
 
         // Friction
-        if (p_mstate->water_state & 1)
+        if (p_mstate != NULL && p_mstate->water_state & 1)
         {
             // Apply water friction
             // Consistent in all direction
@@ -1352,6 +1352,8 @@ void movement_update_system(Scene_t* scene)
         // Level boundary collision
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+        if (p_bbox == NULL) continue;
+
         unsigned int level_width = tilemap.width * TILE_SIZE;
         if(p_ctransform->position.x < 0 || p_ctransform->position.x + p_bbox->size.x > level_width)
         {
@@ -1523,7 +1525,7 @@ void update_tilemap_system(Scene_t* scene)
 
 void hitbox_update_system(Scene_t* scene)
 {
-    static bool checked_entities[MAX_COMP_POOL_SIZE] = {0};
+    //static bool checked_entities[MAX_COMP_POOL_SIZE] = {0};
 
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     TileGrid_t tilemap = data->tilemap;
@@ -1534,6 +1536,7 @@ void hitbox_update_system(Scene_t* scene)
     sc_map_foreach(&scene->ent_manager.component_map[CHITBOXES_T], ent_idx, p_hitbox)
     {
         Entity_t *p_ent =  get_entity(&scene->ent_manager, ent_idx);
+        if (!p_ent->m_alive) continue;
         CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
         for (uint8_t i = 0; i < p_hitbox->n_boxes; ++i)
         {
@@ -1554,15 +1557,15 @@ void hitbox_update_system(Scene_t* scene)
                     unsigned int tile_idx = tile_y * tilemap.width + tile_x;
                     unsigned int other_ent_idx;
                     Entity_t* p_other_ent;
-                    memset(checked_entities, 0, sizeof(checked_entities));
+                    //memset(checked_entities, 0, sizeof(checked_entities));
                     sc_map_foreach(&tilemap.tiles[tile_idx].entities_set, other_ent_idx, p_other_ent)
                     {
                         if (other_ent_idx == ent_idx) continue;
-                        if (checked_entities[other_ent_idx]) continue;
+                        //if (checked_entities[other_ent_idx]) continue;
 
                         Entity_t* p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
                         if (!p_other_ent->m_alive) continue; // To only allow one way collision check
-                        if (p_other_ent->m_tag < p_ent->m_tag) continue; // To only allow one way collision check
+                        //if (p_other_ent->m_tag < p_ent->m_tag) continue; // To only allow one way collision check
 
                         CHurtbox_t* p_other_hurtbox = get_component(p_other_ent, CHURTBOX_T);
                         if (p_other_hurtbox == NULL) continue;
@@ -1578,13 +1581,14 @@ void hitbox_update_system(Scene_t* scene)
                             )
                         )
                         {
-                            //if (p_other_ent->m_tag == CRATES_ENT_TAG)
+                            if (p_other_ent->m_tag == CRATES_ENT_TAG)
                             {
 
                                 CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
                                 CPlayerState_t* p_pstate = get_component(p_ent, CPLAYERSTATE_T);
                                 if (
-                                    p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y
+                                    p_pstate != NULL
+                                    && p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y
                                 )
                                 {
                                     p_ctransform->velocity.y = -400;
@@ -1596,25 +1600,40 @@ void hitbox_update_system(Scene_t* scene)
                                         p_cjump->jumped = true;
                                     }
                                 }
+                            }
+                            CTileCoord_t* p_tilecoord = get_component(
+                                p_other_ent, CTILECOORD_COMP_T
+                            );
 
-                                CTileCoord_t* p_tilecoord = get_component(
-                                    p_other_ent, CTILECOORD_COMP_T
+                            for (size_t i = 0;i < p_tilecoord->n_tiles; ++i)
+                            {
+                                // Use previously store tile position
+                                // Clear from those positions
+                                unsigned int tile_idx = p_tilecoord->tiles[i];
+                                sc_map_del_64v(&(tilemap.tiles[tile_idx].entities_set), other_ent_idx);
+                            }
+                            remove_entity(&scene->ent_manager, other_ent_idx);
+                            if (p_hitbox->one_hit)
+                            {
+                                p_tilecoord = get_component(
+                                    p_ent, CTILECOORD_COMP_T
                                 );
-
                                 for (size_t i = 0;i < p_tilecoord->n_tiles; ++i)
                                 {
                                     // Use previously store tile position
                                     // Clear from those positions
                                     unsigned int tile_idx = p_tilecoord->tiles[i];
-                                    sc_map_del_64v(&(tilemap.tiles[tile_idx].entities_set), other_ent_idx);
+                                    sc_map_del_64v(&(tilemap.tiles[tile_idx].entities_set), ent_idx);
                                 }
-                                remove_entity(&scene->ent_manager, other_ent_idx);
+                                remove_entity(&scene->ent_manager, ent_idx);
+                                goto hitbox_done;
                             }
                         }
                     }
                 }
             }
         }
+hitbox_done: continue;
     }
 }
 
@@ -1653,6 +1672,33 @@ void boulder_destroy_wooden_tile_system(Scene_t* scene)
                 tilemap.tiles[tile_idx + 1].tile_type = EMPTY_TILE;
                 tilemap.tiles[tile_idx + 1].solid = NOT_SOLID;
                 tilemap.tiles[tile_idx + 1].moveable = true;
+            }
+        }
+    }
+}
+
+void container_destroy_system(Scene_t* scene)
+{
+    unsigned int ent_idx;
+    CContainer_t* p_container;
+    sc_map_foreach(&scene->ent_manager.component_map[CCONTAINER_T], ent_idx, p_container)
+    {
+        Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
+        if (!p_ent->m_alive)
+        {
+            Entity_t* new_ent;
+            switch (p_container->item)
+            {
+                case CONTAINER_LEFT_ARROW:
+                {
+                    new_ent = create_arrow(&scene->ent_manager, &scene->engine->assets, 0);
+                    CTransform_t* new_p_ct = get_component(new_ent, CTRANSFORM_COMP_T);
+                    CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
+                    memcpy(&new_p_ct->position, &p_ct->position, sizeof(Vector2));
+                }
+                break;
+                default:
+                break;
             }
         }
     }

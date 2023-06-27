@@ -6,7 +6,7 @@
 #include "sc/map/sc_map.h"
 #include "sc/queue/sc_queue.h"
 
-#define N_TAGS 5
+#define N_TAGS 8
 #define N_COMPONENTS 11
 #define MAX_COMP_POOL_SIZE 1024
 typedef struct EntityManager EntityManager_t;
@@ -110,6 +110,7 @@ typedef struct _CHitBoxes_t {
     Rectangle boxes[2];
     uint8_t n_boxes;
     uint8_t atk;
+    bool one_hit;
 } CHitBoxes_t;
 
 typedef struct _CHurtbox_t {

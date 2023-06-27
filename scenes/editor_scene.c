@@ -18,10 +18,11 @@ enum EntitySpawnSelection {
     TOGGLE_WATER,
     SPAWN_CRATE,
     SPAWN_METAL_CRATE,
+    SPAWN_CRATE_ARROW_L,
     SPAWN_BOULDER,
 };
 
-#define MAX_SPAWN_TYPE 8
+#define MAX_SPAWN_TYPE 9
 static unsigned int current_spawn_selection = 0;
 
 #define SELECTION_TILE_SIZE 32
@@ -138,14 +139,51 @@ static void level_scene_render_func(Scene_t* scene)
                 break;
             }
 
-            if (p_ent->m_tag == BOULDER_ENT_TAG)
+            if (p_bbox != NULL)
             {
-                DrawCircleV(Vector2Add(p_ct->position, p_bbox->half_size), p_bbox->half_size.x, colour);
+                if (p_ent->m_tag == BOULDER_ENT_TAG)
+                {
+                    DrawCircleV(Vector2Add(p_ct->position, p_bbox->half_size), p_bbox->half_size.x, colour);
+                }
+                else
+                {
+                    DrawRectangle(p_ct->position.x, p_ct->position.y, p_bbox->size.x, p_bbox->size.y, colour);
+                }
+
+                if (p_ent->m_tag == CRATES_ENT_TAG)
+                {
+                    CContainer_t* p_container = get_component(p_ent, CCONTAINER_T);
+                    if (p_container != NULL)
+                    {
+                        switch (p_container->item)
+                        {
+                            case CONTAINER_LEFT_ARROW:
+                                DrawLine(
+                                    p_ct->position.x + p_bbox->half_size.x,
+                                    p_ct->position.y + p_bbox->half_size.y,
+                                    p_ct->position.x + p_bbox->size.x,
+                                    p_ct->position.y + p_bbox->half_size.y,
+                                    BLACK
+                                );
+                            break;
+                            default:
+                            break;
+                        }
+                    }
+                }
+
+                //if (p_ent->m_tag == ARROW_ENT_TAG)
+                //{
+                //    DrawLine(
+                //        p_ct->position.x + 10,
+                //        p_ct->position.y + p_bbox->half_size.y,
+                //        p_ct->position.x + p_bbox->size.x,
+                //        p_ct->position.y + p_bbox->half_size.y,
+                //        colour
+                //    );
+                //}
             }
-            else
-            {
-                DrawRectangle(p_ct->position.x, p_ct->position.y, p_bbox->size.x, p_bbox->size.y, colour);
-            }
+
             CHurtbox_t* p_hurtbox = get_component(p_ent, CHURTBOX_T);
             CHitBoxes_t* p_hitbox = get_component(p_ent, CHITBOXES_T);
             if (p_hitbox != NULL)
@@ -228,22 +266,29 @@ static void level_scene_render_func(Scene_t* scene)
         );
 
         Vector2 draw_pos = {data->game_rec.x, data->game_rec.y + data->game_rec.height + SELECTION_GAP};
-        const Color draw_colour[MAX_SPAWN_TYPE] = {BLACK, MAROON, ORANGE, ColorAlpha(RAYWHITE, 0.5), ColorAlpha(BLUE, 0.5), BROWN, GRAY, ColorAlpha(RAYWHITE, 0.5)};
+        const Color draw_colour[MAX_SPAWN_TYPE] = {BLACK, MAROON, ORANGE, ColorAlpha(RAYWHITE, 0.5), ColorAlpha(BLUE, 0.5), BROWN, GRAY, BROWN, ColorAlpha(RAYWHITE, 0.5)};
         for (uint8_t i = 0; i < MAX_SPAWN_TYPE; ++i)
         {
             if (i != current_spawn_selection)
             {
                 DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, draw_colour[i]);
+                Vector2 half_size = {SELECTION_TILE_HALFSIZE, SELECTION_TILE_HALFSIZE};
                 switch (i)
                 {
-                    case 3:
+                    case TOGGLE_SPIKE:
                         DrawRectangle(draw_pos.x, draw_pos.y + SELECTION_TILE_HALFSIZE, SELECTION_TILE_SIZE, SELECTION_TILE_HALFSIZE, RED);
                     break;
-                    case 7:
-                    {
-                        Vector2 half_size = {SELECTION_TILE_HALFSIZE, SELECTION_TILE_HALFSIZE};
+                    case SPAWN_BOULDER:
                         DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, GRAY);
-                    }
+                    break;
+                    case SPAWN_CRATE_ARROW_L:
+                        DrawLine(
+                            draw_pos.x + half_size.x,
+                            draw_pos.y + half_size.y,
+                            draw_pos.x + half_size.x * 2,
+                            draw_pos.y + half_size.y,
+                            BLACK
+                        );
                     break;
                 }
             }
@@ -256,16 +301,23 @@ static void level_scene_render_func(Scene_t* scene)
             SELECTION_TILE_SIZE + 4, SELECTION_TILE_SIZE + 4, GREEN
         );
         DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, draw_colour[current_spawn_selection]);
+        const Vector2 half_size = {SELECTION_TILE_HALFSIZE, SELECTION_TILE_HALFSIZE};
         switch (current_spawn_selection)
         {
-            case 3:
+            case TOGGLE_SPIKE:
                 DrawRectangle(draw_pos.x, draw_pos.y + SELECTION_TILE_HALFSIZE, SELECTION_TILE_SIZE, SELECTION_TILE_HALFSIZE, RED);
             break;
-            case 7:
-            {
-                const Vector2 half_size = {SELECTION_TILE_HALFSIZE, SELECTION_TILE_HALFSIZE};
+            case SPAWN_BOULDER:
                 DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, GRAY);
-            }
+            break;
+            case SPAWN_CRATE_ARROW_L:
+                DrawLine(
+                    draw_pos.x + half_size.x,
+                    draw_pos.y + half_size.y,
+                    draw_pos.x + half_size.x * 2,
+                    draw_pos.y + half_size.y,
+                    BLACK
+                );
             break;
         }
 
@@ -305,10 +357,10 @@ static void level_scene_render_func(Scene_t* scene)
     EndDrawing();
 }
 
-static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal)
+static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal, ContainerItem_t item)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
-    Entity_t* p_crate = create_crate(&scene->ent_manager, &scene->engine->assets, metal);
+    Entity_t* p_crate = create_crate(&scene->ent_manager, &scene->engine->assets, metal, item);
 
     CTransform_t* p_ctransform = get_component(p_crate, CTRANSFORM_COMP_T);
     p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
@@ -420,13 +472,16 @@ static void toggle_block_system(Scene_t* scene)
                 }
             break;
             case SPAWN_CRATE:
-                spawn_crate(scene, tile_idx, false);
+                spawn_crate(scene, tile_idx, false, CONTAINER_EMPTY);
             break;
             case SPAWN_METAL_CRATE:
-                spawn_crate(scene, tile_idx, true);
+                spawn_crate(scene, tile_idx, true, CONTAINER_EMPTY);
             break;
             case SPAWN_BOULDER:
                 spawn_boulder(scene, tile_idx);
+            break;
+            case SPAWN_CRATE_ARROW_L:
+                spawn_crate(scene, tile_idx, false, CONTAINER_LEFT_ARROW);
             break;
             }
 
@@ -591,6 +646,7 @@ void init_level_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &spike_collision_system);
     sc_array_add(&scene->scene.systems, &state_transition_update_system);
     sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
+    sc_array_add(&scene->scene.systems, &container_destroy_system);
     sc_array_add(&scene->scene.systems, &sprite_animation_system);
     sc_array_add(&scene->scene.systems, &camera_update_system);
     sc_array_add(&scene->scene.systems, &player_dir_reset_system);

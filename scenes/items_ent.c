@@ -55,14 +55,34 @@ Entity_t* create_arrow(EntityManager_t* ent_manager, Assets_t* assets, uint8_t d
     add_component(p_arrow, CTILECOORD_COMP_T);
     CHitBoxes_t* p_hitbox = add_component(p_arrow, CHITBOXES_T);
     p_hitbox->n_boxes = 1;
-    p_hitbox->boxes[0] = (Rectangle){TILE_SIZE - 5, TILE_SIZE / 2 - 5, 5, 5};
+
     p_hitbox->atk = 3;
     p_hitbox->one_hit = true;
 
     CTransform_t* p_ctransform = add_component(p_arrow, CTRANSFORM_COMP_T);
     p_ctransform->movement_mode = KINEMATIC_MOVEMENT;
-    p_ctransform->velocity.x = 500;
     p_ctransform->active = true;
+
+    //p_hitbox->boxes[0] = (Rectangle){TILE_SIZE - 5, TILE_SIZE / 2 - 5, 5, 5};
+    switch(dir)
+    {
+        case 0:
+            p_hitbox->boxes[0] = (Rectangle){10, TILE_SIZE / 2 - 5, 10, 5};
+            p_ctransform->velocity.x = -250;
+        break;
+        case 2:
+            p_hitbox->boxes[0] = (Rectangle){TILE_SIZE / 2 - 5, 10, 5, 10};
+            p_ctransform->velocity.y = -250;
+        break;
+        case 3:
+            p_hitbox->boxes[0] = (Rectangle){TILE_SIZE / 2 - 5, 10, 5, 10};
+            p_ctransform->velocity.y = 250;
+        break;
+        default:
+            p_hitbox->boxes[0] = (Rectangle){10, TILE_SIZE / 2 - 5, 10, 5};
+            p_ctransform->velocity.x = 250;
+        break;
+    }
 
     return p_arrow;
 }

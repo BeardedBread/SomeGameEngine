@@ -1805,15 +1805,26 @@ void container_destroy_system(Scene_t* scene)
             switch (p_container->item)
             {
                 case CONTAINER_LEFT_ARROW:
-                {
                     new_ent = create_arrow(&scene->ent_manager, &scene->engine->assets, 0);
-                    CTransform_t* new_p_ct = get_component(new_ent, CTRANSFORM_COMP_T);
-                    CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
-                    memcpy(&new_p_ct->position, &p_ct->position, sizeof(Vector2));
-                }
+                break;
+                case CONTAINER_RIGHT_ARROW:
+                    new_ent = create_arrow(&scene->ent_manager, &scene->engine->assets, 1);
+                break;
+                case CONTAINER_UP_ARROW:
+                    new_ent = create_arrow(&scene->ent_manager, &scene->engine->assets, 2);
+                break;
+                case CONTAINER_DOWN_ARROW:
+                    new_ent = create_arrow(&scene->ent_manager, &scene->engine->assets, 3);
                 break;
                 default:
+                    new_ent = NULL;
                 break;
+            }
+            if (new_ent != NULL)
+            {
+                CTransform_t* new_p_ct = get_component(new_ent, CTRANSFORM_COMP_T);
+                CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
+                memcpy(&new_p_ct->position, &p_ct->position, sizeof(Vector2));
             }
         }
     }

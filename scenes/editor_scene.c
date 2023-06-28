@@ -19,10 +19,13 @@ enum EntitySpawnSelection {
     SPAWN_CRATE,
     SPAWN_METAL_CRATE,
     SPAWN_CRATE_ARROW_L,
+    SPAWN_CRATE_ARROW_R,
+    SPAWN_CRATE_ARROW_U,
+    SPAWN_CRATE_ARROW_D,
     SPAWN_BOULDER,
 };
 
-#define MAX_SPAWN_TYPE 9
+#define MAX_SPAWN_TYPE 12
 static unsigned int current_spawn_selection = 0;
 
 #define SELECTION_TILE_SIZE 32
@@ -159,10 +162,37 @@ static void level_scene_render_func(Scene_t* scene)
                         {
                             case CONTAINER_LEFT_ARROW:
                                 DrawLine(
+                                    p_ct->position.x,
+                                    p_ct->position.y + p_bbox->half_size.y,
+                                    p_ct->position.x + p_bbox->half_size.x,
+                                    p_ct->position.y + p_bbox->half_size.y,
+                                    BLACK
+                                );
+                            break;
+                            case CONTAINER_RIGHT_ARROW:
+                                DrawLine(
                                     p_ct->position.x + p_bbox->half_size.x,
                                     p_ct->position.y + p_bbox->half_size.y,
                                     p_ct->position.x + p_bbox->size.x,
                                     p_ct->position.y + p_bbox->half_size.y,
+                                    BLACK
+                                );
+                            break;
+                            case CONTAINER_UP_ARROW:
+                                DrawLine(
+                                    p_ct->position.x + p_bbox->half_size.x,
+                                    p_ct->position.y,
+                                    p_ct->position.x + p_bbox->half_size.x,
+                                    p_ct->position.y + p_bbox->half_size.y,
+                                    BLACK
+                                );
+                            break;
+                            case CONTAINER_DOWN_ARROW:
+                                DrawLine(
+                                    p_ct->position.x + p_bbox->half_size.x,
+                                    p_ct->position.y + p_bbox->half_size.y,
+                                    p_ct->position.x + p_bbox->half_size.x,
+                                    p_ct->position.y + p_bbox->size.y,
                                     BLACK
                                 );
                             break;
@@ -171,17 +201,6 @@ static void level_scene_render_func(Scene_t* scene)
                         }
                     }
                 }
-
-                //if (p_ent->m_tag == ARROW_ENT_TAG)
-                //{
-                //    DrawLine(
-                //        p_ct->position.x + 10,
-                //        p_ct->position.y + p_bbox->half_size.y,
-                //        p_ct->position.x + p_bbox->size.x,
-                //        p_ct->position.y + p_bbox->half_size.y,
-                //        colour
-                //    );
-                //}
             }
 
             CHurtbox_t* p_hurtbox = get_component(p_ent, CHURTBOX_T);
@@ -266,7 +285,11 @@ static void level_scene_render_func(Scene_t* scene)
         );
 
         Vector2 draw_pos = {data->game_rec.x, data->game_rec.y + data->game_rec.height + SELECTION_GAP};
-        const Color draw_colour[MAX_SPAWN_TYPE] = {BLACK, MAROON, ORANGE, ColorAlpha(RAYWHITE, 0.5), ColorAlpha(BLUE, 0.5), BROWN, GRAY, BROWN, ColorAlpha(RAYWHITE, 0.5)};
+        const Color draw_colour[MAX_SPAWN_TYPE] = {
+            BLACK, MAROON, ORANGE, ColorAlpha(RAYWHITE, 0.5), ColorAlpha(BLUE, 0.5),
+            BROWN, GRAY, BROWN, BROWN, BROWN,
+            BROWN, ColorAlpha(RAYWHITE, 0.5)
+        };
         for (uint8_t i = 0; i < MAX_SPAWN_TYPE; ++i)
         {
             if (i != current_spawn_selection)
@@ -283,10 +306,37 @@ static void level_scene_render_func(Scene_t* scene)
                     break;
                     case SPAWN_CRATE_ARROW_L:
                         DrawLine(
+                            draw_pos.x,
+                            draw_pos.y + half_size.y,
+                            draw_pos.x + half_size.x,
+                            draw_pos.y + half_size.y,
+                            BLACK
+                        );
+                    break;
+                    case SPAWN_CRATE_ARROW_R:
+                        DrawLine(
                             draw_pos.x + half_size.x,
                             draw_pos.y + half_size.y,
                             draw_pos.x + half_size.x * 2,
                             draw_pos.y + half_size.y,
+                            BLACK
+                        );
+                    break;
+                    case SPAWN_CRATE_ARROW_U:
+                        DrawLine(
+                            draw_pos.x + half_size.x,
+                            draw_pos.y,
+                            draw_pos.x + half_size.x,
+                            draw_pos.y + half_size.y,
+                            BLACK
+                        );
+                    break;
+                    case SPAWN_CRATE_ARROW_D:
+                        DrawLine(
+                            draw_pos.x + half_size.x,
+                            draw_pos.y + half_size.y,
+                            draw_pos.x + half_size.x,
+                            draw_pos.y + half_size.y * 2,
                             BLACK
                         );
                     break;
@@ -312,10 +362,37 @@ static void level_scene_render_func(Scene_t* scene)
             break;
             case SPAWN_CRATE_ARROW_L:
                 DrawLine(
+                    draw_pos.x,
+                    draw_pos.y + half_size.y,
+                    draw_pos.x + half_size.x,
+                    draw_pos.y + half_size.y,
+                    BLACK
+                );
+            break;
+            case SPAWN_CRATE_ARROW_R:
+                DrawLine(
                     draw_pos.x + half_size.x,
                     draw_pos.y + half_size.y,
                     draw_pos.x + half_size.x * 2,
                     draw_pos.y + half_size.y,
+                    BLACK
+                );
+            break;
+            case SPAWN_CRATE_ARROW_U:
+                DrawLine(
+                    draw_pos.x + half_size.x,
+                    draw_pos.y,
+                    draw_pos.x + half_size.x,
+                    draw_pos.y + half_size.y,
+                    BLACK
+                );
+            break;
+            case SPAWN_CRATE_ARROW_D:
+                DrawLine(
+                    draw_pos.x + half_size.x,
+                    draw_pos.y + half_size.y,
+                    draw_pos.x + half_size.x,
+                    draw_pos.y + half_size.y * 2,
                     BLACK
                 );
             break;
@@ -436,6 +513,15 @@ static void toggle_block_system(Scene_t* scene)
             break;
             case SPAWN_CRATE_ARROW_L:
                 spawn_crate(scene, tile_idx, false, CONTAINER_LEFT_ARROW);
+            break;
+            case SPAWN_CRATE_ARROW_R:
+                spawn_crate(scene, tile_idx, false, CONTAINER_RIGHT_ARROW);
+            break;
+            case SPAWN_CRATE_ARROW_U:
+                spawn_crate(scene, tile_idx, false, CONTAINER_UP_ARROW);
+            break;
+            case SPAWN_CRATE_ARROW_D:
+                spawn_crate(scene, tile_idx, false, CONTAINER_DOWN_ARROW);
             break;
             }
             change_a_tile(&tilemap, tile_idx, new_type);

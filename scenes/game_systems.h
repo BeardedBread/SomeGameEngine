@@ -24,4 +24,7 @@ void container_destroy_system(Scene_t* scene);
 void player_dir_reset_system(Scene_t* scene);
 void player_respawn_system(Scene_t* scene);
 void spike_collision_system(Scene_t* scene);
+
+
+void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_type);
 #endif // __GAME_SYSTEMS_H

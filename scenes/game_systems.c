@@ -40,6 +40,105 @@ typedef struct CollideEntity {
     TileArea_t area;
 } CollideEntity_t;
 
+void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_type)
+{
+    tilemap->tiles[tile_idx].tile_type = new_type;
+
+    switch (new_type)
+    {
+        case EMPTY_TILE:
+            tilemap->tiles[tile_idx].solid = NOT_SOLID;
+        break;
+        case ONEWAY_TILE:
+            tilemap->tiles[tile_idx].solid = ONE_WAY;
+        break;
+        case LADDER:
+        {
+            int up_tile = tile_idx - tilemap->width;
+            if (up_tile > 0 && tilemap->tiles[up_tile].tile_type != LADDER)
+            {
+                tilemap->tiles[tile_idx].solid = ONE_WAY;
+            }
+            else
+            {
+                tilemap->tiles[tile_idx].solid = NOT_SOLID;
+            }
+            int down_tile = tile_idx + tilemap->width;
+            if (down_tile < tilemap->n_tiles && tilemap->tiles[down_tile].tile_type == LADDER)
+            {
+                tilemap->tiles[down_tile].solid = (tilemap->tiles[tile_idx].tile_type != LADDER)? ONE_WAY : NOT_SOLID;
+            }
+        }
+        break;
+        case SPIKES:
+            tilemap->tiles[tile_idx].solid = NOT_SOLID;
+        break;
+        case SOLID_TILE:
+            tilemap->tiles[tile_idx].solid = SOLID;
+        break;
+    }
+
+    if (new_type == SPIKES)
+    {
+        // Priority: Down, Up, Left, Right
+        if (tile_idx + tilemap->width < tilemap->n_tiles && tilemap->tiles[tile_idx + tilemap->width].tile_type == SOLID_TILE)
+        {
+            tilemap->tiles[tile_idx].offset = (Vector2){0,16};
+            tilemap->tiles[tile_idx].size = (Vector2){32,16};
+        }
+        else if (tile_idx - tilemap->width >= 0 && tilemap->tiles[tile_idx - tilemap->width].tile_type == SOLID_TILE)
+        {
+            tilemap->tiles[tile_idx].offset = (Vector2){0,0};
+            tilemap->tiles[tile_idx].size = (Vector2){32,16};
+        }
+        else if (tile_idx % tilemap->width != 0 && tilemap->tiles[tile_idx - 1].tile_type == SOLID_TILE)
+        {
+            tilemap->tiles[tile_idx].offset = (Vector2){0,0};
+            tilemap->tiles[tile_idx].size = (Vector2){16,32};
+        }
+        else if ((tile_idx + 1) % tilemap->width != 0 && tilemap->tiles[tile_idx + 1].tile_type == SOLID_TILE)
+        {
+            tilemap->tiles[tile_idx].offset = (Vector2){16,0};
+            tilemap->tiles[tile_idx].size = (Vector2){16,32};
+        }
+        else
+        {
+            tilemap->tiles[tile_idx].offset = (Vector2){0,16};
+            tilemap->tiles[tile_idx].size = (Vector2){32,16};
+        }
+    }
+    else if (new_type == ONEWAY_TILE)
+    {
+        tilemap->tiles[tile_idx].offset = (Vector2){0,0};
+        tilemap->tiles[tile_idx].size = (Vector2){32,10};
+    }
+    else
+    {
+        tilemap->tiles[tile_idx].offset = (Vector2){0,0};
+        tilemap->tiles[tile_idx].size = (Vector2){32,32};
+    }
+
+    tilemap->tiles[tile_idx].moveable = (
+        tilemap->tiles[tile_idx].tile_type == EMPTY_TILE
+        || tilemap->tiles[tile_idx].tile_type == SPIKES
+    );
+    tilemap->tiles[tile_idx].def = (tilemap->tiles[tile_idx].tile_type == SOLID_TILE) ? 5: 2;
+
+}
+
+static inline void remove_entity_from_tilemap(EntityManager_t *p_manager, TileGrid_t* tilemap, Entity_t* p_ent)
+{
+    CTileCoord_t* p_tilecoord = get_component(p_ent, CTILECOORD_COMP_T);
+    for (size_t i = 0;i < p_tilecoord->n_tiles; ++i)
+    {
+        // Use previously store tile position
+        // Clear from those positions
+        unsigned int tile_idx = p_tilecoord->tiles[i];
+        sc_map_del_64v(&(tilemap->tiles[tile_idx].entities_set), p_ent->m_id);
+    }
+    remove_entity(p_manager, p_ent->m_id);
+}
+
 // ------------------------- Collision functions ------------------------------------
 // Do not subtract one for the size for any collision check, just pass normally. The extra one is important for AABB test
 static uint8_t check_collision(const CollideEntity_t* ent, TileGrid_t* grid, bool check_oneway)
@@ -1352,36 +1451,49 @@ void movement_update_system(Scene_t* scene)
         // Level boundary collision
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
-        if (p_bbox == NULL) continue;
-
         unsigned int level_width = tilemap.width * TILE_SIZE;
-        if(p_ctransform->position.x < 0 || p_ctransform->position.x + p_bbox->size.x > level_width)
-        {
-            p_ctransform->position.x = (p_ctransform->position.x < 0) ? 0 : p_ctransform->position.x;
-            if (p_ctransform->position.x + p_bbox->size.x > level_width)
-            {
-                p_ctransform->position.x =  level_width - p_bbox->size.x;
-            }
-            else
-            {
-                p_ctransform->position.x = p_ctransform->position.x;
-            }
-            p_ctransform->velocity.x = 0;
-        }
-        
         unsigned int level_height = tilemap.height * TILE_SIZE;
-        if(p_ctransform->position.y < 0 || p_ctransform->position.y + p_bbox->size.y > level_height)
+        if (p_bbox != NULL)
         {
-            p_ctransform->position.y = (p_ctransform->position.y < 0) ? 0 : p_ctransform->position.y;
-            if (p_ctransform->position.y + p_bbox->size.y > level_height)
+
+            if(p_ctransform->position.x < 0 || p_ctransform->position.x + p_bbox->size.x > level_width)
             {
-                p_ctransform->position.y = level_height - p_bbox->size.y;
+                p_ctransform->position.x = (p_ctransform->position.x < 0) ? 0 : p_ctransform->position.x;
+                if (p_ctransform->position.x + p_bbox->size.x > level_width)
+                {
+                    p_ctransform->position.x =  level_width - p_bbox->size.x;
+                }
+                else
+                {
+                    p_ctransform->position.x = p_ctransform->position.x;
+                }
+                p_ctransform->velocity.x = 0;
             }
-            else
+            
+            if(p_ctransform->position.y < 0 || p_ctransform->position.y + p_bbox->size.y > level_height)
             {
-                p_ctransform->position.y = p_ctransform->position.y;
+                p_ctransform->position.y = (p_ctransform->position.y < 0) ? 0 : p_ctransform->position.y;
+                if (p_ctransform->position.y + p_bbox->size.y > level_height)
+                {
+                    p_ctransform->position.y = level_height - p_bbox->size.y;
+                }
+                else
+                {
+                    p_ctransform->position.y = p_ctransform->position.y;
+                }
+                p_ctransform->velocity.y = 0;
             }
-            p_ctransform->velocity.y = 0;
+        }
+        else
+        {
+            if (
+                p_ctransform->position.x < 0 || p_ctransform->position.x > level_width
+                || p_ctransform->position.y < 0 || p_ctransform->position.y > level_height
+            )
+            {
+                remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_ent);
+            }
+        
         }
     }
 }
@@ -1557,7 +1669,31 @@ void hitbox_update_system(Scene_t* scene)
                     unsigned int tile_idx = tile_y * tilemap.width + tile_x;
                     unsigned int other_ent_idx;
                     Entity_t* p_other_ent;
+                    Vector2 overlap;
                     //memset(checked_entities, 0, sizeof(checked_entities));
+
+                    if (tilemap.tiles[tile_idx].tile_type != EMPTY_TILE)
+                    {
+                        Vector2 tile_pos = {tile_x * TILE_SIZE, tile_y * TILE_SIZE};
+                        tile_pos = Vector2Add(tile_pos, tilemap.tiles[tile_idx].offset);
+                        if (
+                            find_AABB_overlap(
+                                hitbox_pos, (Vector2){p_hitbox->boxes[i].width, p_hitbox->boxes[i].height},
+                                tile_pos, tilemap.tiles[tile_idx].size, &overlap
+                            )
+                        )
+                        {
+                            if (p_hitbox->atk > tilemap.tiles[tile_idx].def)
+                            {
+                                change_a_tile(&tilemap, tile_idx, EMPTY_TILE);
+                            }
+                            if (p_hitbox->one_hit)
+                            {
+                                remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_ent);
+                                goto hitbox_done;
+                            }
+                        }
+                    }
                     sc_map_foreach(&tilemap.tiles[tile_idx].entities_set, other_ent_idx, p_other_ent)
                     {
                         if (other_ent_idx == ent_idx) continue;
@@ -1573,7 +1709,6 @@ void hitbox_update_system(Scene_t* scene)
                         Vector2 hurtbox_pos = Vector2Add(p_other_ct->position, p_other_hurtbox->offset);
                         if (p_hitbox->atk <= p_other_hurtbox->def) continue;
 
-                        Vector2 overlap;
                         if (
                             find_AABB_overlap(
                                 hitbox_pos, (Vector2){p_hitbox->boxes[i].width, p_hitbox->boxes[i].height},
@@ -1601,31 +1736,11 @@ void hitbox_update_system(Scene_t* scene)
                                     }
                                 }
                             }
-                            CTileCoord_t* p_tilecoord = get_component(
-                                p_other_ent, CTILECOORD_COMP_T
-                            );
+                            remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_other_ent);
 
-                            for (size_t i = 0;i < p_tilecoord->n_tiles; ++i)
-                            {
-                                // Use previously store tile position
-                                // Clear from those positions
-                                unsigned int tile_idx = p_tilecoord->tiles[i];
-                                sc_map_del_64v(&(tilemap.tiles[tile_idx].entities_set), other_ent_idx);
-                            }
-                            remove_entity(&scene->ent_manager, other_ent_idx);
                             if (p_hitbox->one_hit)
                             {
-                                p_tilecoord = get_component(
-                                    p_ent, CTILECOORD_COMP_T
-                                );
-                                for (size_t i = 0;i < p_tilecoord->n_tiles; ++i)
-                                {
-                                    // Use previously store tile position
-                                    // Clear from those positions
-                                    unsigned int tile_idx = p_tilecoord->tiles[i];
-                                    sc_map_del_64v(&(tilemap.tiles[tile_idx].entities_set), ent_idx);
-                                }
-                                remove_entity(&scene->ent_manager, ent_idx);
+                                remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_ent);
                                 goto hitbox_done;
                             }
                         }

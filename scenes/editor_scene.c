@@ -398,70 +398,24 @@ static void toggle_block_system(Scene_t* scene)
         if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
         {
             enum EntitySpawnSelection sel = (enum EntitySpawnSelection)current_spawn_selection;
+            TileType_t new_type = EMPTY_TILE;
             switch (sel)
             {
             case TOGGLE_TILE:
-                if (tilemap.tiles[tile_idx].tile_type == SOLID_TILE)
-                {
-                    tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
-                    tilemap.tiles[tile_idx].solid = NOT_SOLID;
-                }
-                else
-                {
-                    tilemap.tiles[tile_idx].tile_type = SOLID_TILE;
-                    tilemap.tiles[tile_idx].solid = SOLID;
-                }
-                tilemap.tiles[tile_idx].water_level = 0;
+                new_type = (tilemap.tiles[tile_idx].tile_type == SOLID_TILE)? EMPTY_TILE : SOLID_TILE;
+                if (new_type == SOLID_TILE) tilemap.tiles[tile_idx].water_level = 0;
             break;
             case TOGGLE_ONEWAY:
-                if (tilemap.tiles[tile_idx].tile_type == ONEWAY_TILE)
-                {
-                    tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
-                    tilemap.tiles[tile_idx].solid = NOT_SOLID;
-                }
-                else
-                {
-                    tilemap.tiles[tile_idx].tile_type = ONEWAY_TILE;
-                    tilemap.tiles[tile_idx].solid = ONE_WAY;
-                }
+                new_type = (tilemap.tiles[tile_idx].tile_type == ONEWAY_TILE)? EMPTY_TILE : ONEWAY_TILE;
             break;
             case TOGGLE_LADDER:
-                if (tilemap.tiles[tile_idx].tile_type == LADDER)
-                {
-                    tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
-                    tilemap.tiles[tile_idx].solid = NOT_SOLID;
-                }
-                else
-                {
-                    tilemap.tiles[tile_idx].tile_type = LADDER;
-                    int up_tile = tile_idx - tilemap.width;
-                    if (up_tile > 0 && tilemap.tiles[up_tile].tile_type != LADDER)
-                    {
-                        tilemap.tiles[tile_idx].solid = ONE_WAY;
-                    }
-                    else
-                    {
-                        tilemap.tiles[tile_idx].solid = NOT_SOLID;
-                    }
-                }
-                int down_tile = tile_idx + tilemap.width;
-                if (down_tile < MAX_N_TILES && tilemap.tiles[down_tile].tile_type == LADDER)
-                {
-                    tilemap.tiles[down_tile].solid = (tilemap.tiles[tile_idx].tile_type != LADDER)? ONE_WAY : NOT_SOLID;
-                }
+                new_type = (tilemap.tiles[tile_idx].tile_type == LADDER)? EMPTY_TILE : LADDER;
             break;
             case TOGGLE_SPIKE:
-                if (tilemap.tiles[tile_idx].tile_type == SPIKES)
-                {
-                    tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
-                }
-                else
-                {
-                    tilemap.tiles[tile_idx].tile_type = SPIKES;
-                }
-                tilemap.tiles[tile_idx].solid = NOT_SOLID;
+                new_type = (tilemap.tiles[tile_idx].tile_type == SPIKES)? EMPTY_TILE : SPIKES;
             break;
             case TOGGLE_WATER:
+                new_type = tilemap.tiles[tile_idx].tile_type;
                 if (tilemap.tiles[tile_idx].water_level == 0)
                 {
                     tilemap.tiles[tile_idx].water_level = MAX_WATER_LEVEL;
@@ -484,53 +438,13 @@ static void toggle_block_system(Scene_t* scene)
                 spawn_crate(scene, tile_idx, false, CONTAINER_LEFT_ARROW);
             break;
             }
-
-            if (tilemap.tiles[tile_idx].tile_type == SPIKES)
-            {
-            // Priority: Down, Up, Left, Right
-            if (tile_idx + tilemap.width < MAX_N_TILES && tilemap.tiles[tile_idx + tilemap.width].tile_type == SOLID_TILE)
-            {
-                tilemap.tiles[tile_idx].offset = (Vector2){0,16};
-                tilemap.tiles[tile_idx].size = (Vector2){32,16};
-            }
-            else if (tile_idx - tilemap.width >= 0 && tilemap.tiles[tile_idx - tilemap.width].tile_type == SOLID_TILE)
-            {
-                tilemap.tiles[tile_idx].offset = (Vector2){0,0};
-                tilemap.tiles[tile_idx].size = (Vector2){32,16};
-            }
-            else if (tile_idx % tilemap.width != 0 && tilemap.tiles[tile_idx - 1].tile_type == SOLID_TILE)
-            {
-                tilemap.tiles[tile_idx].offset = (Vector2){0,0};
-                tilemap.tiles[tile_idx].size = (Vector2){16,32};
-            }
-            else if ((tile_idx + 1) % tilemap.width != 0 && tilemap.tiles[tile_idx + 1].tile_type == SOLID_TILE)
-            {
-                tilemap.tiles[tile_idx].offset = (Vector2){16,0};
-                tilemap.tiles[tile_idx].size = (Vector2){16,32};
-            }
-            else
-            {
-                tilemap.tiles[tile_idx].offset = (Vector2){0,16};
-                tilemap.tiles[tile_idx].size = (Vector2){32,16};
-            }
-            }
-            else
-            {
-            tilemap.tiles[tile_idx].offset = (Vector2){0,0};
-            tilemap.tiles[tile_idx].size = (Vector2){32,32};
-            }
+            change_a_tile(&tilemap, tile_idx, new_type);
             last_tile_idx = tile_idx;
-            tilemap.tiles[tile_idx].moveable = (
-                tilemap.tiles[tile_idx].tile_type == EMPTY_TILE
-                || tilemap.tiles[tile_idx].tile_type == SPIKES
-            );
         }
         else if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
         {
-            tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
-            tilemap.tiles[tile_idx].solid = NOT_SOLID;
+            change_a_tile(&tilemap, tile_idx, EMPTY_TILE);
             tilemap.tiles[tile_idx].water_level = 0;
-            tilemap.tiles[tile_idx].moveable = true;
 
             Entity_t* ent;
             unsigned int m_id;
@@ -671,7 +585,7 @@ void init_level_scene(LevelScene_t* scene)
     assert(scene->data.tilemap.n_tiles <= MAX_N_TILES);
     scene->data.tilemap.tiles = all_tiles;
     memset(scene->data.tile_sprites, 0, sizeof(scene->data.tile_sprites));
-    for (size_t i = 0; i < MAX_N_TILES;i++)
+    for (size_t i = 0; i < scene->data.tilemap.n_tiles;i++)
     {
         all_tiles[i].solid = NOT_SOLID;
         all_tiles[i].tile_type = EMPTY_TILE;
@@ -682,9 +596,7 @@ void init_level_scene(LevelScene_t* scene)
     for (size_t i = 0; i < scene->data.tilemap.width; ++i)
     {
         unsigned int tile_idx = (scene->data.tilemap.height - 1) * scene->data.tilemap.width + i;
-        all_tiles[tile_idx].solid = SOLID; // for testing
-        all_tiles[tile_idx].tile_type = SOLID_TILE; // for testing
-        all_tiles[tile_idx].moveable = false;
+        change_a_tile(&scene->data.tilemap, tile_idx, SOLID_TILE);
     }
 
     create_player(&scene->scene.ent_manager, &scene->scene.engine->assets);
@@ -694,7 +606,7 @@ void init_level_scene(LevelScene_t* scene)
 void free_level_scene(LevelScene_t* scene)
 {
     free_scene(&scene->scene);
-    for (size_t i = 0; i < MAX_N_TILES;i++)
+    for (size_t i = 0; i < scene->data.tilemap.n_tiles;i++)
     {
         all_tiles[i].solid = 0;
         sc_map_term_64v(&all_tiles[i].entities_set);

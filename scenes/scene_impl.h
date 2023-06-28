@@ -30,6 +30,7 @@ typedef enum SolidType
 typedef struct Tile {
     TileType_t tile_type;
     SolidType_t solid;
+    uint8_t def;
     unsigned int water_level;
     struct sc_map_64v entities_set;
     Vector2 offset;

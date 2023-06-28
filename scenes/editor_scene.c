@@ -17,7 +17,6 @@ enum EntitySpawnSelection {
     TOGGLE_SPIKE,
     TOGGLE_WATER,
     SPAWN_CRATE,
-    SPAWN_METAL_CRATE,
     SPAWN_CRATE_ARROW_L,
     SPAWN_CRATE_ARROW_R,
     SPAWN_CRATE_ARROW_U,
@@ -25,8 +24,9 @@ enum EntitySpawnSelection {
     SPAWN_BOULDER,
 };
 
-#define MAX_SPAWN_TYPE 12
+#define MAX_SPAWN_TYPE 11
 static unsigned int current_spawn_selection = 0;
+static bool metal_toggle = false;
 
 #define SELECTION_TILE_SIZE 32
 #define SELECTION_TILE_HALFSIZE (SELECTION_TILE_SIZE >> 1)
@@ -57,8 +57,7 @@ static char* get_spawn_selection_string(enum EntitySpawnSelection sel)
         case TOGGLE_LADDER: return "ladder";
         case TOGGLE_SPIKE: return "spike";
         case TOGGLE_WATER: return "water";
-        case SPAWN_CRATE: return "wooden crate";
-        case SPAWN_METAL_CRATE: return "metal crate";
+        case SPAWN_CRATE: return "crate";
         case SPAWN_BOULDER: return "boulder";
         default: return "unknown";
     }
@@ -285,10 +284,11 @@ static void level_scene_render_func(Scene_t* scene)
         );
 
         Vector2 draw_pos = {data->game_rec.x, data->game_rec.y + data->game_rec.height + SELECTION_GAP};
+        const Color crate_colour = metal_toggle ? GRAY : BROWN;
         const Color draw_colour[MAX_SPAWN_TYPE] = {
             BLACK, MAROON, ORANGE, ColorAlpha(RAYWHITE, 0.5), ColorAlpha(BLUE, 0.5),
-            BROWN, GRAY, BROWN, BROWN, BROWN,
-            BROWN, ColorAlpha(RAYWHITE, 0.5)
+            crate_colour, crate_colour, crate_colour, crate_colour, crate_colour,
+            ColorAlpha(RAYWHITE, 0.5)
         };
         for (uint8_t i = 0; i < MAX_SPAWN_TYPE; ++i)
         {
@@ -503,25 +503,22 @@ static void toggle_block_system(Scene_t* scene)
                 }
             break;
             case SPAWN_CRATE:
-                spawn_crate(scene, tile_idx, false, CONTAINER_EMPTY);
-            break;
-            case SPAWN_METAL_CRATE:
-                spawn_crate(scene, tile_idx, true, CONTAINER_EMPTY);
+                spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_EMPTY);
             break;
             case SPAWN_BOULDER:
                 spawn_boulder(scene, tile_idx);
             break;
             case SPAWN_CRATE_ARROW_L:
-                spawn_crate(scene, tile_idx, false, CONTAINER_LEFT_ARROW);
+                spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_LEFT_ARROW);
             break;
             case SPAWN_CRATE_ARROW_R:
-                spawn_crate(scene, tile_idx, false, CONTAINER_RIGHT_ARROW);
+                spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_RIGHT_ARROW);
             break;
             case SPAWN_CRATE_ARROW_U:
-                spawn_crate(scene, tile_idx, false, CONTAINER_UP_ARROW);
+                spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_UP_ARROW);
             break;
             case SPAWN_CRATE_ARROW_D:
-                spawn_crate(scene, tile_idx, false, CONTAINER_DOWN_ARROW);
+                spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_DOWN_ARROW);
             break;
             }
             change_a_tile(&tilemap, tile_idx, new_type);
@@ -610,6 +607,9 @@ void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
                     current_spawn_selection--;
                 }
             break;
+            case ACTION_METAL_TOGGLE:
+                if (!pressed) metal_toggle = !metal_toggle;
+            break;
             case ACTION_EXIT:
                 if(scene->engine != NULL)
                 {
@@ -663,6 +663,7 @@ void init_level_scene(LevelScene_t* scene)
     sc_map_put_64(&scene->scene.action_map, KEY_SPACE, ACTION_JUMP);
     sc_map_put_64(&scene->scene.action_map, KEY_O, ACTION_PREV_SPAWN);
     sc_map_put_64(&scene->scene.action_map, KEY_P, ACTION_NEXT_SPAWN);
+    sc_map_put_64(&scene->scene.action_map, KEY_M, ACTION_METAL_TOGGLE);
     sc_map_put_64(&scene->scene.action_map, KEY_Q, ACTION_EXIT);
 
     scene->data.tilemap.width = DEFAULT_MAP_WIDTH;

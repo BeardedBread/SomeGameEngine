@@ -7,7 +7,7 @@
 #include "sc/queue/sc_queue.h"
 
 #define N_TAGS 8
-#define N_COMPONENTS 11
+#define N_COMPONENTS 12
 #define MAX_COMP_POOL_SIZE 1024
 typedef struct EntityManager EntityManager_t;
 typedef struct Entity Entity_t;
@@ -24,6 +24,7 @@ typedef enum ComponentEnum {
     CHURTBOX_T,
     CSPRITE_T,
     CMOVEABLE_T,
+    CLIFETIMER_T,
 } ComponentEnum_t;
 
 typedef enum MovementMode {
@@ -94,6 +95,7 @@ typedef enum ContainerItem {
     CONTAINER_DOWN_ARROW,
     CONTAINER_COIN,
     CONTAINER_BOMB,
+    CONTAINER_EXPLOSION,
 } ContainerItem_t;
 
 typedef enum ContainerMaterial {
@@ -118,6 +120,11 @@ typedef struct _CHurtbox_t {
     Vector2 size;
     uint8_t def;
 } CHurtbox_t;
+
+typedef struct _CLifeTimer_t {
+    uint8_t timer;
+    uint8_t life_time;
+} CLifeTimer_t;
 
 // Credits to bedroomcoders.co.uk for this
 typedef struct Sprite {
@@ -170,6 +177,22 @@ struct Entity {
     EntityManager_t* manager;
 };
 
+enum EntityUpdateEvent
+{
+    COMP_ADDTION,
+    COMP_DELETION,
+};
+
+struct EntityUpdateEventInfo
+{
+    unsigned long e_id;
+    ComponentEnum_t comp_type;
+    unsigned long c_id;
+    enum EntityUpdateEvent evt_type;
+};
+
+sc_queue_def(struct EntityUpdateEventInfo, ent_evt);
+
 struct EntityManager {
     // All fields are Read-Only
     struct sc_map_64v entities; // ent id : entity
@@ -177,6 +200,7 @@ struct EntityManager {
     struct sc_map_64v component_map[N_COMPONENTS]; // [{ent id: comp}, ...]
     struct sc_queue_uint to_add;
     struct sc_queue_uint to_remove;
+    struct sc_queue_ent_evt to_update;
 };
 
 void init_entity_manager(EntityManager_t* p_manager);

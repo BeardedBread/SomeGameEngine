@@ -13,6 +13,7 @@ void init_entity_manager(EntityManager_t* p_manager)
     }
     sc_queue_init(&p_manager->to_add);
     sc_queue_init(&p_manager->to_remove);
+    sc_queue_init(&p_manager->to_update);
 }
 
 void update_entity_manager(EntityManager_t* p_manager)
@@ -28,21 +29,35 @@ void update_entity_manager(EntityManager_t* p_manager)
         if (!p_entity) continue;
         for (size_t i = 0; i < N_COMPONENTS; ++i)
         {
-            if (p_entity->components[i] == MAX_COMP_POOL_SIZE) continue;
-
-            free_component_to_mempool((ComponentEnum_t)i, p_entity->components[i]);
-            sc_map_del_64v(&p_manager->component_map[i], e_idx);
-            sc_map_del_64v(&p_manager->entities_map[p_entity->m_tag], e_idx);
+            remove_component(p_entity, i);
         }
+        sc_map_del_64v(&p_manager->entities_map[p_entity->m_tag], e_idx);
         free_entity_to_mempool(e_idx);
         sc_map_del_64v(&p_manager->entities, e_idx);
     }
     sc_queue_clear(&p_manager->to_remove);
+
     sc_queue_foreach (&p_manager->to_add, e_idx)
     {
         Entity_t *p_entity = get_entity_wtih_id(e_idx);
         sc_map_put_64v(&p_manager->entities, e_idx, (void *)p_entity);
         sc_map_put_64v(&p_manager->entities_map[p_entity->m_tag], e_idx, (void *)p_entity);
+    }
+    sc_queue_clear(&p_manager->to_add);
+
+    struct EntityUpdateEventInfo evt;
+    sc_queue_foreach (&p_manager->to_update, evt)
+    {
+        switch(evt.evt_type)
+        {
+            case COMP_ADDTION:
+                sc_map_put_64v(&p_manager->component_map[evt.comp_type], evt.e_id, get_component_wtih_id(evt.comp_type, evt.c_id));
+            break;
+            case COMP_DELETION:
+                sc_map_del_64v(&p_manager->component_map[evt.comp_type], evt.e_id);
+                free_component_to_mempool(evt.comp_type, evt.c_id);
+            break;
+        }
     }
     sc_queue_clear(&p_manager->to_add);
 }
@@ -72,6 +87,7 @@ void free_entity_manager(EntityManager_t* p_manager)
     }
     sc_queue_term(&p_manager->to_add);
     sc_queue_term(&p_manager->to_remove);
+    sc_queue_term(&p_manager->to_update);
 }
 
 Entity_t *add_entity(EntityManager_t* p_manager, unsigned int tag)
@@ -107,17 +123,15 @@ Entity_t* get_entity(EntityManager_t* p_manager, unsigned long id)
     return p_entity;
 }
 
-// Components are not expected to be removed
-// So, no need to extra steps to deal with iterator invalidation
 void* add_component(Entity_t* p_entity, ComponentEnum_t comp_type)
 {
-    unsigned long comp_type_idx = (unsigned long)comp_type;
     unsigned long comp_idx = 0;
     void* p_comp = new_component_from_mempool(comp_type, &comp_idx);
     if (p_comp)
     {
         p_entity->components[comp_type] = comp_idx;
-        sc_map_put_64v(&p_entity->manager->component_map[comp_type_idx], p_entity->m_id, p_comp);
+        struct EntityUpdateEventInfo evt = (struct EntityUpdateEventInfo){p_entity->m_id, comp_type, comp_idx, COMP_ADDTION};
+        sc_queue_add_last(&p_entity->manager->to_update, evt);
     }
     return p_comp;
 }
@@ -125,15 +139,14 @@ void* add_component(Entity_t* p_entity, ComponentEnum_t comp_type)
 void* get_component(Entity_t *p_entity, ComponentEnum_t comp_type)
 {
     unsigned long comp_type_idx = (unsigned long)comp_type;
-    void * p_comp = sc_map_get_64v(&p_entity->manager->component_map[comp_type_idx], p_entity->m_id);
-    if (!sc_map_found(&p_entity->manager->component_map[comp_type_idx])) return NULL;
-    return p_comp;
+    unsigned long c_idx = p_entity->components[comp_type_idx];
+    if (c_idx == MAX_COMP_POOL_SIZE) return NULL;
+    return get_component_wtih_id(comp_type, c_idx);
 }
 
 void remove_component(Entity_t *p_entity, ComponentEnum_t comp_type)
 {
-    unsigned long comp_type_idx = (unsigned long)comp_type;
     if (p_entity->components[comp_type] == MAX_COMP_POOL_SIZE) return;
-    sc_map_del_64v(&p_entity->manager->component_map[comp_type_idx], p_entity->m_id);
-    free_component_to_mempool(comp_type, p_entity->components[comp_type]);
+    struct EntityUpdateEventInfo evt = (struct EntityUpdateEventInfo){p_entity->m_id, comp_type, p_entity->components[comp_type] , COMP_DELETION};
+    sc_queue_add_last(&p_entity->manager->to_update, evt);
 }

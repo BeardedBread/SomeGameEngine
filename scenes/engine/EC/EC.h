@@ -119,6 +119,7 @@ typedef struct _CHurtbox_t {
     Vector2 offset;
     Vector2 size;
     uint8_t def;
+    unsigned int damage_src;
 } CHurtbox_t;
 
 typedef struct _CLifeTimer_t {

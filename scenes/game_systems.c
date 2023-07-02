@@ -1675,6 +1675,7 @@ void hitbox_update_system(Scene_t* scene)
                 for (unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
                 {
                     unsigned int tile_idx = tile_y * tilemap.width + tile_x;
+                    if (tile_idx >= tilemap.n_tiles) break;
                     unsigned int other_ent_idx;
                     Entity_t* p_other_ent;
                     Vector2 overlap;
@@ -1725,6 +1726,7 @@ void hitbox_update_system(Scene_t* scene)
                         {
                             if (p_hitbox->atk > p_other_hurtbox->def)
                             {
+                                p_other_hurtbox->damage_src = ent_idx;
                                 if (p_other_ent->m_tag == CRATES_ENT_TAG)
                                 {
 
@@ -1811,6 +1813,14 @@ void container_destroy_system(Scene_t* scene)
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         if (!p_ent->m_alive)
         {
+
+            Entity_t* dmg_src = NULL;
+            CHurtbox_t* p_hurtbox = get_component(p_ent, CHURTBOX_T);
+            if(p_hurtbox != NULL)
+            {
+                dmg_src = get_entity(&scene->ent_manager, p_hurtbox->damage_src);
+            }
+
             Entity_t* new_ent;
             switch (p_container->item)
             {
@@ -1827,7 +1837,27 @@ void container_destroy_system(Scene_t* scene)
                     new_ent = create_arrow(&scene->ent_manager, &scene->engine->assets, 3);
                 break;
                 case CONTAINER_BOMB:
-                    new_ent = create_bomb(&scene->ent_manager, &scene->engine->assets, (Vector2){0, -1});
+                    if (dmg_src != NULL && dmg_src->m_tag == PLAYER_ENT_TAG)
+                    {
+                        const CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
+                        const CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+                        const CTransform_t* dmg_src_ctransform = get_component(dmg_src, CTRANSFORM_COMP_T);
+                        const CBBox_t* dmg_src_bbox = get_component(dmg_src, CBBOX_COMP_T);
+                        Vector2 launch_dir = {0, -1};
+                        if (dmg_src_ctransform->position.x + dmg_src_bbox->size.x <= p_ctransform->position.x)
+                        {
+                            launch_dir.x = 1;
+                        }
+                        else if (dmg_src_ctransform->position.x >= p_ctransform->position.x + p_bbox->size.x)
+                        {
+                            launch_dir.x = -1;
+                        }
+                        new_ent = create_bomb(&scene->ent_manager, &scene->engine->assets, launch_dir);
+                    }
+                    else
+                    {
+                        new_ent = create_explosion(&scene->ent_manager, &scene->engine->assets);
+                    }
                 break;
                 case CONTAINER_EXPLOSION:
                     new_ent = create_explosion(&scene->ent_manager, &scene->engine->assets);

@@ -1,5 +1,6 @@
 #include "ent_impl.h"
 #include "constants.h"
+#include "raymath.h"
 
 Entity_t* create_crate(EntityManager_t* ent_manager, Assets_t* assets, bool metal, ContainerItem_t item)
 {
@@ -51,7 +52,7 @@ Entity_t* create_boulder(EntityManager_t* ent_manager, Assets_t* assets)
 
 Entity_t* create_arrow(EntityManager_t* ent_manager, Assets_t* assets, uint8_t dir)
 {
-    Entity_t* p_arrow = add_entity(ent_manager, ARROW_ENT_TAG);
+    Entity_t* p_arrow = add_entity(ent_manager, DESTRUCTABLE_ENT_TAG);
     add_component(p_arrow, CTILECOORD_COMP_T);
     CHitBoxes_t* p_hitbox = add_component(p_arrow, CHITBOXES_T);
     p_hitbox->n_boxes = 1;
@@ -85,4 +86,24 @@ Entity_t* create_arrow(EntityManager_t* ent_manager, Assets_t* assets, uint8_t d
     }
 
     return p_arrow;
+}
+
+Entity_t* create_bomb(EntityManager_t* ent_manager, Assets_t* assets, Vector2 launch_dir)
+{
+    Entity_t* p_bomb = add_entity(ent_manager, DESTRUCTABLE_ENT_TAG);
+    add_component(p_bomb, CTILECOORD_COMP_T);
+    add_component(p_bomb, CMOVEMENTSTATE_T);
+    CHitBoxes_t* p_hitbox = add_component(p_bomb, CHITBOXES_T);
+    p_hitbox->n_boxes = 1;
+    p_hitbox->boxes[0] = (Rectangle){0, 0, TILE_SIZE, TILE_SIZE};
+
+    p_hitbox->atk = 0;
+    p_hitbox->one_hit = true;
+
+    CTransform_t* p_ctransform = add_component(p_bomb, CTRANSFORM_COMP_T);
+    p_ctransform->active = true; 
+    p_ctransform->movement_mode = REGULAR_MOVEMENT;
+
+    p_ctransform->velocity = Vector2Scale(Vector2Normalize(launch_dir), 500);
+    return p_bomb;
 }

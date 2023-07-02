@@ -21,10 +21,11 @@ enum EntitySpawnSelection {
     SPAWN_CRATE_ARROW_R,
     SPAWN_CRATE_ARROW_U,
     SPAWN_CRATE_ARROW_D,
+    SPAWN_CRATE_BOMB,
     SPAWN_BOULDER,
 };
 
-#define MAX_SPAWN_TYPE 11
+#define MAX_SPAWN_TYPE 12
 static unsigned int current_spawn_selection = 0;
 static bool metal_toggle = false;
 
@@ -195,6 +196,9 @@ static void level_scene_render_func(Scene_t* scene)
                                     BLACK
                                 );
                             break;
+                            case CONTAINER_BOMB:
+                                DrawCircleV(Vector2Add(p_ct->position, p_bbox->half_size), p_bbox->half_size.x, BLACK);
+                            break;
                             default:
                             break;
                         }
@@ -287,7 +291,7 @@ static void level_scene_render_func(Scene_t* scene)
         const Color crate_colour = metal_toggle ? GRAY : BROWN;
         const Color draw_colour[MAX_SPAWN_TYPE] = {
             BLACK, MAROON, ORANGE, ColorAlpha(RAYWHITE, 0.5), ColorAlpha(BLUE, 0.5),
-            crate_colour, crate_colour, crate_colour, crate_colour, crate_colour,
+            crate_colour, crate_colour, crate_colour, crate_colour, crate_colour, crate_colour,
             ColorAlpha(RAYWHITE, 0.5)
         };
         for (uint8_t i = 0; i < MAX_SPAWN_TYPE; ++i)
@@ -339,6 +343,9 @@ static void level_scene_render_func(Scene_t* scene)
                             draw_pos.y + half_size.y * 2,
                             BLACK
                         );
+                    break;
+                    case SPAWN_CRATE_BOMB:
+                        DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, BLACK);
                     break;
                 }
             }
@@ -395,6 +402,9 @@ static void level_scene_render_func(Scene_t* scene)
                     draw_pos.y + half_size.y * 2,
                     BLACK
                 );
+            break;
+            case SPAWN_CRATE_BOMB:
+                DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, BLACK);
             break;
         }
 
@@ -519,6 +529,9 @@ static void toggle_block_system(Scene_t* scene)
             break;
             case SPAWN_CRATE_ARROW_D:
                 spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_DOWN_ARROW);
+            break;
+            case SPAWN_CRATE_BOMB:
+                spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_BOMB);
             break;
             }
             change_a_tile(&tilemap, tile_idx, new_type);

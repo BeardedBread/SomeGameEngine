@@ -1114,6 +1114,12 @@ void global_external_forces_system(Scene_t* scene)
             continue;
         }
 
+        Vector2 half_size = {0, 0};
+        if (p_bbox != NULL)
+        {
+            half_size = p_bbox->half_size;
+        }
+
         if (!(p_mstate->ground_state & 1))
         {
             // Only apply upthrust if center is in water
@@ -1121,8 +1127,8 @@ void global_external_forces_system(Scene_t* scene)
             if (p_mstate->water_state & 1)
             {
                 unsigned int tile_idx = get_tile_idx(
-                    p_ctransform->position.x + p_bbox->half_size.x,
-                    p_ctransform->position.y + p_bbox->half_size.y,
+                    p_ctransform->position.x + half_size.x,
+                    p_ctransform->position.y + half_size.y,
                     data->tilemap.width
                 );
 
@@ -1139,6 +1145,8 @@ void global_external_forces_system(Scene_t* scene)
             p_ctransform->accel,
             Vector2Multiply(p_ctransform->fric_coeff, p_ctransform->velocity)
         );
+        
+        if (p_bbox == NULL) continue; //Do not proceed if no bbox
 
 
         // Zero out acceleration for contacts with sturdy entites and tiles
@@ -1707,7 +1715,6 @@ void hitbox_update_system(Scene_t* scene)
                         if (p_other_hurtbox == NULL) continue;
                         CTransform_t* p_other_ct = get_component(p_other_ent, CTRANSFORM_COMP_T);
                         Vector2 hurtbox_pos = Vector2Add(p_other_ct->position, p_other_hurtbox->offset);
-                        if (p_hitbox->atk <= p_other_hurtbox->def) continue;
 
                         if (
                             find_AABB_overlap(
@@ -1716,27 +1723,30 @@ void hitbox_update_system(Scene_t* scene)
                             )
                         )
                         {
-                            if (p_other_ent->m_tag == CRATES_ENT_TAG)
+                            if (p_hitbox->atk > p_other_hurtbox->def)
                             {
-
-                                CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
-                                CPlayerState_t* p_pstate = get_component(p_ent, CPLAYERSTATE_T);
-                                if (
-                                    p_pstate != NULL
-                                    && p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y
-                                )
+                                if (p_other_ent->m_tag == CRATES_ENT_TAG)
                                 {
-                                    p_ctransform->velocity.y = -400;
-                                    if (p_pstate->jump_pressed)
+
+                                    CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+                                    CPlayerState_t* p_pstate = get_component(p_ent, CPLAYERSTATE_T);
+                                    if (
+                                        p_pstate != NULL
+                                        && p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y
+                                    )
                                     {
-                                        p_ctransform->velocity.y = -600;
-                                        CJump_t * p_cjump = get_component(p_ent, CJUMP_COMP_T);
-                                        p_cjump->short_hop = false;
-                                        p_cjump->jumped = true;
+                                        p_ctransform->velocity.y = -400;
+                                        if (p_pstate->jump_pressed)
+                                        {
+                                            p_ctransform->velocity.y = -600;
+                                            CJump_t * p_cjump = get_component(p_ent, CJUMP_COMP_T);
+                                            p_cjump->short_hop = false;
+                                            p_cjump->jumped = true;
+                                        }
                                     }
                                 }
+                                remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_other_ent);
                             }
-                            remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_other_ent);
 
                             if (p_hitbox->one_hit)
                             {
@@ -1815,6 +1825,9 @@ void container_destroy_system(Scene_t* scene)
                 break;
                 case CONTAINER_DOWN_ARROW:
                     new_ent = create_arrow(&scene->ent_manager, &scene->engine->assets, 3);
+                break;
+                case CONTAINER_BOMB:
+                    new_ent = create_bomb(&scene->ent_manager, &scene->engine->assets, (Vector2){0, -1});
                 break;
                 default:
                     new_ent = NULL;

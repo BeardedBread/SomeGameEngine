@@ -1829,6 +1829,9 @@ void container_destroy_system(Scene_t* scene)
                 case CONTAINER_BOMB:
                     new_ent = create_bomb(&scene->ent_manager, &scene->engine->assets, (Vector2){0, -1});
                 break;
+                case CONTAINER_EXPLOSION:
+                    new_ent = create_explosion(&scene->ent_manager, &scene->engine->assets);
+                break;
                 default:
                     new_ent = NULL;
                 break;
@@ -1837,8 +1840,24 @@ void container_destroy_system(Scene_t* scene)
             {
                 CTransform_t* new_p_ct = get_component(new_ent, CTRANSFORM_COMP_T);
                 CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
-                memcpy(&new_p_ct->position, &p_ct->position, sizeof(Vector2));
+                new_p_ct->position = Vector2Add(new_p_ct->position, p_ct->position);
             }
+        }
+    }
+}
+
+void lifetimer_update_system(Scene_t* scene)
+{
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    TileGrid_t tilemap = data->tilemap;
+    unsigned int ent_idx;
+    CLifeTimer_t* p_lifetimer;
+    sc_map_foreach(&scene->ent_manager.component_map[CLIFETIMER_T], ent_idx, p_lifetimer)
+    {
+        p_lifetimer->life_time--;
+        if (p_lifetimer->life_time == 0)
+        {
+            remove_entity_from_tilemap(&scene->ent_manager, &tilemap, get_entity(&scene->ent_manager, ent_idx));
         }
     }
 }

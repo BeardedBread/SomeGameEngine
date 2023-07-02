@@ -95,15 +95,41 @@ Entity_t* create_bomb(EntityManager_t* ent_manager, Assets_t* assets, Vector2 la
     add_component(p_bomb, CMOVEMENTSTATE_T);
     CHitBoxes_t* p_hitbox = add_component(p_bomb, CHITBOXES_T);
     p_hitbox->n_boxes = 1;
-    p_hitbox->boxes[0] = (Rectangle){0, 0, TILE_SIZE, TILE_SIZE};
+    p_hitbox->boxes[0] = (Rectangle){0, 0, 25, 25};
 
     p_hitbox->atk = 0;
     p_hitbox->one_hit = true;
 
+    CContainer_t* p_container = add_component(p_bomb, CCONTAINER_T);
+    p_container->item = CONTAINER_EXPLOSION;
+
     CTransform_t* p_ctransform = add_component(p_bomb, CTRANSFORM_COMP_T);
     p_ctransform->active = true; 
     p_ctransform->movement_mode = REGULAR_MOVEMENT;
+    p_ctransform->position.x += (TILE_SIZE - 25) / 2;
+    p_ctransform->position.y += (TILE_SIZE - 25) / 2;
 
     p_ctransform->velocity = Vector2Scale(Vector2Normalize(launch_dir), 500);
     return p_bomb;
+}
+
+Entity_t* create_explosion(EntityManager_t* ent_manager, Assets_t* assets)
+{
+    Entity_t* p_explosion = add_entity(ent_manager, DESTRUCTABLE_ENT_TAG);
+    add_component(p_explosion, CTILECOORD_COMP_T);
+    CHitBoxes_t* p_hitbox = add_component(p_explosion, CHITBOXES_T);
+    p_hitbox->n_boxes = 1;
+
+    p_hitbox->atk = 3;
+
+    CTransform_t* p_ctransform = add_component(p_explosion, CTRANSFORM_COMP_T);
+    p_ctransform->movement_mode = KINEMATIC_MOVEMENT;
+    p_ctransform->active = true;
+    p_ctransform->position.x -= 15;
+    p_ctransform->position.y -= 15;
+    p_hitbox->boxes[0] = (Rectangle){0, 0, TILE_SIZE + 30, TILE_SIZE + 30};
+
+    CLifeTimer_t* p_clifetimer = add_component(p_explosion, CLIFETIMER_T);
+    p_clifetimer->life_time = 3;
+    return p_explosion;
 }

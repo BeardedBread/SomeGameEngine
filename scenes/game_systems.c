@@ -274,7 +274,7 @@ static uint8_t check_collision_line(const CollideEntity_t* ent, TileGrid_t* grid
 
 
 // TODO: This should be a point collision check, not an  AABB check
-static bool check_collision_offset(
+static uint8_t check_collision_offset(
     Entity_t* p_ent, Vector2 pos, Vector2 bbox_sz,
     TileGrid_t* grid, Vector2 offset 
 )
@@ -689,17 +689,8 @@ void player_movement_input_system(Scene_t* scene)
             }
         }
 
-        bool hit = false;
-        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
-        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
-        unsigned int tile_y = (p_ctransform->position.y) / TILE_SIZE;
-        if (p_bbox->size.y < TILE_SIZE && tile_y > 0)  tile_y--; // hack to detect small bbox state
-
-        for(unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
-        {
-            hit |= tilemap.tiles[tile_y * tilemap.width + tile_x].tile_type == SOLID_TILE;
-        }
-        if (hit)
+        uint8_t collide_type = check_collision_offset(p_player, p_ctransform->position, p_bbox->size, &tilemap, (Vector2){0, -TILE_SIZE});
+        if (collide_type == 1)
         {
             p_pstate->is_crouch |= 0b10;
         }

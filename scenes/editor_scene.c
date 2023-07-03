@@ -642,6 +642,7 @@ void init_level_scene(LevelScene_t* scene)
 
     init_level_scene_data(&scene->data);
     // insert level scene systems
+    sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &player_movement_input_system);
     sc_array_add(&scene->scene.systems, &player_bbox_update_system);
     sc_array_add(&scene->scene.systems, &player_pushing_system);
@@ -653,7 +654,7 @@ void init_level_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &boulder_destroy_wooden_tile_system);
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &tile_collision_system);
-    sc_array_add(&scene->scene.systems, &update_tilemap_system);
+    //sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &hitbox_update_system);
     sc_array_add(&scene->scene.systems, &player_crushing_system);
     sc_array_add(&scene->scene.systems, &spike_collision_system);

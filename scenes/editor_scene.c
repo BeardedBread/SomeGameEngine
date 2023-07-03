@@ -659,8 +659,8 @@ void init_level_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &spike_collision_system);
     sc_array_add(&scene->scene.systems, &state_transition_update_system);
     sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
-    sc_array_add(&scene->scene.systems, &container_destroy_system);
     sc_array_add(&scene->scene.systems, &lifetimer_update_system);
+    sc_array_add(&scene->scene.systems, &container_destroy_system);
     sc_array_add(&scene->scene.systems, &sprite_animation_system);
     sc_array_add(&scene->scene.systems, &camera_update_system);
     sc_array_add(&scene->scene.systems, &player_dir_reset_system);

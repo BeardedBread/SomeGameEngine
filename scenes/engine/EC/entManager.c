@@ -125,15 +125,21 @@ Entity_t* get_entity(EntityManager_t* p_manager, unsigned long id)
 
 void* add_component(Entity_t* p_entity, ComponentEnum_t comp_type)
 {
-    unsigned long comp_idx = 0;
-    void* p_comp = new_component_from_mempool(comp_type, &comp_idx);
-    if (p_comp)
+    if (p_entity->components[comp_type] == MAX_COMP_POOL_SIZE)
     {
-        p_entity->components[comp_type] = comp_idx;
-        struct EntityUpdateEventInfo evt = (struct EntityUpdateEventInfo){p_entity->m_id, comp_type, comp_idx, COMP_ADDTION};
-        sc_queue_add_last(&p_entity->manager->to_update, evt);
+
+        unsigned long comp_idx = 0;
+        void* p_comp = new_component_from_mempool(comp_type, &comp_idx);
+        if (p_comp)
+        {
+            p_entity->components[comp_type] = comp_idx;
+            struct EntityUpdateEventInfo evt = (struct EntityUpdateEventInfo){p_entity->m_id, comp_type, comp_idx, COMP_ADDTION};
+            sc_queue_add_last(&p_entity->manager->to_update, evt);
+        }
+        return p_comp;
     }
-    return p_comp;
+
+    return get_component(p_entity, comp_type);
 }
 
 void* get_component(Entity_t *p_entity, ComponentEnum_t comp_type)
@@ -148,5 +154,6 @@ void remove_component(Entity_t *p_entity, ComponentEnum_t comp_type)
 {
     if (p_entity->components[comp_type] == MAX_COMP_POOL_SIZE) return;
     struct EntityUpdateEventInfo evt = (struct EntityUpdateEventInfo){p_entity->m_id, comp_type, p_entity->components[comp_type] , COMP_DELETION};
+    p_entity->components[comp_type] = MAX_COMP_POOL_SIZE;
     sc_queue_add_last(&p_entity->manager->to_update, evt);
 }

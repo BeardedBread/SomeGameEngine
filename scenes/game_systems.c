@@ -1645,7 +1645,7 @@ void update_tilemap_system(Scene_t* scene)
 
 void hitbox_update_system(Scene_t* scene)
 {
-    //static bool checked_entities[MAX_COMP_POOL_SIZE] = {0};
+    static bool checked_entities[MAX_COMP_POOL_SIZE] = {0};
 
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     TileGrid_t tilemap = data->tilemap;
@@ -1658,6 +1658,8 @@ void hitbox_update_system(Scene_t* scene)
         Entity_t *p_ent =  get_entity(&scene->ent_manager, ent_idx);
         if (!p_ent->m_alive) continue;
         CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
+
+        memset(checked_entities, 0, sizeof(checked_entities));
         for (uint8_t i = 0; i < p_hitbox->n_boxes; ++i)
         {
             Vector2 hitbox_pos = {
@@ -1679,7 +1681,6 @@ void hitbox_update_system(Scene_t* scene)
                     unsigned int other_ent_idx;
                     Entity_t* p_other_ent;
                     Vector2 overlap;
-                    //memset(checked_entities, 0, sizeof(checked_entities));
 
                     if (tilemap.tiles[tile_idx].tile_type != EMPTY_TILE)
                     {
@@ -1704,7 +1705,7 @@ void hitbox_update_system(Scene_t* scene)
                     sc_map_foreach(&tilemap.tiles[tile_idx].entities_set, other_ent_idx, p_other_ent)
                     {
                         if (other_ent_idx == ent_idx) continue;
-                        //if (checked_entities[other_ent_idx]) continue;
+                        if (checked_entities[other_ent_idx]) continue;
 
                         Entity_t* p_other_ent = get_entity(&scene->ent_manager, other_ent_idx);
                         if (!p_other_ent->m_alive) continue; // To only allow one way collision check
@@ -1746,7 +1747,18 @@ void hitbox_update_system(Scene_t* scene)
                                         }
                                     }
                                 }
-                                remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_other_ent);
+
+                                if (p_ent->m_tag != PLAYER_ENT_TAG)
+                                {
+                                    remove_component(p_other_ent, CHURTBOX_T);
+                                    CLifeTimer_t* p_clifetimer = add_component(p_other_ent, CLIFETIMER_T);
+                                    p_clifetimer->life_time = 8;
+                                }
+                                else
+                                {
+                                    // Need to remove immediately, otherwise will interfere with bomb spawning
+                                    remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_other_ent);
+                                }
                             }
 
                         }

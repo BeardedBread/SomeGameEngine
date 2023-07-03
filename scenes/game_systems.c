@@ -1652,9 +1652,9 @@ void hitbox_update_system(Scene_t* scene)
 
     unsigned int ent_idx;
     CHitBoxes_t* p_hitbox;
-
     sc_map_foreach(&scene->ent_manager.component_map[CHITBOXES_T], ent_idx, p_hitbox)
     {
+        bool hit = false;
         Entity_t *p_ent =  get_entity(&scene->ent_manager, ent_idx);
         if (!p_ent->m_alive) continue;
         CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
@@ -1692,17 +1692,15 @@ void hitbox_update_system(Scene_t* scene)
                             )
                         )
                         {
+                            hit = true;
                             if (p_hitbox->atk > tilemap.tiles[tile_idx].def)
                             {
                                 change_a_tile(&tilemap, tile_idx, EMPTY_TILE);
-                            }
-                            if (p_hitbox->one_hit)
-                            {
-                                remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_ent);
-                                goto hitbox_done;
+                                continue;
                             }
                         }
                     }
+
                     sc_map_foreach(&tilemap.tiles[tile_idx].entities_set, other_ent_idx, p_other_ent)
                     {
                         if (other_ent_idx == ent_idx) continue;
@@ -1724,6 +1722,7 @@ void hitbox_update_system(Scene_t* scene)
                             )
                         )
                         {
+                            hit = true;
                             if (p_hitbox->atk > p_other_hurtbox->def)
                             {
                                 p_other_hurtbox->damage_src = ent_idx;
@@ -1750,17 +1749,15 @@ void hitbox_update_system(Scene_t* scene)
                                 remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_other_ent);
                             }
 
-                            if (p_hitbox->one_hit)
-                            {
-                                remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_ent);
-                                goto hitbox_done;
-                            }
                         }
                     }
                 }
             }
         }
-hitbox_done: continue;
+        if (p_hitbox->one_hit && hit)
+        {
+            remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_ent);
+        }
     }
 }
 

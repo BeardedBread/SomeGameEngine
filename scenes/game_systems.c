@@ -774,10 +774,10 @@ void player_bbox_update_system(Scene_t* scene)
         }
 
         if (
-            !check_collision_offset(
+            check_collision_offset(
                 p_player, p_ctransform->position, new_bbox,
                 &tilemap, offset 
-            )
+            ) != 1
         )
         {
             set_bbox(p_bbox, new_bbox.x, new_bbox.y);

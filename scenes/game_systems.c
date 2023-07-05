@@ -42,6 +42,7 @@ typedef struct CollideEntity {
 
 void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_type)
 {
+    TileType_t last_type = tilemap->tiles[tile_idx].tile_type;
     tilemap->tiles[tile_idx].tile_type = new_type;
 
     switch (new_type)
@@ -76,6 +77,16 @@ void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_ty
         case SOLID_TILE:
             tilemap->tiles[tile_idx].solid = SOLID;
         break;
+    }
+
+    if (last_type == LADDER && new_type != LADDER)
+    {
+        int down_tile = tile_idx + tilemap->width;
+        if (down_tile < tilemap->n_tiles && tilemap->tiles[down_tile].tile_type == LADDER)
+        {
+            tilemap->tiles[down_tile].solid = ONE_WAY;
+        }
+
     }
 
     if (new_type == SPIKES)

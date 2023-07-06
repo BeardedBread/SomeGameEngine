@@ -154,10 +154,14 @@ static inline void remove_entity_from_tilemap(EntityManager_t *p_manager, TileGr
 // Do not subtract one for the size for any collision check, just pass normally. The extra one is important for AABB test
 static uint8_t check_collision(const CollideEntity_t* ent, TileGrid_t* grid, bool check_oneway)
 {
-    for(unsigned int tile_y = ent->area.tile_y1; tile_y <= ent->area.tile_y2; tile_y++)
+    unsigned int tile_x1 = (ent->area.tile_x1 < 0) ? 0 : ent->area.tile_x1;
+    unsigned int tile_x2 = (ent->area.tile_x2 >= grid->width) ? grid->width - 1 : ent->area.tile_x2;
+    unsigned int tile_y1 = (ent->area.tile_y1 < 0) ? 0 : ent->area.tile_y1;
+    unsigned int tile_y2 = (ent->area.tile_y2 >= grid->height) ? grid->height - 1 : ent->area.tile_y2;
+
+    for(unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
     {
-        if (tile_y >= grid->height) return 0;
-        for(unsigned int tile_x = ent->area.tile_x1; tile_x <= ent->area.tile_x2; tile_x++)
+        for(unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
         {
             if (tile_x >= grid->width) return 0;
             unsigned int tile_idx = tile_y*grid->width + tile_x;
@@ -221,12 +225,17 @@ static uint8_t check_collision(const CollideEntity_t* ent, TileGrid_t* grid, boo
 
 static uint8_t check_collision_line(const CollideEntity_t* ent, TileGrid_t* grid, bool check_oneway)
 {
+    unsigned int tile_x1 = (ent->area.tile_x1 < 0) ? 0 : ent->area.tile_x1;
+    unsigned int tile_x2 = (ent->area.tile_x2 >= grid->width) ? grid->width - 1 : ent->area.tile_x2;
+    unsigned int tile_y1 = (ent->area.tile_y1 < 0) ? 0 : ent->area.tile_y1;
+    unsigned int tile_y2 = (ent->area.tile_y2 >= grid->height) ? grid->height - 1 : ent->area.tile_y2;
+
     Vector2 p1 = {ent->bbox.x, ent->bbox.y};
     Vector2 p2 = {ent->bbox.x + ent->bbox.width - 1, ent->bbox.y + ent->bbox.height - 1};
-    for(unsigned int tile_y = ent->area.tile_y1; tile_y <= ent->area.tile_y2; tile_y++)
+    for(unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
     {
         if (tile_y >= grid->height) return 0;
-        for(unsigned int tile_x = ent->area.tile_x1; tile_x <= ent->area.tile_x2; tile_x++)
+        for(unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
         {
             if (tile_x >= grid->width) return 0;
             unsigned int tile_idx = tile_y*grid->width + tile_x;

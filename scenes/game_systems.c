@@ -873,7 +873,6 @@ void player_crushing_system(Scene_t* scene)
                 }
             };
 
-
             // Left
             uint8_t collide_type = check_collision_line(&ent, &data->tilemap, false);
             if (collide_type == 1)
@@ -913,6 +912,12 @@ void spike_collision_system(Scene_t* scene)
         unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
         unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
         unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE;
+
+        tile_x1 = (tile_x1 < 0) ? 0 : tile_x1;
+        tile_x2 = (tile_x2 >= tilemap.width) ? tilemap.width - 1 : tile_x2;
+        tile_y1 = (tile_y1 < 0) ? 0 : tile_y1;
+        tile_y2 = (tile_y2 >= tilemap.height) ? tilemap.height - 1 : tile_y2;
+
         Vector2 overlap;
         for (unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
         {
@@ -973,6 +978,11 @@ void tile_collision_system(Scene_t* scene)
         unsigned int tile_y1 = (p_ctransform->position.y - 1) / TILE_SIZE;
         unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
         unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
+
+        tile_x1 = (tile_x1 < 0) ? 0 : tile_x1;
+        tile_x2 = (tile_x2 >= tilemap.width) ? tilemap.width - 1 : tile_x2;
+        tile_y1 = (tile_y1 < 0) ? 0 : tile_y1;
+        tile_y2 = (tile_y2 >= tilemap.height) ? tilemap.height - 1 : tile_y2;
 
         for (unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
         {

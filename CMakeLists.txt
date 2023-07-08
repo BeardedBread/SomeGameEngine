@@ -71,6 +71,20 @@ target_link_libraries(scene_test_mem
     ${GAME_LIBS}
 )
 
+add_executable(water_test
+    water_test.c
+)
+
+target_include_directories(water_test
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+)
+target_link_libraries(water_test
+    ${GAME_LIBS}
+)
+target_compile_options(water_test PRIVATE -fsanitize=address -gdwarf-4)
+target_link_options(water_test PRIVATE -fsanitize=address -gdwarf-4)
+
 add_executable(menu_test
     menu_test.c
 )

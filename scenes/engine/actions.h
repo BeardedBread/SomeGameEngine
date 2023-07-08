@@ -12,5 +12,6 @@ typedef enum ActionType
     ACTION_METAL_TOGGLE,
     ACTION_CONFIRM,
     ACTION_EXIT,
+    ACTION_RESTART,
 }ActionType_t;
 #endif // __ACTIONS_H

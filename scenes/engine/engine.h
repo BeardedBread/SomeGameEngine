@@ -1,6 +1,7 @@
 #ifndef __ENGINE_H
 #define __ENGINE_H
 #include "actions.h"
+#include "collisions.h"
 #include "sc/array/sc_array.h"
 #include "assets.h"
 

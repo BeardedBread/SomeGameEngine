@@ -683,6 +683,7 @@ void init_level_scene(LevelScene_t* scene)
 
     scene->data.tilemap.width = DEFAULT_MAP_WIDTH;
     scene->data.tilemap.height = DEFAULT_MAP_HEIGHT;
+    scene->data.tilemap.tile_size = TILE_SIZE;
     scene->data.tilemap.n_tiles = scene->data.tilemap.width * scene->data.tilemap.height;
     assert(scene->data.tilemap.n_tiles <= MAX_N_TILES);
     scene->data.tilemap.tiles = all_tiles;

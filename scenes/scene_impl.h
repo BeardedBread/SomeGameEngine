@@ -18,32 +18,6 @@ typedef enum TileType {
     LADDER,
     SPIKES,
 } TileType_t;
-#define MAX_TILE_TYPES 5
-typedef enum SolidType
-{
-    NOT_SOLID = 0,
-    SOLID,
-    ONE_WAY,
-}SolidType_t;
-
-
-typedef struct Tile {
-    TileType_t tile_type;
-    SolidType_t solid;
-    uint8_t def;
-    unsigned int water_level;
-    struct sc_map_64v entities_set;
-    Vector2 offset;
-    Vector2 size;
-    bool moveable;
-}Tile_t;
-
-typedef struct TileGrid {
-    unsigned int width;
-    unsigned int height;
-    unsigned int n_tiles;
-    Tile_t * tiles;
-}TileGrid_t;
 
 typedef struct LevelSceneData {
     TileGrid_t tilemap;

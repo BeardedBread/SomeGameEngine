@@ -4,6 +4,7 @@ add_library(lib_engine STATIC
     AABB.c
     gui.c
     engine.c
+    collisions.c
 )
 target_include_directories(lib_engine
     PUBLIC

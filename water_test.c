@@ -3,6 +3,7 @@
 #include "raymath.h"
 #include "scene_impl.h"
 #include "ent_impl.h"
+#include "water_flow.h"
 #include "game_systems.h"
 #include "assets_loader.h"
 #include <stdio.h>
@@ -306,6 +307,8 @@ int main(void)
     sc_map_put_64(&scene.scene.action_map, KEY_LEFT, ACTION_LEFT);
     sc_map_put_64(&scene.scene.action_map, KEY_RIGHT, ACTION_RIGHT);
 
+    Entity_t* p_runner = create_water_runner(&scene.scene.ent_manager, DEFAULT_MAP_WIDTH, DEFAULT_MAP_HEIGHT, 0);
+
     while(true)
     {
 
@@ -345,7 +348,8 @@ int main(void)
         // This is needed to advance time delta
         render_scene(&scene.scene);
         if (WindowShouldClose()) break;
-    } 
+    }
+    free_water_runner(&p_runner, &scene.scene.ent_manager);
     free_scene(&scene.scene);
     for (size_t i = 0; i < scene.data.tilemap.n_tiles;i++)
     {

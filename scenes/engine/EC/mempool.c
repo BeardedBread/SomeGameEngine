@@ -19,6 +19,7 @@ static CHurtbox_t churtbox_buffer[MAX_COMP_POOL_SIZE];
 static CSprite_t csprite_buffer[MAX_COMP_POOL_SIZE];
 static CMoveable_t cmoveable_buffer[MAX_COMP_POOL_SIZE];
 static CLifeTimer_t clifetimer_buffer[MAX_COMP_POOL_SIZE];
+static CWaterRunner_t cwaterrunner_buffer[4];
 
 typedef struct ULongCircBuffer {
     unsigned long* buffer;     // data buffer
@@ -90,6 +91,7 @@ static MemPool_t comp_mempools[N_COMPONENTS] = {
     {csprite_buffer, MAX_COMP_POOL_SIZE, sizeof(CSprite_t), NULL, {0}},
     {cmoveable_buffer, MAX_COMP_POOL_SIZE, sizeof(CMoveable_t), NULL, {0}},
     {clifetimer_buffer, MAX_COMP_POOL_SIZE, sizeof(CLifeTimer_t), NULL, {0}},
+    {cwaterrunner_buffer, 4, sizeof(CWaterRunner_t), NULL, {0}},
 };
 static MemPool_t ent_mempool = {
     .buffer = entity_buffer,

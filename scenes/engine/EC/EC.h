@@ -7,7 +7,7 @@
 #include "sc/queue/sc_queue.h"
 
 #define N_TAGS 8
-#define N_COMPONENTS 12
+#define N_COMPONENTS 13
 #define MAX_COMP_POOL_SIZE 1024
 typedef struct EntityManager EntityManager_t;
 typedef struct Entity Entity_t;
@@ -25,6 +25,7 @@ typedef enum ComponentEnum {
     CSPRITE_T,
     CMOVEABLE_T,
     CLIFETIMER_T,
+    CWATERRUNNER_T,
 } ComponentEnum_t;
 
 typedef enum MovementMode {
@@ -126,6 +127,24 @@ typedef struct _CLifeTimer_t {
     uint8_t timer;
     uint8_t life_time;
 } CLifeTimer_t;
+
+typedef struct _BFSTile {
+    int32_t to;
+    int32_t from;
+    bool reachable;
+}BFSTile_t;
+
+typedef struct _BFSTileMap {
+    BFSTile_t* tilemap;
+    uint32_t width;
+    uint32_t height;
+    uint32_t len;
+}BFSTileMap_t;
+
+typedef struct _CWaterRunner {
+    int32_t current_tile;
+    BFSTileMap_t bfs_tilemap;
+}CWaterRunner_t;
 
 // Credits to bedroomcoders.co.uk for this
 typedef struct Sprite {

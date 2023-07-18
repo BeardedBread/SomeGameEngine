@@ -3,6 +3,7 @@ add_library(lib_scenes STATIC
     assets_loader.c
     player_ent.c
     items_ent.c
+    water_flow.c
     editor_scene.c
     menu_scene.c
     game_systems.c

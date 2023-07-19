@@ -15,6 +15,7 @@ typedef struct Tile {
     SolidType_t solid;
     uint8_t def;
     unsigned int water_level;
+    unsigned int max_water_level;
     struct sc_map_64v entities_set;
     Vector2 offset;
     Vector2 size;

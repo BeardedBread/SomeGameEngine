@@ -85,6 +85,12 @@ static void level_scene_render_func(Scene_t* scene)
             unsigned int x = ((p_runner->current_tile) % tilemap.width) * tilemap.tile_size; 
             unsigned int y = ((p_runner->current_tile) / tilemap.width) * tilemap.tile_size; 
             DrawCircle(x+16, y+16, 8, ColorAlpha(BLACK, 0.2));
+            if (p_runner->target_tile < p_runner->bfs_tilemap.len)
+            {
+                unsigned int x = ((p_runner->target_tile) % tilemap.width) * tilemap.tile_size; 
+                unsigned int y = ((p_runner->target_tile) / tilemap.width) * tilemap.tile_size; 
+                DrawCircle(x+16, y+16, 8, ColorAlpha(BLUE, 0.2));
+            }
         }
 
         char buffer[64] = {0};
@@ -309,6 +315,7 @@ int main(void)
         all_tiles[i].solid = NOT_SOLID;
         all_tiles[i].tile_type = EMPTY_TILE;
         all_tiles[i].moveable = true;
+        all_tiles[i].max_water_level = 1;
         sc_map_init_64v(&all_tiles[i].entities_set, 16, 0);
         all_tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
     }
@@ -330,9 +337,12 @@ int main(void)
     sc_array_add(&scene.scene.systems, &simple_friction_system);
     sc_array_add(&scene.scene.systems, &movement_update_system);
     sc_array_add(&scene.scene.systems, &update_tilemap_system);
+    sc_array_add(&scene.scene.systems, &update_water_runner_system);
     sc_array_add(&scene.scene.systems, &toggle_block_system);
     sc_array_add(&scene.scene.systems, &camera_update_system);
     sc_array_add(&scene.scene.systems, &player_dir_reset_system);
+
+
     sc_map_put_64(&scene.scene.action_map, KEY_R, ACTION_RESTART);
     sc_map_put_64(&scene.scene.action_map, KEY_UP, ACTION_UP);
     sc_map_put_64(&scene.scene.action_map, KEY_DOWN, ACTION_DOWN);

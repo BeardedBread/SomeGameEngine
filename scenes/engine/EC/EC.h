@@ -143,6 +143,9 @@ typedef struct _BFSTileMap {
 
 typedef struct _CWaterRunner {
     int32_t current_tile;
+    int32_t target_tile;
+    struct sc_queue_32 bfs_queue;
+    bool* visited;
     BFSTileMap_t bfs_tilemap;
 }CWaterRunner_t;
 

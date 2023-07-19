@@ -64,17 +64,7 @@ static void level_scene_render_func(Scene_t* scene)
         sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
         {
             CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
-            CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
-            Color colour;
-            switch(p_ent->m_tag)
-            {
-                case PLAYER_ENT_TAG:
-                    colour = RED;
-                break;
-                default:
-                    colour = BLACK;
-                break;
-            }
+            if (p_ct == NULL) continue;
 
 
             CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
@@ -87,6 +77,14 @@ static void level_scene_render_func(Scene_t* scene)
                     draw_sprite(spr.sprite, pos, p_cspr->flip_x);
                 }
             }
+        }
+        sc_map_foreach_value(&scene->ent_manager.entities_map[DYNMEM_ENT_TAG], p_ent)
+        {
+            CWaterRunner_t* p_runner = get_component(p_ent, CWATERRUNNER_T);
+
+            unsigned int x = ((p_runner->current_tile) % tilemap.width) * tilemap.tile_size; 
+            unsigned int y = ((p_runner->current_tile) / tilemap.width) * tilemap.tile_size; 
+            DrawCircle(x+16, y+16, 8, ColorAlpha(BLACK, 0.2));
         }
 
         char buffer[64] = {0};
@@ -152,15 +150,12 @@ static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
 
 static void simple_friction_system(Scene_t* scene)
 {
-    //LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     CMovementState_t* p_mstate;
     unsigned long ent_idx;
     sc_map_foreach(&scene->ent_manager.component_map[CMOVEMENTSTATE_T], ent_idx, p_mstate)
     {
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
-        //CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
-        // Friction
         p_ctransform->fric_coeff = (Vector2){-4.5, -4.5};
         p_ctransform->accel = Vector2Add(
             p_ctransform->accel,
@@ -195,8 +190,46 @@ static void toggle_block_system(Scene_t* scene)
             change_a_tile(&tilemap, tile_idx, new_type);
             last_tile_idx = tile_idx;
         }
-        else if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
+        else if (IsMouseButtonReleased(MOUSE_RIGHT_BUTTON))
         {
+            if (sc_map_size_64v(&tilemap.tiles[tile_idx].entities_set) == 0)
+            {
+                Entity_t* p_ent = create_water_runner(&scene->ent_manager, DEFAULT_MAP_WIDTH, DEFAULT_MAP_HEIGHT, tile_idx);
+                if (p_ent == NULL) return;
+
+                CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
+                p_ct->position.x = (tile_idx % tilemap.width) * tilemap.tile_size; 
+                p_ct->position.y = (tile_idx / tilemap.width) * tilemap.tile_size; 
+            }
+            else
+            {
+                Entity_t* ent;
+                unsigned int m_id;
+                sc_map_foreach(&tilemap.tiles[tile_idx].entities_set, m_id, ent)
+                {
+                    if (ent->m_tag == PLAYER_ENT_TAG) continue;
+                    CTileCoord_t* p_tilecoord = get_component(
+                        ent, CTILECOORD_COMP_T
+                    );
+
+                    for (size_t i = 0;i < p_tilecoord->n_tiles; ++i)
+                    {
+                        // Use previously store tile position
+                        // Clear from those positions
+                        unsigned int tile_idx = p_tilecoord->tiles[i];
+                        sc_map_del_64v(&(tilemap.tiles[tile_idx].entities_set), m_id);
+                    }
+                    CWaterRunner_t* p_crunner = get_component(ent, CWATERRUNNER_T);
+                    if (p_crunner == NULL)
+                    {
+                        remove_entity(&scene->ent_manager, m_id);
+                    }
+                    else
+                    {
+                        free_water_runner(ent, &scene->ent_manager);
+                    }
+                }
+            }
         }
     }
 }
@@ -236,9 +269,6 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 
 static void player_simple_movement_system(Scene_t* scene)
 {
-    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
-    TileGrid_t tilemap = data->tilemap;
-
     // Deal with player acceleration/velocity via inputs first
     CPlayerState_t* p_pstate;
     unsigned int ent_idx;
@@ -269,6 +299,7 @@ int main(void)
 
     scene.data.tilemap.width = DEFAULT_MAP_WIDTH;
     scene.data.tilemap.height = DEFAULT_MAP_HEIGHT;
+    scene.data.tilemap.tile_size = TILE_SIZE;
     scene.data.tilemap.n_tiles = scene.data.tilemap.width * scene.data.tilemap.height;
     assert(scene.data.tilemap.n_tiles <= MAX_N_TILES);
     scene.data.tilemap.tiles = all_tiles;
@@ -298,6 +329,7 @@ int main(void)
     //sc_array_add(&scene.scene.systems, &player_bbox_update_system);
     sc_array_add(&scene.scene.systems, &simple_friction_system);
     sc_array_add(&scene.scene.systems, &movement_update_system);
+    sc_array_add(&scene.scene.systems, &update_tilemap_system);
     sc_array_add(&scene.scene.systems, &toggle_block_system);
     sc_array_add(&scene.scene.systems, &camera_update_system);
     sc_array_add(&scene.scene.systems, &player_dir_reset_system);
@@ -307,7 +339,6 @@ int main(void)
     sc_map_put_64(&scene.scene.action_map, KEY_LEFT, ACTION_LEFT);
     sc_map_put_64(&scene.scene.action_map, KEY_RIGHT, ACTION_RIGHT);
 
-    Entity_t* p_runner = create_water_runner(&scene.scene.ent_manager, DEFAULT_MAP_WIDTH, DEFAULT_MAP_HEIGHT, 0);
 
     while(true)
     {
@@ -349,7 +380,13 @@ int main(void)
         render_scene(&scene.scene);
         if (WindowShouldClose()) break;
     }
-    free_water_runner(&p_runner, &scene.scene.ent_manager);
+
+    unsigned int m_id;
+    Entity_t* ent;
+    sc_map_foreach(&scene.scene.ent_manager.entities_map[DYNMEM_ENT_TAG], m_id, ent)
+    {
+        free_water_runner(ent, &scene.scene.ent_manager);
+    }
     free_scene(&scene.scene);
     for (size_t i = 0; i < scene.data.tilemap.n_tiles;i++)
     {

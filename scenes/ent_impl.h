@@ -9,6 +9,7 @@ typedef enum EntityTag {
     CRATES_ENT_TAG,
     BOULDER_ENT_TAG,
     DESTRUCTABLE_ENT_TAG,
+    DYNMEM_ENT_TAG,
 } EntityTag_t;
 
 

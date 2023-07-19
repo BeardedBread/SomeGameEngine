@@ -3,7 +3,7 @@
 
 Entity_t* create_water_runner(EntityManager_t* ent_manager, int32_t width, int32_t height, int32_t start_tile)
 {
-    Entity_t* p_filler = add_entity(ent_manager, NO_ENT_TAG);
+    Entity_t* p_filler = add_entity(ent_manager, DYNMEM_ENT_TAG);
     if (p_filler == NULL) return NULL;
     CWaterRunner_t* p_crunner = add_component(p_filler, CWATERRUNNER_T);
     if (p_crunner == NULL)
@@ -23,15 +23,18 @@ Entity_t* create_water_runner(EntityManager_t* ent_manager, int32_t width, int32
     p_crunner->bfs_tilemap.len = total;
 
     p_crunner->current_tile = start_tile;
+
+    CTransform_t* p_ct = add_component(p_filler, CTRANSFORM_COMP_T);
+    p_ct->movement_mode = KINEMATIC_MOVEMENT;
+    add_component(p_filler, CTILECOORD_COMP_T);
     return p_filler;
 }
 
-void free_water_runner(Entity_t** ent, EntityManager_t* ent_manager)
+void free_water_runner(Entity_t* ent, EntityManager_t* ent_manager)
 {
-    CWaterRunner_t* p_crunner = get_component(*ent, CWATERRUNNER_T);
+    CWaterRunner_t* p_crunner = get_component(ent, CWATERRUNNER_T);
     free(p_crunner->bfs_tilemap.tilemap);
-    remove_entity(ent_manager, (*ent)->m_id);
-    *ent = NULL;
+    remove_entity(ent_manager, ent->m_id);
 }
 
 

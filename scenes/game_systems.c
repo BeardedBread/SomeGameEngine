@@ -1367,7 +1367,6 @@ void update_tilemap_system(Scene_t* scene)
         CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
         if (p_ctransform == NULL) continue;
         CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
-        if (p_bbox == NULL) continue;
 
         // Update tilemap position
         for (size_t i = 0;i < p_tilecoord->n_tiles; ++i)
@@ -1383,8 +1382,13 @@ void update_tilemap_system(Scene_t* scene)
         // Extend the check by a little to avoid missing
         unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
         unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
-        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
-        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE;
+        unsigned int tile_x2 = (p_ctransform->position.x) / TILE_SIZE;
+        unsigned int tile_y2 = (p_ctransform->position.y) / TILE_SIZE;
+        if (p_bbox != NULL)
+        {
+            tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
+            tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE;
+        }
 
         for (unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
         {

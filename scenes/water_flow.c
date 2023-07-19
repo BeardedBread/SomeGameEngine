@@ -70,9 +70,24 @@ void update_water_runner_system(Scene_t* scene)
     unsigned int ent_idx;
     sc_map_foreach(&scene->ent_manager.component_map[CWATERRUNNER_T], ent_idx, p_crunner)
     {
-        //Entity_t* ent = get_entity(&scene->ent_manager, ent_idx);
-        sc_queue_add_last(&p_crunner->bfs_queue, p_crunner->current_tile);
+        Entity_t* ent = get_entity(&scene->ent_manager, ent_idx);
+        if (tilemap.tiles[p_crunner->current_tile].solid == SOLID)
+        {
+            CTileCoord_t* p_tilecoord = get_component(
+                ent, CTILECOORD_COMP_T
+            );
+            for (size_t i = 0;i < p_tilecoord->n_tiles; ++i)
+            {
+                // Use previously store tile position
+                // Clear from those positions
+                unsigned int tile_idx = p_tilecoord->tiles[i];
+                sc_map_del_64v(&(tilemap.tiles[tile_idx].entities_set), ent_idx);
+            }
+            free_water_runner(ent, &scene->ent_manager);
+            continue;
+        }
 
+        static uint8_t delay = 5;
         switch (p_crunner->state)
         {
             case LOWEST_POINT_SEARCH:
@@ -80,9 +95,11 @@ void update_water_runner_system(Scene_t* scene)
                 for (size_t i = 0; i < p_crunner->bfs_tilemap.len; ++i)
                 {
                     p_crunner->bfs_tilemap.tilemap[i].from = -1;
+                    p_crunner->bfs_tilemap.tilemap[i].reachable = false;
                 }
                 memset(p_crunner->visited, 0, p_crunner->bfs_tilemap.len * sizeof(bool));
                 int32_t lowest_tile = p_crunner->current_tile;
+                sc_queue_add_last(&p_crunner->bfs_queue, p_crunner->current_tile);
                 while (!sc_queue_empty(&p_crunner->bfs_queue))
                 {
                     unsigned int curr_idx = sc_queue_peek_first(&p_crunner->bfs_queue);
@@ -146,6 +163,11 @@ void update_water_runner_system(Scene_t* scene)
                 }
                 p_crunner->target_tile = lowest_tile;
 
+                if (p_crunner->target_tile == p_crunner->current_tile)
+                {
+                    p_crunner->state = SCANLINE_FILL;
+                    break;
+                }
                 // Trace path from lowest_tile
                 unsigned int prev_idx = lowest_tile;
                 unsigned int curr_idx = p_crunner->bfs_tilemap.tilemap[prev_idx].from;
@@ -155,8 +177,24 @@ void update_water_runner_system(Scene_t* scene)
                     prev_idx = curr_idx;
                     curr_idx = p_crunner->bfs_tilemap.tilemap[prev_idx].from;
                 }
+                delay = 5;
                 p_crunner->state = LOWEST_POINT_MOVEMENT;
             }
+            break;
+            case LOWEST_POINT_MOVEMENT:
+                delay--;
+                if (delay == 0)
+                {
+                    p_crunner->current_tile = p_crunner->bfs_tilemap.tilemap[p_crunner->current_tile].to;
+                    CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
+                    p_ct->position.x = (p_crunner->current_tile % tilemap.width) * tilemap.tile_size; 
+                    p_ct->position.y = (p_crunner->current_tile / tilemap.width) * tilemap.tile_size; 
+                    if (p_crunner->current_tile == p_crunner->target_tile)
+                    {
+                        p_crunner->state = SCANLINE_FILL;
+                    }
+                    delay = 5;
+                }
             break;
             default:
             break;

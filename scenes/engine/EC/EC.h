@@ -145,6 +145,7 @@ typedef enum _WaterRunnerState
 {
     LOWEST_POINT_SEARCH = 0,
     LOWEST_POINT_MOVEMENT,
+    SCANLINE_FILL,
 }WaterRunerState_t;
 
 typedef struct _CWaterRunner {

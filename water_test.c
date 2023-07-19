@@ -92,7 +92,7 @@ static void level_scene_render_func(Scene_t* scene)
                 DrawCircle(x+16, y+16, 8, ColorAlpha(BLUE, 0.2));
             }
 
-            if (p_runner->state != LOWEST_POINT_SEARCH)
+            if (p_runner->state == LOWEST_POINT_MOVEMENT)
             {
                 unsigned int curr_idx = p_runner->current_tile;
                 unsigned int next_idx = p_runner->bfs_tilemap.tilemap[curr_idx].to;
@@ -195,6 +195,10 @@ static void toggle_block_system(Scene_t* scene)
     Vector2 raw_mouse_pos = {GetMouseX(), GetMouseY()};
     raw_mouse_pos = Vector2Subtract(raw_mouse_pos, (Vector2){data->game_rec.x, data->game_rec.y});
 
+    if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+    {
+        last_tile_idx = MAX_N_TILES;
+    }
     if (
         raw_mouse_pos.x < data->game_rec.width
         && raw_mouse_pos.y < data->game_rec.height

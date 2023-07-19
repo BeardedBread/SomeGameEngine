@@ -37,7 +37,10 @@ void update_entity_manager(EntityManager_t* p_manager)
         if (!p_entity) continue;
         for (size_t i = 0; i < N_COMPONENTS; ++i)
         {
-            remove_component(p_entity, i);
+            if (p_entity->components[i] == MAX_COMP_POOL_SIZE) continue;
+            free_component_to_mempool(i, p_entity->components[i]);
+            sc_map_del_64v(&p_manager->component_map[i], e_idx);
+            p_entity->components[i] = MAX_COMP_POOL_SIZE;
         }
         sc_map_del_64v(&p_manager->entities_map[p_entity->m_tag], e_idx);
         free_entity_to_mempool(e_idx);

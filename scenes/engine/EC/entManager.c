@@ -23,6 +23,14 @@ void update_entity_manager(EntityManager_t* p_manager)
     // New entities are assigned during add_entity
 	unsigned long e_idx;
     
+    sc_queue_foreach (&p_manager->to_add, e_idx)
+    {
+        Entity_t *p_entity = get_entity_wtih_id(e_idx);
+        sc_map_put_64v(&p_manager->entities, e_idx, (void *)p_entity);
+        sc_map_put_64v(&p_manager->entities_map[p_entity->m_tag], e_idx, (void *)p_entity);
+    }
+    sc_queue_clear(&p_manager->to_add);
+
     sc_queue_foreach (&p_manager->to_remove, e_idx)
     {
         Entity_t *p_entity = (Entity_t *)sc_map_get_64v(&p_manager->entities, e_idx);
@@ -37,17 +45,11 @@ void update_entity_manager(EntityManager_t* p_manager)
     }
     sc_queue_clear(&p_manager->to_remove);
 
-    sc_queue_foreach (&p_manager->to_add, e_idx)
-    {
-        Entity_t *p_entity = get_entity_wtih_id(e_idx);
-        sc_map_put_64v(&p_manager->entities, e_idx, (void *)p_entity);
-        sc_map_put_64v(&p_manager->entities_map[p_entity->m_tag], e_idx, (void *)p_entity);
-    }
-    sc_queue_clear(&p_manager->to_add);
-
     struct EntityUpdateEventInfo evt;
     sc_queue_foreach (&p_manager->to_update, evt)
     {
+        sc_map_get_64v(&p_manager->entities, evt.e_id);
+        if(!sc_map_found(&p_manager->entities)) continue;
         switch(evt.evt_type)
         {
             case COMP_ADDTION:
@@ -59,7 +61,7 @@ void update_entity_manager(EntityManager_t* p_manager)
             break;
         }
     }
-    sc_queue_clear(&p_manager->to_add);
+    sc_queue_clear(&p_manager->to_update);
 }
 
 void clear_entity_manager(EntityManager_t* p_manager)
@@ -94,11 +96,10 @@ Entity_t *add_entity(EntityManager_t* p_manager, unsigned int tag)
 {
     unsigned long e_idx = 0;
     Entity_t* p_ent = new_entity_from_mempool(&e_idx);
+    if (p_ent == NULL) return NULL;
+
     p_ent->m_tag = tag;
-    if (p_ent)
-    {
-        sc_queue_add_last(&p_manager->to_add, e_idx);
-    }
+    sc_queue_add_last(&p_manager->to_add, e_idx);
     p_ent->manager = p_manager;
     return p_ent;
 }
@@ -106,14 +107,17 @@ Entity_t *add_entity(EntityManager_t* p_manager, unsigned int tag)
 void remove_entity(EntityManager_t* p_manager, unsigned long id)
 {
     Entity_t* p_entity = sc_map_get_64v(&p_manager->entities, id);
-    if(!sc_map_found(&p_manager->entities)) return;
-    // This only marks the entity for deletion
-    // Does not free entity. This is done during the update
-    if (p_entity->m_alive)
+    if(sc_map_found(&p_manager->entities))
     {
-        p_entity->m_alive = false;
-        sc_queue_add_last(&p_manager->to_remove, id);
+        // This only marks the entity for deletion
+        // Does not free entity. This is done during the update
+        if (p_entity->m_alive)
+        {
+            p_entity->m_alive = false;
+        }
     }
+    // Queue anyways because added entity may be in update queue
+    sc_queue_add_last(&p_manager->to_remove, id);
 }
 
 Entity_t* get_entity(EntityManager_t* p_manager, unsigned long id)

@@ -141,12 +141,19 @@ typedef struct _BFSTileMap {
     uint32_t len;
 }BFSTileMap_t;
 
+typedef enum _WaterRunnerState
+{
+    LOWEST_POINT_SEARCH = 0,
+    LOWEST_POINT_MOVEMENT,
+}WaterRunerState_t;
+
 typedef struct _CWaterRunner {
+    BFSTileMap_t bfs_tilemap;
     int32_t current_tile;
     int32_t target_tile;
     struct sc_queue_32 bfs_queue;
     bool* visited;
-    BFSTileMap_t bfs_tilemap;
+    WaterRunerState_t state;
 }CWaterRunner_t;
 
 // Credits to bedroomcoders.co.uk for this

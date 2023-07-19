@@ -91,6 +91,22 @@ static void level_scene_render_func(Scene_t* scene)
                 unsigned int y = ((p_runner->target_tile) / tilemap.width) * tilemap.tile_size; 
                 DrawCircle(x+16, y+16, 8, ColorAlpha(BLUE, 0.2));
             }
+
+            if (p_runner->state != LOWEST_POINT_SEARCH)
+            {
+                unsigned int curr_idx = p_runner->current_tile;
+                unsigned int next_idx = p_runner->bfs_tilemap.tilemap[curr_idx].to;
+                while(curr_idx != p_runner->target_tile)
+                {
+                    unsigned int x1 = (curr_idx % tilemap.width) * tilemap.tile_size + tilemap.tile_size / 2; 
+                    unsigned int y1 = (curr_idx / tilemap.width) * tilemap.tile_size + tilemap.tile_size / 2; 
+                    unsigned int x2 = (next_idx % tilemap.width) * tilemap.tile_size + tilemap.tile_size / 2; 
+                    unsigned int y2 = (next_idx / tilemap.width) * tilemap.tile_size + tilemap.tile_size / 2; 
+                    DrawLine(x1, y1, x2, y2, BLACK);
+                    curr_idx = next_idx;
+                    next_idx = p_runner->bfs_tilemap.tilemap[curr_idx].to;
+                }
+            }
         }
 
         char buffer[64] = {0};
@@ -195,6 +211,11 @@ static void toggle_block_system(Scene_t* scene)
             if (new_type == SOLID_TILE) tilemap.tiles[tile_idx].water_level = 0;
             change_a_tile(&tilemap, tile_idx, new_type);
             last_tile_idx = tile_idx;
+            CWaterRunner_t* p_crunner;
+            sc_map_foreach_value(&scene->ent_manager.component_map[CWATERRUNNER_T], p_crunner)
+            {
+                p_crunner->state = LOWEST_POINT_SEARCH;
+            }
         }
         else if (IsMouseButtonReleased(MOUSE_RIGHT_BUTTON))
         {

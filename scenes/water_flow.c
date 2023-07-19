@@ -50,13 +50,13 @@ void update_water_runner_system(Scene_t* scene)
     //  - Scanline fill
     // A runner is given an amount of movement cost
     // Within the movement cost, do the following logic
-    // Perform a modified DFS to find the lowest point:
+    // Perform a modified BFS to find the lowest point:
     //  - Solid tiles are not reachable
     //  - If bottom tile is non-solid, that is the only reachable tile,
     //  - If bottom tile is filled with water fully, down+left+right are reachable
     //  - If bottom tile is solid, left+right are reachable
     //  - If bottom tile is OOB, terminate
-    // Use a LIFO to deal with this.
+    // Use a FIFO to deal with this.
     // On DFS completion, find the path to the lowest point. Keep track of this 
     // The DFS should have figured out all reachable tiles, start scanline filling at the lowest point.
     // On completion, move up update tile reachability by DFS on the current level. (repeat first step)
@@ -72,57 +72,95 @@ void update_water_runner_system(Scene_t* scene)
     {
         //Entity_t* ent = get_entity(&scene->ent_manager, ent_idx);
         sc_queue_add_last(&p_crunner->bfs_queue, p_crunner->current_tile);
-        memset(p_crunner->visited, 0, p_crunner->bfs_tilemap.len * sizeof(bool));
-        int32_t lowest_tile = p_crunner->current_tile;
-        while (!sc_queue_empty(&p_crunner->bfs_queue))
+
+        switch (p_crunner->state)
         {
-            unsigned int curr_idx = sc_queue_peek_first(&p_crunner->bfs_queue);
-            sc_queue_del_first(&p_crunner->bfs_queue);
-            if (p_crunner->visited[curr_idx]) continue;
-
-            unsigned int curr_height = curr_idx / p_crunner->bfs_tilemap.width;
-            unsigned int curr_low = lowest_tile / p_crunner->bfs_tilemap.width;
-            if (curr_height > curr_low)
+            case LOWEST_POINT_SEARCH:
             {
-                lowest_tile = curr_idx;
-            }
-
-
-            p_crunner->visited[curr_idx] = true;
-            p_crunner->bfs_tilemap.tilemap[curr_idx].reachable = true;
-            // Possible optimisation to avoid repeated BFS, dunno how possible
-
-            unsigned int next = curr_idx + p_crunner->bfs_tilemap.width;
-            if (next >= p_crunner->bfs_tilemap.len) continue;
-
-            Tile_t* next_tile = tilemap.tiles + next;
-            if (next_tile->solid != SOLID && next_tile->water_level < next_tile->max_water_level)
-            {
-                sc_queue_add_last(&p_crunner->bfs_queue, next);
-            }
-            else
-            {
-                next = curr_idx - 1;
-                if (next % p_crunner->bfs_tilemap.width != 0)
+                for (size_t i = 0; i < p_crunner->bfs_tilemap.len; ++i)
                 {
-                    next_tile = tilemap.tiles + next;
-                    if (next_tile->solid != SOLID && next_tile->water_level < next_tile->max_water_level)
+                    p_crunner->bfs_tilemap.tilemap[i].from = -1;
+                }
+                memset(p_crunner->visited, 0, p_crunner->bfs_tilemap.len * sizeof(bool));
+                int32_t lowest_tile = p_crunner->current_tile;
+                while (!sc_queue_empty(&p_crunner->bfs_queue))
+                {
+                    unsigned int curr_idx = sc_queue_peek_first(&p_crunner->bfs_queue);
+                    sc_queue_del_first(&p_crunner->bfs_queue);
+
+                    unsigned int curr_height = curr_idx / p_crunner->bfs_tilemap.width;
+                    unsigned int curr_low = lowest_tile / p_crunner->bfs_tilemap.width;
+                    if (curr_height > curr_low)
+                    {
+                        lowest_tile = curr_idx;
+                    }
+
+                    p_crunner->visited[curr_idx] = true;
+                    p_crunner->bfs_tilemap.tilemap[curr_idx].reachable = true;
+                    // Possible optimisation to avoid repeated BFS, dunno how possible
+
+                    unsigned int next = curr_idx + p_crunner->bfs_tilemap.width;
+                    if (next >= p_crunner->bfs_tilemap.len) continue;
+
+                    Tile_t* next_tile = tilemap.tiles + next;
+                    if (
+                        next_tile->solid != SOLID
+                        && next_tile->water_level < next_tile->max_water_level
+                        && !p_crunner->visited[next]
+                    )
                     {
                         sc_queue_add_last(&p_crunner->bfs_queue, next);
+                        p_crunner->bfs_tilemap.tilemap[next].from = curr_idx;
                     }
-                }
-                next = curr_idx + 1;
-                if (next % p_crunner->bfs_tilemap.width != 0)
-                {
-                    next_tile = tilemap.tiles + next;
-                    if (next_tile->solid != SOLID && next_tile->water_level < next_tile->max_water_level)
+                    else
                     {
-                        sc_queue_add_last(&p_crunner->bfs_queue, next);
+                        next = curr_idx - 1;
+                        if (next % p_crunner->bfs_tilemap.width != 0)
+                        {
+                            next_tile = tilemap.tiles + next;
+                            if (
+                                next_tile->solid != SOLID
+                                && next_tile->water_level < next_tile->max_water_level
+                                && !p_crunner->visited[next]
+                            )
+                            {
+                                sc_queue_add_last(&p_crunner->bfs_queue, next);
+                                p_crunner->bfs_tilemap.tilemap[next].from = curr_idx;
+                            }
+                        }
+                        next = curr_idx + 1;
+                        if (next % p_crunner->bfs_tilemap.width != 0)
+                        {
+                            next_tile = tilemap.tiles + next;
+                            if (
+                                next_tile->solid != SOLID
+                                && next_tile->water_level < next_tile->max_water_level
+                                && !p_crunner->visited[next]
+                            )
+                            {
+                                sc_queue_add_last(&p_crunner->bfs_queue, next);
+                                p_crunner->bfs_tilemap.tilemap[next].from = curr_idx;
+                            }
+                        }
                     }
                 }
+                p_crunner->target_tile = lowest_tile;
+
+                // Trace path from lowest_tile
+                unsigned int prev_idx = lowest_tile;
+                unsigned int curr_idx = p_crunner->bfs_tilemap.tilemap[prev_idx].from;
+                while (p_crunner->bfs_tilemap.tilemap[prev_idx].from >= 0)
+                {
+                    p_crunner->bfs_tilemap.tilemap[curr_idx].to = prev_idx;
+                    prev_idx = curr_idx;
+                    curr_idx = p_crunner->bfs_tilemap.tilemap[prev_idx].from;
+                }
+                p_crunner->state = LOWEST_POINT_MOVEMENT;
             }
+            break;
+            default:
+            break;
         }
-        p_crunner->target_tile = lowest_tile;
     }
 }
 

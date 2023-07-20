@@ -24,6 +24,8 @@ static GameEngine_t engine =
     .assets = {0}
 };
 
+static bool water_toggle = false;
+
 static void level_scene_render_func(Scene_t* scene)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
@@ -146,7 +148,7 @@ static void level_scene_render_func(Scene_t* scene)
     draw_rec.y = 0;
     draw_rec.height *= -1;
     BeginDrawing();
-        ClearBackground(LIGHTGRAY);
+        ClearBackground( water_toggle? ColorAlpha(BLUE, 0.2) : LIGHTGRAY);
         DrawTextureRec(
             data->game_viewport.texture,
             draw_rec,
@@ -210,10 +212,28 @@ static void toggle_block_system(Scene_t* scene)
         if (tile_idx == last_tile_idx) return;
         if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
         {
-            TileType_t new_type = EMPTY_TILE;
-            new_type = (tilemap.tiles[tile_idx].tile_type == SOLID_TILE)? EMPTY_TILE : SOLID_TILE;
-            if (new_type == SOLID_TILE) tilemap.tiles[tile_idx].water_level = 0;
-            change_a_tile(&tilemap, tile_idx, new_type);
+            if (!water_toggle)
+            {
+                TileType_t new_type = EMPTY_TILE;
+                new_type = (tilemap.tiles[tile_idx].tile_type == SOLID_TILE)? EMPTY_TILE : SOLID_TILE;
+                if (new_type == SOLID_TILE) tilemap.tiles[tile_idx].water_level = 0;
+                change_a_tile(&tilemap, tile_idx, new_type);
+            }
+            else
+            {
+                if (tilemap.tiles[tile_idx].tile_type != SOLID_TILE)
+                {
+                    if (tilemap.tiles[tile_idx].water_level > 0)
+                    {
+                        tilemap.tiles[tile_idx].water_level = 0;
+                    }
+                    else
+                    {
+                        tilemap.tiles[tile_idx].water_level = tilemap.max_water_level;
+                    }
+                }
+            
+            }
             last_tile_idx = tile_idx;
             CWaterRunner_t* p_crunner;
             sc_map_foreach_value(&scene->ent_manager.component_map[CWATERRUNNER_T], p_crunner)
@@ -284,6 +304,9 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             case ACTION_RIGHT:
                 p_playerstate->player_dir.x = (pressed)? 1 : 0;
             break;
+            case ACTION_METAL_TOGGLE:
+                 if (!pressed) water_toggle = !water_toggle;
+            break;
             default:
             break;
         }
@@ -331,6 +354,7 @@ int main(void)
     scene.data.tilemap.width = DEFAULT_MAP_WIDTH;
     scene.data.tilemap.height = DEFAULT_MAP_HEIGHT;
     scene.data.tilemap.tile_size = TILE_SIZE;
+    scene.data.tilemap.max_water_level = 1;
     scene.data.tilemap.n_tiles = scene.data.tilemap.width * scene.data.tilemap.height;
     assert(scene.data.tilemap.n_tiles <= MAX_N_TILES);
     scene.data.tilemap.tiles = all_tiles;
@@ -340,7 +364,6 @@ int main(void)
         all_tiles[i].solid = NOT_SOLID;
         all_tiles[i].tile_type = EMPTY_TILE;
         all_tiles[i].moveable = true;
-        all_tiles[i].max_water_level = 1;
         sc_map_init_64v(&all_tiles[i].entities_set, 16, 0);
         all_tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
     }
@@ -373,6 +396,7 @@ int main(void)
     sc_map_put_64(&scene.scene.action_map, KEY_DOWN, ACTION_DOWN);
     sc_map_put_64(&scene.scene.action_map, KEY_LEFT, ACTION_LEFT);
     sc_map_put_64(&scene.scene.action_map, KEY_RIGHT, ACTION_RIGHT);
+    sc_map_put_64(&scene.scene.action_map, KEY_P, ACTION_METAL_TOGGLE);
 
 
     while(true)

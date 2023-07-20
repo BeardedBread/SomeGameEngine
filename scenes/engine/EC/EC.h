@@ -150,12 +150,14 @@ typedef enum _WaterRunnerState
 
 typedef struct _CWaterRunner {
     BFSTileMap_t bfs_tilemap;
+    WaterRunerState_t state;
+    struct sc_queue_32 bfs_queue;
     int32_t start_height;
     int32_t current_tile;
     int32_t target_tile;
-    struct sc_queue_32 bfs_queue;
     bool* visited;
-    WaterRunerState_t state;
+    uint8_t movement_delay;
+    uint8_t counter;
 }CWaterRunner_t;
 
 // Credits to bedroomcoders.co.uk for this

@@ -147,6 +147,7 @@ typedef enum _WaterRunnerState
     BFS_START,
     LOWEST_POINT_SEARCH,
     LOWEST_POINT_MOVEMENT,
+    REACHABILITY_SEARCH,
     SCANLINE_FILL,
 }WaterRunerState_t;
 

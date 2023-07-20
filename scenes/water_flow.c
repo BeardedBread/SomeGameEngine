@@ -45,6 +45,84 @@ void free_water_runner(Entity_t* ent, EntityManager_t* ent_manager)
     remove_entity(ent_manager, ent->m_id);
 }
 
+static void runner_BFS(const TileGrid_t* tilemap, CWaterRunner_t* p_crunner, int32_t* lowest_tile)
+{
+    while (!sc_queue_empty(&p_crunner->bfs_queue))
+    {
+        unsigned int curr_idx = sc_queue_peek_first(&p_crunner->bfs_queue);
+        sc_queue_del_first(&p_crunner->bfs_queue);
+
+        unsigned int curr_height = curr_idx / p_crunner->bfs_tilemap.width;
+        unsigned int curr_low = *lowest_tile / p_crunner->bfs_tilemap.width;
+
+        // Possible optimisation to avoid repeated BFS, dunno how possible
+
+        bool to_go[4] = {false, false, false, false};
+        Tile_t* curr_tile = tilemap->tiles + curr_idx;
+
+        unsigned int next = curr_idx + p_crunner->bfs_tilemap.width;
+        Tile_t* next_tile = tilemap->tiles + next;
+
+        if (
+            curr_height > curr_low
+            && curr_tile->water_level < tilemap->max_water_level
+            && next_tile->water_level < tilemap->max_water_level
+        )
+        {
+            *lowest_tile = curr_idx;
+        }
+
+
+        if (next < p_crunner->bfs_tilemap.len)
+        {
+            to_go[0] = next_tile->solid != SOLID;
+        }
+
+        if (
+            next_tile->solid == SOLID
+            || next_tile->water_level == tilemap->max_water_level
+            || curr_tile->water_level == tilemap->max_water_level
+        )
+        {
+            if (curr_idx % p_crunner->bfs_tilemap.width != 0)
+            {
+                next = curr_idx - 1;
+                next_tile = tilemap->tiles + next;
+                to_go[1] = next_tile->solid != SOLID;
+            }
+            next = curr_idx + 1;
+            if (next % p_crunner->bfs_tilemap.width != 0)
+            {
+                next_tile = tilemap->tiles + next;
+                to_go[2] = next_tile->solid != SOLID;
+            }
+        }
+
+        if (curr_tile->water_level == tilemap->max_water_level)
+        {
+            next = curr_idx - p_crunner->bfs_tilemap.width;
+            if (next >= 0 && next / p_crunner->bfs_tilemap.width >= p_crunner->start_height)
+            {
+                next_tile = tilemap->tiles + next;
+                to_go[3] = next_tile->solid != SOLID;
+            }
+        }
+
+        const int8_t offsets[4] = {p_crunner->bfs_tilemap.width, -1, 1, -p_crunner->bfs_tilemap.width};
+        for (uint8_t i = 0; i < 4; ++i)
+        {
+            next = curr_idx + offsets[i];
+            if (to_go[i] && !p_crunner->visited[next])
+            {
+                sc_queue_add_last(&p_crunner->bfs_queue, next);
+                p_crunner->bfs_tilemap.tilemap[next].from = curr_idx;
+                p_crunner->visited[next] = true;
+                p_crunner->bfs_tilemap.tilemap[next].reachable = true;
+            }
+        }
+    }
+}
+
 void update_water_runner_system(Scene_t* scene)
 {
     // The core of the water runner is to:
@@ -109,80 +187,7 @@ void update_water_runner_system(Scene_t* scene)
                 // Want the fallthough
             case LOWEST_POINT_SEARCH:
             {
-                while (!sc_queue_empty(&p_crunner->bfs_queue))
-                {
-                    unsigned int curr_idx = sc_queue_peek_first(&p_crunner->bfs_queue);
-                    sc_queue_del_first(&p_crunner->bfs_queue);
-
-                    unsigned int curr_height = curr_idx / p_crunner->bfs_tilemap.width;
-                    unsigned int curr_low = lowest_tile / p_crunner->bfs_tilemap.width;
-
-                    // Possible optimisation to avoid repeated BFS, dunno how possible
-
-                    bool to_go[4] = {false, false, false, false};
-                    Tile_t* curr_tile = tilemap.tiles + curr_idx;
-
-                    unsigned int next = curr_idx + p_crunner->bfs_tilemap.width;
-                    Tile_t* next_tile = tilemap.tiles + next;
-
-                    if (
-                        curr_height > curr_low
-                        && curr_tile->water_level < tilemap.max_water_level
-                        && next_tile->water_level < tilemap.max_water_level
-                    )
-                    {
-                        lowest_tile = curr_idx;
-                    }
-
-
-                    if (next < p_crunner->bfs_tilemap.len)
-                    {
-                        to_go[0] = next_tile->solid != SOLID;
-                    }
-
-                    if (
-                        next_tile->solid == SOLID
-                        || next_tile->water_level == tilemap.max_water_level
-                        || curr_tile->water_level == tilemap.max_water_level
-                    )
-                    {
-                        if (curr_idx % p_crunner->bfs_tilemap.width != 0)
-                        {
-                            next = curr_idx - 1;
-                            next_tile = tilemap.tiles + next;
-                            to_go[1] = next_tile->solid != SOLID;
-                        }
-                        next = curr_idx + 1;
-                        if (next % p_crunner->bfs_tilemap.width != 0)
-                        {
-                            next_tile = tilemap.tiles + next;
-                            to_go[2] = next_tile->solid != SOLID;
-                        }
-                    }
-
-                    if (curr_tile->water_level == tilemap.max_water_level)
-                    {
-                        next = curr_idx - p_crunner->bfs_tilemap.width;
-                        if (next >= 0 && next / p_crunner->bfs_tilemap.width >= p_crunner->start_height)
-                        {
-                            next_tile = tilemap.tiles + next;
-                            to_go[3] = next_tile->solid != SOLID;
-                        }
-                    }
-
-                    const int8_t offsets[4] = {p_crunner->bfs_tilemap.width, -1, 1, -p_crunner->bfs_tilemap.width};
-                    for (uint8_t i = 0; i < 4; ++i)
-                    {
-                        next = curr_idx + offsets[i];
-                        if (to_go[i] && !p_crunner->visited[next])
-                        {
-                            sc_queue_add_last(&p_crunner->bfs_queue, next);
-                            p_crunner->bfs_tilemap.tilemap[next].from = curr_idx;
-                            p_crunner->visited[next] = true;
-                            p_crunner->bfs_tilemap.tilemap[next].reachable = true;
-                        }
-                    }
-                }
+                runner_BFS(&tilemap, p_crunner, &lowest_tile);
                 p_crunner->target_tile = lowest_tile;
 
                 if (p_crunner->target_tile == p_crunner->current_tile)
@@ -213,10 +218,29 @@ void update_water_runner_system(Scene_t* scene)
                     p_ct->position.y = (p_crunner->current_tile / tilemap.width) * tilemap.tile_size; 
                     if (p_crunner->current_tile == p_crunner->target_tile)
                     {
-                        p_crunner->state = SCANLINE_FILL;
+                        p_crunner->state = REACHABILITY_SEARCH;
                     }
                     p_crunner->counter = p_crunner->movement_delay;
                 }
+            break;
+            case REACHABILITY_SEARCH:
+            {
+                unsigned int start_tile =
+                    (p_crunner->current_tile / p_crunner->bfs_tilemap.width) * p_crunner->bfs_tilemap.width;
+
+                for (size_t i = 0; i < p_crunner->bfs_tilemap.width; ++i)
+                {
+                    p_crunner->bfs_tilemap.tilemap[start_tile + i].reachable = false;
+                }
+
+                memset(p_crunner->visited, 0, p_crunner->bfs_tilemap.len * sizeof(bool));
+                p_crunner->bfs_tilemap.tilemap[p_crunner->current_tile].reachable = true;
+                sc_queue_add_last(&p_crunner->bfs_queue, p_crunner->current_tile);
+                int32_t lowest_tile = p_crunner->current_tile;
+                runner_BFS(&tilemap, p_crunner, &lowest_tile);
+
+                p_crunner->state = SCANLINE_FILL;
+            }
             break;
             default:
             break;

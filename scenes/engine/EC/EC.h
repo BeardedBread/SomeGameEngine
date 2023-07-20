@@ -143,7 +143,9 @@ typedef struct _BFSTileMap {
 
 typedef enum _WaterRunnerState
 {
-    LOWEST_POINT_SEARCH = 0,
+    BFS_RESET = 0,
+    BFS_START,
+    LOWEST_POINT_SEARCH,
     LOWEST_POINT_MOVEMENT,
     SCANLINE_FILL,
 }WaterRunerState_t;

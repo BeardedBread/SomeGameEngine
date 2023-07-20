@@ -91,19 +91,24 @@ void update_water_runner_system(Scene_t* scene)
 
         switch (p_crunner->state)
         {
-            case LOWEST_POINT_SEARCH:
-            {
+            case BFS_RESET:
                 for (size_t i = 0; i < p_crunner->bfs_tilemap.len; ++i)
                 {
                     p_crunner->bfs_tilemap.tilemap[i].from = -1;
                     p_crunner->bfs_tilemap.tilemap[i].reachable = false;
                 }
+                p_crunner->state = BFS_START;
+                // Want the fallthough
+            case BFS_START:
                 memset(p_crunner->visited, 0, p_crunner->bfs_tilemap.len * sizeof(bool));
                 int32_t lowest_tile = p_crunner->current_tile;
                 p_crunner->visited[p_crunner->current_tile] = true;
                 p_crunner->bfs_tilemap.tilemap[p_crunner->current_tile].reachable = true;
-
                 sc_queue_add_last(&p_crunner->bfs_queue, p_crunner->current_tile);
+                p_crunner->state = LOWEST_POINT_SEARCH;
+                // Want the fallthough
+            case LOWEST_POINT_SEARCH:
+            {
                 while (!sc_queue_empty(&p_crunner->bfs_queue))
                 {
                     unsigned int curr_idx = sc_queue_peek_first(&p_crunner->bfs_queue);

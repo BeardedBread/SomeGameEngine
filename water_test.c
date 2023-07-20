@@ -257,7 +257,7 @@ static void toggle_block_system(Scene_t* scene)
             CWaterRunner_t* p_crunner;
             sc_map_foreach_value(&scene->ent_manager.component_map[CWATERRUNNER_T], p_crunner)
             {
-                p_crunner->state = LOWEST_POINT_SEARCH;
+                p_crunner->state = BFS_RESET;
             }
         }
         else if (IsMouseButtonReleased(MOUSE_RIGHT_BUTTON))

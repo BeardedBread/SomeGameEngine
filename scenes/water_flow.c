@@ -117,14 +117,19 @@ void update_water_runner_system(Scene_t* scene)
                     bool to_go[4] = {false, false, false, false};
                     Tile_t* curr_tile = tilemap.tiles + curr_idx;
 
-                    if (curr_height > curr_low && curr_tile->water_level < tilemap.max_water_level)
+                    unsigned int next = curr_idx + p_crunner->bfs_tilemap.width;
+                    Tile_t* next_tile = tilemap.tiles + next;
+
+                    if (
+                        curr_height > curr_low
+                        && curr_tile->water_level < tilemap.max_water_level
+                        && next_tile->water_level < tilemap.max_water_level
+                    )
                     {
                         lowest_tile = curr_idx;
                     }
 
 
-                    unsigned int next = curr_idx + p_crunner->bfs_tilemap.width;
-                    Tile_t* next_tile = tilemap.tiles + next;
                     if (next < p_crunner->bfs_tilemap.len)
                     {
                         to_go[0] = next_tile->solid != SOLID;
@@ -136,9 +141,9 @@ void update_water_runner_system(Scene_t* scene)
                         || curr_tile->water_level == tilemap.max_water_level
                     )
                     {
-                        next = curr_idx - 1;
-                        if (next % p_crunner->bfs_tilemap.width != 0)
+                        if (curr_idx % p_crunner->bfs_tilemap.width != 0)
                         {
+                            next = curr_idx - 1;
                             next_tile = tilemap.tiles + next;
                             to_go[1] = next_tile->solid != SOLID;
                         }

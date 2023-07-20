@@ -109,6 +109,25 @@ static void level_scene_render_func(Scene_t* scene)
                     next_idx = p_runner->bfs_tilemap.tilemap[curr_idx].to;
                 }
             }
+            else if (p_runner->state == SCANLINE_FILL)
+            {
+                unsigned int tile_y = ((p_runner->current_tile) / tilemap.width);
+                for (size_t i = 0; i < tilemap.width; ++i)
+                {
+                    unsigned int tile_idx = i + tile_y * tilemap.width;
+                    if (
+                        p_runner->bfs_tilemap.tilemap[tile_idx].reachable
+                        && tilemap.tiles[tile_idx].water_level < tilemap.max_water_level
+                    )
+                    {
+                        DrawRectangle(
+                            i * tilemap.tile_size, tile_y * tilemap.tile_size,
+                            tilemap.tile_size, tilemap.tile_size, ColorAlpha(GREEN, 0.4)
+                        );
+                    }
+
+                }
+            }
         }
 
         char buffer[64] = {0};

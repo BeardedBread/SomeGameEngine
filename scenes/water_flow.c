@@ -63,38 +63,36 @@ static void runner_BFS(const TileGrid_t* tilemap, CWaterRunner_t* p_crunner, int
         unsigned int next = curr_idx + p_crunner->bfs_tilemap.width;
         Tile_t* next_tile = tilemap->tiles + next;
 
-        if (
-            curr_height > curr_low
-            && curr_tile->water_level < tilemap->max_water_level
-            && next_tile->water_level < tilemap->max_water_level
-        )
-        {
-            *lowest_tile = curr_idx;
-        }
-
-
         if (next < p_crunner->bfs_tilemap.len)
         {
-            to_go[0] = next_tile->solid != SOLID;
-        }
-
-        if (
-            next_tile->solid == SOLID
-            || next_tile->water_level == tilemap->max_water_level
-            || curr_tile->water_level == tilemap->max_water_level
-        )
-        {
-            if (curr_idx % p_crunner->bfs_tilemap.width != 0)
+            if (
+                curr_height > curr_low
+                && curr_tile->water_level < tilemap->max_water_level
+            )
             {
-                next = curr_idx - 1;
-                next_tile = tilemap->tiles + next;
-                to_go[1] = next_tile->solid != SOLID;
+                *lowest_tile = curr_idx;
             }
-            next = curr_idx + 1;
-            if (next % p_crunner->bfs_tilemap.width != 0)
+
+            to_go[0] = next_tile->solid != SOLID;
+
+            if (
+                next_tile->solid == SOLID
+                || next_tile->water_level == tilemap->max_water_level
+                || curr_tile->water_level == tilemap->max_water_level
+            )
             {
-                next_tile = tilemap->tiles + next;
-                to_go[2] = next_tile->solid != SOLID;
+                if (curr_idx % p_crunner->bfs_tilemap.width != 0)
+                {
+                    next = curr_idx - 1;
+                    next_tile = tilemap->tiles + next;
+                    to_go[1] = next_tile->solid != SOLID;
+                }
+                next = curr_idx + 1;
+                if (next % p_crunner->bfs_tilemap.width != 0)
+                {
+                    next_tile = tilemap->tiles + next;
+                    to_go[2] = next_tile->solid != SOLID;
+                }
             }
         }
 

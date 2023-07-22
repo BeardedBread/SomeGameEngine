@@ -55,11 +55,18 @@ static void level_scene_render_func(Scene_t* scene)
                 DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
             }
 
-            if (tilemap.tiles[i].water_level > 0)
+            //if (tilemap.tiles[i].water_level > 0)
             {
+                float water_height = tilemap.tiles[i].water_level * 1.0f / tilemap.max_water_level;
                 // Draw water tile
                 Color water_colour = ColorAlpha(BLUE, 0.5);
-                DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
+                DrawRectangle(
+                    x,
+                    y + (1.0f - water_height) * TILE_SIZE,
+                    TILE_SIZE,
+                    water_height * TILE_SIZE,
+                    water_colour
+                );
             }
         }
 
@@ -355,7 +362,7 @@ int main(void)
     scene.data.tilemap.width = DEFAULT_MAP_WIDTH;
     scene.data.tilemap.height = DEFAULT_MAP_HEIGHT;
     scene.data.tilemap.tile_size = TILE_SIZE;
-    scene.data.tilemap.max_water_level = 1;
+    scene.data.tilemap.max_water_level = 4;
     scene.data.tilemap.n_tiles = scene.data.tilemap.width * scene.data.tilemap.height;
     assert(scene.data.tilemap.n_tiles <= MAX_N_TILES);
     scene.data.tilemap.tiles = all_tiles;

@@ -284,6 +284,9 @@ void update_water_runner_system(Scene_t* scene)
                         if (curr_tile->water_level < tilemap.max_water_level)
                         {
                             curr_tile->water_level++;
+                        }
+                        if (curr_tile->water_level != tilemap.max_water_level)
+                        {
                             p_crunner->counter++;
                         }
                     }

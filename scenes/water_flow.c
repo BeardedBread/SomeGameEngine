@@ -182,9 +182,6 @@ void update_water_runner_system(Scene_t* scene)
                     p_crunner->bfs_tilemap.tilemap[i].from = -1;
                     p_crunner->bfs_tilemap.tilemap[i].reachable = false;
                 }
-                p_crunner->state = BFS_START;
-                // Want the fallthough
-            case BFS_START:
                 p_crunner->state = LOWEST_POINT_SEARCH;
                 // Want the fallthough
             case LOWEST_POINT_SEARCH:

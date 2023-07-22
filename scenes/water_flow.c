@@ -229,7 +229,7 @@ void update_water_runner_system(Scene_t* scene)
             {
                 if (tilemap.tiles[p_crunner->current_tile].water_level == tilemap.max_water_level)
                 {
-                    p_crunner->state = FILL_COMPLETE;
+                    p_crunner->state = BFS_RESET;
                     break;
                 }
                 int start_tile =
@@ -243,19 +243,29 @@ void update_water_runner_system(Scene_t* scene)
                 int32_t lowest_tile = p_crunner->current_tile;
                 runner_BFS(&tilemap, p_crunner, &lowest_tile, p_crunner->current_tile);
 
-                p_crunner->counter = 0;
                 for (int i = 0; i < p_crunner->bfs_tilemap.width; ++i)
                 {
-                    Tile_t* curr_tile = tilemap.tiles + start_tile + i;
                     if (
                         p_crunner->bfs_tilemap.tilemap[start_tile + i].reachable
-                        && curr_tile->water_level < tilemap.max_water_level
                     )
                     {
-                        p_crunner->counter++;
+                        p_crunner->fill_range[0] = i;
+                        break;
                     }
                 }
-                p_crunner->fill_idx = 0;
+                for (int i = p_crunner->bfs_tilemap.width - 1; i >= 0; --i)
+                {
+                    if (
+                        p_crunner->bfs_tilemap.tilemap[start_tile + i].reachable
+                    )
+                    {
+                        p_crunner->fill_range[1] = i;
+                        break;
+                    }
+                }
+
+                p_crunner->fill_idx = p_crunner->fill_range[0];
+                p_crunner->counter = 0;
                 p_crunner->state = SCANLINE_FILL;
             }
             break;
@@ -269,24 +279,27 @@ void update_water_runner_system(Scene_t* scene)
                     Tile_t* curr_tile = tilemap.tiles + curr_idx;
                     if (
                         p_crunner->bfs_tilemap.tilemap[curr_idx].reachable
-                        && curr_tile->water_level < tilemap.max_water_level
                     )
                     {
-                        curr_tile->water_level++;
-                        if (curr_tile->water_level == tilemap.max_water_level)
+                        if (curr_tile->water_level < tilemap.max_water_level)
                         {
-                            p_crunner->counter--;
+                            curr_tile->water_level++;
+                            p_crunner->counter++;
                         }
                     }
 
-                    if (p_crunner->counter == 0)
-                    {
-                        p_crunner->state = BFS_RESET;
-                        break;
-                    }
 
                     p_crunner->fill_idx++;
-                    p_crunner->fill_idx %= p_crunner->bfs_tilemap.width;
+                    if (p_crunner->fill_idx > p_crunner->fill_range[1])
+                    {
+                        if (p_crunner->counter == 0)
+                        {
+                            p_crunner->state = BFS_RESET;
+                            break;
+                        }
+                        p_crunner->counter = 0;
+                        p_crunner->fill_idx = p_crunner->fill_range[0];
+                    }
                 }
             }
             break;

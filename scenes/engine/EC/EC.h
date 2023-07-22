@@ -149,18 +149,19 @@ typedef enum _WaterRunnerState
     LOWEST_POINT_MOVEMENT,
     REACHABILITY_SEARCH,
     SCANLINE_FILL,
+    FILL_COMPLETE,
 }WaterRunerState_t;
 
 typedef struct _CWaterRunner {
     BFSTileMap_t bfs_tilemap;
     WaterRunerState_t state;
     struct sc_queue_32 bfs_queue;
-    int32_t start_height;
+    bool* visited;
     int32_t current_tile;
     int32_t target_tile;
-    bool* visited;
+    int32_t fill_idx;
     uint8_t movement_delay;
-    uint8_t counter;
+    int16_t counter;
 }CWaterRunner_t;
 
 // Credits to bedroomcoders.co.uk for this

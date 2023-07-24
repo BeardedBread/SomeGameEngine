@@ -112,12 +112,17 @@ static void level_scene_render_func(Scene_t* scene)
                 );
             }
 
-            if (tilemap.tiles[i].water_level > 0)
-            {
-                // Draw water tile
-                Color water_colour = ColorAlpha(BLUE, 0.5);
-                DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
-            }
+            // Draw water tile
+            float water_height = tilemap.tiles[i].water_level * 1.0f / tilemap.max_water_level;
+            // Draw water tile
+            Color water_colour = ColorAlpha(BLUE, 0.5);
+            DrawRectangle(
+                x,
+                y + (1.0f - water_height) * TILE_SIZE,
+                TILE_SIZE,
+                water_height * TILE_SIZE,
+                water_colour
+            );
         }
 
         char buffer[64] = {0};
@@ -473,6 +478,11 @@ static void toggle_block_system(Scene_t* scene)
     Vector2 raw_mouse_pos = {GetMouseX(), GetMouseY()};
     raw_mouse_pos = Vector2Subtract(raw_mouse_pos, (Vector2){data->game_rec.x, data->game_rec.y});
 
+    if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+    {
+        last_tile_idx = MAX_N_TILES;
+    }
+
     if (
         raw_mouse_pos.x < data->game_rec.width
         && raw_mouse_pos.y < data->game_rec.height
@@ -482,6 +492,7 @@ static void toggle_block_system(Scene_t* scene)
         unsigned int tile_idx = get_tile_idx(mouse_pos.x, mouse_pos.y, &tilemap);
         if (tile_idx >= MAX_N_TILES) return;
         if (tile_idx == last_tile_idx) return;
+
         if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
         {
             enum EntitySpawnSelection sel = (enum EntitySpawnSelection)current_spawn_selection;
@@ -503,13 +514,9 @@ static void toggle_block_system(Scene_t* scene)
             break;
             case TOGGLE_WATER:
                 new_type = tilemap.tiles[tile_idx].tile_type;
-                if (tilemap.tiles[tile_idx].water_level == 0)
+                if (tilemap.tiles[tile_idx].water_level < MAX_WATER_LEVEL)
                 {
-                    tilemap.tiles[tile_idx].water_level = MAX_WATER_LEVEL;
-                }
-                else
-                {
-                    tilemap.tiles[tile_idx].water_level = 0;
+                    tilemap.tiles[tile_idx].water_level++;
                 }
             break;
             case SPAWN_CRATE:
@@ -683,6 +690,7 @@ void init_level_scene(LevelScene_t* scene)
 
     scene->data.tilemap.width = DEFAULT_MAP_WIDTH;
     scene->data.tilemap.height = DEFAULT_MAP_HEIGHT;
+    scene->data.tilemap.max_water_level = MAX_WATER_LEVEL;
     scene->data.tilemap.tile_size = TILE_SIZE;
     scene->data.tilemap.n_tiles = scene->data.tilemap.width * scene->data.tilemap.height;
     assert(scene->data.tilemap.n_tiles <= MAX_N_TILES);

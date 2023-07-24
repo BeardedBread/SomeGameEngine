@@ -70,7 +70,7 @@ static void runner_BFS(const TileGrid_t* tilemap, CWaterRunner_t* p_crunner, int
 
         if (
             ((curr_height <= init_height && !first_reached) || curr_height > curr_low)
-            && curr_tile->water_level < tilemap->max_water_level
+            && curr_tile->water_level < curr_tile->max_water_level
         )
         {
             first_reached = true;
@@ -84,8 +84,8 @@ static void runner_BFS(const TileGrid_t* tilemap, CWaterRunner_t* p_crunner, int
 
             if (
                 next_tile->solid == SOLID
-                || next_tile->water_level == tilemap->max_water_level
-                || curr_tile->water_level == tilemap->max_water_level
+                || next_tile->water_level >= next_tile->max_water_level
+                || curr_tile->water_level >= curr_tile->max_water_level
             )
             {
                 if (curr_idx % p_crunner->bfs_tilemap.width != 0)
@@ -103,7 +103,7 @@ static void runner_BFS(const TileGrid_t* tilemap, CWaterRunner_t* p_crunner, int
             }
         }
         
-        if (curr_tile->water_level == tilemap->max_water_level)
+        if (curr_tile->water_level >= curr_tile->max_water_level)
         {
 
             next = curr_idx - p_crunner->bfs_tilemap.width;
@@ -227,7 +227,8 @@ void update_water_runner_system(Scene_t* scene)
             break;
             case REACHABILITY_SEARCH:
             {
-                if (tilemap.tiles[p_crunner->current_tile].water_level == tilemap.max_water_level)
+                Tile_t* curr_tile = tilemap.tiles + p_crunner->current_tile;
+                if (curr_tile->water_level >= curr_tile->max_water_level)
                 {
                     p_crunner->state = BFS_RESET;
                     break;
@@ -282,11 +283,11 @@ void update_water_runner_system(Scene_t* scene)
                         p_crunner->bfs_tilemap.tilemap[curr_idx].reachable
                     )
                     {
-                        if (curr_tile->water_level < tilemap.max_water_level)
+                        if (curr_tile->water_level < curr_tile->max_water_level)
                         {
                             curr_tile->water_level++;
                         }
-                        if (curr_tile->water_level != tilemap.max_water_level)
+                        if (curr_tile->water_level < curr_tile->max_water_level)
                         {
                             p_crunner->counter++;
                         }

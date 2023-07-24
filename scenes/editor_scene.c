@@ -717,7 +717,6 @@ void init_level_scene(LevelScene_t* scene)
 
     scene->data.tilemap.width = DEFAULT_MAP_WIDTH;
     scene->data.tilemap.height = DEFAULT_MAP_HEIGHT;
-    scene->data.tilemap.max_water_level = MAX_WATER_LEVEL;
     scene->data.tilemap.tile_size = TILE_SIZE;
     scene->data.tilemap.n_tiles = scene->data.tilemap.width * scene->data.tilemap.height;
     assert(scene->data.tilemap.n_tiles <= MAX_N_TILES);
@@ -728,6 +727,7 @@ void init_level_scene(LevelScene_t* scene)
         all_tiles[i].solid = NOT_SOLID;
         all_tiles[i].tile_type = EMPTY_TILE;
         all_tiles[i].moveable = true;
+        all_tiles[i].max_water_level = 4;
         sc_map_init_64v(&all_tiles[i].entities_set, 16, 0);
         all_tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
     }

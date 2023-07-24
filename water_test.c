@@ -55,19 +55,16 @@ static void level_scene_render_func(Scene_t* scene)
                 DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
             }
 
-            //if (tilemap.tiles[i].water_level > 0)
-            {
-                float water_height = tilemap.tiles[i].water_level * 1.0f / tilemap.max_water_level;
-                // Draw water tile
-                Color water_colour = ColorAlpha(BLUE, 0.5);
-                DrawRectangle(
-                    x,
-                    y + (1.0f - water_height) * TILE_SIZE,
-                    TILE_SIZE,
-                    water_height * TILE_SIZE,
-                    water_colour
-                );
-            }
+            uint32_t water_height = tilemap.tiles[i].water_level * WATER_BBOX_STEP;
+            // Draw water tile
+            Color water_colour = ColorAlpha(BLUE, 0.5);
+            DrawRectangle(
+                x,
+                y + (TILE_SIZE - water_height),
+                TILE_SIZE,
+                water_height,
+                water_colour
+            );
         }
 
         sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
@@ -237,7 +234,7 @@ static void toggle_block_system(Scene_t* scene)
                     }
                     else
                     {
-                        tilemap.tiles[tile_idx].water_level = tilemap.max_water_level;
+                        tilemap.tiles[tile_idx].water_level = tilemap.tiles[tile_idx].max_water_level;
                     }
                 }
             
@@ -362,7 +359,6 @@ int main(void)
     scene.data.tilemap.width = DEFAULT_MAP_WIDTH;
     scene.data.tilemap.height = DEFAULT_MAP_HEIGHT;
     scene.data.tilemap.tile_size = TILE_SIZE;
-    scene.data.tilemap.max_water_level = 4;
     scene.data.tilemap.n_tiles = scene.data.tilemap.width * scene.data.tilemap.height;
     assert(scene.data.tilemap.n_tiles <= MAX_N_TILES);
     scene.data.tilemap.tiles = all_tiles;
@@ -372,6 +368,7 @@ int main(void)
         all_tiles[i].solid = NOT_SOLID;
         all_tiles[i].tile_type = EMPTY_TILE;
         all_tiles[i].moveable = true;
+        all_tiles[i].max_water_level = 3;
         sc_map_init_64v(&all_tiles[i].entities_set, 16, 0);
         all_tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
     }

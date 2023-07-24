@@ -1,5 +1,6 @@
 #include "scene_impl.h"
 #include "game_systems.h"
+#include "water_flow.h"
 #include "constants.h"
 #include "ent_impl.h"
 #include "mempool.h"
@@ -23,9 +24,10 @@ enum EntitySpawnSelection {
     SPAWN_CRATE_ARROW_D,
     SPAWN_CRATE_BOMB,
     SPAWN_BOULDER,
+    SPAWN_WATER_RUNNER,
 };
 
-#define MAX_SPAWN_TYPE 12
+#define MAX_SPAWN_TYPE 13
 static unsigned int current_spawn_selection = 0;
 static bool metal_toggle = false;
 
@@ -47,21 +49,6 @@ static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
     }
 
     return MAX_N_TILES;
-}
-
-static char* get_spawn_selection_string(enum EntitySpawnSelection sel)
-{
-    switch(sel)
-    {
-        case TOGGLE_TILE: return "solid tile";
-        case TOGGLE_ONEWAY: return "wooden tile";
-        case TOGGLE_LADDER: return "ladder";
-        case TOGGLE_SPIKE: return "spike";
-        case TOGGLE_WATER: return "water";
-        case SPAWN_CRATE: return "crate";
-        case SPAWN_BOULDER: return "boulder";
-        default: return "unknown";
-    }
 }
 
 static void level_scene_render_func(Scene_t* scene)
@@ -248,6 +235,14 @@ static void level_scene_render_func(Scene_t* scene)
             }
         }
 
+        sc_map_foreach_value(&scene->ent_manager.entities_map[DYNMEM_ENT_TAG], p_ent)
+        {
+            CWaterRunner_t* p_runner = get_component(p_ent, CWATERRUNNER_T);
+
+            unsigned int x = ((p_runner->current_tile) % tilemap.width) * tilemap.tile_size;
+            unsigned int y = ((p_runner->current_tile) / tilemap.width) * tilemap.tile_size;
+            DrawCircle(x+16, y+16, 8, ColorAlpha(BLUE, 0.6));
+        }
         for (size_t i = 0; i < tilemap.n_tiles; ++i)
         {
             int x = (i % tilemap.width) * TILE_SIZE;
@@ -297,7 +292,7 @@ static void level_scene_render_func(Scene_t* scene)
         const Color draw_colour[MAX_SPAWN_TYPE] = {
             BLACK, MAROON, ORANGE, ColorAlpha(RAYWHITE, 0.5), ColorAlpha(BLUE, 0.5),
             crate_colour, crate_colour, crate_colour, crate_colour, crate_colour, crate_colour,
-            ColorAlpha(RAYWHITE, 0.5)
+            ColorAlpha(RAYWHITE, 0.5), ColorAlpha(RAYWHITE, 0.5)
         };
         for (uint8_t i = 0; i < MAX_SPAWN_TYPE; ++i)
         {
@@ -351,6 +346,9 @@ static void level_scene_render_func(Scene_t* scene)
                     break;
                     case SPAWN_CRATE_BOMB:
                         DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, BLACK);
+                    break;
+                    case SPAWN_WATER_RUNNER:
+                        DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, ColorAlpha(BLUE, 0.2));
                     break;
                 }
             }
@@ -411,6 +409,9 @@ static void level_scene_render_func(Scene_t* scene)
             case SPAWN_CRATE_BOMB:
                 DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, BLACK);
             break;
+            case SPAWN_WATER_RUNNER:
+                DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, ColorAlpha(BLUE, 0.2));
+            break;
         }
 
         // For DEBUG
@@ -436,8 +437,8 @@ static void level_scene_render_func(Scene_t* scene)
             sprintf(buffer, "Ladder: %u", p_pstate->ladder_state);
             DrawText(buffer, gui_x, 150, 12, BLACK);
         }
-        sprintf(buffer, "Spawn Entity: %s", get_spawn_selection_string(current_spawn_selection));
-        DrawText(buffer, gui_x, 240, 12, BLACK);
+        //sprintf(buffer, "Spawn Entity: %s", get_spawn_selection_string(current_spawn_selection));
+        //DrawText(buffer, gui_x, 240, 12, BLACK);
         sprintf(buffer, "Number of Entities: %u", sc_map_size_64v(&scene->ent_manager.entities));
         DrawText(buffer, gui_x, 270, 12, BLACK);
         sprintf(buffer, "FPS: %u", GetFPS());
@@ -499,50 +500,66 @@ static void toggle_block_system(Scene_t* scene)
             TileType_t new_type = EMPTY_TILE;
             switch (sel)
             {
-            case TOGGLE_TILE:
-                new_type = (tilemap.tiles[tile_idx].tile_type == SOLID_TILE)? EMPTY_TILE : SOLID_TILE;
-                if (new_type == SOLID_TILE) tilemap.tiles[tile_idx].water_level = 0;
-            break;
-            case TOGGLE_ONEWAY:
-                new_type = (tilemap.tiles[tile_idx].tile_type == ONEWAY_TILE)? EMPTY_TILE : ONEWAY_TILE;
-            break;
-            case TOGGLE_LADDER:
-                new_type = (tilemap.tiles[tile_idx].tile_type == LADDER)? EMPTY_TILE : LADDER;
-            break;
-            case TOGGLE_SPIKE:
-                new_type = (tilemap.tiles[tile_idx].tile_type == SPIKES)? EMPTY_TILE : SPIKES;
-            break;
-            case TOGGLE_WATER:
-                new_type = tilemap.tiles[tile_idx].tile_type;
-                if (tilemap.tiles[tile_idx].water_level < MAX_WATER_LEVEL)
+                case TOGGLE_TILE:
+                    new_type = (tilemap.tiles[tile_idx].tile_type == SOLID_TILE)? EMPTY_TILE : SOLID_TILE;
+                    if (new_type == SOLID_TILE) tilemap.tiles[tile_idx].water_level = 0;
+                break;
+                case TOGGLE_ONEWAY:
+                    new_type = (tilemap.tiles[tile_idx].tile_type == ONEWAY_TILE)? EMPTY_TILE : ONEWAY_TILE;
+                break;
+                case TOGGLE_LADDER:
+                    new_type = (tilemap.tiles[tile_idx].tile_type == LADDER)? EMPTY_TILE : LADDER;
+                break;
+                case TOGGLE_SPIKE:
+                    new_type = (tilemap.tiles[tile_idx].tile_type == SPIKES)? EMPTY_TILE : SPIKES;
+                break;
+                case TOGGLE_WATER:
+                    new_type = tilemap.tiles[tile_idx].tile_type;
+                    if (tilemap.tiles[tile_idx].water_level < MAX_WATER_LEVEL)
+                    {
+                        tilemap.tiles[tile_idx].water_level++;
+                    }
+                break;
+                case SPAWN_CRATE:
+                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_EMPTY);
+                break;
+                case SPAWN_BOULDER:
+                    spawn_boulder(scene, tile_idx);
+                break;
+                case SPAWN_CRATE_ARROW_L:
+                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_LEFT_ARROW);
+                break;
+                case SPAWN_CRATE_ARROW_R:
+                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_RIGHT_ARROW);
+                break;
+                case SPAWN_CRATE_ARROW_U:
+                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_UP_ARROW);
+                break;
+                case SPAWN_CRATE_ARROW_D:
+                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_DOWN_ARROW);
+                break;
+                case SPAWN_CRATE_BOMB:
+                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_BOMB);
+                break;
+                case SPAWN_WATER_RUNNER:
                 {
-                    tilemap.tiles[tile_idx].water_level++;
+                    Entity_t* p_ent = create_water_runner(&scene->ent_manager, DEFAULT_MAP_WIDTH, DEFAULT_MAP_HEIGHT, tile_idx);
+                    if (p_ent != NULL)
+                    {
+                        CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
+                        p_ct->position.x = (tile_idx % tilemap.width) * tilemap.tile_size;
+                        p_ct->position.y = (tile_idx / tilemap.width) * tilemap.tile_size;
+                    }
                 }
-            break;
-            case SPAWN_CRATE:
-                spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_EMPTY);
-            break;
-            case SPAWN_BOULDER:
-                spawn_boulder(scene, tile_idx);
-            break;
-            case SPAWN_CRATE_ARROW_L:
-                spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_LEFT_ARROW);
-            break;
-            case SPAWN_CRATE_ARROW_R:
-                spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_RIGHT_ARROW);
-            break;
-            case SPAWN_CRATE_ARROW_U:
-                spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_UP_ARROW);
-            break;
-            case SPAWN_CRATE_ARROW_D:
-                spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_DOWN_ARROW);
-            break;
-            case SPAWN_CRATE_BOMB:
-                spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_BOMB);
-            break;
+                break;
             }
             change_a_tile(&tilemap, tile_idx, new_type);
             last_tile_idx = tile_idx;
+            CWaterRunner_t* p_crunner;
+            sc_map_foreach_value(&scene->ent_manager.component_map[CWATERRUNNER_T], p_crunner)
+            {
+                p_crunner->state = BFS_RESET;
+            }
         }
         else if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
         {
@@ -565,7 +582,16 @@ static void toggle_block_system(Scene_t* scene)
                     unsigned int tile_idx = p_tilecoord->tiles[i];
                     sc_map_del_64v(&(tilemap.tiles[tile_idx].entities_set), m_id);
                 }
-                remove_entity(&scene->ent_manager, m_id);
+                //remove_entity(&scene->ent_manager, m_id);
+                CWaterRunner_t* p_crunner = get_component(ent, CWATERRUNNER_T);
+                if (p_crunner == NULL)
+                {
+                    remove_entity(&scene->ent_manager, m_id);
+                }
+                else
+                {
+                    free_water_runner(ent, &scene->ent_manager);
+                }
             }
         }
         else
@@ -673,6 +699,7 @@ void init_level_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &camera_update_system);
     sc_array_add(&scene->scene.systems, &player_dir_reset_system);
     sc_array_add(&scene->scene.systems, &player_respawn_system);
+    sc_array_add(&scene->scene.systems, &update_water_runner_system);
     sc_array_add(&scene->scene.systems, &toggle_block_system);
 
     // This avoid graphical glitch, not essential

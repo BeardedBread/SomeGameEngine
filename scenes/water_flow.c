@@ -1,4 +1,5 @@
 #include "water_flow.h"
+#include "constants.h"
 #include "sc/queue/sc_queue.h"
 #include <stdio.h>
 Entity_t* create_water_runner(EntityManager_t* ent_manager, int32_t width, int32_t height, int32_t start_tile)
@@ -80,7 +81,7 @@ static void runner_BFS(const TileGrid_t* tilemap, CWaterRunner_t* p_crunner, int
 
         if (next < p_crunner->bfs_tilemap.len)
         {
-            to_go[0] = next_tile->solid != SOLID;
+            to_go[0] = (next_tile->solid != SOLID && next_tile->max_water_level == MAX_WATER_LEVEL);
 
             if (
                 next_tile->solid == SOLID
@@ -92,13 +93,13 @@ static void runner_BFS(const TileGrid_t* tilemap, CWaterRunner_t* p_crunner, int
                 {
                     next = curr_idx - 1;
                     next_tile = tilemap->tiles + next;
-                    to_go[1] = next_tile->solid != SOLID;
+                    to_go[1] = (next_tile->solid != SOLID && next_tile->max_water_level == MAX_WATER_LEVEL);
                 }
                 next = curr_idx + 1;
                 if (next % p_crunner->bfs_tilemap.width != 0)
                 {
                     next_tile = tilemap->tiles + next;
-                    to_go[2] = next_tile->solid != SOLID;
+                    to_go[2] = (next_tile->solid != SOLID && next_tile->max_water_level == MAX_WATER_LEVEL);
                 }
             }
         }
@@ -110,7 +111,7 @@ static void runner_BFS(const TileGrid_t* tilemap, CWaterRunner_t* p_crunner, int
             if (next >= 0)
             {
                 next_tile = tilemap->tiles + next;
-                to_go[3] = next_tile->solid != SOLID;
+                to_go[3] = (next_tile->solid != SOLID && next_tile->max_water_level == MAX_WATER_LEVEL);
             }
         }
 

@@ -368,7 +368,7 @@ int main(void)
         all_tiles[i].solid = NOT_SOLID;
         all_tiles[i].tile_type = EMPTY_TILE;
         all_tiles[i].moveable = true;
-        all_tiles[i].max_water_level = 3;
+        all_tiles[i].max_water_level = 4;
         sc_map_init_64v(&all_tiles[i].entities_set, 16, 0);
         all_tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
     }

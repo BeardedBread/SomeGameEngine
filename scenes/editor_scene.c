@@ -17,6 +17,7 @@ enum EntitySpawnSelection {
     TOGGLE_LADDER,
     TOGGLE_SPIKE,
     TOGGLE_WATER,
+    TOGGLE_AIR_POCKET,
     SPAWN_CRATE,
     SPAWN_CRATE_ARROW_L,
     SPAWN_CRATE_ARROW_R,
@@ -27,7 +28,7 @@ enum EntitySpawnSelection {
     SPAWN_WATER_RUNNER,
 };
 
-#define MAX_SPAWN_TYPE 13
+#define MAX_SPAWN_TYPE 14
 static unsigned int current_spawn_selection = 0;
 static bool metal_toggle = false;
 
@@ -110,6 +111,10 @@ static void level_scene_render_func(Scene_t* scene)
                 water_height,
                 water_colour
             );
+            if (tilemap.tiles[i].max_water_level < MAX_WATER_LEVEL)
+            {
+                DrawRectangleLinesEx((Rectangle){x, y, TILE_SIZE, TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
+            }
         }
 
         char buffer[64] = {0};
@@ -290,7 +295,7 @@ static void level_scene_render_func(Scene_t* scene)
         Vector2 draw_pos = {data->game_rec.x, data->game_rec.y + data->game_rec.height + SELECTION_GAP};
         const Color crate_colour = metal_toggle ? GRAY : BROWN;
         const Color draw_colour[MAX_SPAWN_TYPE] = {
-            BLACK, MAROON, ORANGE, ColorAlpha(RAYWHITE, 0.5), ColorAlpha(BLUE, 0.5),
+            BLACK, MAROON, ORANGE, ColorAlpha(RAYWHITE, 0.5), ColorAlpha(BLUE, 0.5), ColorAlpha(RAYWHITE, 0.5),
             crate_colour, crate_colour, crate_colour, crate_colour, crate_colour, crate_colour,
             ColorAlpha(RAYWHITE, 0.5), ColorAlpha(RAYWHITE, 0.5)
         };
@@ -349,6 +354,9 @@ static void level_scene_render_func(Scene_t* scene)
                     break;
                     case SPAWN_WATER_RUNNER:
                         DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, ColorAlpha(BLUE, 0.2));
+                    break;
+                    case TOGGLE_AIR_POCKET:
+                        DrawRectangleLinesEx((Rectangle){draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
                     break;
                 }
             }
@@ -411,6 +419,9 @@ static void level_scene_render_func(Scene_t* scene)
             break;
             case SPAWN_WATER_RUNNER:
                 DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, ColorAlpha(BLUE, 0.2));
+            break;
+            case TOGGLE_AIR_POCKET:
+                DrawRectangleLinesEx((Rectangle){draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
             break;
         }
 
@@ -518,6 +529,18 @@ static void toggle_block_system(Scene_t* scene)
                     if (tilemap.tiles[tile_idx].water_level < MAX_WATER_LEVEL)
                     {
                         tilemap.tiles[tile_idx].water_level++;
+                    }
+                break;
+                case TOGGLE_AIR_POCKET:
+                    new_type = tilemap.tiles[tile_idx].tile_type;
+                    if (tilemap.tiles[tile_idx].max_water_level < MAX_WATER_LEVEL)
+                    {
+                        tilemap.tiles[tile_idx].max_water_level = MAX_WATER_LEVEL;
+                    }
+                    else
+                    {
+                        tilemap.tiles[tile_idx].max_water_level = 0;
+                        tilemap.tiles[tile_idx].water_level = 0;
                     }
                 break;
                 case SPAWN_CRATE:

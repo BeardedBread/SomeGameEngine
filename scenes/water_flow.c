@@ -219,6 +219,7 @@ void update_water_runner_system(Scene_t* scene)
                     CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
                     p_ct->position.x = (p_crunner->current_tile % tilemap.width) * tilemap.tile_size; 
                     p_ct->position.y = (p_crunner->current_tile / tilemap.width) * tilemap.tile_size; 
+                    tilemap.tiles[p_crunner->current_tile].wet = true;
                     if (p_crunner->current_tile == p_crunner->target_tile)
                     {
                         p_crunner->state = REACHABILITY_SEARCH;

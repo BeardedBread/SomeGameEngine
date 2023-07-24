@@ -20,6 +20,7 @@ typedef struct Tile {
     Vector2 offset;
     Vector2 size;
     bool moveable;
+    bool wet;
 }Tile_t;
 
 typedef struct TileGrid
@@ -28,7 +29,6 @@ typedef struct TileGrid
     unsigned int height;
     unsigned int n_tiles;
     unsigned int tile_size;
-    //unsigned int max_water_level;
     Tile_t* tiles;
 }TileGrid_t;
 

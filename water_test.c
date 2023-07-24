@@ -54,6 +54,37 @@ static void level_scene_render_func(Scene_t* scene)
             {
                 DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
             }
+            
+            if (tilemap.tiles[i].wet)
+            {
+#define SURFACE_THICKNESS 4
+                int up = i - tilemap.width;
+                int bot = i + tilemap.width;
+                int right = i + 1;
+                int left = i - 1;
+                int bot_line = y + TILE_SIZE - tilemap.tiles[i].water_level * WATER_BBOX_STEP - SURFACE_THICKNESS / 2;
+                if (up >= 0 && tilemap.tiles[up].wet)
+                {
+                    DrawLineEx((Vector2){x + TILE_SIZE / 2, y}, (Vector2){x + TILE_SIZE / 2, y + TILE_SIZE - tilemap.tiles[i].water_level * WATER_BBOX_STEP}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
+                }
+
+
+                if (
+                    bot <= tilemap.n_tiles
+                    && tilemap.tiles[bot].water_level < MAX_WATER_LEVEL
+                    && tilemap.tiles[i].water_level == 0
+                    )
+                {
+                    if (i % tilemap.width != 0 && tilemap.tiles[left].wet)
+                    {
+                        DrawLineEx((Vector2){x, bot_line}, (Vector2){x + TILE_SIZE / 2, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
+                    }
+                    if (right % tilemap.width != 0 && tilemap.tiles[right].wet)
+                    {
+                        DrawLineEx((Vector2){x + TILE_SIZE / 2, bot_line}, (Vector2){x + TILE_SIZE, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
+                    }
+                }
+            }
 
             uint32_t water_height = tilemap.tiles[i].water_level * WATER_BBOX_STEP;
             // Draw water tile
@@ -221,7 +252,11 @@ static void toggle_block_system(Scene_t* scene)
             {
                 TileType_t new_type = EMPTY_TILE;
                 new_type = (tilemap.tiles[tile_idx].tile_type == SOLID_TILE)? EMPTY_TILE : SOLID_TILE;
-                if (new_type == SOLID_TILE) tilemap.tiles[tile_idx].water_level = 0;
+                if (new_type == SOLID_TILE)
+                {
+                    tilemap.tiles[tile_idx].water_level = 0;
+                    tilemap.tiles[tile_idx].wet = false;
+                }
                 change_a_tile(&tilemap, tile_idx, new_type);
             }
             else
@@ -243,7 +278,39 @@ static void toggle_block_system(Scene_t* scene)
             CWaterRunner_t* p_crunner;
             sc_map_foreach_value(&scene->ent_manager.component_map[CWATERRUNNER_T], p_crunner)
             {
+                //if (tilemap.tiles[tile_idx].solid)
+                //{
+                //    int curr_idx = p_crunner->current_tile;
+                //    //Tile_t* curr_tile = tilemap.tiles + p_crunner->current_tile;
+                //    bool blocked = false;
+                //    puts("Retracing");
+                //    while(curr_idx >= 0)
+                //    {
+                //        printf("%u\n", curr_idx);
+                //        if (curr_idx == tile_idx)
+                //        {
+                //            blocked = true;
+                //            break;
+                //        }
+                //        curr_idx = p_crunner->bfs_tilemap.tilemap[curr_idx].from;
+                //    }
+                //    if (blocked)
+                //    {
+                //        int return_idx = p_crunner->current_tile;
+                //        if (p_crunner->bfs_tilemap.tilemap[curr_idx].from >= 0)
+                //        {
+                //            p_crunner->current_tile = p_crunner->bfs_tilemap.tilemap[curr_idx].from;
+                //        }
+                //        puts("Blocking...");
+                //        while(curr_idx != return_idx)
+                //        {
+                //            tilemap.tiles[curr_idx].wet = false;
+                //            curr_idx = p_crunner->bfs_tilemap.tilemap[curr_idx].to;
+                //        }
+                //    }
+                //}
                 p_crunner->state = BFS_RESET;
+
             }
         }
         else if (IsMouseButtonReleased(MOUSE_RIGHT_BUTTON))

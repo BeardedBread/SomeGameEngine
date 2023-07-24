@@ -113,14 +113,14 @@ static void level_scene_render_func(Scene_t* scene)
             }
 
             // Draw water tile
-            float water_height = tilemap.tiles[i].water_level * 1.0f / tilemap.max_water_level;
+            uint32_t water_height = tilemap.tiles[i].water_level * WATER_BBOX_STEP;
             // Draw water tile
             Color water_colour = ColorAlpha(BLUE, 0.5);
             DrawRectangle(
                 x,
-                y + (1.0f - water_height) * TILE_SIZE,
+                y + (TILE_SIZE - water_height),
                 TILE_SIZE,
-                water_height * TILE_SIZE,
+                water_height,
                 water_colour
             );
         }

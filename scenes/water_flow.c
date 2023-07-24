@@ -166,7 +166,7 @@ void update_water_runner_system(Scene_t* scene)
             {
                 // Use previously store tile position
                 // Clear from those positions
-                unsigned int tile_idx = p_tilecoord->tiles[i];
+                int tile_idx = p_tilecoord->tiles[i];
                 sc_map_del_64v(&(tilemap.tiles[tile_idx].entities_set), ent_idx);
             }
             free_water_runner(ent, &scene->ent_manager);
@@ -192,8 +192,8 @@ void update_water_runner_system(Scene_t* scene)
                 runner_BFS(&tilemap, p_crunner, &lowest_tile, p_crunner->current_tile);
                 p_crunner->target_tile = lowest_tile;
                 // Trace path from lowest_tile
-                unsigned int prev_idx = lowest_tile;
-                unsigned int curr_idx = p_crunner->bfs_tilemap.tilemap[prev_idx].from;
+                int prev_idx = lowest_tile;
+                int curr_idx = p_crunner->bfs_tilemap.tilemap[prev_idx].from;
                 while (p_crunner->bfs_tilemap.tilemap[prev_idx].from >= 0)
                 {
                     p_crunner->bfs_tilemap.tilemap[curr_idx].to = prev_idx;
@@ -271,6 +271,7 @@ void update_water_runner_system(Scene_t* scene)
             break;
             case SCANLINE_FILL:
             {
+                // Unsigned usage here is okay
                 unsigned int start_tile =
                     (p_crunner->current_tile / p_crunner->bfs_tilemap.width) * p_crunner->bfs_tilemap.width;
                 //for (size_t i = 0; i < 10; ++i)

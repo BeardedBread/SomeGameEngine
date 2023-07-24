@@ -869,27 +869,35 @@ void global_external_forces_system(Scene_t* scene)
             continue;
         }
 
-        Vector2 half_size = {0, 0};
-        if (p_bbox != NULL)
-        {
-            half_size = p_bbox->half_size;
-        }
-
         if (!(p_mstate->ground_state & 1))
         {
             // Only apply upthrust if center is in water
             // If need more accuracy, need to find area of overlap
             if (p_mstate->water_state & 1)
             {
+                Vector2 player_center = (Vector2){
+                    .x = p_ctransform->position.x + p_bbox->half_size.x,
+                    .y = p_ctransform->position.y + p_bbox->half_size.y,
+                };
                 unsigned int tile_idx = get_tile_idx(
-                    p_ctransform->position.x + half_size.x,
-                    p_ctransform->position.y + half_size.y,
+                    player_center.x,
+                    player_center.y,
                     data->tilemap.width
                 );
-
                 if (data->tilemap.tiles[tile_idx].water_level > 0)
                 {
-                    p_ctransform->accel = Vector2Add(p_ctransform->accel, UPTHRUST);
+                    uint32_t water_height = data->tilemap.tiles[tile_idx].water_level * WATER_BBOX_STEP;
+                    Rectangle box = {
+                        .x = (tile_idx % data->tilemap.width) * data->tilemap.tile_size,
+                        .y = (tile_idx / data->tilemap.width + 1) * data->tilemap.tile_size - water_height,
+                        .width = data->tilemap.tile_size,
+                        .height = water_height,
+                    };
+
+                    if (point_in_AABB(player_center, box))
+                    {
+                        p_ctransform->accel = Vector2Add(p_ctransform->accel, UPTHRUST);
+                    }
                 }
             }
             p_ctransform->accel = Vector2Add(p_ctransform->accel, GRAVITY);
@@ -1318,12 +1326,27 @@ void state_transition_update_system(Scene_t* scene)
         bool in_water = false;
         if (!(p_mstate->water_state & 1))
         {
+            Vector2 player_center = (Vector2){
+                .x = p_ctransform->position.x + p_bbox->half_size.x,
+                .y = p_ctransform->position.y + p_bbox->half_size.y,
+            };
             unsigned int tile_idx = get_tile_idx(
-                p_ctransform->position.x + p_bbox->half_size.x,
-                p_ctransform->position.y + p_bbox->half_size.y,
+                player_center.x,
+                player_center.y,
                 data->tilemap.width
             );
-            in_water =  (data->tilemap.tiles[tile_idx].water_level > 0);
+            if (data->tilemap.tiles[tile_idx].water_level > 0)
+            {
+                uint32_t water_height = data->tilemap.tiles[tile_idx].water_level * WATER_BBOX_STEP;
+                Rectangle box = {
+                    .x = (tile_idx % data->tilemap.width) * data->tilemap.tile_size,
+                    .y = (tile_idx / data->tilemap.width + 1) * data->tilemap.tile_size - water_height,
+                    .width = data->tilemap.tile_size,
+                    .height = water_height,
+                };
+
+                in_water = point_in_AABB(player_center, box);
+            }
         }
         else
         {

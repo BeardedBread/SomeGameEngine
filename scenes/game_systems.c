@@ -896,7 +896,7 @@ void global_external_forces_system(Scene_t* scene)
 
                     if (point_in_AABB(player_center, box))
                     {
-                        p_ctransform->accel = Vector2Add(p_ctransform->accel, UPTHRUST);
+                        p_ctransform->accel = Vector2Multiply(Vector2Add(p_ctransform->accel, UPTHRUST), p_ctransform->shape_factor);
                     }
                 }
             }
@@ -906,7 +906,10 @@ void global_external_forces_system(Scene_t* scene)
         // Friction
         p_ctransform->accel = Vector2Add(
             p_ctransform->accel,
-            Vector2Multiply(p_ctransform->fric_coeff, p_ctransform->velocity)
+            Vector2Multiply(
+                Vector2Multiply(p_ctransform->fric_coeff, p_ctransform->velocity),
+                p_ctransform->shape_factor
+            )
         );
         
         if (p_bbox == NULL) continue; //Do not proceed if no bbox

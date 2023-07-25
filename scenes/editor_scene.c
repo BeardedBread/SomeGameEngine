@@ -562,7 +562,7 @@ static void toggle_block_system(Scene_t* scene)
                     new_type = tilemap.tiles[tile_idx].tile_type;
                     if (tilemap.tiles[tile_idx].water_level < MAX_WATER_LEVEL)
                     {
-                        tilemap.tiles[tile_idx].water_level++;
+                        tilemap.tiles[tile_idx].water_level = MAX_WATER_LEVEL;
                     }
                 break;
                 case TOGGLE_AIR_POCKET:

@@ -48,6 +48,7 @@ typedef struct _CTransform_t {
     Vector2 velocity;
     Vector2 accel;
     Vector2 fric_coeff;
+    Vector2 shape_factor;
     int8_t grav_delay;
     int8_t grav_timer;
     MovementMode_t movement_mode;

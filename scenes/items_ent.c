@@ -13,6 +13,7 @@ Entity_t* create_crate(EntityManager_t* ent_manager, Assets_t* assets, bool meta
 
     CTransform_t* p_ctransform = add_component(p_crate, CTRANSFORM_COMP_T);
     p_ctransform->grav_delay = 5;
+    p_ctransform->shape_factor = metal ? (Vector2){0.7,0.7} : (Vector2){0.8,0.8} ;
     add_component(p_crate, CMOVEMENTSTATE_T);
     add_component(p_crate, CTILECOORD_COMP_T);
     CHurtbox_t* p_hurtbox = add_component(p_crate, CHURTBOX_T);
@@ -41,6 +42,7 @@ Entity_t* create_boulder(EntityManager_t* ent_manager, Assets_t* assets)
     CTransform_t* p_ctransform = add_component(p_boulder, CTRANSFORM_COMP_T);
     p_ctransform->grav_delay = 5;
     p_ctransform->active = true;
+    p_ctransform->shape_factor = (Vector2){0.6, 0.6};
     add_component(p_boulder, CMOVEMENTSTATE_T);
     add_component(p_boulder, CTILECOORD_COMP_T);
     CMoveable_t* p_cmove = add_component(p_boulder, CMOVEABLE_T);
@@ -107,6 +109,7 @@ Entity_t* create_bomb(EntityManager_t* ent_manager, Assets_t* assets, Vector2 la
 
     CTransform_t* p_ctransform = add_component(p_bomb, CTRANSFORM_COMP_T);
     p_ctransform->active = true; 
+    p_ctransform->shape_factor = (Vector2){0.1, 0.1};
     p_ctransform->movement_mode = REGULAR_MOVEMENT;
     p_ctransform->position.x += (TILE_SIZE - 25) / 2;
     p_ctransform->position.y += (TILE_SIZE - 25) / 2;

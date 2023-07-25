@@ -1028,13 +1028,19 @@ void moveable_update_system(Scene_t* scene)
                         {
                             Entity_t* other_ent = get_entity(&scene->ent_manager, idx_to_check);
                             CBBox_t* p_other_bbox = get_component(other_ent, CBBOX_COMP_T);
-                            any_solid |= p_other_bbox->solid;
+                            if (p_other_bbox != NULL)
+                            {
+                                any_solid |= p_other_bbox->solid;
+                            }
                         }
                         sc_map_foreach_key(&tilemap.tiles[tile_idx2].entities_set, idx_to_check)
                         {
                             Entity_t* other_ent = get_entity(&scene->ent_manager, idx_to_check);
                             CBBox_t* p_other_bbox = get_component(other_ent, CBBOX_COMP_T);
-                            any_solid |= p_other_bbox->solid;
+                            if (p_other_bbox != NULL)
+                            {
+                                any_solid |= p_other_bbox->solid;
+                            }
                         }
                         if (!any_solid)
                         {
@@ -1057,13 +1063,19 @@ void moveable_update_system(Scene_t* scene)
                         {
                             Entity_t* other_ent = get_entity(&scene->ent_manager, idx_to_check);
                             CBBox_t* p_other_bbox = get_component(other_ent, CBBOX_COMP_T);
-                            any_solid |= p_other_bbox->solid;
+                            if (p_other_bbox != NULL)
+                            {
+                                any_solid |= p_other_bbox->solid;
+                            }
                         }
                         sc_map_foreach_key(&tilemap.tiles[tile_idx2].entities_set, idx_to_check)
                         {
                             Entity_t* other_ent = get_entity(&scene->ent_manager, idx_to_check);
                             CBBox_t* p_other_bbox = get_component(other_ent, CBBOX_COMP_T);
-                            any_solid |= p_other_bbox->solid;
+                            if (p_other_bbox != NULL)
+                            {
+                                any_solid |= p_other_bbox->solid;
+                            }
                         }
                         if (!any_solid)
                         {

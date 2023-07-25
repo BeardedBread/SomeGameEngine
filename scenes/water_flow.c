@@ -40,7 +40,9 @@ void free_water_runner(Entity_t* ent, EntityManager_t* ent_manager)
 {
     CWaterRunner_t* p_crunner = get_component(ent, CWATERRUNNER_T);
     free(p_crunner->bfs_tilemap.tilemap);
+    p_crunner->bfs_tilemap.tilemap = NULL;
     free(p_crunner->visited);
+    p_crunner->visited = NULL;
     sc_queue_term(&p_crunner->bfs_queue);
     remove_entity(ent_manager, ent->m_id);
 }

@@ -115,15 +115,14 @@ static void level_scene_render_func(Scene_t* scene)
 
                 if (
                     bot <= tilemap.n_tiles
-                    && tilemap.tiles[bot].water_level < MAX_WATER_LEVEL
                     && tilemap.tiles[i].water_level == 0
                     )
                 {
-                    if (i % tilemap.width != 0 && tilemap.tiles[left].wet)
+                    if (i % tilemap.width != 0 && tilemap.tiles[left].wet && (tilemap.tiles[bot].solid == SOLID || tilemap.tiles[bot-1].solid == SOLID))
                     {
                         DrawLineEx((Vector2){x, bot_line}, (Vector2){x + TILE_SIZE / 2, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
                     }
-                    if (right % tilemap.width != 0 && tilemap.tiles[right].wet)
+                    if (right % tilemap.width != 0 && tilemap.tiles[right].wet && (tilemap.tiles[bot].solid == SOLID || tilemap.tiles[bot+1].solid == SOLID))
                     {
                         DrawLineEx((Vector2){x + TILE_SIZE / 2, bot_line}, (Vector2){x + TILE_SIZE, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
                     }
@@ -563,6 +562,7 @@ static void toggle_block_system(Scene_t* scene)
                     if (tilemap.tiles[tile_idx].water_level < MAX_WATER_LEVEL)
                     {
                         tilemap.tiles[tile_idx].water_level = MAX_WATER_LEVEL;
+                        tilemap.tiles[tile_idx].wet = false;
                     }
                 break;
                 case TOGGLE_AIR_POCKET:

@@ -295,6 +295,10 @@ void update_water_runner_system(Scene_t* scene)
                         {
                             p_crunner->counter++;
                         }
+                        else
+                        {
+                            curr_tile->wet = false;
+                        }
                     }
 
 

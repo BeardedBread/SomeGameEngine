@@ -671,6 +671,55 @@ static void toggle_block_system(Scene_t* scene)
     }
 }
 
+static void restart_editor_level(Scene_t* scene)
+{
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    TileGrid_t tilemap = data->tilemap;
+    for (size_t i = 0; i < tilemap.n_tiles;i++)
+    {
+        tilemap.tiles[i].solid = NOT_SOLID;
+        tilemap.tiles[i].tile_type = EMPTY_TILE;
+        tilemap.tiles[i].moveable = true;
+        tilemap.tiles[i].max_water_level = 4;
+        tilemap.tiles[i].water_level = 0;
+        tilemap.tiles[i].wet = false;
+        tilemap.tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
+        Entity_t* ent;
+        unsigned int m_id;
+        sc_map_foreach(&tilemap.tiles[i].entities_set, m_id, ent)
+        {
+            if (ent->m_tag == PLAYER_ENT_TAG) continue;
+            CTileCoord_t* p_tilecoord = get_component(
+                ent, CTILECOORD_COMP_T
+            );
+
+            for (size_t i = 0;i < p_tilecoord->n_tiles; ++i)
+            {
+                // Use previously store tile position
+                // Clear from those positions
+                unsigned int tile_idx = p_tilecoord->tiles[i];
+                sc_map_del_64v(&(tilemap.tiles[tile_idx].entities_set), m_id);
+            }
+            //remove_entity(&scene->ent_manager, m_id);
+            CWaterRunner_t* p_crunner = get_component(ent, CWATERRUNNER_T);
+            if (p_crunner == NULL)
+            {
+                remove_entity(&scene->ent_manager, m_id);
+            }
+            else
+            {
+                free_water_runner(ent, &scene->ent_manager);
+            }
+        }
+    }
+    update_entity_manager(&scene->ent_manager);
+    for (size_t i = 0; i < tilemap.width; ++i)
+    {
+        unsigned int tile_idx = (tilemap.height - 1) * tilemap.width + i;
+        change_a_tile(&tilemap, tile_idx, SOLID_TILE);
+    }
+}
+
 void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
     CPlayerState_t* p_playerstate;
@@ -718,6 +767,9 @@ void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
                 {
                     change_scene(scene->engine, 0);
                 }
+            break;
+            case ACTION_RESTART:
+                restart_editor_level(scene);
             break;
             default:
             break;
@@ -771,6 +823,7 @@ void init_level_scene(LevelScene_t* scene)
     sc_map_put_64(&scene->scene.action_map, KEY_P, ACTION_NEXT_SPAWN);
     sc_map_put_64(&scene->scene.action_map, KEY_M, ACTION_METAL_TOGGLE);
     sc_map_put_64(&scene->scene.action_map, KEY_Q, ACTION_EXIT);
+    sc_map_put_64(&scene->scene.action_map, KEY_R, ACTION_RESTART);
 
     scene->data.tilemap.width = DEFAULT_MAP_WIDTH;
     scene->data.tilemap.height = DEFAULT_MAP_HEIGHT;

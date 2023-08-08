@@ -2,6 +2,16 @@
 #include "constants.h"
 #include "raymath.h"
 
+static SpriteRenderInfo_t item_sprite_map[2] = {0};
+
+bool init_item_creation(Assets_t* assets)
+{
+    item_sprite_map[0].sprite = get_sprite(assets, "w_crate");
+    item_sprite_map[1].sprite = get_sprite(assets, "m_crate");
+    return true;
+}
+
+
 Entity_t* create_crate(EntityManager_t* ent_manager, Assets_t* assets, bool metal, ContainerItem_t item)
 {
     Entity_t* p_crate = add_entity(ent_manager, CRATES_ENT_TAG);
@@ -11,8 +21,15 @@ Entity_t* create_crate(EntityManager_t* ent_manager, Assets_t* assets, bool meta
     p_bbox->solid = true;
     p_bbox->fragile = !metal;
 
+    if (item == CONTAINER_EMPTY)
+    {
+        CSprite_t* p_cspr = add_component(p_crate, CSPRITE_T);
+        p_cspr->sprites = item_sprite_map;
+        p_cspr->current_idx = metal? 1 : 0;
+    }
+
     CTransform_t* p_ctransform = add_component(p_crate, CTRANSFORM_COMP_T);
-    p_ctransform->grav_delay = 5;
+    p_ctransform->grav_delay = 7;
     p_ctransform->shape_factor = metal ? (Vector2){0.7,0.7} : (Vector2){0.8,0.8} ;
     add_component(p_crate, CMOVEMENTSTATE_T);
     add_component(p_crate, CTILECOORD_COMP_T);
@@ -130,9 +147,9 @@ Entity_t* create_explosion(EntityManager_t* ent_manager, Assets_t* assets)
     CTransform_t* p_ctransform = add_component(p_explosion, CTRANSFORM_COMP_T);
     p_ctransform->movement_mode = KINEMATIC_MOVEMENT;
     p_ctransform->active = true;
-    p_ctransform->position.x -= 15;
-    p_ctransform->position.y -= 15;
-    p_hitbox->boxes[0] = (Rectangle){0, 0, TILE_SIZE + 30, TILE_SIZE + 30};
+    p_ctransform->position.x -= 24;
+    p_ctransform->position.y -= 24;
+    p_hitbox->boxes[0] = (Rectangle){0, 0, TILE_SIZE + 48, TILE_SIZE + 48};
 
     CLifeTimer_t* p_clifetimer = add_component(p_explosion, CLIFETIMER_T);
     p_clifetimer->life_time = 3;

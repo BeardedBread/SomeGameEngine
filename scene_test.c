@@ -27,6 +27,7 @@ int main(void)
     init_assets(&engine.assets);
     load_from_infofile("res/assets.info", &engine.assets);
     init_player_creation("res/player_spr.info", &engine.assets);
+    init_item_creation(&engine.assets);
 
     LevelScene_t scene;
     scene.scene.engine = &engine;

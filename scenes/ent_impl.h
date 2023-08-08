@@ -15,6 +15,9 @@ typedef enum EntityTag {
 
 bool init_player_creation(const char* info_file, Assets_t* assets);
 Entity_t* create_player(EntityManager_t* ent_manager, Assets_t* assets);
+
+
+bool init_item_creation(Assets_t* assets);
 Entity_t* create_crate(EntityManager_t* ent_manager, Assets_t* assets, bool metal, ContainerItem_t item);
 Entity_t* create_boulder(EntityManager_t* ent_manager, Assets_t* assets);
 Entity_t* create_arrow(EntityManager_t* ent_manager, Assets_t* assets, uint8_t dir);

@@ -2,12 +2,14 @@
 #include "constants.h"
 #include "raymath.h"
 
-static SpriteRenderInfo_t item_sprite_map[2] = {0};
+static SpriteRenderInfo_t item_sprite_map[3] = {0};
 
 bool init_item_creation(Assets_t* assets)
 {
     item_sprite_map[0].sprite = get_sprite(assets, "w_crate");
     item_sprite_map[1].sprite = get_sprite(assets, "m_crate");
+    item_sprite_map[2].sprite = get_sprite(assets, "arrow");
+    item_sprite_map[2].offset = (Vector2){-8, 4};
     return true;
 }
 
@@ -85,6 +87,9 @@ Entity_t* create_arrow(EntityManager_t* ent_manager, Assets_t* assets, uint8_t d
     p_ctransform->movement_mode = KINEMATIC_MOVEMENT;
     p_ctransform->active = true;
 
+    CSprite_t* p_cspr = add_component(p_arrow, CSPRITE_T);
+    p_cspr->sprites = item_sprite_map;
+    p_cspr->current_idx = 2;
     //p_hitbox->boxes[0] = (Rectangle){TILE_SIZE - 5, TILE_SIZE / 2 - 5, 5, 5};
     switch(dir)
     {

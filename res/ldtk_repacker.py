@@ -19,6 +19,10 @@ ENUMIDS_TILETYPE_MAPPING = {
     'Water': 2
 }
 
+ENTID_MAPPING = {
+    'Player': 1
+}
+
 # First go to tilesets and find Simple_tiles identifier, then find enumTags to identifier which tile type is what tileid
 ids_tiletype_map = {}
 tileset_defs = level_pack_data["defs"]["tilesets"]
@@ -57,11 +61,12 @@ with open(converted_filename, 'wb+') as out_file:
 
 
         level_layout = {}
+        entity_layout = {}
         for layer in level['layerInstances']:
-            if layer["__identifier"] != "Tiles":
-                continue
-
-            level_layout = layer
+            if layer["__identifier"] == "Tiles":
+                level_layout = layer
+            elif layer["__identifier"] == "Entities":
+                entity_layout = layer
 
         # Dimensions of each level is obtained via __cWid and __cHei. Get the __gridSize as well
         width = level_layout["__cWid"]
@@ -73,6 +78,11 @@ with open(converted_filename, 'wb+') as out_file:
         # Loop through gridTiles, get "d" as the index to fill the info
         for tile in level_layout["gridTiles"]:
             tiles_info[tile["d"][0]][0] = ids_tiletype_map[tile["t"]]
+
+        for ent in entity_layout["entityInstances"]:
+            if ent["__identifier"] in ENTID_MAPPING:
+                x,y = ent["__grid"]
+                tiles_info[y*width + x][1] = ENTID_MAPPING[ent["__identifier"]]
 
         out_file.write(struct.pack("32s2H", level_name.encode('utf-8'), width, height))
         for tile in tiles_info:

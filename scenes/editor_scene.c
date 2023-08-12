@@ -8,7 +8,6 @@
 #include "raymath.h"
 #include <stdio.h>
 
-#define MAX_N_TILES 4096
 static Tile_t all_tiles[MAX_N_TILES] = {0};
 
 enum EntitySpawnSelection {

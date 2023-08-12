@@ -25,6 +25,8 @@ typedef struct LevelSceneData {
     Rectangle game_rec;
     Camera2D cam;
     Sprite_t* tile_sprites[MAX_TILE_TYPES];
+    LevelPack_t level_pack;
+    unsigned int current_level;
 }LevelSceneData_t;
 
 typedef struct LevelScene {
@@ -35,6 +37,7 @@ typedef struct LevelScene {
 void init_level_scene(LevelScene_t* scene);
 void free_level_scene(LevelScene_t* scene);
 void reload_level_scene(LevelScene_t* scene);
+bool load_a_level(LevelScene_t* scene, unsigned int level_num);
 
 typedef enum GuiMode {
     KEYBOARD_MODE,

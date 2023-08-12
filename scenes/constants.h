@@ -40,4 +40,8 @@
 
 #define MAX_WATER_LEVEL 4
 #define WATER_BBOX_STEP (TILE_SIZE / MAX_WATER_LEVEL)
+
+#define MAX_LEVEL_NUM 50
+#define MAX_N_TILES 4096
+
 #endif // __CONSTANTS_H

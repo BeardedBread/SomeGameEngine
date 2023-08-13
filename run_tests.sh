@@ -1,1 +1,1 @@
-ctest --rerun-failed --output-on-failure --test-dir build/tests
+ctest --output-on-failure --test-dir build/tests

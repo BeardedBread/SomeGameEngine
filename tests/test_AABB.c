@@ -1,4 +1,5 @@
 #include "AABB.h"
+#include <stdio.h>
 
 #include <stdarg.h>
 #include <stddef.h>
@@ -25,10 +26,14 @@ static void test_line_AABB(void **state)
 
     p1.y = 0;
     p2.y = 0;
+    assert_false(line_in_AABB(p1, p2, box));
+    p2.y = 1;
     assert_true(line_in_AABB(p1, p2, box));
 
     p1 = (Vector2){5, 0};
     p2 = (Vector2){5, 10};
+    assert_false(line_in_AABB(p1, p2, box));
+    p2 = (Vector2){6, 10};
     assert_true(line_in_AABB(p1, p2, box));
 
     p1 = (Vector2){14, 0};

@@ -93,7 +93,7 @@ uint8_t check_collision_line(const CollideEntity_t* ent, TileGrid_t* grid, bool 
     unsigned int tile_y2 = (ent->area.tile_y2 >= grid->height) ? grid->height - 1 : ent->area.tile_y2;
 
     Vector2 p1 = {ent->bbox.x, ent->bbox.y};
-    Vector2 p2 = {ent->bbox.x + ent->bbox.width - 1, ent->bbox.y + ent->bbox.height - 1};
+    Vector2 p2 = {ent->bbox.x + ent->bbox.width, ent->bbox.y + ent->bbox.height};
     for(unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
     {
         if (tile_y >= grid->height) return 0;

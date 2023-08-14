@@ -2,10 +2,13 @@
 #include "ent_impl.h"
 #include "constants.h"
 
-void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* tiles)
+void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* tiles, Rectangle view_zone)
+//void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* tiles)
 {
-    data->game_viewport = LoadRenderTexture(VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE);
-    data->game_rec = (Rectangle){25, 25, VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE};
+    //data->game_viewport = LoadRenderTexture(VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE);
+    //data->game_rec = (Rectangle){25, 25, VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE};
+    data->game_viewport = LoadRenderTexture(view_zone.width, view_zone.height);
+    data->game_rec = view_zone;
     data->cam = (Camera2D){0};
     data->cam.rotation = 0.0f;
     data->cam.zoom = 1.0f;

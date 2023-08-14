@@ -1649,8 +1649,8 @@ void camera_update_system(Scene_t* scene)
     }
     Vector2 max = GetWorldToScreen2D(
         (Vector2){
-            lvl_scene->data.tilemap.width * TILE_SIZE,
-            lvl_scene->data.tilemap.height * TILE_SIZE
+            fmax(lvl_scene->data.tilemap.width * TILE_SIZE, lvl_scene->data.game_rec.width),
+            fmax(lvl_scene->data.tilemap.height * TILE_SIZE, lvl_scene->data.game_rec.height)
         },
         lvl_scene->data.cam
     );

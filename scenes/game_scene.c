@@ -368,7 +368,10 @@ void init_game_scene(LevelScene_t* scene)
     init_scene(&scene->scene, &level_scene_render_func, &level_do_action);
 
     scene->data.tilemap.tiles = all_tiles;
-    init_level_scene_data(&scene->data, MAX_N_TILES, all_tiles);
+    init_level_scene_data(
+        &scene->data, MAX_N_TILES, all_tiles,
+        (Rectangle){25, 25, 32*TILE_SIZE, 18*TILE_SIZE}
+    );
 
     create_player(&scene->scene.ent_manager, &scene->scene.engine->assets);
     update_entity_manager(&scene->scene.ent_manager);

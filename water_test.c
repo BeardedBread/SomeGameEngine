@@ -419,7 +419,10 @@ int main(void)
     LevelScene_t scene;
     scene.scene.engine = &engine;
     init_scene(&scene.scene, &level_scene_render_func, &level_do_action);
-    init_level_scene_data(&scene.data, MAX_N_TILES, all_tiles);
+    init_level_scene_data(
+        &scene.data, MAX_N_TILES, all_tiles,
+        (Rectangle){25, 25, VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE}
+    );
     assert(scene.data.tilemap.n_tiles <= MAX_N_TILES);
 
     for (size_t i = 0; i < scene.data.tilemap.width; ++i)

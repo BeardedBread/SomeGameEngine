@@ -782,7 +782,10 @@ void init_sandbox_scene(LevelScene_t* scene)
     init_scene(&scene->scene, &level_scene_render_func, &level_do_action);
 
     scene->data.tilemap.tiles = all_tiles;
-    init_level_scene_data(&scene->data, MAX_N_TILES, all_tiles);
+    init_level_scene_data(
+        &scene->data, MAX_N_TILES, all_tiles,
+        (Rectangle){25, 25, VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE}
+    );
     for (size_t i = 0; i < scene->data.tilemap.width; ++i)
     {
         unsigned int tile_idx = (scene->data.tilemap.height - 1) * scene->data.tilemap.width + i;

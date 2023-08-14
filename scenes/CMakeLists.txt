@@ -6,6 +6,7 @@ add_library(lib_scenes STATIC
     water_flow.c
     editor_scene.c
     menu_scene.c
+    game_scene.c
     game_systems.c
     scene_systems.c
 )

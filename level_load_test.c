@@ -229,13 +229,22 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             break;
         }
     }
-    switch (action)
+    if (!pressed)
     {
-        case ACTION_RESTART:
-            puts("Restarting!");
-        break;
-        default:
-        break;
+        switch (action)
+        {
+            case ACTION_RESTART:
+                reload_level_tilemap((LevelScene_t*)scene);
+            break;
+            case ACTION_NEXTLEVEL:
+                load_next_level_tilemap((LevelScene_t*)scene);
+            break;
+            case ACTION_PREVLEVEL:
+                load_prev_level_tilemap((LevelScene_t*)scene);
+            break;
+            default:
+            break;
+        }
     }
 }
 
@@ -293,11 +302,12 @@ int main(void)
 
 
     sc_map_put_64(&scene.scene.action_map, KEY_R, ACTION_RESTART);
+    sc_map_put_64(&scene.scene.action_map, KEY_RIGHT_BRACKET, ACTION_NEXTLEVEL);
+    sc_map_put_64(&scene.scene.action_map, KEY_LEFT_BRACKET, ACTION_PREVLEVEL);
     sc_map_put_64(&scene.scene.action_map, KEY_UP, ACTION_UP);
     sc_map_put_64(&scene.scene.action_map, KEY_DOWN, ACTION_DOWN);
     sc_map_put_64(&scene.scene.action_map, KEY_LEFT, ACTION_LEFT);
     sc_map_put_64(&scene.scene.action_map, KEY_RIGHT, ACTION_RIGHT);
-    sc_map_put_64(&scene.scene.action_map, KEY_P, ACTION_METAL_TOGGLE);
 
     while(true)
     {

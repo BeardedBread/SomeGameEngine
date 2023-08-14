@@ -13,5 +13,7 @@ typedef enum ActionType
     ACTION_CONFIRM,
     ACTION_EXIT,
     ACTION_RESTART,
+    ACTION_NEXTLEVEL,
+    ACTION_PREVLEVEL,
 }ActionType_t;
 #endif // __ACTIONS_H

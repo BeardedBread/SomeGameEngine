@@ -62,11 +62,14 @@ with open(converted_filename, 'wb+') as out_file:
 
         level_layout = {}
         entity_layout = {}
+        water_layout = {}
         for layer in level['layerInstances']:
             if layer["__identifier"] == "Tiles":
                 level_layout = layer
             elif layer["__identifier"] == "Entities":
                 entity_layout = layer
+            elif layer["__identifier"] == "Water":
+                water_layout = layer
 
         # Dimensions of each level is obtained via __cWid and __cHei. Get the __gridSize as well
         width = level_layout["__cWid"]
@@ -78,6 +81,9 @@ with open(converted_filename, 'wb+') as out_file:
         # Loop through gridTiles, get "d" as the index to fill the info
         for tile in level_layout["gridTiles"]:
             tiles_info[tile["d"][0]][0] = ids_tiletype_map[tile["t"]]
+
+        for i, water_level in enumerate(water_layout["intGridCsv"]):
+            tiles_info[i][2] = water_level
 
         for ent in entity_layout["entityInstances"]:
             if ent["__identifier"] in ENTID_MAPPING:

@@ -66,14 +66,12 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
         scene->data.tilemap.tiles[i].tile_type = EMPTY_TILE;
         scene->data.tilemap.tiles[i].moveable = true;
         scene->data.tilemap.tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
+        sc_map_clear_64v(&scene->data.tilemap.tiles[i].entities_set);
 
         switch (lvl_map.tiles[i].tile_type)
         {
             case 1:
                 change_a_tile(&scene->data.tilemap, i, SOLID_TILE);
-            break;
-            case 2:
-                scene->data.tilemap.tiles[i].water_level = scene->data.tilemap.tiles[i].max_water_level;
             break;
             default:
             break;
@@ -84,13 +82,14 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
             {
                 Entity_t* ent = create_player(&scene->scene.ent_manager, &scene->scene.engine->assets);
                 CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
-                p_ct->position.x = i & scene->data.tilemap.width;
-                p_ct->position.y = i / scene->data.tilemap.width;
+                p_ct->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+                p_ct->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
             }
             break;
             default:
             break;
         }
+        scene->data.tilemap.tiles[i].water_level = lvl_map.tiles[i].water;
     }
     return true;
 }
@@ -98,6 +97,26 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
 void reload_level_tilemap(LevelScene_t* scene)
 {
     load_level_tilemap(scene, scene->data.current_level);
+}
+
+void load_next_level_tilemap(LevelScene_t* scene)
+{
+    unsigned int lvl = scene->data.current_level;
+    lvl++;
+    if (lvl < scene->data.level_pack->n_levels)
+    {
+        load_level_tilemap(scene, lvl);
+    }
+}
+
+void load_prev_level_tilemap(LevelScene_t* scene)
+{
+    unsigned int lvl = scene->data.current_level;
+    lvl--;
+    if (lvl >= 0)
+    {
+        load_level_tilemap(scene, lvl);
+    }
 }
 
 void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_type)

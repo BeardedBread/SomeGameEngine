@@ -39,6 +39,8 @@ void free_sandbox_scene(LevelScene_t* scene);
 void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* tiles);
 void term_level_scene_data(LevelSceneData_t* data);
 void reload_level_tilemap(LevelScene_t* scene);
+void load_next_level_tilemap(LevelScene_t* scene);
+void load_prev_level_tilemap(LevelScene_t* scene);
 bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num);
 void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_type);
 

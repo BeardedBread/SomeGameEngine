@@ -28,6 +28,7 @@ typedef struct TileGrid
     unsigned int width;
     unsigned int height;
     unsigned int n_tiles;
+    unsigned int max_tiles;
     unsigned int tile_size;
     Tile_t* tiles;
 }TileGrid_t;

@@ -31,7 +31,7 @@ int main(void)
 
     LevelScene_t scene;
     scene.scene.engine = &engine;
-    init_level_scene(&scene);
+    init_sandbox_scene(&scene);
     scene.data.tile_sprites[ONEWAY_TILE] = get_sprite(&engine.assets, "tl_owp");
     scene.data.tile_sprites[LADDER] = get_sprite(&engine.assets, "tl_ldr");
     scenes[0] = &scene.scene;
@@ -78,7 +78,7 @@ int main(void)
         render_scene(&scene.scene);
         if (WindowShouldClose()) break;
     } 
-    free_level_scene(&scene);
+    free_sandbox_scene(&scene);
     sc_queue_term(&key_buffer);
     term_assets(&engine.assets);
     CloseWindow();

@@ -34,10 +34,13 @@ typedef struct LevelScene {
     LevelSceneData_t data;
 }LevelScene_t;
 
-void init_level_scene(LevelScene_t* scene);
-void free_level_scene(LevelScene_t* scene);
-void reload_level_scene(LevelScene_t* scene);
-bool load_a_level(LevelScene_t* scene, unsigned int level_num);
+void init_sandbox_scene(LevelScene_t* scene);
+void free_sandbox_scene(LevelScene_t* scene);
+void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* tiles);
+void term_level_scene_data(LevelSceneData_t* data);
+void reload_level_tilemap(LevelScene_t* scene);
+bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num);
+void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_type);
 
 typedef enum GuiMode {
     KEYBOARD_MODE,
@@ -58,4 +61,5 @@ typedef struct MenuScene {
 
 void init_menu_scene(MenuScene_t* scene);
 void free_menu_scene(MenuScene_t* scene);
+
 #endif // __SCENE_IMPL_H

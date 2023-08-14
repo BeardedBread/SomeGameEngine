@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-#define MAX_N_TILES 4096
 static Tile_t all_tiles[MAX_N_TILES] = {0};
 
 // Maintain own queue to handle key presses
@@ -193,7 +192,6 @@ static void level_scene_render_func(Scene_t* scene)
         );
     EndDrawing();
 }
-#define MAX_N_TILES 4096
 
 static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
 {
@@ -421,24 +419,9 @@ int main(void)
     LevelScene_t scene;
     scene.scene.engine = &engine;
     init_scene(&scene.scene, &level_scene_render_func, &level_do_action);
-    init_level_scene_data(&scene.data);
-
-    scene.data.tilemap.width = DEFAULT_MAP_WIDTH;
-    scene.data.tilemap.height = DEFAULT_MAP_HEIGHT;
-    scene.data.tilemap.tile_size = TILE_SIZE;
-    scene.data.tilemap.n_tiles = scene.data.tilemap.width * scene.data.tilemap.height;
+    init_level_scene_data(&scene.data, MAX_N_TILES, all_tiles);
     assert(scene.data.tilemap.n_tiles <= MAX_N_TILES);
-    scene.data.tilemap.tiles = all_tiles;
-    memset(scene.data.tile_sprites, 0, sizeof(scene.data.tile_sprites));
-    for (size_t i = 0; i < scene.data.tilemap.n_tiles;i++)
-    {
-        all_tiles[i].solid = NOT_SOLID;
-        all_tiles[i].tile_type = EMPTY_TILE;
-        all_tiles[i].moveable = true;
-        all_tiles[i].max_water_level = 4;
-        sc_map_init_64v(&all_tiles[i].entities_set, 16, 0);
-        all_tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
-    }
+
     for (size_t i = 0; i < scene.data.tilemap.width; ++i)
     {
         unsigned int tile_idx = (scene.data.tilemap.height - 1) * scene.data.tilemap.width + i;
@@ -519,11 +502,6 @@ int main(void)
         free_water_runner(ent, &scene.scene.ent_manager);
     }
     free_scene(&scene.scene);
-    for (size_t i = 0; i < scene.data.tilemap.n_tiles;i++)
-    {
-        all_tiles[i].solid = 0;
-        sc_map_term_64v(&all_tiles[i].entities_set);
-    }
     term_level_scene_data(&scene.data);
     sc_queue_term(&key_buffer);
     term_assets(&engine.assets);

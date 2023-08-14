@@ -46,7 +46,7 @@ int main(void)
 
     LevelScene_t level_scene;
     level_scene.scene.engine = &engine;
-    init_level_scene(&level_scene);
+    init_sandbox_scene(&level_scene);
     MenuScene_t menu_scene;
     menu_scene.scene.engine = &engine;
     init_menu_scene(&menu_scene);
@@ -102,7 +102,7 @@ int main(void)
             sc_queue_clear(&key_buffer);
         }
     }
-    free_level_scene(&level_scene);
+    free_sandbox_scene(&level_scene);
     free_menu_scene(&menu_scene);
     sc_queue_term(&key_buffer);
     term_assets(&engine.assets);

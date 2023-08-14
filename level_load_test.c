@@ -283,7 +283,7 @@ int main(void)
     LevelScene_t scene;
     scene.scene.engine = &engine;
     init_scene(&scene.scene, &level_scene_render_func, &level_do_action);
-    init_level_scene_data(&scene.data);
+    init_level_scene_data(&scene.data, MAX_N_TILES, all_tiles);
 
     pack = get_level_pack(&engine.assets, "TestLevels");
     assert(pack != NULL);
@@ -293,10 +293,8 @@ int main(void)
 
     scene.data.tilemap.width = scene.data.level_pack->levels[scene.data.current_level].width;
     scene.data.tilemap.height = scene.data.level_pack->levels[scene.data.current_level].height;
-    scene.data.tilemap.tile_size = TILE_SIZE;
     scene.data.tilemap.n_tiles = scene.data.tilemap.width * scene.data.tilemap.height;
     assert(scene.data.tilemap.n_tiles <= MAX_N_TILES);
-    scene.data.tilemap.tiles = all_tiles;
     memset(scene.data.tile_sprites, 0, sizeof(scene.data.tile_sprites));
 
     LevelMap_t lvl_map = scene.data.level_pack->levels[scene.data.current_level];
@@ -320,8 +318,6 @@ int main(void)
             default:
             break;
         }
-
-        sc_map_init_64v(&all_tiles[i].entities_set, 16, 0);
         switch (lvl_map.tiles[i].entity_to_spawn)
         {
             case 1:
@@ -409,11 +405,6 @@ int main(void)
         free_water_runner(ent, &scene.scene.ent_manager);
     }
     free_scene(&scene.scene);
-    for (size_t i = 0; i < scene.data.tilemap.n_tiles;i++)
-    {
-        all_tiles[i].solid = 0;
-        sc_map_term_64v(&all_tiles[i].entities_set);
-    }
     term_level_scene_data(&scene.data);
     sc_queue_term(&key_buffer);
     term_assets(&engine.assets);

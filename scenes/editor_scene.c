@@ -776,12 +776,22 @@ void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
     }
 }
 
-void init_level_scene(LevelScene_t* scene)
+void init_sandbox_scene(LevelScene_t* scene)
 {
     //init_scene(&scene->scene, LEVEL_SCENE, &level_scene_render_func, &level_do_action);
     init_scene(&scene->scene, &level_scene_render_func, &level_do_action);
 
-    init_level_scene_data(&scene->data);
+    scene->data.tilemap.tiles = all_tiles;
+    init_level_scene_data(&scene->data, MAX_N_TILES, all_tiles);
+    for (size_t i = 0; i < scene->data.tilemap.width; ++i)
+    {
+        unsigned int tile_idx = (scene->data.tilemap.height - 1) * scene->data.tilemap.width + i;
+        change_a_tile(&scene->data.tilemap, tile_idx, SOLID_TILE);
+    }
+
+    create_player(&scene->scene.ent_manager, &scene->scene.engine->assets);
+    update_entity_manager(&scene->scene.ent_manager);
+
     // insert level scene systems
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &player_movement_input_system);
@@ -824,43 +834,10 @@ void init_level_scene(LevelScene_t* scene)
     sc_map_put_64(&scene->scene.action_map, KEY_Q, ACTION_EXIT);
     sc_map_put_64(&scene->scene.action_map, KEY_R, ACTION_RESTART);
 
-    scene->data.tilemap.width = DEFAULT_MAP_WIDTH;
-    scene->data.tilemap.height = DEFAULT_MAP_HEIGHT;
-    scene->data.tilemap.tile_size = TILE_SIZE;
-    scene->data.tilemap.n_tiles = scene->data.tilemap.width * scene->data.tilemap.height;
-    assert(scene->data.tilemap.n_tiles <= MAX_N_TILES);
-    scene->data.tilemap.tiles = all_tiles;
-    memset(scene->data.tile_sprites, 0, sizeof(scene->data.tile_sprites));
-    for (size_t i = 0; i < scene->data.tilemap.n_tiles;i++)
-    {
-        all_tiles[i].solid = NOT_SOLID;
-        all_tiles[i].tile_type = EMPTY_TILE;
-        all_tiles[i].moveable = true;
-        all_tiles[i].max_water_level = 4;
-        sc_map_init_64v(&all_tiles[i].entities_set, 16, 0);
-        all_tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
-    }
-    for (size_t i = 0; i < scene->data.tilemap.width; ++i)
-    {
-        unsigned int tile_idx = (scene->data.tilemap.height - 1) * scene->data.tilemap.width + i;
-        change_a_tile(&scene->data.tilemap, tile_idx, SOLID_TILE);
-    }
-
-    create_player(&scene->scene.ent_manager, &scene->scene.engine->assets);
-    update_entity_manager(&scene->scene.ent_manager);
 }
 
-void free_level_scene(LevelScene_t* scene)
+void free_sandbox_scene(LevelScene_t* scene)
 {
     free_scene(&scene->scene);
-    for (size_t i = 0; i < scene->data.tilemap.n_tiles;i++)
-    {
-        all_tiles[i].solid = 0;
-        sc_map_term_64v(&all_tiles[i].entities_set);
-    }
     term_level_scene_data(&scene->data);
-}
-
-void reload_level_scene(LevelScene_t* scene)
-{
 }

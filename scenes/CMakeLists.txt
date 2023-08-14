@@ -7,6 +7,7 @@ add_library(lib_scenes STATIC
     editor_scene.c
     menu_scene.c
     game_systems.c
+    scene_systems.c
 )
 target_include_directories(lib_scenes
     PUBLIC

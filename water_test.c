@@ -413,8 +413,6 @@ int main(void)
     init_memory_pools();
 
     init_assets(&engine.assets);
-    load_from_infofile("res/assets.info", &engine.assets);
-    init_player_creation("res/player_spr.info", &engine.assets);
 
     LevelScene_t scene;
     scene.scene.engine = &engine;

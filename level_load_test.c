@@ -29,8 +29,7 @@ int main(void)
     init_memory_pools();
 
     init_assets(&engine.assets);
-    load_from_infofile("res/assets.info", &engine.assets);
-    init_player_creation("res/player_spr.info", &engine.assets);
+    load_from_infofile("res/test_assets.info", &engine.assets);
     LevelPack_t* pack = get_level_pack(&engine.assets, "TestLevels");
     assert(pack != NULL);
 

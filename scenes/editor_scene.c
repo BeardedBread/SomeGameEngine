@@ -719,7 +719,7 @@ static void restart_editor_level(Scene_t* scene)
     }
 }
 
-void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
+static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
     CPlayerState_t* p_playerstate;
     sc_map_foreach_value(&scene->ent_manager.component_map[CPLAYERSTATE_T], p_playerstate)

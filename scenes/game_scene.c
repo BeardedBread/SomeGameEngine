@@ -315,7 +315,7 @@ static void level_scene_render_func(Scene_t* scene)
     EndDrawing();
 }
 
-void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
+static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
     CPlayerState_t* p_playerstate;
     sc_map_foreach_value(&scene->ent_manager.component_map[CPLAYERSTATE_T], p_playerstate)
@@ -355,6 +355,12 @@ void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             break;
             case ACTION_PREVLEVEL:
                 load_prev_level_tilemap((LevelScene_t*)scene);
+            break;
+            case ACTION_EXIT:
+                if(scene->engine != NULL)
+                {
+                    change_scene(scene->engine, 0);
+                }
             break;
             default:
             break;

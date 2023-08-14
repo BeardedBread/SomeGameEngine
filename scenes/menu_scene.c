@@ -10,8 +10,9 @@ static void menu_scene_render_func(Scene_t* scene)
         ClearBackground(RAYWHITE);
         DrawText("This is a game", 25, 220, 12, BLACK);
         UI_button(data->buttons, "Start");
-        UI_button(data->buttons + 1, "Continue");
-        UI_button(data->buttons + 2, "Exit");
+        UI_button(data->buttons + 1, "Sandbox");
+        UI_button(data->buttons + 2, "Continue");
+        UI_button(data->buttons + 3, "Exit");
     EndDrawing();
 }
 
@@ -56,6 +57,9 @@ static void menu_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             {
                 case 0:
                     change_scene(scene->engine, 1);
+                break;
+                case 1:
+                    change_scene(scene->engine, 2);
                 break;
                 default:
                 break;
@@ -128,7 +132,6 @@ void init_menu_scene(MenuScene_t* scene)
         .state = STATE_NORMAL,
         .alpha = 1.0
     };
-
     scene->data.buttons[1] = (UIComp_t) {
         .bbox = {25,300,125,30},
         .state = STATE_NORMAL,
@@ -139,7 +142,12 @@ void init_menu_scene(MenuScene_t* scene)
         .state = STATE_NORMAL,
         .alpha = 1.0
     };
-    scene->data.max_comp = 3;
+    scene->data.buttons[3] = (UIComp_t) {
+        .bbox = {25,390,125,30},
+        .state = STATE_NORMAL,
+        .alpha = 1.0
+    };
+    scene->data.max_comp = 4;
     scene->data.selected_comp = 0;
     scene->data.mode = KEYBOARD_MODE;
 

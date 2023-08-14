@@ -4,12 +4,12 @@
 #include "ent_impl.h"
 #include "mempool.h"
 #include <stdio.h>
-#define N_SCENES 3
+#define N_SCENES 4
 
 Scene_t *scenes[N_SCENES];
 static GameEngine_t engine = {
     .scenes = scenes,
-    .max_scenes = 2,
+    .max_scenes = 3,
     .curr_scene = 0,
     .assets = {0}
 };
@@ -33,9 +33,13 @@ int main(void)
     load_from_infofile("res/assets.info", &engine.assets);
     init_player_creation("res/player_spr.info", &engine.assets);
 
+    LevelScene_t sandbox_scene;
+    sandbox_scene.scene.engine = &engine;
+    init_sandbox_scene(&sandbox_scene);
+
     LevelScene_t level_scene;
     level_scene.scene.engine = &engine;
-    init_sandbox_scene(&level_scene);
+    init_game_scene(&level_scene);
     LevelPack_t* pack = get_level_pack(&engine.assets, "TestLevels");
     if (pack != NULL)
     {
@@ -49,12 +53,9 @@ int main(void)
     init_menu_scene(&menu_scene);
     scenes[0] = &menu_scene.scene;
     scenes[1] = &level_scene.scene;
+    scenes[2] = &sandbox_scene.scene;
     change_scene(&engine, 0);
 
-    //Camera2D camera = { 0 };
-    //camera.offset = (Vector2){0,0};
-    //camera.rotation = 0.0f;
-    //camera.zoom = 1.0f;
     while (!WindowShouldClose())
     {
         // This entire key processing relies on the assumption that a pressed key will
@@ -99,7 +100,8 @@ int main(void)
             sc_queue_clear(&key_buffer);
         }
     }
-    free_sandbox_scene(&level_scene);
+    free_sandbox_scene(&sandbox_scene);
+    free_game_scene(&level_scene);
     free_menu_scene(&menu_scene);
     sc_queue_term(&key_buffer);
     term_assets(&engine.assets);

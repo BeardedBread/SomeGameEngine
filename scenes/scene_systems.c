@@ -1,4 +1,5 @@
 #include "scene_impl.h"
+#include "ent_impl.h"
 #include "constants.h"
 
 void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* tiles)
@@ -44,17 +45,59 @@ void term_level_scene_data(LevelSceneData_t* data)
     UnloadRenderTexture(data->game_viewport); // Unload render texture
 }
 
-static void clear_level_tilemap(LevelSceneData_t* data)
-{
-}
-
 bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
 {
+    if (level_num >= scene->data.level_pack->n_levels) return false;
+
+    LevelMap_t lvl_map = scene->data.level_pack->levels[level_num];
+    uint32_t n_tiles = lvl_map.width * lvl_map.height;
+    if (n_tiles > scene->data.tilemap.max_tiles) return false;
+
+    scene->data.current_level = level_num;
+    scene->data.tilemap.width = lvl_map.width;
+    scene->data.tilemap.height = lvl_map.height;
+    scene->data.tilemap.n_tiles = n_tiles;
+
+    clear_entity_manager(&scene->scene.ent_manager);
+    for (size_t i = 0; i < scene->data.tilemap.n_tiles;i++)
+    {
+        scene->data.tilemap.tiles[i].max_water_level = 4;
+        scene->data.tilemap.tiles[i].solid = NOT_SOLID;
+        scene->data.tilemap.tiles[i].tile_type = EMPTY_TILE;
+        scene->data.tilemap.tiles[i].moveable = true;
+        scene->data.tilemap.tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
+
+        switch (lvl_map.tiles[i].tile_type)
+        {
+            case 1:
+                change_a_tile(&scene->data.tilemap, i, SOLID_TILE);
+            break;
+            case 2:
+                scene->data.tilemap.tiles[i].water_level = scene->data.tilemap.tiles[i].max_water_level;
+            break;
+            default:
+            break;
+        }
+        switch (lvl_map.tiles[i].entity_to_spawn)
+        {
+            case 1:
+            {
+                Entity_t* ent = create_player(&scene->scene.ent_manager, &scene->scene.engine->assets);
+                CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
+                p_ct->position.x = i & scene->data.tilemap.width;
+                p_ct->position.y = i / scene->data.tilemap.width;
+            }
+            break;
+            default:
+            break;
+        }
+    }
     return true;
 }
 
 void reload_level_tilemap(LevelScene_t* scene)
 {
+    load_level_tilemap(scene, scene->data.current_level);
 }
 
 void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_type)

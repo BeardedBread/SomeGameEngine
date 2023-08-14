@@ -190,19 +190,6 @@ static void level_scene_render_func(Scene_t* scene)
     EndDrawing();
 }
 
-static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
-{
-    unsigned int tile_x = x / TILE_SIZE;
-    unsigned int tile_y = y / TILE_SIZE;
-
-    if (tile_x < tilemap->width && tile_y < tilemap->height)
-    {
-        return tile_y * tilemap->width + tile_x;
-    }
-
-    return MAX_N_TILES;
-}
-
 static void simple_friction_system(Scene_t* scene)
 {
     CMovementState_t* p_mstate;
@@ -290,48 +277,7 @@ int main(void)
 
     scene.data.level_pack = pack;
     scene.data.current_level = 0;
-
-    scene.data.tilemap.width = scene.data.level_pack->levels[scene.data.current_level].width;
-    scene.data.tilemap.height = scene.data.level_pack->levels[scene.data.current_level].height;
-    scene.data.tilemap.n_tiles = scene.data.tilemap.width * scene.data.tilemap.height;
-    assert(scene.data.tilemap.n_tiles <= MAX_N_TILES);
-    memset(scene.data.tile_sprites, 0, sizeof(scene.data.tile_sprites));
-
-    LevelMap_t lvl_map = scene.data.level_pack->levels[scene.data.current_level];
-    // Level loading in here
-    for (size_t i = 0; i < scene.data.tilemap.n_tiles;i++)
-    {
-        all_tiles[i].max_water_level = 4;
-        all_tiles[i].solid = NOT_SOLID;
-        all_tiles[i].tile_type = EMPTY_TILE;
-        all_tiles[i].moveable = true;
-        all_tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
-
-        switch (lvl_map.tiles[i].tile_type)
-        {
-            case 1:
-                change_a_tile(&scene.data.tilemap, i, SOLID_TILE);
-            break;
-            case 2:
-                all_tiles[i].water_level = all_tiles[i].max_water_level;
-            break;
-            default:
-            break;
-        }
-        switch (lvl_map.tiles[i].entity_to_spawn)
-        {
-            case 1:
-            {
-                Entity_t* ent = create_player(&scene.scene.ent_manager, &scene.scene.engine->assets);
-                CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
-                p_ct->position.x = i & scene.data.tilemap.width;
-                p_ct->position.y = i / scene.data.tilemap.width;
-            }
-            break;
-            default:
-            break;
-        }
-    }
+    assert(load_level_tilemap(&scene, 0) == true);
 
     update_entity_manager(&scene.scene.ent_manager);
 
@@ -355,7 +301,6 @@ int main(void)
     sc_map_put_64(&scene.scene.action_map, KEY_LEFT, ACTION_LEFT);
     sc_map_put_64(&scene.scene.action_map, KEY_RIGHT, ACTION_RIGHT);
     sc_map_put_64(&scene.scene.action_map, KEY_P, ACTION_METAL_TOGGLE);
-
 
     while(true)
     {

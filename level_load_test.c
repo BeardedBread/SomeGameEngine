@@ -264,15 +264,12 @@ int main(void)
     load_from_infofile("res/assets.info", &engine.assets);
     init_player_creation("res/player_spr.info", &engine.assets);
 
-    LevelPack_t* pack = add_level_pack(&engine.assets, "TestLevels", "res/defaultLevels.lvldata");
-    assert(pack != NULL);
-
     LevelScene_t scene;
     scene.scene.engine = &engine;
     init_scene(&scene.scene, &level_scene_render_func, &level_do_action);
     init_level_scene_data(&scene.data, MAX_N_TILES, all_tiles);
 
-    pack = get_level_pack(&engine.assets, "TestLevels");
+    LevelPack_t* pack = get_level_pack(&engine.assets, "TestLevels");
     assert(pack != NULL);
 
     scene.data.level_pack = pack;

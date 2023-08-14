@@ -1,5 +1,7 @@
 #include "raylib.h"
+#include "assets_loader.h"
 #include "scene_impl.h"
+#include "ent_impl.h"
 #include "mempool.h"
 #include <stdio.h>
 #define N_SCENES 3
@@ -15,20 +17,6 @@ static GameEngine_t engine = {
 const int screenWidth = 1280;
 const int screenHeight = 640;
 
-static void load_assets(void)
-{
-    Texture2D* tex = add_texture(&engine.assets, "plr_tex", "res/test_tex.png");
-    Sprite_t* spr = add_sprite(&engine.assets, "plr_stand", tex);
-    spr->origin = (Vector2){0, 0};
-    spr->frame_size = (Vector2){32, 32};
-
-    spr = add_sprite(&engine.assets, "plr_run", tex);
-    spr->frame_count = 4;
-    spr->origin = (Vector2){0, 0};
-    spr->frame_size = (Vector2){32, 32};
-    spr->speed = 15;
-}
-
 // Maintain own queue to handle key presses
 struct sc_queue_32 key_buffer;
 
@@ -42,11 +30,20 @@ int main(void)
     init_memory_pools();
 
     init_assets(&engine.assets);
-    load_assets();
+    load_from_infofile("res/assets.info", &engine.assets);
+    init_player_creation("res/player_spr.info", &engine.assets);
 
     LevelScene_t level_scene;
     level_scene.scene.engine = &engine;
     init_sandbox_scene(&level_scene);
+    LevelPack_t* pack = get_level_pack(&engine.assets, "TestLevels");
+    if (pack != NULL)
+    {
+        level_scene.data.level_pack = pack;
+        level_scene.data.current_level = 0;
+        load_level_tilemap(&level_scene, 0);
+    }
+
     MenuScene_t menu_scene;
     menu_scene.scene.engine = &engine;
     init_menu_scene(&menu_scene);

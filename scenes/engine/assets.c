@@ -4,12 +4,12 @@
 #include <stdio.h>
 
 #define MAX_TEXTURES 16
-#define MAX_SPRITES 16
+#define MAX_SPRITES 64
 #define MAX_SOUNDS 16
 #define MAX_FONTS 4
 #define MAX_N_TILES 4096
 #define MAX_NAME_LEN 32
-#define MAX_LEVEL_PACK 1
+#define MAX_LEVEL_PACK 4
 uint8_t n_loaded[5] = {0};
 
 // Hard limit number of 

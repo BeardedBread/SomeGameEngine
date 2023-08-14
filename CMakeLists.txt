@@ -85,6 +85,19 @@ target_link_libraries(water_test
 target_compile_options(water_test PRIVATE -fsanitize=address -gdwarf-4)
 target_link_options(water_test PRIVATE -fsanitize=address -gdwarf-4)
 
+add_executable(level_load_test
+    level_load_test.c
+)
+target_include_directories(level_load_test
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+)
+target_link_libraries(level_load_test
+    ${GAME_LIBS}
+)
+target_compile_options(level_load_test PRIVATE -fsanitize=address -gdwarf-4)
+target_link_options(level_load_test PRIVATE -fsanitize=address -gdwarf-4)
+
 add_executable(menu_test
     menu_test.c
 )

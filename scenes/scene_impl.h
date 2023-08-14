@@ -25,7 +25,7 @@ typedef struct LevelSceneData {
     Rectangle game_rec;
     Camera2D cam;
     Sprite_t* tile_sprites[MAX_TILE_TYPES];
-    LevelPack_t level_pack;
+    LevelPack_t* level_pack;
     unsigned int current_level;
 }LevelSceneData_t;
 

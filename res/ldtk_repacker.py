@@ -52,7 +52,7 @@ converted_filename = '.'.join(fileparts)
 
 # Each level should be packed as: [width, 2 bytes][height, 2 bytes][tile_type,entity,water,padding 1,1,1,1 bytes][tile_type,entity,water,padding 1,1,1,1 bytes]...
 with open(converted_filename, 'wb+') as out_file:
-    out_file.write(struct.pack("I", n_levels))
+    out_file.write(struct.pack("<I", n_levels))
     # Then loop the levels. Read the layerIndstances
     for level in level_pack_data["levels"]:
         # Search for __identifier for the level layout
@@ -84,9 +84,9 @@ with open(converted_filename, 'wb+') as out_file:
                 x,y = ent["__grid"]
                 tiles_info[y*width + x][1] = ENTID_MAPPING[ent["__identifier"]]
 
-        out_file.write(struct.pack("32s2H", level_name.encode('utf-8'), width, height))
+        out_file.write(struct.pack("<32s2H", level_name.encode('utf-8'), width, height))
         for tile in tiles_info:
-            out_file.write(struct.pack("3Bx", *tile))
+            out_file.write(struct.pack("<3Bx", *tile))
 
 
         for y in range(height):

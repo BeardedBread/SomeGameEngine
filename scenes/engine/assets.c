@@ -1,6 +1,8 @@
 #include "assets.h"
 #include "assert.h"
 
+#include <stdio.h>
+
 #define MAX_TEXTURES 16
 #define MAX_SPRITES 16
 #define MAX_SOUNDS 16
@@ -45,6 +47,11 @@ static LevelPackData_t levelpacks[MAX_LEVEL_PACK];
 
 static void unload_level_pack(LevelPack_t pack)
 {
+    for (uint8_t i = 0; i < pack.n_levels; ++i)
+    {
+        free(pack.levels[i].tiles);
+    }
+    free(pack.levels);
 }
 
 // Maybe need a circular buffer??
@@ -96,9 +103,39 @@ Font* add_font(Assets_t* assets, const char* name, const char* path)
     return &fonts[fnt_idx].font;
 }
 
-LevelTileInfo_t* add_level_pack(Assets_t* assets, const char* name, const char* path)
+LevelPack_t* add_level_pack(Assets_t* assets, const char* name, const char* path)
 {
-    return NULL;
+    FILE* file = fopen(path, "rb");
+    if (file == NULL) return NULL;
+
+    LevelPackData_t* pack_info = levelpacks + n_loaded[4];
+    fread(&pack_info->pack.n_levels, sizeof(uint32_t), 1, file);
+    pack_info->pack.levels = calloc(pack_info->pack.n_levels, sizeof(LevelMap_t));
+
+    for (uint8_t i = 0; i < pack_info->pack.n_levels; ++i)
+    {
+        fread(pack_info->pack.levels[i].level_name, sizeof(char), 32, file);
+        fread(&pack_info->pack.levels[i].width, sizeof(uint16_t), 1, file);
+        fread(&pack_info->pack.levels[i].height, sizeof(uint16_t), 1, file);
+        uint32_t n_tiles = pack_info->pack.levels[i].width * pack_info->pack.levels[i].height;
+
+        pack_info->pack.levels[i].tiles = calloc(n_tiles, sizeof(LevelTileInfo_t));
+        uint16_t dummy;
+        for (uint32_t j = 0; j < n_tiles; j++)
+        {
+            fread(&pack_info->pack.levels[i].tiles[j].tile_type, 1, 1, file);
+            fread(&pack_info->pack.levels[i].tiles[j].entity_to_spawn, 1, 1, file);
+            fread(&dummy, 2, 1, file);
+        }
+    }
+    
+    fclose(file);
+    uint8_t pack_idx = n_loaded[4];
+    strncpy(pack_info->name, name, MAX_NAME_LEN);
+    sc_map_put_s64(&assets->m_levelpacks, levelpacks[pack_idx].name, pack_idx);
+    n_loaded[4]++;
+
+    return &levelpacks[pack_idx].pack;
 }
 
 void init_assets(Assets_t* assets)
@@ -183,6 +220,16 @@ Font* get_font(Assets_t* assets, const char* name)
     if (sc_map_found(&assets->m_fonts))
     {
         return &fonts[fnt_idx].font;
+    }
+    return NULL;
+}
+
+LevelPack_t* get_level_pack(Assets_t* assets, const char* name)
+{
+    uint8_t pack_idx = sc_map_get_s64(&assets->m_levelpacks, name);
+    if (sc_map_found(&assets->m_levelpacks))
+    {
+        return &levelpacks[pack_idx].pack;
     }
     return NULL;
 }

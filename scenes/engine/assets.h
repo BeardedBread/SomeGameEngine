@@ -17,6 +17,7 @@ typedef struct LevelTileInfo
 {
     uint8_t tile_type;
     uint8_t entity_to_spawn;
+    uint8_t dummy[2];
 }LevelTileInfo_t;
 
 typedef struct LevelMap

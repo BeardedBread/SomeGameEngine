@@ -120,13 +120,7 @@ LevelPack_t* add_level_pack(Assets_t* assets, const char* name, const char* path
         uint32_t n_tiles = pack_info->pack.levels[i].width * pack_info->pack.levels[i].height;
 
         pack_info->pack.levels[i].tiles = calloc(n_tiles, sizeof(LevelTileInfo_t));
-        uint16_t dummy;
-        for (uint32_t j = 0; j < n_tiles; j++)
-        {
-            fread(&pack_info->pack.levels[i].tiles[j].tile_type, 1, 1, file);
-            fread(&pack_info->pack.levels[i].tiles[j].entity_to_spawn, 1, 1, file);
-            fread(&dummy, 2, 1, file);
-        }
+        fread(pack_info->pack.levels[i].tiles, 4, n_tiles, file);
     }
     
     fclose(file);

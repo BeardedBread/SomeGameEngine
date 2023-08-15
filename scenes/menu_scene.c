@@ -16,6 +16,21 @@ static void menu_scene_render_func(Scene_t* scene)
     EndDrawing();
 }
 
+static void exec_component_function(Scene_t* scene, int sel)
+{
+            switch(sel)
+            {
+                case 0:
+                    change_scene(scene->engine, 1);
+                break;
+                case 1:
+                    change_scene(scene->engine, 2);
+                break;
+                default:
+                break;
+            }
+}
+
 static void menu_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
     MenuSceneData_t* data = &(CONTAINER_OF(scene, MenuScene_t, scene)->data);
@@ -53,17 +68,7 @@ static void menu_do_action(Scene_t* scene, ActionType_t action, bool pressed)
         data->selected_comp = new_selection;
         if (action == ACTION_CONFIRM && scene->engine != NULL)
         {
-            switch(data->selected_comp)
-            {
-                case 0:
-                    change_scene(scene->engine, 1);
-                break;
-                case 1:
-                    change_scene(scene->engine, 2);
-                break;
-                default:
-                break;
-            }
+            exec_component_function(scene, data->selected_comp);
         }
     }
 }
@@ -103,14 +108,7 @@ static void gui_loop(Scene_t* scene)
                         data->buttons[i].pressed = true;
                         if (scene->engine != NULL)
                         {
-                            switch(i)
-                            {
-                                case 0:
-                                    change_scene(scene->engine, 1);
-                                break;
-                                default:
-                                break;
-                            }
+                            exec_component_function(scene, i);
                         }
                     }
                     data->selected_comp = i;
@@ -149,7 +147,7 @@ void init_menu_scene(MenuScene_t* scene)
     };
     scene->data.max_comp = 4;
     scene->data.selected_comp = 0;
-    scene->data.mode = KEYBOARD_MODE;
+    scene->data.mode = MOUSE_MODE;
 
     sc_map_put_64(&scene->scene.action_map, KEY_UP, ACTION_UP);
     sc_map_put_64(&scene->scene.action_map, KEY_DOWN, ACTION_DOWN);

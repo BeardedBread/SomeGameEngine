@@ -2,7 +2,7 @@
 #include "constants.h"
 #include "raymath.h"
 
-static SpriteRenderInfo_t item_sprite_map[7] = {0};
+static SpriteRenderInfo_t item_sprite_map[17] = {0};
 
 bool init_item_creation(Assets_t* assets)
 {
@@ -15,6 +15,16 @@ bool init_item_creation(Assets_t* assets)
     item_sprite_map[5].sprite = get_sprite(assets, "d_arrow");
     item_sprite_map[6].sprite = get_sprite(assets, "bomb");
     item_sprite_map[6].offset = (Vector2){0, -4};
+    item_sprite_map[7].sprite = get_sprite(assets, "w_ra_crate");
+    item_sprite_map[8].sprite = get_sprite(assets, "m_ra_crate");
+    item_sprite_map[9].sprite = get_sprite(assets, "w_ua_crate");
+    item_sprite_map[10].sprite = get_sprite(assets, "m_ua_crate");
+    item_sprite_map[11].sprite = get_sprite(assets, "w_la_crate");
+    item_sprite_map[12].sprite = get_sprite(assets, "m_la_crate");
+    item_sprite_map[13].sprite = get_sprite(assets, "w_da_crate");
+    item_sprite_map[14].sprite = get_sprite(assets, "m_da_crate");
+    item_sprite_map[15].sprite = get_sprite(assets, "w_b_crate");
+    item_sprite_map[16].sprite = get_sprite(assets, "m_b_crate");
     return true;
 }
 
@@ -28,13 +38,6 @@ Entity_t* create_crate(EntityManager_t* ent_manager, Assets_t* assets, bool meta
     p_bbox->solid = true;
     p_bbox->fragile = !metal;
 
-    if (item == CONTAINER_EMPTY)
-    {
-        CSprite_t* p_cspr = add_component(p_crate, CSPRITE_T);
-        p_cspr->sprites = item_sprite_map;
-        p_cspr->current_idx = metal? 1 : 0;
-    }
-
     CTransform_t* p_ctransform = add_component(p_crate, CTRANSFORM_COMP_T);
     p_ctransform->grav_delay = 7;
     p_ctransform->shape_factor = metal ? (Vector2){0.7,0.7} : (Vector2){0.8,0.8} ;
@@ -45,11 +48,24 @@ Entity_t* create_crate(EntityManager_t* ent_manager, Assets_t* assets, bool meta
     p_hurtbox->def = metal ? 2 : 1;
     p_hurtbox->damage_src = -1;
 
+    CSprite_t* p_cspr = add_component(p_crate, CSPRITE_T);
+    p_cspr->sprites = item_sprite_map;
     if (item != CONTAINER_EMPTY)
     {
         CContainer_t* p_container = add_component(p_crate, CCONTAINER_T);
         p_container->item = item;
     }
+    switch(item)
+    {
+        case CONTAINER_RIGHT_ARROW: p_cspr->current_idx = 7; break;
+        case CONTAINER_UP_ARROW: p_cspr->current_idx = 9; break;
+        case CONTAINER_LEFT_ARROW: p_cspr->current_idx = 11; break;
+        case CONTAINER_DOWN_ARROW: p_cspr->current_idx = 13; break;
+        case CONTAINER_BOMB: p_cspr->current_idx = 15; break;
+        default: p_cspr->current_idx = 0; break;
+    }
+
+    if (metal) p_cspr->current_idx++;
 
     return p_crate;
 }

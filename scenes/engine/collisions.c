@@ -4,12 +4,15 @@
 void remove_entity_from_tilemap(EntityManager_t *p_manager, TileGrid_t* tilemap, Entity_t* p_ent)
 {
     CTileCoord_t* p_tilecoord = get_component(p_ent, CTILECOORD_COMP_T);
-    for (size_t i = 0;i < p_tilecoord->n_tiles; ++i)
+    if (p_tilecoord != NULL)
     {
-        // Use previously store tile position
-        // Clear from those positions
-        unsigned int tile_idx = p_tilecoord->tiles[i];
-        sc_map_del_64v(&(tilemap->tiles[tile_idx].entities_set), p_ent->m_id);
+        for (size_t i = 0;i < p_tilecoord->n_tiles; ++i)
+        {
+            // Use previously store tile position
+            // Clear from those positions
+            unsigned int tile_idx = p_tilecoord->tiles[i];
+            sc_map_del_64v(&(tilemap->tiles[tile_idx].entities_set), p_ent->m_id);
+        }
     }
     remove_entity(p_manager, p_ent->m_id);
 }

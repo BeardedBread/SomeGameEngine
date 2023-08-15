@@ -1305,6 +1305,7 @@ void update_tilemap_system(Scene_t* scene)
     sc_map_foreach(&scene->ent_manager.component_map[CTILECOORD_COMP_T], ent_idx, p_tilecoord)
     {
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
+        if (!p_ent->m_alive) continue;
         CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
         if (p_ctransform == NULL) continue;
         CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);

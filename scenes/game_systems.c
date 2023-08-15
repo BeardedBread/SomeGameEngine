@@ -1331,6 +1331,8 @@ void update_tilemap_system(Scene_t* scene)
             tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
             tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE;
         }
+        tile_x2 = (tile_x2 >= tilemap.width) ? tilemap.width - 1 : tile_x2;
+        tile_y2 = (tile_y2 >= tilemap.height) ? tilemap.width - 1 : tile_y2;
 
         for (unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
         {
@@ -1372,6 +1374,8 @@ void hitbox_update_system(Scene_t* scene)
             unsigned int tile_y1 = (hitbox_pos.y) / TILE_SIZE;
             unsigned int tile_x2 = (hitbox_pos.x + p_hitbox->boxes[i].width - 1) / TILE_SIZE;
             unsigned int tile_y2 = (hitbox_pos.y + p_hitbox->boxes[i].height - 1) / TILE_SIZE;
+            tile_x2 = (tile_x2 >= tilemap.width) ? tilemap.width - 1 : tile_x2;
+            tile_y2 = (tile_y2 >= tilemap.height) ? tilemap.width - 1 : tile_y2;
 
             for (unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
             {

@@ -2,14 +2,19 @@
 #include "constants.h"
 #include "raymath.h"
 
-static SpriteRenderInfo_t item_sprite_map[3] = {0};
+static SpriteRenderInfo_t item_sprite_map[7] = {0};
 
 bool init_item_creation(Assets_t* assets)
 {
     item_sprite_map[0].sprite = get_sprite(assets, "w_crate");
     item_sprite_map[1].sprite = get_sprite(assets, "m_crate");
-    item_sprite_map[2].sprite = get_sprite(assets, "arrow");
+    item_sprite_map[2].sprite = get_sprite(assets, "r_arrow");
     item_sprite_map[2].offset = (Vector2){-8, 4};
+    item_sprite_map[3].sprite = get_sprite(assets, "u_arrow");
+    item_sprite_map[4].sprite = get_sprite(assets, "l_arrow");
+    item_sprite_map[5].sprite = get_sprite(assets, "d_arrow");
+    item_sprite_map[6].sprite = get_sprite(assets, "bomb");
+    item_sprite_map[6].offset = (Vector2){0, -4};
     return true;
 }
 
@@ -95,19 +100,22 @@ Entity_t* create_arrow(EntityManager_t* ent_manager, Assets_t* assets, uint8_t d
     {
         case 0:
             p_hitbox->boxes[0] = (Rectangle){10, TILE_SIZE / 2 - 5, 10, 5};
-            p_ctransform->velocity.x = -250;
+            p_ctransform->velocity.x = -ARROW_SPEED;
+            p_cspr->current_idx += 2;
         break;
         case 2:
             p_hitbox->boxes[0] = (Rectangle){TILE_SIZE / 2 - 5, 10, 5, 10};
-            p_ctransform->velocity.y = -250;
+            p_ctransform->velocity.y = -ARROW_SPEED;
+            p_cspr->current_idx += 1;
         break;
         case 3:
             p_hitbox->boxes[0] = (Rectangle){TILE_SIZE / 2 - 5, 10, 5, 10};
-            p_ctransform->velocity.y = 250;
+            p_ctransform->velocity.y = ARROW_SPEED;
+            p_cspr->current_idx += 3;
         break;
         default:
             p_hitbox->boxes[0] = (Rectangle){10, TILE_SIZE / 2 - 5, 10, 5};
-            p_ctransform->velocity.x = 250;
+            p_ctransform->velocity.x = ARROW_SPEED;
         break;
     }
 
@@ -128,6 +136,10 @@ Entity_t* create_bomb(EntityManager_t* ent_manager, Assets_t* assets, Vector2 la
 
     CContainer_t* p_container = add_component(p_bomb, CCONTAINER_T);
     p_container->item = CONTAINER_EXPLOSION;
+
+    CSprite_t* p_cspr = add_component(p_bomb, CSPRITE_T);
+    p_cspr->sprites = item_sprite_map;
+    p_cspr->current_idx = 6;
 
     CTransform_t* p_ctransform = add_component(p_bomb, CTRANSFORM_COMP_T);
     p_ctransform->active = true; 

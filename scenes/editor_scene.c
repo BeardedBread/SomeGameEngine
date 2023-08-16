@@ -37,6 +37,29 @@ static bool metal_toggle = false;
 #define SELECTION_REGION_WIDTH (SELECTION_TILE_SIZE * MAX_SPAWN_TYPE)
 #define SELECTION_REGION_HEIGHT SELECTION_TILE_SIZE
 
+static char* get_spawn_selection_string(enum EntitySpawnSelection sel)
+{
+    switch(sel)
+    {
+        case TOGGLE_TILE: return "solid tile";
+        case TOGGLE_ONEWAY: return "wooden tile";
+        case TOGGLE_LADDER: return "ladder";
+        case TOGGLE_SPIKE: return "spike";
+        case TOGGLE_WATER: return "water";
+        case TOGGLE_AIR_POCKET: return "air pocket";
+        case SPAWN_CRATE: return (metal_toggle) ? "metal crate" : "wooden crate";
+        case SPAWN_CRATE_ARROW_D: return (metal_toggle) ? "metal down arrow crate" : "wooden down arrow crate";
+        case SPAWN_CRATE_ARROW_U: return (metal_toggle) ? "metal up arrow crate" : "wooden up arrow crate";
+        case SPAWN_CRATE_ARROW_L: return (metal_toggle) ? "metal left arrow crate" : "wooden left arrow crate";
+        case SPAWN_CRATE_ARROW_R: return (metal_toggle) ? "metal right arrow crate" : "wooden right arrow crate";
+        case SPAWN_CRATE_BOMB: return (metal_toggle) ? "metal bomb crate" : "wooden bomb crate";
+        case SPAWN_BOULDER: return "boulder";
+        case SPAWN_WATER_RUNNER: return "water runner";
+        default: return "unknown";
+    }
+}
+
+
 
 static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
 {
@@ -454,6 +477,11 @@ static void level_scene_render_func(Scene_t* scene)
             break;
         }
 
+        draw_pos.x = data->game_rec.x + (MAX_SPAWN_TYPE + 1) * SELECTION_TILE_SIZE;
+        sprintf(buffer, "Selection: %s", get_spawn_selection_string(current_spawn_selection));
+        DrawText(buffer, draw_pos.x, draw_pos.y, 24, BLACK);
+        draw_pos.y += SELECTION_TILE_SIZE;
+        DrawText("Press R to reset the map\nO,P to cycle the selection", draw_pos.x, draw_pos.y, 16, BLACK);
         // For DEBUG
         const int gui_x = data->game_rec.x + data->game_rec.width + 10;
         sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)

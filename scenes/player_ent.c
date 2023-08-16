@@ -4,7 +4,7 @@
 #include <string.h>
 #include "raymath.h"
 
-#define N_PLAYER_SPRITES 8
+#define N_PLAYER_SPRITES 9
 enum PlayerSpriteEnum
 {
     SPR_PLAYER_STAND = 0,
@@ -15,6 +15,7 @@ enum PlayerSpriteEnum
     SPR_PLAYER_CROUCH,
     SPR_PLAYER_CRMOVE,
     SPR_PLAYER_SWIM,
+    SPR_PLAYER_DEAD,
 };
 
 static SpriteRenderInfo_t player_sprite_map[N_PLAYER_SPRITES] = {0};
@@ -25,6 +26,7 @@ static unsigned int player_sprite_transition_func(Entity_t* ent)
     CMovementState_t* p_move = get_component(ent, CMOVEMENTSTATE_T);
     CSprite_t* p_spr = get_component(ent, CSPRITE_T);
     CPlayerState_t* p_plr = get_component(ent, CPLAYERSTATE_T);
+
     if (p_ctrans->velocity.x > 0) p_spr->flip_x = true;
     else if (p_ctrans->velocity.x < 0) p_spr->flip_x = false;
 
@@ -89,6 +91,23 @@ Entity_t* create_player(EntityManager_t* ent_manager, Assets_t* assets)
     CSprite_t* p_cspr = add_component(p_ent, CSPRITE_T);
     p_cspr->sprites = player_sprite_map;
     p_cspr->transition_func = &player_sprite_transition_func;
+
+    return p_ent;
+}
+
+Entity_t* create_dead_player(EntityManager_t* ent_manager, Assets_t* assets)
+{
+    Entity_t* p_ent = add_entity(ent_manager, NO_ENT_TAG);
+    CTransform_t* p_ct = add_component(p_ent, CTRANSFORM_COMP_T);
+    p_ct->active = true;
+    p_ct->shape_factor = (Vector2){1, 1};
+    p_ct->velocity.y = -450;
+
+    CSprite_t* p_cspr = add_component(p_ent, CSPRITE_T);
+    p_cspr->sprites = player_sprite_map;
+    p_cspr->current_idx = SPR_PLAYER_DEAD;
+
+    add_component(p_ent, CMOVEMENTSTATE_T);
 
     return p_ent;
 }

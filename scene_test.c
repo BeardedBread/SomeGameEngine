@@ -34,6 +34,10 @@ int main(void)
     init_sandbox_scene(&scene);
     scene.data.tile_sprites[ONEWAY_TILE] = get_sprite(&engine.assets, "tl_owp");
     scene.data.tile_sprites[LADDER] = get_sprite(&engine.assets, "tl_ldr");
+    scene.data.tile_sprites[SPIKES] = get_sprite(&engine.assets, "d_spikes");
+    scene.data.tile_sprites[SPIKES + TILE_90CWROT] = get_sprite(&engine.assets, "l_spikes");
+    scene.data.tile_sprites[SPIKES + TILE_90CCWROT] = get_sprite(&engine.assets, "r_spikes");
+    scene.data.tile_sprites[SPIKES + TILE_180ROT] = get_sprite(&engine.assets, "u_spikes");
     scenes[0] = &scene.scene;
     change_scene(&engine, 0);
 

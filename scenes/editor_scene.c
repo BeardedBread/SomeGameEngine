@@ -75,9 +75,10 @@ static void level_scene_render_func(Scene_t* scene)
                 DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
             }
 
-            if (data->tile_sprites[tilemap.tiles[i].tile_type] != NULL)
+            uint8_t tile_sprite_idx = tilemap.tiles[i].tile_type + tilemap.tiles[i].rotation;
+            if (data->tile_sprites[tile_sprite_idx] != NULL)
             {
-                draw_sprite(data->tile_sprites[tilemap.tiles[i].tile_type], (Vector2){x,y}, false);
+                draw_sprite(data->tile_sprites[tile_sprite_idx], (Vector2){x,y}, false);
             }
             else if (tilemap.tiles[i].tile_type == SOLID_TILE)
             {

@@ -10,9 +10,18 @@ typedef enum SolidType
     ONE_WAY,
 }SolidType_t;
 
+typedef enum TileRotation
+{
+    TILE_NOROTATE = 0,
+    TILE_90CWROT,
+    TILE_90CCWROT,
+    TILE_180ROT
+}TileRotation_t;
+
 typedef struct Tile {
     unsigned int tile_type;
     SolidType_t solid;
+    TileRotation_t rotation;
     uint8_t def;
     uint8_t water_level;
     uint8_t max_water_level;

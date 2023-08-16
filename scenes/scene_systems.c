@@ -32,6 +32,7 @@ void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* t
     {
         data->tilemap.tiles[i].solid = NOT_SOLID;
         data->tilemap.tiles[i].tile_type = EMPTY_TILE;
+        data->tilemap.tiles[i].rotation = TILE_NOROTATE;
         data->tilemap.tiles[i].moveable = true;
         data->tilemap.tiles[i].max_water_level = 4;
         sc_map_init_64v(&data->tilemap.tiles[i].entities_set, 16, 0);
@@ -171,6 +172,7 @@ void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_ty
 
     }
 
+    tilemap->tiles[tile_idx].rotation = TILE_NOROTATE;
     if (new_type == SPIKES)
     {
         // Priority: Down, Up, Left, Right
@@ -183,16 +185,19 @@ void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_ty
         {
             tilemap->tiles[tile_idx].offset = (Vector2){0,0};
             tilemap->tiles[tile_idx].size = (Vector2){32,16};
+            tilemap->tiles[tile_idx].rotation = TILE_180ROT;
         }
         else if (tile_idx % tilemap->width != 0 && tilemap->tiles[tile_idx - 1].tile_type == SOLID_TILE)
         {
             tilemap->tiles[tile_idx].offset = (Vector2){0,0};
             tilemap->tiles[tile_idx].size = (Vector2){16,32};
+            tilemap->tiles[tile_idx].rotation = TILE_90CWROT;
         }
         else if ((tile_idx + 1) % tilemap->width != 0 && tilemap->tiles[tile_idx + 1].tile_type == SOLID_TILE)
         {
             tilemap->tiles[tile_idx].offset = (Vector2){16,0};
             tilemap->tiles[tile_idx].size = (Vector2){16,32};
+            tilemap->tiles[tile_idx].rotation = TILE_90CCWROT;
         }
         else
         {

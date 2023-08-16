@@ -19,12 +19,14 @@ typedef enum TileType {
     SPIKES,
 } TileType_t;
 
+#define MAX_TILE_SPRITES 32
+
 typedef struct LevelSceneData {
     TileGrid_t tilemap;
     RenderTexture2D game_viewport;
     Rectangle game_rec;
     Camera2D cam;
-    Sprite_t* tile_sprites[MAX_TILE_TYPES];
+    Sprite_t* tile_sprites[MAX_TILE_SPRITES];
     LevelPack_t* level_pack;
     unsigned int current_level;
 }LevelSceneData_t;

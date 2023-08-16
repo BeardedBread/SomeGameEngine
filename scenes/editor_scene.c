@@ -30,6 +30,7 @@ enum EntitySpawnSelection {
 #define MAX_SPAWN_TYPE 14
 static unsigned int current_spawn_selection = 0;
 static bool metal_toggle = false;
+static bool crate_activation = false;
 
 #define SELECTION_TILE_SIZE 32
 #define SELECTION_TILE_HALFSIZE (SELECTION_TILE_SIZE >> 1)
@@ -478,10 +479,15 @@ static void level_scene_render_func(Scene_t* scene)
         }
 
         draw_pos.x = data->game_rec.x + (MAX_SPAWN_TYPE + 1) * SELECTION_TILE_SIZE;
+        sprintf(buffer, "Crate %s on spawn", crate_activation? "active" : "inactive");
+        DrawText(buffer, draw_pos.x, draw_pos.y, 20, BLACK);
+        draw_pos.x = data->game_rec.x;
+        draw_pos.y += SELECTION_TILE_SIZE + 5;
         sprintf(buffer, "Selection: %s", get_spawn_selection_string(current_spawn_selection));
-        DrawText(buffer, draw_pos.x, draw_pos.y, 24, BLACK);
-        draw_pos.y += SELECTION_TILE_SIZE;
-        DrawText("Press R to reset the map\nO,P to cycle the selection", draw_pos.x, draw_pos.y, 16, BLACK);
+        DrawText(buffer, draw_pos.x, draw_pos.y, 20, BLACK);
+        draw_pos.x = data->game_rec.x + (MAX_SPAWN_TYPE + 1) * SELECTION_TILE_SIZE;
+        DrawText("Press R to reset the map\nO,P to cycle the selection, T to toggle crate spawn behaviour", draw_pos.x, draw_pos.y, 16, BLACK);
+
         // For DEBUG
         const int gui_x = data->game_rec.x + data->game_rec.width + 10;
         sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
@@ -518,7 +524,7 @@ static void level_scene_render_func(Scene_t* scene)
     EndDrawing();
 }
 
-static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal, ContainerItem_t item)
+static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal, ContainerItem_t item, bool active)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     Entity_t* p_crate = create_crate(&scene->ent_manager, &scene->engine->assets, metal, item);
@@ -526,6 +532,7 @@ static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal, Conta
     CTransform_t* p_ctransform = get_component(p_crate, CTRANSFORM_COMP_T);
     p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
     p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
+    p_ctransform->active = active;
 }
 
 static void spawn_boulder(Scene_t* scene, unsigned int tile_idx)
@@ -606,25 +613,27 @@ static void toggle_block_system(Scene_t* scene)
                     }
                 break;
                 case SPAWN_CRATE:
-                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_EMPTY);
+                {
+                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_EMPTY, crate_activation);
+                }
                 break;
                 case SPAWN_BOULDER:
                     spawn_boulder(scene, tile_idx);
                 break;
                 case SPAWN_CRATE_ARROW_L:
-                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_LEFT_ARROW);
+                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_LEFT_ARROW, crate_activation);
                 break;
                 case SPAWN_CRATE_ARROW_R:
-                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_RIGHT_ARROW);
+                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_RIGHT_ARROW, crate_activation);
                 break;
                 case SPAWN_CRATE_ARROW_U:
-                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_UP_ARROW);
+                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_UP_ARROW, crate_activation);
                 break;
                 case SPAWN_CRATE_ARROW_D:
-                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_DOWN_ARROW);
+                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_DOWN_ARROW, crate_activation);
                 break;
                 case SPAWN_CRATE_BOMB:
-                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_BOMB);
+                    spawn_crate(scene, tile_idx, metal_toggle, CONTAINER_BOMB, crate_activation);
                 break;
                 case SPAWN_WATER_RUNNER:
                 {
@@ -790,6 +799,9 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             case ACTION_METAL_TOGGLE:
                 if (!pressed) metal_toggle = !metal_toggle;
             break;
+            case ACTION_CRATE_ACTIVATION:
+                if (!pressed) crate_activation = !crate_activation;
+            break;
             case ACTION_EXIT:
                 if(scene->engine != NULL)
                 {
@@ -863,6 +875,7 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_map_put_64(&scene->scene.action_map, KEY_O, ACTION_PREV_SPAWN);
     sc_map_put_64(&scene->scene.action_map, KEY_P, ACTION_NEXT_SPAWN);
     sc_map_put_64(&scene->scene.action_map, KEY_M, ACTION_METAL_TOGGLE);
+    sc_map_put_64(&scene->scene.action_map, KEY_T, ACTION_CRATE_ACTIVATION);
     sc_map_put_64(&scene->scene.action_map, KEY_Q, ACTION_EXIT);
     sc_map_put_64(&scene->scene.action_map, KEY_R, ACTION_RESTART);
 

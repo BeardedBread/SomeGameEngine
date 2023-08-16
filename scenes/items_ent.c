@@ -2,7 +2,7 @@
 #include "constants.h"
 #include "raymath.h"
 
-static SpriteRenderInfo_t item_sprite_map[17] = {0};
+static SpriteRenderInfo_t item_sprite_map[18] = {0};
 
 bool init_item_creation(Assets_t* assets)
 {
@@ -25,6 +25,8 @@ bool init_item_creation(Assets_t* assets)
     item_sprite_map[14].sprite = get_sprite(assets, "m_da_crate");
     item_sprite_map[15].sprite = get_sprite(assets, "w_b_crate");
     item_sprite_map[16].sprite = get_sprite(assets, "m_b_crate");
+    item_sprite_map[17].sprite = get_sprite(assets, "explode");
+    item_sprite_map[17].offset = (Vector2){-12, -12};
     return true;
 }
 
@@ -183,6 +185,10 @@ Entity_t* create_explosion(EntityManager_t* ent_manager, Assets_t* assets)
     p_ctransform->position.x -= 24;
     p_ctransform->position.y -= 24;
     p_hitbox->boxes[0] = (Rectangle){0, 0, TILE_SIZE + 48, TILE_SIZE + 48};
+
+    CSprite_t* p_cspr = add_component(p_explosion, CSPRITE_T);
+    p_cspr->sprites = item_sprite_map;
+    p_cspr->current_idx = 17;
 
     CLifeTimer_t* p_clifetimer = add_component(p_explosion, CLIFETIMER_T);
     p_clifetimer->life_time = 3;

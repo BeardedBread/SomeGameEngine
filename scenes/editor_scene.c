@@ -874,6 +874,11 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_map_put_64(&scene->scene.action_map, KEY_DOWN, ACTION_DOWN);
     sc_map_put_64(&scene->scene.action_map, KEY_LEFT, ACTION_LEFT);
     sc_map_put_64(&scene->scene.action_map, KEY_RIGHT, ACTION_RIGHT);
+    sc_map_put_64(&scene->scene.action_map, KEY_W, ACTION_UP);
+    sc_map_put_64(&scene->scene.action_map, KEY_S, ACTION_DOWN);
+    sc_map_put_64(&scene->scene.action_map, KEY_A, ACTION_LEFT);
+    sc_map_put_64(&scene->scene.action_map, KEY_D, ACTION_RIGHT);
+
     sc_map_put_64(&scene->scene.action_map, KEY_SPACE, ACTION_JUMP);
     sc_map_put_64(&scene->scene.action_map, KEY_O, ACTION_PREV_SPAWN);
     sc_map_put_64(&scene->scene.action_map, KEY_P, ACTION_NEXT_SPAWN);

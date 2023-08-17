@@ -1290,7 +1290,16 @@ void state_transition_update_system(Scene_t* scene)
                 for (unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
                 {
                     unsigned int tile_idx = tile_y * data->tilemap.width + tile_x;
-                    in_water |= data->tilemap.tiles[tile_idx].water_level > 0;
+                    if (data->tilemap.tiles[tile_idx].water_level == 0) continue;
+
+                    uint32_t water_height = data->tilemap.tiles[tile_idx].water_level * WATER_BBOX_STEP;
+                    Vector2 tl = {tile_x * data->tilemap.tile_size, (tile_y + 1) * data->tilemap.tile_size - water_height};
+                    Vector2 overlap;
+                    in_water |= find_AABB_overlap(
+                        p_ctransform->position, p_bbox->size,
+                        tl, (Vector2){data->tilemap.tile_size, water_height}
+                        , &overlap
+                    ) > 0;
                 }
             }
         }

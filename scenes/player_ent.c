@@ -58,6 +58,8 @@ static unsigned int player_sprite_transition_func(Entity_t* ent)
 Entity_t* create_player(EntityManager_t* ent_manager, Assets_t* assets)
 {
     Entity_t* p_ent = add_entity(ent_manager, PLAYER_ENT_TAG);
+    if (p_ent == NULL) return NULL;
+
     CBBox_t* p_bbox = add_component(p_ent, CBBOX_COMP_T);
 
     set_bbox(p_bbox, PLAYER_WIDTH, PLAYER_HEIGHT);
@@ -98,6 +100,8 @@ Entity_t* create_player(EntityManager_t* ent_manager, Assets_t* assets)
 Entity_t* create_dead_player(EntityManager_t* ent_manager, Assets_t* assets)
 {
     Entity_t* p_ent = add_entity(ent_manager, NO_ENT_TAG);
+    if (p_ent == NULL) return NULL;
+
     CTransform_t* p_ct = add_component(p_ent, CTRANSFORM_COMP_T);
     p_ct->active = true;
     p_ct->shape_factor = (Vector2){1, 1};

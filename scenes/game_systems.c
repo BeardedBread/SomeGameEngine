@@ -202,7 +202,6 @@ void player_respawn_system(Scene_t* scene)
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     TileGrid_t tilemap = data->tilemap;
     Entity_t* p_player;
-    uint8_t to_respawn = 0;
     // Cannot create player while looping though the players
     // So have to create outside of the loop
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
@@ -210,16 +209,18 @@ void player_respawn_system(Scene_t* scene)
         if (!p_player->m_alive)
         {
             CTransform_t* p_ct = get_component(p_player, CTRANSFORM_COMP_T);
-            remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_player);
             Entity_t* ent = create_dead_player(&scene->ent_manager, &scene->engine->assets);
-            CTransform_t* new_ct = get_component(ent, CTRANSFORM_COMP_T);
-            memcpy(&new_ct->position, &p_ct->position, sizeof(p_ct->position));
-            to_respawn++;
+            if (ent != NULL)
+            {
+                CTransform_t* new_ct = get_component(ent, CTRANSFORM_COMP_T);
+                memcpy(&new_ct->position, &p_ct->position, sizeof(p_ct->position));
+            }
+            p_player->m_alive = true;
+            memset(&p_ct->position, 0, sizeof(p_ct->position));
+            memset(&p_ct->velocity, 0, sizeof(p_ct->velocity));
+            memset(&p_ct->accel, 0, sizeof(p_ct->accel));
+
         }
-    }
-    if (to_respawn > 0)
-    {
-        create_player(&scene->ent_manager, &scene->engine->assets);
     }
 }
 

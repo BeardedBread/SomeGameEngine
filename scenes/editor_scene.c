@@ -528,6 +528,7 @@ static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal, Conta
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     Entity_t* p_crate = create_crate(&scene->ent_manager, &scene->engine->assets, metal, item);
+    if (p_crate == NULL) return;
 
     CTransform_t* p_ctransform = get_component(p_crate, CTRANSFORM_COMP_T);
     p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
@@ -539,6 +540,7 @@ static void spawn_boulder(Scene_t* scene, unsigned int tile_idx)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     Entity_t* p_boulder = create_boulder(&scene->ent_manager, &scene->engine->assets);
+    if (p_boulder == NULL) return;
 
     CTransform_t* p_ctransform = get_component(p_boulder, CTRANSFORM_COMP_T);
     p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;

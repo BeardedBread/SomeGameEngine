@@ -34,8 +34,9 @@ bool init_item_creation(Assets_t* assets)
 Entity_t* create_crate(EntityManager_t* ent_manager, Assets_t* assets, bool metal, ContainerItem_t item)
 {
     Entity_t* p_crate = add_entity(ent_manager, CRATES_ENT_TAG);
-    CBBox_t* p_bbox = add_component(p_crate, CBBOX_COMP_T);
+    if (p_crate == NULL) return NULL;
 
+    CBBox_t* p_bbox = add_component(p_crate, CBBOX_COMP_T);
     set_bbox(p_bbox, TILE_SIZE, TILE_SIZE);
     p_bbox->solid = true;
     p_bbox->fragile = !metal;
@@ -75,8 +76,9 @@ Entity_t* create_crate(EntityManager_t* ent_manager, Assets_t* assets, bool meta
 Entity_t* create_boulder(EntityManager_t* ent_manager, Assets_t* assets)
 {
     Entity_t* p_boulder = add_entity(ent_manager, BOULDER_ENT_TAG);
-    CBBox_t* p_bbox = add_component(p_boulder, CBBOX_COMP_T);
+    if (p_boulder == NULL) return NULL;
 
+    CBBox_t* p_bbox = add_component(p_boulder, CBBOX_COMP_T);
     set_bbox(p_bbox, TILE_SIZE, TILE_SIZE);
     p_bbox->solid = true;
     p_bbox->fragile = false;
@@ -99,6 +101,8 @@ Entity_t* create_boulder(EntityManager_t* ent_manager, Assets_t* assets)
 Entity_t* create_arrow(EntityManager_t* ent_manager, Assets_t* assets, uint8_t dir)
 {
     Entity_t* p_arrow = add_entity(ent_manager, DESTRUCTABLE_ENT_TAG);
+    if (p_arrow == NULL) return NULL;
+
     add_component(p_arrow, CTILECOORD_COMP_T);
     CHitBoxes_t* p_hitbox = add_component(p_arrow, CHITBOXES_T);
     p_hitbox->n_boxes = 1;
@@ -143,6 +147,8 @@ Entity_t* create_arrow(EntityManager_t* ent_manager, Assets_t* assets, uint8_t d
 Entity_t* create_bomb(EntityManager_t* ent_manager, Assets_t* assets, Vector2 launch_dir)
 {
     Entity_t* p_bomb = add_entity(ent_manager, DESTRUCTABLE_ENT_TAG);
+    if (p_bomb == NULL) return NULL;
+
     add_component(p_bomb, CTILECOORD_COMP_T);
     add_component(p_bomb, CMOVEMENTSTATE_T);
     CHitBoxes_t* p_hitbox = add_component(p_bomb, CHITBOXES_T);
@@ -173,6 +179,8 @@ Entity_t* create_bomb(EntityManager_t* ent_manager, Assets_t* assets, Vector2 la
 Entity_t* create_explosion(EntityManager_t* ent_manager, Assets_t* assets)
 {
     Entity_t* p_explosion = add_entity(ent_manager, DESTRUCTABLE_ENT_TAG);
+    if (p_explosion == NULL) return NULL;
+
     add_component(p_explosion, CTILECOORD_COMP_T);
     CHitBoxes_t* p_hitbox = add_component(p_explosion, CHITBOXES_T);
     p_hitbox->n_boxes = 1;

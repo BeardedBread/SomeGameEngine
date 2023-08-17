@@ -217,6 +217,7 @@ void free_component_to_mempool(ComponentEnum_t comp_type, unsigned long idx)
 
 void print_mempool_stats(char* buffer)
 {
+    buffer += sprintf(buffer, "Entity free: %u\n", ent_mempool.free_list.count);
     for (size_t i = 0; i < N_COMPONENTS; ++i)
     {
         buffer += sprintf(

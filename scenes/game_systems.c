@@ -1026,7 +1026,10 @@ void player_pushing_system(Scene_t* scene)
     {
         CMovementState_t* p_movement = get_component(p_player, CMOVEMENTSTATE_T);
         CPlayerState_t* p_pstate = get_component(p_player, CPLAYERSTATE_T);
-        if (!(p_movement->ground_state & 1) || p_pstate->player_dir.x == 0) continue;
+        if (
+            !(p_movement->ground_state & 1 || p_movement->water_state & 1)
+            || p_pstate->player_dir.x == 0
+        ) continue;
 
         CTransform_t* p_ctransform = get_component(p_player, CTRANSFORM_COMP_T);
         CBBox_t* p_bbox = get_component(p_player, CBBOX_COMP_T);

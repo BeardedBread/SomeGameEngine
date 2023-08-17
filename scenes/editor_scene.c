@@ -716,6 +716,7 @@ static void restart_editor_level(Scene_t* scene)
     {
         tilemap.tiles[i].solid = NOT_SOLID;
         tilemap.tiles[i].tile_type = EMPTY_TILE;
+        tilemap.tiles[i].rotation = TILE_NOROTATE;
         tilemap.tiles[i].moveable = true;
         tilemap.tiles[i].max_water_level = 4;
         tilemap.tiles[i].water_level = 0;

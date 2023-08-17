@@ -190,9 +190,9 @@ Entity_t* create_explosion(EntityManager_t* ent_manager, Assets_t* assets)
     CTransform_t* p_ctransform = add_component(p_explosion, CTRANSFORM_COMP_T);
     p_ctransform->movement_mode = KINEMATIC_MOVEMENT;
     p_ctransform->active = true;
-    p_ctransform->position.x -= 24;
-    p_ctransform->position.y -= 24;
-    p_hitbox->boxes[0] = (Rectangle){0, 0, TILE_SIZE + 48, TILE_SIZE + 48};
+    p_ctransform->position.x -= 16;
+    p_ctransform->position.y -= 16;
+    p_hitbox->boxes[0] = (Rectangle){0, 0, TILE_SIZE + 32, TILE_SIZE + 32};
 
     CSprite_t* p_cspr = add_component(p_explosion, CSPRITE_T);
     p_cspr->sprites = item_sprite_map;

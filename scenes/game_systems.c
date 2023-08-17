@@ -456,6 +456,8 @@ void player_bbox_update_system(Scene_t* scene)
         p_hitbox->boxes[0].height = p_bbox->size.y + 2;
         //p_hitbox->boxes[1].y = p_bbox->size.y / 4;
         p_hitbox->boxes[1].height = p_bbox->size.y - 1;
+        CHurtbox_t* p_hurtbox = get_component(p_player, CHURTBOX_T);
+        p_hurtbox->size = p_bbox->size;
     }
 }
 
@@ -1478,9 +1480,17 @@ void hitbox_update_system(Scene_t* scene)
 
                                 if (p_ent->m_tag != PLAYER_ENT_TAG)
                                 {
-                                    remove_component(p_other_ent, CHURTBOX_T);
-                                    CLifeTimer_t* p_clifetimer = add_component(p_other_ent, CLIFETIMER_T);
-                                    p_clifetimer->life_time = 8;
+
+                                    if (p_other_ent->m_tag == PLAYER_ENT_TAG)
+                                    {
+                                        p_other_ent->m_alive = false;
+                                    }
+                                    else
+                                    {
+                                        remove_component(p_other_ent, CHURTBOX_T);
+                                        CLifeTimer_t* p_clifetimer = add_component(p_other_ent, CLIFETIMER_T);
+                                        p_clifetimer->life_time = 6;
+                                    }
                                 }
                                 else
                                 {

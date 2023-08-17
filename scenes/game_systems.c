@@ -761,9 +761,10 @@ void friction_coefficient_update_system(Scene_t* scene)
         }
 
         CPlayerState_t* p_pstate = get_component(p_ent, CPLAYERSTATE_T);
-        if (p_pstate != NULL && (p_pstate->is_crouch & 1))
+        if (p_pstate != NULL)
         {
-            p_ct->fric_coeff.x -= 4;
+            if (p_pstate->is_crouch & 1) p_ct->fric_coeff.x -= 4;
+            if ((p_mstate->ground_state & 1) && p_pstate->player_dir.x != 0) p_ct->fric_coeff.x *= 0.9;
         }
     }
 }

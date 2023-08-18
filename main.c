@@ -99,6 +99,11 @@ int main(void)
         {
             sc_queue_clear(&key_buffer);
         }
+
+        if (curr_scene->state == SCENE_ENDED && engine.curr_scene == 0)
+        {
+            break;
+        }
     }
     free_sandbox_scene(&sandbox_scene);
     free_game_scene(&level_scene);

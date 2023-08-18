@@ -199,8 +199,6 @@ static Vector2 shift_bbox(Vector2 bbox, Vector2 new_bbox, AnchorPoint_t anchor)
 
 void player_respawn_system(Scene_t* scene)
 {
-    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
-    TileGrid_t tilemap = data->tilemap;
     Entity_t* p_player;
     // Cannot create player while looping though the players
     // So have to create outside of the loop
@@ -902,12 +900,12 @@ void moveable_update_system(Scene_t* scene)
         // Intentional. Want this check even after a gridmove to allow gridmove after that
         if (!p_moveable->gridmove)
         {
-            if (p_ctransform->prev_velocity.y <= 0 && p_ctransform->prev_position.x == p_ctransform->position.x) continue;
+            //if (p_ctransform->prev_velocity.y <= 0 && p_ctransform->prev_position.x == p_ctransform->position.x) continue;
 
             TileGrid_t tilemap = (CONTAINER_OF(scene, LevelScene_t, scene)->data).tilemap;
             Vector2 point_to_check = {
                 .x = p_ctransform->position.x + p_bbox->half_size.x,
-                .y = p_ctransform->position.y + p_bbox->size.y + 5 // 5 is arbitrary, just to make sure there's a little gap
+                .y = p_ctransform->position.y + p_bbox->size.y + 1
             };
             int tile_x = point_to_check.x / TILE_SIZE;
             int tile_y = point_to_check.y / TILE_SIZE;

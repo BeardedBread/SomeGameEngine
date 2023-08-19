@@ -1,5 +1,46 @@
 #include "engine.h"
 
+void init_engine(GameEngine_t* engine)
+{
+    sc_queue_init(&engine->key_buffer);
+}
+
+void deinit_engine(GameEngine_t* engine)
+{
+    sc_queue_term(&engine->key_buffer);
+}
+
+void process_inputs(GameEngine_t* engine, Scene_t* scene)
+{
+    unsigned int sz = sc_queue_size(&engine->key_buffer);
+    // Process any existing pressed key
+    for (size_t i = 0; i < sz; i++)
+    {
+        int button = sc_queue_del_first(&engine->key_buffer);
+        ActionType_t action = sc_map_get_64(&scene->action_map, button);
+        if (IsKeyReleased(button))
+        {
+            do_action(scene, action, false);
+        }
+        else
+        {
+            do_action(scene, action, true);
+            sc_queue_add_last(&engine->key_buffer, button);
+        }
+    }
+
+    // Detect new key presses
+    while(true)
+    {
+        int button = GetKeyPressed();
+        if (button == 0) break;
+        ActionType_t action = sc_map_get_64(&scene->action_map, button);
+        if (!sc_map_found(&scene->action_map)) continue;
+        do_action(scene, action, true);
+        sc_queue_add_last(&engine->key_buffer, button);
+    }
+}
+
 void change_scene(GameEngine_t* engine, unsigned int idx)
 {
     engine->scenes[engine->curr_scene]->state = SCENE_ENDED;

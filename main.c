@@ -24,7 +24,7 @@ int main(void)
 {
     // Initialization
     //--------------------------------------------------------------------------------------
-    sc_queue_init(&key_buffer);
+    init_engine(&engine);
     InitWindow(screenWidth, screenHeight, "raylib");
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
     init_memory_pools();
@@ -62,33 +62,7 @@ int main(void)
         // appear in the polling of raylib
         Scene_t* curr_scene = engine.scenes[engine.curr_scene];
 
-        unsigned int sz = sc_queue_size(&key_buffer);
-        // Process any existing pressed key
-        for (size_t i = 0; i < sz; i++)
-        {
-            int button = sc_queue_del_first(&key_buffer);
-            ActionType_t action = sc_map_get_64(&curr_scene->action_map, button);
-            if (IsKeyReleased(button))
-            {
-                do_action(curr_scene, action, false);
-            }
-            else
-            {
-                do_action(curr_scene, action, true);
-                sc_queue_add_last(&key_buffer, button);
-            }
-        }
-
-        // Detect new key presses
-        while(true)
-        {
-            int button = GetKeyPressed();
-            if (button == 0) break;
-            ActionType_t action = sc_map_get_64(&curr_scene->action_map, button);
-            if (!sc_map_found(&curr_scene->action_map)) continue;
-            do_action(curr_scene, action, true);
-            sc_queue_add_last(&key_buffer, button);
-        }
+        process_inputs(&engine, curr_scene);
 
         update_scene(curr_scene);
         update_entity_manager(&curr_scene->ent_manager);
@@ -108,7 +82,7 @@ int main(void)
     free_sandbox_scene(&sandbox_scene);
     free_game_scene(&level_scene);
     free_menu_scene(&menu_scene);
-    sc_queue_term(&key_buffer);
+    deinit_engine(&engine);
     term_assets(&engine.assets);
     CloseWindow(); 
 }

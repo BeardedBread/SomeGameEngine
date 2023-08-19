@@ -12,6 +12,8 @@ typedef struct GameEngine {
     unsigned int max_scenes;
     unsigned int curr_scene;
     Assets_t assets;
+    // Maintain own queue to handle key presses
+    struct sc_queue_32 key_buffer;
 } GameEngine_t;
 void change_scene(GameEngine_t* engine, unsigned int idx);
 
@@ -40,6 +42,10 @@ struct Scene {
     SceneState_t state;
     GameEngine_t *engine;
 };
+
+void init_engine(GameEngine_t* engine);
+void deinit_engine(GameEngine_t* engine);
+void process_inputs(GameEngine_t* engine, Scene_t* scene);
 
 // Inline functions, for convenience
 extern void update_scene(Scene_t* scene);

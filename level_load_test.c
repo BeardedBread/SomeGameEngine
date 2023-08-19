@@ -9,9 +9,6 @@
 #include <stdio.h>
 #include <unistd.h>
 
-// Maintain own queue to handle key presses
-struct sc_queue_32 key_buffer;
-
 Scene_t* scenes[1];
 static GameEngine_t engine =
 {
@@ -23,7 +20,7 @@ static GameEngine_t engine =
 
 int main(void)
 {
-    sc_queue_init(&key_buffer);
+    init_engine(&engine);
     InitWindow(1280, 640, "raylib");
     SetTargetFPS(60);
     init_memory_pools();
@@ -48,38 +45,7 @@ int main(void)
 
     while(true)
     {
-
-        // This entire key processing relies on the assumption that a pressed key will
-        // appear in the polling of raylib
-
-        unsigned int sz = sc_queue_size(&key_buffer);
-        // Process any existing pressed key
-        for (size_t i = 0; i < sz; i++)
-        {
-            int button = sc_queue_del_first(&key_buffer);
-            ActionType_t action = sc_map_get_64(&scene.scene.action_map, button);
-            if (IsKeyReleased(button))
-            {
-                do_action(&scene.scene, action, false);
-            }
-            else
-            {
-                do_action(&scene.scene, action, true);
-                sc_queue_add_last(&key_buffer, button);
-            }
-        }
-
-        // Detect new key presses
-        while(true)
-        {
-            int button = GetKeyPressed();
-            if (button == 0) break;
-            ActionType_t action = sc_map_get_64(&scene.scene.action_map, button);
-            if (!sc_map_found(&scene.scene.action_map)) continue;
-            do_action(&scene.scene, action, true);
-            sc_queue_add_last(&key_buffer, button);
-        }
-
+        process_inputs(&engine, &scene.scene);
         update_scene(&scene.scene);
         update_entity_manager(&scene.scene.ent_manager);
         // This is needed to advance time delta
@@ -95,7 +61,7 @@ int main(void)
     }
     free_scene(&scene.scene);
     term_level_scene_data(&scene.data);
-    sc_queue_term(&key_buffer);
+    deinit_engine(&engine);
     term_assets(&engine.assets);
     CloseWindow();
 }

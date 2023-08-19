@@ -4,6 +4,9 @@
 #include "assets_loader.h"
 #include <stdio.h>
 #include <unistd.h>
+#if defined(PLATFORM_WEB)
+    #include <emscripten/emscripten.h>
+#endif
 
 
 Scene_t* scenes[1];
@@ -14,6 +17,17 @@ static GameEngine_t engine =
     .curr_scene = 0,
     .assets = {0}
 };
+
+void update_loop(void)
+{
+    Scene_t* scene = engine.scenes[engine.curr_scene];
+    process_inputs(&engine, scene);
+
+    update_scene(scene);
+    update_entity_manager(&scene->ent_manager);
+    // This is needed to advance time delta
+    render_scene(scene);
+}
 
 int main(void)
 {
@@ -39,22 +53,26 @@ int main(void)
     scenes[0] = &scene.scene;
     change_scene(&engine, 0);
 
+    #if defined(PLATFORM_WEB)
+        emscripten_set_main_loop(update_loop, 0, 1);
+    #else
+        while(true)
+        {
 
-    while(true)
-    {
+            // This entire key processing relies on the assumption that a pressed key will
+            // appear in the polling of raylib
+            process_inputs(&engine, &scene.scene);
 
-        // This entire key processing relies on the assumption that a pressed key will
-        // appear in the polling of raylib
-        process_inputs(&engine, &scene.scene);
-
-        update_scene(&scene.scene);
-        update_entity_manager(&scene.scene.ent_manager);
-        // This is needed to advance time delta
-        render_scene(&scene.scene);
-        if (WindowShouldClose()) break;
-    } 
+            update_scene(&scene.scene);
+            update_entity_manager(&scene.scene.ent_manager);
+            // This is needed to advance time delta
+            render_scene(&scene.scene);
+            if (WindowShouldClose()) break;
+        }
+    #endif
     free_sandbox_scene(&scene);
     deinit_engine(&engine);
     term_assets(&engine.assets);
     CloseWindow();
+
 }

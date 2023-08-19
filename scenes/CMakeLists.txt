@@ -1,3 +1,7 @@
+if (EMSCRIPTEN)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPLATFORM_WEB")
+endif ()
+
 add_subdirectory(engine)
 add_library(lib_scenes STATIC
     assets_loader.c

@@ -108,8 +108,6 @@ static void level_scene_render_func(Scene_t* scene)
                 int x = tile_x * TILE_SIZE;
                 int y = tile_y * TILE_SIZE;
 
-                char buffer[6] = {0};
-                sprintf(buffer, "%u", sc_map_size_64v(&tilemap.tiles[i].entities_set));
 
                 if (!tilemap.tiles[i].moveable)
                 {
@@ -329,6 +327,7 @@ static void level_scene_render_func(Scene_t* scene)
             unsigned int y = ((p_runner->current_tile) / tilemap.width) * tilemap.tile_size;
             DrawCircle(x+16, y+16, 8, ColorAlpha(BLUE, 0.6));
         }
+    #if !defined(PLATFORM_WEB)
         for (size_t i = 0; i < tilemap.n_tiles; ++i)
         {
             int x = (i % tilemap.width) * TILE_SIZE;
@@ -345,6 +344,7 @@ static void level_scene_render_func(Scene_t* scene)
                 DrawText(buffer, x, y, 10, BLACK);
             }
         }
+#endif
 
         // Draw tile grid
         for (size_t i = min.x; i < max.x; ++i)
@@ -399,6 +399,9 @@ static void level_scene_render_func(Scene_t* scene)
 
         // For DEBUG
         const int gui_x = data->game_rec.x + data->game_rec.width + 10;
+        int gui_y = 15;
+
+    #if !defined(PLATFORM_WEB)
         sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
         {
             CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
@@ -406,30 +409,36 @@ static void level_scene_render_func(Scene_t* scene)
             CPlayerState_t* p_pstate = get_component(p_ent, CPLAYERSTATE_T);
             CMovementState_t* p_mstate = get_component(p_ent, CMOVEMENTSTATE_T);
             sprintf(buffer, "Pos: %.3f\n %.3f", p_ct->position.x, p_ct->position.y);
-            DrawText(buffer, gui_x, 15, 12, BLACK);
+            DrawText(buffer, gui_x, gui_y, 12, BLACK);
             sprintf(buffer, "Vel: %.3f\n %.3f", p_ct->velocity.x, p_ct->velocity.y);
-            DrawText(buffer, gui_x + 80, 15, 12, BLACK);
-            //sprintf(buffer, "Accel: %.3f\n %.3f", p_ct->accel.x, p_ct->accel.y);
-            //DrawText(buffer, tilemap.width * TILE_SIZE + 128, 60, 12, BLACK);
+            DrawText(buffer, gui_x + 80, gui_y, 12, BLACK);
+
+            gui_y += 45;
             sprintf(buffer, "Jumps: %u", p_cjump->jumps);
-            DrawText(buffer, gui_x, 60, 12, BLACK);
+            DrawText(buffer, gui_x, gui_y, 12, BLACK);
+            gui_y += 30;
             sprintf(buffer, "Crouch: %u", p_pstate->is_crouch);
-            DrawText(buffer, gui_x, 90, 12, BLACK);
+            DrawText(buffer, gui_x, gui_y, 12, BLACK);
+            gui_y += 30;
             sprintf(buffer, "Water: %s", p_mstate->water_state & 1? "YES":"NO");
-            DrawText(buffer, gui_x, 120, 12, BLACK);
+            DrawText(buffer, gui_x, gui_y, 12, BLACK);
+            gui_y += 30;
             sprintf(buffer, "Ladder: %u", p_pstate->ladder_state);
-            DrawText(buffer, gui_x, 150, 12, BLACK);
+            DrawText(buffer, gui_x, gui_y, 12, BLACK);
         }
+#endif
         //sprintf(buffer, "Spawn Entity: %s", get_spawn_selection_string(current_spawn_selection));
         //DrawText(buffer, gui_x, 240, 12, BLACK);
         sprintf(buffer, "Number of Entities: %u", sc_map_size_64v(&scene->ent_manager.entities));
-        DrawText(buffer, gui_x, 270, 12, BLACK);
+        DrawText(buffer, gui_x, gui_y, 12, BLACK);
+        gui_y += 30;
         sprintf(buffer, "FPS: %u", GetFPS());
-        DrawText(buffer, gui_x, 320, 12, BLACK);
+        DrawText(buffer, gui_x, gui_y, 12, BLACK);
 
+        gui_y += 30;
         static char mempool_stats[512];
         print_mempool_stats(mempool_stats);
-        DrawText(mempool_stats, gui_x, 350, 12, BLACK);
+        DrawText(mempool_stats, gui_x, gui_y, 12, BLACK);
     EndDrawing();
 }
 

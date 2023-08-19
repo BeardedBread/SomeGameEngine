@@ -347,12 +347,12 @@ static void level_scene_render_func(Scene_t* scene)
         }
 
         // Draw tile grid
-        for (size_t i = 0; i < tilemap.width; ++i)
+        for (size_t i = min.x; i < max.x; ++i)
         {
             int x = (i+1)*TILE_SIZE;
             DrawLine(x, 0, x, tilemap.height * TILE_SIZE, BLACK);
         }
-        for (size_t i = 0; i < tilemap.height;++i)
+        for (size_t i = min.y; i < max.y;++i)
         {
             int y = (i+1)*TILE_SIZE;
             DrawLine(0, y, tilemap.width * TILE_SIZE, y, BLACK);

@@ -726,6 +726,58 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             break;
             case ACTION_METAL_TOGGLE:
                 if (!pressed) metal_toggle = !metal_toggle;
+                const Color crate_colour = metal_toggle ? GRAY : BROWN;
+                Vector2 draw_pos = {SPAWN_CRATE * SELECTION_TILE_SIZE , 0};
+                BeginTextureMode(selection_section);
+                for (uint8_t i = SPAWN_CRATE; i <= SPAWN_CRATE_BOMB; ++i)
+                {
+                    DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, crate_colour);
+                    Vector2 half_size = {SELECTION_TILE_HALFSIZE, SELECTION_TILE_HALFSIZE};
+                    switch (i)
+                    {
+                        case SPAWN_CRATE_ARROW_L:
+                            DrawLine(
+                                draw_pos.x,
+                                draw_pos.y + half_size.y,
+                                draw_pos.x + half_size.x,
+                                draw_pos.y + half_size.y,
+                                BLACK
+                            );
+                        break;
+                        case SPAWN_CRATE_ARROW_R:
+                            DrawLine(
+                                draw_pos.x + half_size.x,
+                                draw_pos.y + half_size.y,
+                                draw_pos.x + half_size.x * 2,
+                                draw_pos.y + half_size.y,
+                                BLACK
+                            );
+                        break;
+                        case SPAWN_CRATE_ARROW_U:
+                            DrawLine(
+                                draw_pos.x + half_size.x,
+                                draw_pos.y,
+                                draw_pos.x + half_size.x,
+                                draw_pos.y + half_size.y,
+                                BLACK
+                            );
+                        break;
+                        case SPAWN_CRATE_ARROW_D:
+                            DrawLine(
+                                draw_pos.x + half_size.x,
+                                draw_pos.y + half_size.y,
+                                draw_pos.x + half_size.x,
+                                draw_pos.y + half_size.y * 2,
+                                BLACK
+                            );
+                        break;
+                        case SPAWN_CRATE_BOMB:
+                            DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, BLACK);
+                        break;
+                    }
+                    draw_pos.x += SELECTION_TILE_SIZE;
+                }
+                EndTextureMode();
             break;
             case ACTION_CRATE_ACTIVATION:
                 if (!pressed) crate_activation = !crate_activation;
@@ -773,63 +825,61 @@ void init_sandbox_scene(LevelScene_t* scene)
         };
         for (uint8_t i = 0; i < MAX_SPAWN_TYPE; ++i)
         {
+            DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, draw_colour[i]);
+            Vector2 half_size = {SELECTION_TILE_HALFSIZE, SELECTION_TILE_HALFSIZE};
+            switch (i)
             {
-                DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, draw_colour[i]);
-                Vector2 half_size = {SELECTION_TILE_HALFSIZE, SELECTION_TILE_HALFSIZE};
-                switch (i)
-                {
-                    case TOGGLE_SPIKE:
-                        DrawRectangle(draw_pos.x, draw_pos.y + SELECTION_TILE_HALFSIZE, SELECTION_TILE_SIZE, SELECTION_TILE_HALFSIZE, RED);
-                    break;
-                    case SPAWN_BOULDER:
-                        DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, GRAY);
-                    break;
-                    case SPAWN_CRATE_ARROW_L:
-                        DrawLine(
-                            draw_pos.x,
-                            draw_pos.y + half_size.y,
-                            draw_pos.x + half_size.x,
-                            draw_pos.y + half_size.y,
-                            BLACK
-                        );
-                    break;
-                    case SPAWN_CRATE_ARROW_R:
-                        DrawLine(
-                            draw_pos.x + half_size.x,
-                            draw_pos.y + half_size.y,
-                            draw_pos.x + half_size.x * 2,
-                            draw_pos.y + half_size.y,
-                            BLACK
-                        );
-                    break;
-                    case SPAWN_CRATE_ARROW_U:
-                        DrawLine(
-                            draw_pos.x + half_size.x,
-                            draw_pos.y,
-                            draw_pos.x + half_size.x,
-                            draw_pos.y + half_size.y,
-                            BLACK
-                        );
-                    break;
-                    case SPAWN_CRATE_ARROW_D:
-                        DrawLine(
-                            draw_pos.x + half_size.x,
-                            draw_pos.y + half_size.y,
-                            draw_pos.x + half_size.x,
-                            draw_pos.y + half_size.y * 2,
-                            BLACK
-                        );
-                    break;
-                    case SPAWN_CRATE_BOMB:
-                        DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, BLACK);
-                    break;
-                    case SPAWN_WATER_RUNNER:
-                        DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, ColorAlpha(BLUE, 0.2));
-                    break;
-                    case TOGGLE_AIR_POCKET:
-                        DrawRectangleLinesEx((Rectangle){draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
-                    break;
-                }
+                case TOGGLE_SPIKE:
+                    DrawRectangle(draw_pos.x, draw_pos.y + SELECTION_TILE_HALFSIZE, SELECTION_TILE_SIZE, SELECTION_TILE_HALFSIZE, RED);
+                break;
+                case SPAWN_BOULDER:
+                    DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, GRAY);
+                break;
+                case SPAWN_CRATE_ARROW_L:
+                    DrawLine(
+                        draw_pos.x,
+                        draw_pos.y + half_size.y,
+                        draw_pos.x + half_size.x,
+                        draw_pos.y + half_size.y,
+                        BLACK
+                    );
+                break;
+                case SPAWN_CRATE_ARROW_R:
+                    DrawLine(
+                        draw_pos.x + half_size.x,
+                        draw_pos.y + half_size.y,
+                        draw_pos.x + half_size.x * 2,
+                        draw_pos.y + half_size.y,
+                        BLACK
+                    );
+                break;
+                case SPAWN_CRATE_ARROW_U:
+                    DrawLine(
+                        draw_pos.x + half_size.x,
+                        draw_pos.y,
+                        draw_pos.x + half_size.x,
+                        draw_pos.y + half_size.y,
+                        BLACK
+                    );
+                break;
+                case SPAWN_CRATE_ARROW_D:
+                    DrawLine(
+                        draw_pos.x + half_size.x,
+                        draw_pos.y + half_size.y,
+                        draw_pos.x + half_size.x,
+                        draw_pos.y + half_size.y * 2,
+                        BLACK
+                    );
+                break;
+                case SPAWN_CRATE_BOMB:
+                    DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, BLACK);
+                break;
+                case SPAWN_WATER_RUNNER:
+                    DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, ColorAlpha(BLUE, 0.2));
+                break;
+                case TOGGLE_AIR_POCKET:
+                    DrawRectangleLinesEx((Rectangle){draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
+                break;
             }
             draw_pos.x += SELECTION_TILE_SIZE;
         }

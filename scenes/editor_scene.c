@@ -75,6 +75,7 @@ static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
     return MAX_N_TILES;
 }
 
+static RenderTexture2D selection_section;
 static void level_scene_render_func(Scene_t* scene)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
@@ -96,22 +97,18 @@ static void level_scene_render_func(Scene_t* scene)
     max.x = (int)fmin(tilemap.width-1, max.x + 1);
     max.y = (int)fmin(tilemap.height-1, max.y + 1);
 
-    printf("(%d,%d  %d,%d\n", (int)min.x, (int)min.y, (int)max.x, (int)max.y);
     BeginTextureMode(data->game_viewport);
         ClearBackground(WHITE);
         BeginMode2D(data->cam);
-        //for (size_t i = 0; i < tilemap.n_tiles; ++i)
-        //{
         for (int tile_y = min.y; tile_y <= max.y; tile_y++)
         {
-            //for (unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
             for (int tile_x = min.x; tile_x <= max.x; tile_x++)
             {
-                //int i = get_tile_idx(x, y, &tilemap);
                 int i = tile_x + tile_y * tilemap.width;
-                char buffer[6] = {0};
                 int x = tile_x * TILE_SIZE;
                 int y = tile_y * TILE_SIZE;
+
+                char buffer[6] = {0};
                 sprintf(buffer, "%u", sc_map_size_64v(&tilemap.tiles[i].entities_set));
 
                 if (!tilemap.tiles[i].moveable)
@@ -375,149 +372,30 @@ static void level_scene_render_func(Scene_t* scene)
             (Vector2){data->game_rec.x, data->game_rec.y},
             WHITE
         );
+        draw_rec.width = SELECTION_REGION_WIDTH;
+        draw_rec.height = -(SELECTION_REGION_HEIGHT * 2 + 10);
+
 
         Vector2 draw_pos = {data->game_rec.x, data->game_rec.y + data->game_rec.height + SELECTION_GAP};
-        const Color crate_colour = metal_toggle ? GRAY : BROWN;
-        const Color draw_colour[MAX_SPAWN_TYPE] = {
-            BLACK, MAROON, ORANGE, ColorAlpha(RAYWHITE, 0.5), ColorAlpha(BLUE, 0.5), ColorAlpha(RAYWHITE, 0.5),
-            crate_colour, crate_colour, crate_colour, crate_colour, crate_colour, crate_colour,
-            ColorAlpha(RAYWHITE, 0.5), ColorAlpha(RAYWHITE, 0.5)
-        };
-        for (uint8_t i = 0; i < MAX_SPAWN_TYPE; ++i)
-        {
-            if (i != current_spawn_selection)
-            {
-                DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, draw_colour[i]);
-                Vector2 half_size = {SELECTION_TILE_HALFSIZE, SELECTION_TILE_HALFSIZE};
-                switch (i)
-                {
-                    case TOGGLE_SPIKE:
-                        DrawRectangle(draw_pos.x, draw_pos.y + SELECTION_TILE_HALFSIZE, SELECTION_TILE_SIZE, SELECTION_TILE_HALFSIZE, RED);
-                    break;
-                    case SPAWN_BOULDER:
-                        DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, GRAY);
-                    break;
-                    case SPAWN_CRATE_ARROW_L:
-                        DrawLine(
-                            draw_pos.x,
-                            draw_pos.y + half_size.y,
-                            draw_pos.x + half_size.x,
-                            draw_pos.y + half_size.y,
-                            BLACK
-                        );
-                    break;
-                    case SPAWN_CRATE_ARROW_R:
-                        DrawLine(
-                            draw_pos.x + half_size.x,
-                            draw_pos.y + half_size.y,
-                            draw_pos.x + half_size.x * 2,
-                            draw_pos.y + half_size.y,
-                            BLACK
-                        );
-                    break;
-                    case SPAWN_CRATE_ARROW_U:
-                        DrawLine(
-                            draw_pos.x + half_size.x,
-                            draw_pos.y,
-                            draw_pos.x + half_size.x,
-                            draw_pos.y + half_size.y,
-                            BLACK
-                        );
-                    break;
-                    case SPAWN_CRATE_ARROW_D:
-                        DrawLine(
-                            draw_pos.x + half_size.x,
-                            draw_pos.y + half_size.y,
-                            draw_pos.x + half_size.x,
-                            draw_pos.y + half_size.y * 2,
-                            BLACK
-                        );
-                    break;
-                    case SPAWN_CRATE_BOMB:
-                        DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, BLACK);
-                    break;
-                    case SPAWN_WATER_RUNNER:
-                        DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, ColorAlpha(BLUE, 0.2));
-                    break;
-                    case TOGGLE_AIR_POCKET:
-                        DrawRectangleLinesEx((Rectangle){draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
-                    break;
-                }
-            }
-            draw_pos.x += SELECTION_TILE_SIZE;
-        }
-
-        draw_pos.x = data->game_rec.x + current_spawn_selection * SELECTION_TILE_SIZE;
-        DrawRectangle(
-            draw_pos.x - 2, draw_pos.y - 2,
-            SELECTION_TILE_SIZE + 4, SELECTION_TILE_SIZE + 4, GREEN
+        DrawTextureRec(
+            selection_section.texture,
+            draw_rec,
+            draw_pos,
+            WHITE
         );
-        DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, draw_colour[current_spawn_selection]);
-        const Vector2 half_size = {SELECTION_TILE_HALFSIZE, SELECTION_TILE_HALFSIZE};
-        switch (current_spawn_selection)
-        {
-            case TOGGLE_SPIKE:
-                DrawRectangle(draw_pos.x, draw_pos.y + SELECTION_TILE_HALFSIZE, SELECTION_TILE_SIZE, SELECTION_TILE_HALFSIZE, RED);
-            break;
-            case SPAWN_BOULDER:
-                DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, GRAY);
-            break;
-            case SPAWN_CRATE_ARROW_L:
-                DrawLine(
-                    draw_pos.x,
-                    draw_pos.y + half_size.y,
-                    draw_pos.x + half_size.x,
-                    draw_pos.y + half_size.y,
-                    BLACK
-                );
-            break;
-            case SPAWN_CRATE_ARROW_R:
-                DrawLine(
-                    draw_pos.x + half_size.x,
-                    draw_pos.y + half_size.y,
-                    draw_pos.x + half_size.x * 2,
-                    draw_pos.y + half_size.y,
-                    BLACK
-                );
-            break;
-            case SPAWN_CRATE_ARROW_U:
-                DrawLine(
-                    draw_pos.x + half_size.x,
-                    draw_pos.y,
-                    draw_pos.x + half_size.x,
-                    draw_pos.y + half_size.y,
-                    BLACK
-                );
-            break;
-            case SPAWN_CRATE_ARROW_D:
-                DrawLine(
-                    draw_pos.x + half_size.x,
-                    draw_pos.y + half_size.y,
-                    draw_pos.x + half_size.x,
-                    draw_pos.y + half_size.y * 2,
-                    BLACK
-                );
-            break;
-            case SPAWN_CRATE_BOMB:
-                DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, BLACK);
-            break;
-            case SPAWN_WATER_RUNNER:
-                DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, ColorAlpha(BLUE, 0.2));
-            break;
-            case TOGGLE_AIR_POCKET:
-                DrawRectangleLinesEx((Rectangle){draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
-            break;
-        }
+        
+        draw_pos.x = data->game_rec.x + current_spawn_selection * SELECTION_TILE_SIZE;
+        DrawRectangleLines(
+            draw_pos.x, draw_pos.y,
+            SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, GREEN
+        );
 
         draw_pos.x = data->game_rec.x + (MAX_SPAWN_TYPE + 1) * SELECTION_TILE_SIZE;
-        sprintf(buffer, "Crate %s on spawn", crate_activation? "active" : "inactive");
-        DrawText(buffer, draw_pos.x, draw_pos.y, 20, BLACK);
-        draw_pos.x = data->game_rec.x;
-        draw_pos.y += SELECTION_TILE_SIZE + 5;
         sprintf(buffer, "Selection: %s", get_spawn_selection_string(current_spawn_selection));
         DrawText(buffer, draw_pos.x, draw_pos.y, 20, BLACK);
-        draw_pos.x = data->game_rec.x + (MAX_SPAWN_TYPE + 1) * SELECTION_TILE_SIZE;
-        DrawText("Press R to reset the map\nO,P to cycle the selection, T to toggle crate spawn behaviour", draw_pos.x, draw_pos.y, 16, BLACK);
+        draw_pos.y += SELECTION_TILE_SIZE + 5;
+        sprintf(buffer, "Crate %s on spawn", crate_activation? "active" : "inactive");
+        DrawText(buffer, draw_pos.x, draw_pos.y, 20, BLACK);
 
         // For DEBUG
         const int gui_x = data->game_rec.x + data->game_rec.width + 10;
@@ -866,6 +744,85 @@ void init_sandbox_scene(LevelScene_t* scene)
         unsigned int tile_idx = (scene->data.tilemap.height - 1) * scene->data.tilemap.width + i;
         change_a_tile(&scene->data.tilemap, tile_idx, SOLID_TILE);
     }
+    selection_section = LoadRenderTexture(SELECTION_REGION_WIDTH, SELECTION_REGION_HEIGHT * 2 + 10);
+
+    BeginTextureMode(selection_section);
+        ClearBackground(LIGHTGRAY);
+        Vector2 draw_pos = {0, 0};
+        const Color crate_colour = metal_toggle ? GRAY : BROWN;
+        const Color draw_colour[MAX_SPAWN_TYPE] = {
+            BLACK, MAROON, ORANGE, ColorAlpha(RAYWHITE, 0.5), ColorAlpha(BLUE, 0.5), ColorAlpha(RAYWHITE, 0.5),
+            crate_colour, crate_colour, crate_colour, crate_colour, crate_colour, crate_colour,
+            ColorAlpha(RAYWHITE, 0.5), ColorAlpha(RAYWHITE, 0.5)
+        };
+        for (uint8_t i = 0; i < MAX_SPAWN_TYPE; ++i)
+        {
+            {
+                DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, draw_colour[i]);
+                Vector2 half_size = {SELECTION_TILE_HALFSIZE, SELECTION_TILE_HALFSIZE};
+                switch (i)
+                {
+                    case TOGGLE_SPIKE:
+                        DrawRectangle(draw_pos.x, draw_pos.y + SELECTION_TILE_HALFSIZE, SELECTION_TILE_SIZE, SELECTION_TILE_HALFSIZE, RED);
+                    break;
+                    case SPAWN_BOULDER:
+                        DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, GRAY);
+                    break;
+                    case SPAWN_CRATE_ARROW_L:
+                        DrawLine(
+                            draw_pos.x,
+                            draw_pos.y + half_size.y,
+                            draw_pos.x + half_size.x,
+                            draw_pos.y + half_size.y,
+                            BLACK
+                        );
+                    break;
+                    case SPAWN_CRATE_ARROW_R:
+                        DrawLine(
+                            draw_pos.x + half_size.x,
+                            draw_pos.y + half_size.y,
+                            draw_pos.x + half_size.x * 2,
+                            draw_pos.y + half_size.y,
+                            BLACK
+                        );
+                    break;
+                    case SPAWN_CRATE_ARROW_U:
+                        DrawLine(
+                            draw_pos.x + half_size.x,
+                            draw_pos.y,
+                            draw_pos.x + half_size.x,
+                            draw_pos.y + half_size.y,
+                            BLACK
+                        );
+                    break;
+                    case SPAWN_CRATE_ARROW_D:
+                        DrawLine(
+                            draw_pos.x + half_size.x,
+                            draw_pos.y + half_size.y,
+                            draw_pos.x + half_size.x,
+                            draw_pos.y + half_size.y * 2,
+                            BLACK
+                        );
+                    break;
+                    case SPAWN_CRATE_BOMB:
+                        DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, BLACK);
+                    break;
+                    case SPAWN_WATER_RUNNER:
+                        DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, ColorAlpha(BLUE, 0.2));
+                    break;
+                    case TOGGLE_AIR_POCKET:
+                        DrawRectangleLinesEx((Rectangle){draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
+                    break;
+                }
+            }
+            draw_pos.x += SELECTION_TILE_SIZE;
+        }
+
+        draw_pos.y += SELECTION_TILE_SIZE + 2;
+        DrawText("R to reset the map, O/P to cycle the selection,\nT to toggle crate spawn behaviour", 0, draw_pos.y, 16, BLACK);
+
+
+    EndTextureMode();
 
     create_player(&scene->scene.ent_manager, &scene->scene.engine->assets);
     update_entity_manager(&scene->scene.ent_manager);
@@ -924,4 +881,5 @@ void free_sandbox_scene(LevelScene_t* scene)
 {
     free_scene(&scene->scene);
     term_level_scene_data(&scene->data);
+    UnloadRenderTexture(selection_section); // Unload render texture
 }

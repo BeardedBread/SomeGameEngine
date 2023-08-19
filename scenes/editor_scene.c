@@ -109,12 +109,14 @@ static void level_scene_render_func(Scene_t* scene)
                 int y = tile_y * TILE_SIZE;
 
 
+    #if !defined(PLATFORM_WEB)
                 if (!tilemap.tiles[i].moveable)
                 {
                     // Draw water tile
                     Color water_colour = ColorAlpha(RED, 0.2);
                     DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
                 }
+    #endif
 
                 uint8_t tile_sprite_idx = tilemap.tiles[i].tile_type + tilemap.tiles[i].rotation;
                 if (data->tile_sprites[tile_sprite_idx] != NULL)
@@ -194,12 +196,13 @@ static void level_scene_render_func(Scene_t* scene)
             CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
             CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
 
-            if (
-                p_ct->position.x < min.x * tilemap.tile_size
-                || p_ct->position.x + p_bbox->size.x > max.x * tilemap.tile_size
-                || p_ct->position.y < min.y * tilemap.tile_size
-                || p_ct->position.y + p_bbox->size.y > max.y * tilemap.tile_size
-            ) continue;
+            // TODO: Figure out better way to cull this
+            //if (
+            //    p_ct->position.x + p_bbox < min.x * tilemap.tile_size
+            //    || p_ct->position.x + p_bbox->size.x > max.x * tilemap.tile_size
+            //    || p_ct->position.y < min.y * tilemap.tile_size
+            //    || p_ct->position.y + p_bbox->size.y > max.y * tilemap.tile_size
+            //) continue;
 
             Color colour;
             switch(p_ent->m_tag)
@@ -327,24 +330,27 @@ static void level_scene_render_func(Scene_t* scene)
             unsigned int y = ((p_runner->current_tile) / tilemap.width) * tilemap.tile_size;
             DrawCircle(x+16, y+16, 8, ColorAlpha(BLUE, 0.6));
         }
-    #if !defined(PLATFORM_WEB)
-        for (size_t i = 0; i < tilemap.n_tiles; ++i)
+        for (int tile_y = min.y; tile_y <= max.y; tile_y++)
         {
-            int x = (i % tilemap.width) * TILE_SIZE;
-            int y = (i / tilemap.width) * TILE_SIZE;
-            sprintf(buffer, "%u", sc_map_size_64v(&tilemap.tiles[i].entities_set));
+            for (int tile_x = min.x; tile_x <= max.x; tile_x++)
+            {
+                int i = tile_x + tile_y * tilemap.width;
+                int x = tile_x * TILE_SIZE;
+                int y = tile_y * TILE_SIZE;
 
-            if (tilemap.tiles[i].solid > 0)
-            {
-                DrawText(buffer, x, y, 10, WHITE);
-            }
-            else
-            {
-                // Draw water tile
-                DrawText(buffer, x, y, 10, BLACK);
+                sprintf(buffer, "%u", sc_map_size_64v(&tilemap.tiles[i].entities_set));
+
+                if (tilemap.tiles[i].solid > 0)
+                {
+                    DrawText(buffer, x, y, 10, WHITE);
+                }
+                else
+                {
+                    // Draw water tile
+                    DrawText(buffer, x, y, 10, BLACK);
+                }
             }
         }
-#endif
 
         // Draw tile grid
         for (size_t i = min.x; i < max.x; ++i)
@@ -425,6 +431,7 @@ static void level_scene_render_func(Scene_t* scene)
             gui_y += 30;
             sprintf(buffer, "Ladder: %u", p_pstate->ladder_state);
             DrawText(buffer, gui_x, gui_y, 12, BLACK);
+            gui_y += 30;
         }
 #endif
         //sprintf(buffer, "Spawn Entity: %s", get_spawn_selection_string(current_spawn_selection));

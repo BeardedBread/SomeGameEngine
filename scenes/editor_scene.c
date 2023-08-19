@@ -885,7 +885,7 @@ void init_sandbox_scene(LevelScene_t* scene)
         }
 
         draw_pos.y += SELECTION_TILE_SIZE + 2;
-        DrawText("R to reset the map, O/P to cycle the selection,\nT to toggle crate spawn behaviour", 0, draw_pos.y, 16, BLACK);
+        DrawText("R to reset the map, O/P to cycle the selection,\nM to toggle metal crates. T to toggle crate spawn behaviour", 0, draw_pos.y, 14, BLACK);
 
 
     EndTextureMode();

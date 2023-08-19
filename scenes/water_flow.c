@@ -23,6 +23,7 @@ Entity_t* create_water_runner(EntityManager_t* ent_manager, int32_t width, int32
     p_crunner->bfs_tilemap.height = height;
     p_crunner->bfs_tilemap.len = total;
     p_crunner->movement_delay = 5;
+    p_crunner->movement_speed = 6;
 
     sc_queue_init(&p_crunner->bfs_queue);
     p_crunner->visited = calloc(total, sizeof(bool));
@@ -217,16 +218,29 @@ void update_water_runner_system(Scene_t* scene)
                 p_crunner->counter--;
                 if (p_crunner->counter == 0)
                 {
-                    p_crunner->current_tile = p_crunner->bfs_tilemap.tilemap[p_crunner->current_tile].to;
-                    CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
-                    p_ct->position.x = (p_crunner->current_tile % tilemap.width) * tilemap.tile_size; 
-                    p_ct->position.y = (p_crunner->current_tile / tilemap.width) * tilemap.tile_size; 
-                    tilemap.tiles[p_crunner->current_tile].wet = true;
-                    if (p_crunner->current_tile == p_crunner->target_tile)
+
+                    int8_t move_left = p_crunner->movement_speed;
+                    while (move_left)
                     {
-                        p_crunner->state = REACHABILITY_SEARCH;
+                        p_crunner->current_tile = p_crunner->bfs_tilemap.tilemap[p_crunner->current_tile].to;
+                        CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
+                        p_ct->position.x = (p_crunner->current_tile % tilemap.width) * tilemap.tile_size; 
+                        p_ct->position.y = (p_crunner->current_tile / tilemap.width) * tilemap.tile_size; 
+
+                        Tile_t* tile = tilemap.tiles + p_crunner->current_tile;
+                        tile->wet = true;
+                        move_left--;
+                        if (tile->water_level != tile->max_water_level)
+                        {
+                            move_left--;
+                        }
+                        if (p_crunner->current_tile == p_crunner->target_tile)
+                        {
+                            p_crunner->state = REACHABILITY_SEARCH;
+                            break;
+                        }
+                        p_crunner->counter = p_crunner->movement_delay;
                     }
-                    p_crunner->counter = p_crunner->movement_delay;
                 }
             break;
             case REACHABILITY_SEARCH:

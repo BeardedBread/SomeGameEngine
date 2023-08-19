@@ -163,6 +163,7 @@ typedef struct _CWaterRunner {
     int32_t fill_idx;
     int16_t fill_range[2];
     uint8_t movement_delay;
+    int8_t movement_speed;
     int16_t counter;
 }CWaterRunner_t;
 

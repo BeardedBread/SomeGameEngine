@@ -493,7 +493,7 @@ static void toggle_block_system(Scene_t* scene)
     {
         Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data->cam);
         unsigned int tile_idx = get_tile_idx(mouse_pos.x, mouse_pos.y, &tilemap);
-        if (tile_idx >= MAX_N_TILES) return;
+        if (tile_idx >= (tilemap.n_tiles - tilemap.width)) return;
         if (tile_idx == last_tile_idx) return;
 
         if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))

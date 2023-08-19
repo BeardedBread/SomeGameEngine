@@ -54,8 +54,10 @@ int main(void)
     change_scene(&engine, 0);
 
     #if defined(PLATFORM_WEB)
+        puts("Setting emscripten main loop");
         emscripten_set_main_loop(update_loop, 0, 1);
     #else
+        puts("Regular main loop");
         while(true)
         {
 

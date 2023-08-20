@@ -1,4 +1,7 @@
 # Some Game Engine
+
+**Spriteless sandbox demo here**: [link](https://sadpumpkin.itch.io/somegameengine)
+
 An attempt to create a game with the ECS architecture in C. This is mostly a learning experience about what goes into a game engine.
 
 The goal of the project is to make a game similar to Hannah and The Pirate Caves from Neopets. I thought that's a nice game to aim for, plus I have fond memories of it. It is not a full-on remake!
@@ -8,16 +11,18 @@ The goal of the project is to make a game similar to Hannah and The Pirate Caves
 ## Implementation Notes
 As mentioned, this is mostly a learning experience, so certain things are implemented for the sake of learning. However, there are certain things that I didn't bother with because dealing with them will open up another can of worms. Either that or I find it too large of a feature to implement on my own without hating my existance. For these, I will use libraries.
 
-As this point of time (28/5/2023), these are the things I won't bother for now:
+As this point of time (20/8/2023), these are the things I won't bother for now:
 - Game rendering: I remember dealing with OpenGL for a little bit and it being a not-so-pleasant experience. This is also a large topic on its own too.
 - Camera System: This is an interesting one. I would really like to implement this. However, this is sort of tied to game rendering, so no.
 - Windows and raw input handling: Not keen on this.
 - GUI: I'm not about to roll my own GUI library for this.
 - Data structures: Will only do it for specific reasons. Otherwise, use a library.
+- Level editor: ... no. This is more towards GUI design which I'm not currently keen on.
 
-Libraries used:
+Libraries/Tools used:
 - _raylib_ \[[link](https://github.com/raysan5/raylib)\] + _raygui_ \[[link](https://github.com/raysan5/raygui)\]: MVP of this project. Basically the backbone of the game. I've use it for some past projects and it's always a pleasant experience. Can recommend!
 - _sc_ \[[link](https://github.com/tezc/sc)\]: For data structures. The library targets server backend usage, so it might not be the most suitable usage, and is likely to be replaced. However, it has been a good experience using this library, so no complaints from me.
+- _LDtk_ \[[link](https://ldtk.io/)\]: A nice level editor. I haven't use it to its fullest extent, but definitely having a good experience so far.
 
 ## Progress
 The engine features:
@@ -25,12 +30,16 @@ The engine features:
 - AABB collision system + Grid-based Broad phase collision detection
 - Scene management and transition
 - Assets management and sprite transition
+- Simple level loading
 
-Game progress:
+Current progress:
 - Simple main menu + sandbox scenes
 - Player movement
 - Tiles: Solid tiles, water, One-way platforms and ladders
-- Crates
+- Crates: wooden and metal
+- Arrows and dynamites
+- Water filling
+- Demo level pack loading
 
 ## Build Instruction
 1. Build and install raylib.

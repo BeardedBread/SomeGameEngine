@@ -24,6 +24,7 @@ set(GAME_LIBS
 
 
 add_subdirectory(scenes)
+
 add_executable(${PROJECT_NAME}
     main.c
 )
@@ -36,7 +37,6 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     ${GAME_LIBS}
 )
-
 add_executable(scene_test
     scene_test.c
 )
@@ -46,15 +46,17 @@ target_include_directories(scene_test
     ${CMAKE_CURRENT_LIST_DIR}
 )
 
+if (NOT EMSCRIPTEN)
 target_compile_options(scene_test PRIVATE -fsanitize=address -gdwarf-4)
 target_link_options(scene_test PRIVATE -fsanitize=address -gdwarf-4)
-
+endif ()
 target_link_libraries(scene_test
     ${GAME_LIBS}
 )
 
 
 if (NOT EMSCRIPTEN)
+
 add_executable(EntManager_test
     entManager_test.c
 )

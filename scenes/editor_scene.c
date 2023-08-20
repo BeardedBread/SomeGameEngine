@@ -885,7 +885,7 @@ void init_sandbox_scene(LevelScene_t* scene)
         }
 
         draw_pos.y += SELECTION_TILE_SIZE + 2;
-        DrawText("R to reset the map, O/P to cycle the selection,\nM to toggle metal crates. T to toggle crate spawn behaviour", 0, draw_pos.y, 14, BLACK);
+        DrawText("R to reset the map, Q/E to cycle the selection,\nF to toggle metal crates. T to toggle crate spawn behaviour", 0, draw_pos.y, 14, BLACK);
 
 
     EndTextureMode();
@@ -934,11 +934,11 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_map_put_64(&scene->scene.action_map, KEY_D, ACTION_RIGHT);
 
     sc_map_put_64(&scene->scene.action_map, KEY_SPACE, ACTION_JUMP);
-    sc_map_put_64(&scene->scene.action_map, KEY_O, ACTION_PREV_SPAWN);
-    sc_map_put_64(&scene->scene.action_map, KEY_P, ACTION_NEXT_SPAWN);
-    sc_map_put_64(&scene->scene.action_map, KEY_M, ACTION_METAL_TOGGLE);
+    sc_map_put_64(&scene->scene.action_map, KEY_Q, ACTION_PREV_SPAWN);
+    sc_map_put_64(&scene->scene.action_map, KEY_E, ACTION_NEXT_SPAWN);
+    sc_map_put_64(&scene->scene.action_map, KEY_F, ACTION_METAL_TOGGLE);
     sc_map_put_64(&scene->scene.action_map, KEY_T, ACTION_CRATE_ACTIVATION);
-    sc_map_put_64(&scene->scene.action_map, KEY_Q, ACTION_EXIT);
+    sc_map_put_64(&scene->scene.action_map, KEY_L, ACTION_EXIT);
     sc_map_put_64(&scene->scene.action_map, KEY_R, ACTION_RESTART);
 
 }

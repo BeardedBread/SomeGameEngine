@@ -45,46 +45,40 @@ static bool check_collision_and_move(
         // If there is collision, use previous overlap to determine direction
         find_AABB_overlap(p_ct->prev_position, p_bbox->size, *other_pos, other_bbox, &prev_overlap);
 
-        // Store collision event here
-        // Check collision on x or y axis
-        // Encode key and value, -ve is left and up, +ve is right and down
-        Vector2 offset = {0, 0};
-        if (fabs(prev_overlap.y) > fabs(prev_overlap.x))
-        {
-            offset.x = overlap.x;
-        }
-        else if (fabs(prev_overlap.x) > fabs(prev_overlap.y))
-        {
-            offset.y = overlap.y;
-        }
-        else if (fabs(overlap.x) < fabs(overlap.y))
-        {
-            offset.x = overlap.x;
-        }
-        else
-        {
-            offset.y = overlap.y;
-        }
-
         // Resolve collision via moving player by the overlap amount only if other is solid
         // also check for empty to prevent creating new collision. Not fool-proof, but good enough
-        //if (other_solid && !check_collision_at(ent_idx, p_ct->position, sz, tilemap, offset, p_manager))
-        if ( other_solid == SOLID
-            || (
-                other_solid == ONE_WAY && offset.y  < 0
-                && (p_ct->prev_position.y + p_bbox->size.y - 1 < other_pos->y))
-        )
+        Vector2 offset = {0, 0};
+        if (other_solid == SOLID)
         {
-            //if (!check_collision_offset(ent, p_ct->position, p_bbox->size, tilemap, offset))
+            if (fabs(prev_overlap.y) > fabs(prev_overlap.x))
             {
-                p_ct->position = Vector2Add(p_ct->position, offset);
+                offset.x = overlap.x;
             }
-            //else 
+            else if (fabs(prev_overlap.x) > fabs(prev_overlap.y))
             {
-            
-                //*other_pos = Vector2Subtract(*other_pos, offset);
+                offset.y = overlap.y;
+            }
+            else if (fabs(overlap.x) < fabs(overlap.y))
+            {
+                offset.x = overlap.x;
+            }
+            else
+            {
+                offset.y = overlap.y;
             }
         }
+        else if (other_solid == ONE_WAY)
+        {
+            // One way collision is a bit special
+            if (
+                p_ct->prev_position.y + p_bbox->size.y - 1 < other_pos->y
+                && p_ct->position.y + p_bbox->size.y - 1 >= other_pos->y
+            )
+            {
+                offset.y = other_pos->y - (p_ct->position.y + p_bbox->size.y);
+            }
+        }
+        p_ct->position = Vector2Add(p_ct->position, offset);
     }
     else if (overlap_mode == 2)
     {

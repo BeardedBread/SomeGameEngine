@@ -1,6 +1,6 @@
 # Some Game Engine
 
-**Spriteless sandbox demo here**: [link](https://sadpumpkin.itch.io/somegameengine)
+**Sandbox demo here**: [link](https://sadpumpkin.itch.io/somegameengine)
 
 An attempt to create a game with the ECS architecture in C. This is mostly a learning experience about what goes into a game engine.
 
@@ -23,6 +23,7 @@ Libraries/Tools used:
 - _raylib_ \[[link](https://github.com/raysan5/raylib)\] + _raygui_ \[[link](https://github.com/raysan5/raygui)\]: MVP of this project. Basically the backbone of the game. I've use it for some past projects and it's always a pleasant experience. Can recommend!
 - _sc_ \[[link](https://github.com/tezc/sc)\]: For data structures. The library targets server backend usage, so it might not be the most suitable usage, and is likely to be replaced. However, it has been a good experience using this library, so no complaints from me.
 - _LDtk_ \[[link](https://ldtk.io/)\]: A nice level editor. I haven't use it to its fullest extent, but definitely having a good experience so far.
+- _Aseprite_ \[[link](https://www.aseprite.org/)\]: Used it to create sprites. Good tool!
 
 ## Progress
 The engine features:

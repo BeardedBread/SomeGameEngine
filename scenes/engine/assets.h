@@ -44,6 +44,7 @@ Sprite_t* add_sprite(Assets_t* assets, const char* name, Texture2D* texture);
 Sound* add_sound(Assets_t * assets, const char* name, const char* path);
 Font* add_font(Assets_t* assets, const char* name, const char* path);
 LevelPack_t* add_level_pack(Assets_t* assets, const char* name, const char* path);
+LevelPack_t* uncompress_level_pack(Assets_t* assets, const char* name, const char* path);
 
 Texture2D* get_texture(Assets_t* assets, const char* name);
 Sprite_t* get_sprite(Assets_t* assets, const char* name);

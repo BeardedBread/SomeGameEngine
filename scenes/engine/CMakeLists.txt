@@ -5,12 +5,16 @@ add_library(lib_engine STATIC
     gui.c
     engine.c
     collisions.c
+    ${LIBZSTD_DIR}/lib/libzstd.a
 )
 target_include_directories(lib_engine
+    PRIVATE
+    ${LIBZSTD_DIR}/include
     PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}
 )
 target_link_libraries(lib_engine
     PUBLIC
     lib_EC
+    zstd
 )

@@ -5,6 +5,7 @@ cmake_minimum_required(VERSION 3.22.1)
 project(${PROJECT_NAME} C)
 set(CMAKE_C_STANDARD 99)
 set(RAYLIB_DIR /usr/local/lib CACHE FILEPATH "directory to Raylib")
+set(LIBZSTD_DIR /usr/local/lib CACHE FILEPATH "directory to zstd")
 
 if (EMSCRIPTEN)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY")

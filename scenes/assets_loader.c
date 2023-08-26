@@ -97,7 +97,8 @@ bool load_from_infofile(const char* file, Assets_t* assets)
                 break;
                 case LEVELPACK_INFO:
                 {
-                    if (add_level_pack(assets, name, info_str) == NULL)
+                    //if (add_level_pack(assets, name, info_str) == NULL)
+                    if (uncompress_level_pack(assets, name, info_str) == NULL)
                     {
                         printf("Unable to add level pack at line %lu\n", line_num);
                         break;

@@ -1,6 +1,7 @@
 #include "assets.h"
 #include "assert.h"
 
+#include "zstd.h"
 #include <stdio.h>
 
 #define MAX_TEXTURES 16
@@ -44,6 +45,15 @@ static FontData_t fonts[MAX_FONTS];
 static SoundData_t sfx[MAX_SOUNDS];
 static SpriteData_t sprites[MAX_SPRITES];
 static LevelPackData_t levelpacks[MAX_LEVEL_PACK];
+
+#define DECOMPRESSOR_INBUF_LEN 4096
+#define DECOMPRESSOR_OUTBUF_LEN 4096
+static struct ZstdDecompressor
+{
+    ZSTD_DCtx* ctx;
+    uint8_t in_buffer[DECOMPRESSOR_INBUF_LEN];
+    uint8_t out_buffer[DECOMPRESSOR_OUTBUF_LEN];
+}level_decompressor;
 
 static void unload_level_pack(LevelPack_t pack)
 {
@@ -132,6 +142,144 @@ LevelPack_t* add_level_pack(Assets_t* assets, const char* name, const char* path
     return &levelpacks[pack_idx].pack;
 }
 
+LevelPack_t* uncompress_level_pack(Assets_t* assets, const char* name, const char* path)
+{
+    FILE* file = fopen(path, "rb");
+    if (file == NULL) return NULL;
+
+    LevelPackData_t* pack_info = levelpacks + n_loaded[4];
+    size_t read = 0;
+
+    ZSTD_inBuffer input = { level_decompressor.in_buffer, read, 0 };
+    ZSTD_outBuffer output = { level_decompressor.out_buffer, 4, 0 };
+
+    do
+    {
+        if (input.pos == input.size)
+        {
+            puts("Read more");
+            read = fread(level_decompressor.in_buffer, 1, DECOMPRESSOR_INBUF_LEN, file);
+            if (read == 0) break;
+            input.size = read;
+            input.pos = 0;
+        }
+        size_t const ret = ZSTD_decompressStream(level_decompressor.ctx, &output , &input);
+        if (ZSTD_isError(ret))
+        {
+            printf("Decompression Error: %s\n", ZSTD_getErrorName(ret));
+            break;
+        }
+    }
+    while (output.pos == 0);
+
+    if (output.pos == 0)
+    {
+        perror("Could not read number of levels");
+        return NULL;
+    }
+
+    // Read number of levels and alloc the memory for the levels
+    uint32_t n_levels = 0;
+    uint8_t lvls = 0;
+    bool err = false;
+    memcpy(&n_levels, level_decompressor.out_buffer, 4);
+    pack_info->pack.levels = calloc(n_levels, sizeof(LevelMap_t));
+
+    for (lvls = 0; lvls < n_levels; ++lvls)
+    {
+        printf("Parsing level %u\n", lvls);
+        output.size = 36;
+        output.pos = 0;
+
+        do
+        {
+            if (input.pos == input.size)
+            {
+                read = fread(level_decompressor.in_buffer, 1, DECOMPRESSOR_INBUF_LEN, file);
+                if (read == 0) break;
+                input.size = read;
+                input.pos = 0;
+            }
+            size_t const ret = ZSTD_decompressStream(level_decompressor.ctx, &output , &input);
+            if (ZSTD_isError(ret))
+            {
+                printf("Decompression Error: %s\n", ZSTD_getErrorName(ret));
+                break;
+            }
+            printf("Compare %lu to %lu\n", output.pos, output.size);
+        }
+        while (output.pos != output.size);
+
+        if (output.pos != output.size)
+        {
+            perror("Could not read level");
+            err = true;
+            goto load_end;
+        }
+        memcpy(pack_info->pack.levels[lvls].level_name, level_decompressor.out_buffer, 32);
+        memcpy(&pack_info->pack.levels[lvls].width, level_decompressor.out_buffer + 32, 2);
+        memcpy(&pack_info->pack.levels[lvls].height, level_decompressor.out_buffer + 34, 2);
+        pack_info->pack.levels[lvls].level_name[31] = '\0';
+        printf("Level name: %s\n", pack_info->pack.levels[lvls].level_name);
+        printf("WxH: %u %u\n", pack_info->pack.levels[lvls].width, pack_info->pack.levels[lvls].height);
+
+        uint32_t n_tiles = pack_info->pack.levels[lvls].width * pack_info->pack.levels[lvls].height;
+
+        uint32_t remaining_len = n_tiles * 4;
+        pack_info->pack.levels[lvls].tiles = calloc(n_tiles, sizeof(LevelTileInfo_t));
+        output.size = DECOMPRESSOR_OUTBUF_LEN;
+        output.pos = 0;
+        uint8_t* data_ptr = (uint8_t*)pack_info->pack.levels[lvls].tiles;
+        do
+        {
+            if (input.pos == input.size)
+            {
+                read = fread(level_decompressor.in_buffer, 1, DECOMPRESSOR_INBUF_LEN, file);
+                if (read == 0) break;
+                input.size = read;
+                input.pos = 0;
+            }
+            size_t to_read = (remaining_len > DECOMPRESSOR_OUTBUF_LEN) ? DECOMPRESSOR_OUTBUF_LEN : remaining_len;
+            output.size = to_read;
+            output.pos = 0;
+            size_t const ret = ZSTD_decompressStream(level_decompressor.ctx, &output , &input);
+            if (ZSTD_isError(ret))
+            {
+                printf("Decompression Error: %s\n", ZSTD_getErrorName(ret));
+                break;
+            }
+            memcpy(data_ptr, level_decompressor.out_buffer, output.pos);
+            data_ptr += output.pos;
+            remaining_len -= output.pos;
+        }
+        while (remaining_len > 0);
+
+        if (remaining_len > 0)
+        {
+            free(pack_info->pack.levels[lvls].tiles);
+            perror("Could not read level tiles");
+            err = true;
+            goto load_end;
+        }
+    }
+load_end:
+    fclose(file);
+
+    if (err)
+    {
+        unload_level_pack(pack_info->pack);
+        return NULL;
+    }
+
+    pack_info->pack.n_levels = lvls;
+    uint8_t pack_idx = n_loaded[4];
+    strncpy(pack_info->name, name, MAX_NAME_LEN);
+    sc_map_put_s64(&assets->m_levelpacks, levelpacks[pack_idx].name, pack_idx);
+    n_loaded[4]++;
+
+    return &levelpacks[pack_idx].pack;
+}
+
 void init_assets(Assets_t* assets)
 {
     sc_map_init_s64(&assets->m_fonts, MAX_FONTS, 0);
@@ -139,6 +287,7 @@ void init_assets(Assets_t* assets)
     sc_map_init_s64(&assets->m_textures, MAX_TEXTURES, 0);
     sc_map_init_s64(&assets->m_sounds, MAX_SOUNDS, 0);
     sc_map_init_s64(&assets->m_levelpacks, MAX_LEVEL_PACK, 0);
+    level_decompressor.ctx = ZSTD_createDCtx();
 }
 
 void free_all_assets(Assets_t* assets)
@@ -176,6 +325,7 @@ void term_assets(Assets_t* assets)
     sc_map_term_s64(&assets->m_sounds);
     sc_map_term_s64(&assets->m_sprites);
     sc_map_term_s64(&assets->m_levelpacks);
+    ZSTD_freeDCtx(level_decompressor.ctx);
 }
 
 Texture2D* get_texture(Assets_t* assets, const char* name)

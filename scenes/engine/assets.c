@@ -1,6 +1,9 @@
 #include "assets.h"
 #include "assert.h"
 
+#define RRES_RAYLIB_IMPLEMENTATION
+#include "rres.h"
+
 #include "zstd.h"
 #include <stdio.h>
 
@@ -79,6 +82,26 @@ Texture2D* add_texture(Assets_t* assets, const char* name, const char* path)
     return &textures[tex_idx].texture;
 }
 
+Texture2D* add_texture_rres(Assets_t* assets, const char* name, const char* filename, const RresFileInfo_t* rres_file)
+{
+    uint8_t tex_idx = n_loaded[0];
+    assert(tex_idx < MAX_TEXTURES);
+
+    rresResourceChunk chunk = rresLoadResourceChunk(rres_file->fname, rresGetResourceId(rres_file->dir, filename));
+
+    //Expect RAW type of png extension
+    Image image = LoadImageFromMemory(GetFileExtension(filename), chunk.data.raw, chunk.info.baseSize);
+    Texture2D tex = LoadTextureFromImage(image);
+    UnloadImage(image); 
+    rresUnloadResourceChunk(chunk);
+    
+    textures[tex_idx].texture = tex;
+    strncpy(textures[tex_idx].name, name, MAX_NAME_LEN);
+    sc_map_put_s64(&assets->m_textures, textures[tex_idx].name, tex_idx);
+    n_loaded[0]++;
+    return &textures[tex_idx].texture;
+}
+
 Sprite_t* add_sprite(Assets_t* assets, const char* name, Texture2D* texture)
 {
     uint8_t spr_idx = n_loaded[1];
@@ -142,11 +165,8 @@ LevelPack_t* add_level_pack(Assets_t* assets, const char* name, const char* path
     return &levelpacks[pack_idx].pack;
 }
 
-LevelPack_t* uncompress_level_pack(Assets_t* assets, const char* name, const char* path)
+static LevelPack_t* add_level_pack_zst(Assets_t* assets, const char* name, FILE* file)
 {
-    FILE* file = fopen(path, "rb");
-    if (file == NULL) return NULL;
-
     LevelPackData_t* pack_info = levelpacks + n_loaded[4];
     size_t read = 0;
 
@@ -263,8 +283,6 @@ LevelPack_t* uncompress_level_pack(Assets_t* assets, const char* name, const cha
         }
     }
 load_end:
-    fclose(file);
-
     if (err)
     {
         unload_level_pack(pack_info->pack);
@@ -278,6 +296,31 @@ load_end:
     n_loaded[4]++;
 
     return &levelpacks[pack_idx].pack;
+}
+
+LevelPack_t* uncompress_level_pack(Assets_t* assets, const char* name, const char* path)
+{
+    FILE* file = fopen(path, "rb");
+    if (file == NULL) return NULL;
+
+    LevelPack_t* pack = add_level_pack_zst(assets, name, file);
+    fclose(file);
+
+    return pack;
+
+}
+
+LevelPack_t* add_level_pack_rres(Assets_t* assets, const char* name, const char* filename, const RresFileInfo_t* rres_file)
+{
+
+    rresResourceChunk chunk = rresLoadResourceChunk(rres_file->fname, rresGetResourceId(rres_file->dir, filename));
+    FILE* f_in = fmemopen(chunk.data.raw, chunk.info.baseSize, "rb");
+
+    LevelPack_t* pack = add_level_pack_zst(assets, name, f_in);
+    fclose(f_in);
+    rresUnloadResourceChunk(chunk);
+
+    return pack;
 }
 
 void init_assets(Assets_t* assets)

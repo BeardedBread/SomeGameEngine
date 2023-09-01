@@ -3,6 +3,7 @@
 #include "sc/map/sc_map.h"
 #include "EC.h"
 #include "raylib.h"
+#include "rres.h"
 
 typedef struct Assets
 {
@@ -35,16 +36,27 @@ typedef struct LevelPack
    LevelMap_t* levels;
 }LevelPack_t;
 
+typedef struct RresFileInfo
+{
+    rresCentralDir dir;
+    const char* fname;
+}RresFileInfo_t;
+
 void init_assets(Assets_t* assets);
 void free_all_assets(Assets_t* assets);
 void term_assets(Assets_t* assets);
 
 Texture2D* add_texture(Assets_t* assets, const char* name, const char* path);
-Sprite_t* add_sprite(Assets_t* assets, const char* name, Texture2D* texture);
 Sound* add_sound(Assets_t * assets, const char* name, const char* path);
 Font* add_font(Assets_t* assets, const char* name, const char* path);
 LevelPack_t* add_level_pack(Assets_t* assets, const char* name, const char* path);
 LevelPack_t* uncompress_level_pack(Assets_t* assets, const char* name, const char* path);
+
+// Rres version
+Texture2D* add_texture_rres(Assets_t* assets, const char* name, const char* filename, const RresFileInfo_t* rres_file);
+LevelPack_t* add_level_pack_rres(Assets_t* assets, const char* name, const char* filename, const RresFileInfo_t* rres_file);
+
+Sprite_t* add_sprite(Assets_t* assets, const char* name, Texture2D* texture);
 
 Texture2D* get_texture(Assets_t* assets, const char* name);
 Sprite_t* get_sprite(Assets_t* assets, const char* name);

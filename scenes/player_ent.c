@@ -119,18 +119,11 @@ Entity_t* create_dead_player(EntityManager_t* ent_manager, Assets_t* assets)
     return p_ent;
 }
 
-bool init_player_creation(const char* info_file, Assets_t* assets)
+static bool init_player_file(FILE* in_file, Assets_t* assets)
 {
     static bool already_init = false;
 
     if (already_init) return false;
-
-    FILE* in_file = fopen(info_file, "r");
-    if (in_file == NULL)
-    {
-        printf("Unable to open file %s\n", info_file);
-        return false;
-    }
 
     char buffer[256];
     char* tmp;
@@ -168,4 +161,35 @@ bool init_player_creation(const char* info_file, Assets_t* assets)
     }
     already_init = true;
     return true;
+}
+
+bool init_player_creation(const char* info_file, Assets_t* assets)
+{
+    FILE* in_file = fopen(info_file, "r");
+    if (in_file == NULL)
+    {
+        printf("Unable to open file %s\n", info_file);
+        return false;
+    }
+    bool okay = init_player_file(in_file, assets);
+    fclose(in_file);
+
+    return okay;
+}
+
+bool init_player_creation_rres(const char* rres_fname, const char* file, Assets_t* assets)
+{
+    RresFileInfo_t rres_file;
+    rres_file.dir = rresLoadCentralDirectory(rres_fname);
+    rres_file.fname = rres_fname;
+
+    rresResourceChunk chunk = rresLoadResourceChunk(rres_file.fname, rresGetResourceId(rres_file.dir, file)); // Hardcoded
+    FILE* in_file = fmemopen(chunk.data.raw, chunk.info.baseSize, "rb");
+
+    bool okay = init_player_file(in_file, assets);
+    fclose(in_file);
+
+    rresUnloadResourceChunk(chunk);
+    rresUnloadCentralDirectory(rres_file.dir);
+    return okay;
 }

@@ -5,6 +5,7 @@ add_library(lib_engine STATIC
     gui.c
     engine.c
     collisions.c
+    rres.c
     ${LIBZSTD_DIR}/lib/libzstd.a
 )
 target_include_directories(lib_engine

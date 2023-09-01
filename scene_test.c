@@ -37,8 +37,10 @@ int main(void)
     init_memory_pools();
 
     init_assets(&engine.assets);
-    load_from_infofile("res/assets.info", &engine.assets);
-    init_player_creation("res/player_spr.info", &engine.assets);
+    //load_from_infofile("res/assets.info.raw", &engine.assets);
+    //init_player_creation("res/player_spr.info", &engine.assets);
+    load_from_rres("res/myresources.rres", &engine.assets);
+    init_player_creation_rres("res/myresources.rres", "player_spr.info", &engine.assets);
     init_item_creation(&engine.assets);
 
     LevelScene_t scene;

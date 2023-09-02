@@ -25,6 +25,7 @@ set(GAME_LIBS
 
 
 add_subdirectory(scenes)
+add_subdirectory(res)
 
 add_executable(${PROJECT_NAME}
     main.c

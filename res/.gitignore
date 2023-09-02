@@ -2,5 +2,5 @@
 !.gitignore
 !ldtk_repacker.py
 !test_assets.info
-!testLevels.lvldata
+!testLevels.lvldata.zst
 !rres_packer.c

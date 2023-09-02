@@ -183,11 +183,22 @@ bool init_player_creation_rres(const char* rres_fname, const char* file, Assets_
     rres_file.dir = rresLoadCentralDirectory(rres_fname);
     rres_file.fname = rres_fname;
 
-    rresResourceChunk chunk = rresLoadResourceChunk(rres_file.fname, rresGetResourceId(rres_file.dir, file)); // Hardcoded
-    FILE* in_file = fmemopen(chunk.data.raw, chunk.info.baseSize, "rb");
+    if (rres_file.dir.count == 0)
+    {
+        puts("Empty central directory");
+        return false;
+    }
 
-    bool okay = init_player_file(in_file, assets);
-    fclose(in_file);
+    int res_id = rresGetResourceId(rres_file.dir, file);
+    rresResourceChunk chunk = rresLoadResourceChunk(rres_file.fname, res_id);
+    
+    bool okay = false;
+    if (chunk.info.id == res_id)
+    {
+        FILE* in_file = fmemopen(chunk.data.raw, chunk.info.baseSize, "rb");
+        okay = init_player_file(in_file, assets);
+        fclose(in_file);
+    }
 
     rresUnloadResourceChunk(chunk);
     rresUnloadCentralDirectory(rres_file.dir);

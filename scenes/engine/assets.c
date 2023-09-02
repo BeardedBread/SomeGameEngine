@@ -87,19 +87,25 @@ Texture2D* add_texture_rres(Assets_t* assets, const char* name, const char* file
     uint8_t tex_idx = n_loaded[0];
     assert(tex_idx < MAX_TEXTURES);
 
-    rresResourceChunk chunk = rresLoadResourceChunk(rres_file->fname, rresGetResourceId(rres_file->dir, filename));
+    int res_id = rresGetResourceId(rres_file->dir, filename);
+    rresResourceChunk chunk = rresLoadResourceChunk(rres_file->fname, res_id);
 
-    //Expect RAW type of png extension
-    Image image = LoadImageFromMemory(GetFileExtension(filename), chunk.data.raw, chunk.info.baseSize);
-    Texture2D tex = LoadTextureFromImage(image);
-    UnloadImage(image); 
+    Texture2D* out_tex = NULL;
+    if (chunk.info.id == res_id)
+    {
+        //Expect RAW type of png extension
+        Image image = LoadImageFromMemory(GetFileExtension(filename), chunk.data.raw, chunk.info.baseSize);
+        Texture2D tex = LoadTextureFromImage(image);
+        UnloadImage(image); 
+        
+        textures[tex_idx].texture = tex;
+        strncpy(textures[tex_idx].name, name, MAX_NAME_LEN);
+        sc_map_put_s64(&assets->m_textures, textures[tex_idx].name, tex_idx);
+        n_loaded[0]++;
+        out_tex = &textures[tex_idx].texture;
+    }
     rresUnloadResourceChunk(chunk);
-    
-    textures[tex_idx].texture = tex;
-    strncpy(textures[tex_idx].name, name, MAX_NAME_LEN);
-    sc_map_put_s64(&assets->m_textures, textures[tex_idx].name, tex_idx);
-    n_loaded[0]++;
-    return &textures[tex_idx].texture;
+    return out_tex;
 }
 
 Sprite_t* add_sprite(Assets_t* assets, const char* name, Texture2D* texture)
@@ -312,14 +318,18 @@ LevelPack_t* uncompress_level_pack(Assets_t* assets, const char* name, const cha
 
 LevelPack_t* add_level_pack_rres(Assets_t* assets, const char* name, const char* filename, const RresFileInfo_t* rres_file)
 {
+    int res_id = rresGetResourceId(rres_file->dir, filename);
 
-    rresResourceChunk chunk = rresLoadResourceChunk(rres_file->fname, rresGetResourceId(rres_file->dir, filename));
-    FILE* f_in = fmemopen(chunk.data.raw, chunk.info.baseSize, "rb");
+    rresResourceChunk chunk = rresLoadResourceChunk(rres_file->fname, res_id);
 
-    LevelPack_t* pack = add_level_pack_zst(assets, name, f_in);
-    fclose(f_in);
+    LevelPack_t* pack = NULL;
+    if ( chunk.info.id == res_id)
+    {
+        FILE* f_in = fmemopen(chunk.data.raw, chunk.info.baseSize, "rb");
+        pack = add_level_pack_zst(assets, name, f_in);
+        fclose(f_in);
+    }
     rresUnloadResourceChunk(chunk);
-
     return pack;
 }
 

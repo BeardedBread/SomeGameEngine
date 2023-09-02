@@ -50,7 +50,7 @@ bool load_from_rres(const char* file, Assets_t* assets)
     rresResourceChunk chunk = rresLoadResourceChunk(file, res_id); // Hardcoded
     bool okay = false;
 
-    if (chunk.info.id == res_id)
+    if (chunk.info.baseSize > 0)
     {
         FILE* in_file = fmemopen(chunk.data.raw, chunk.info.baseSize, "rb");
 

@@ -91,7 +91,7 @@ Texture2D* add_texture_rres(Assets_t* assets, const char* name, const char* file
     rresResourceChunk chunk = rresLoadResourceChunk(rres_file->fname, res_id);
 
     Texture2D* out_tex = NULL;
-    if (chunk.info.id == res_id)
+    if (chunk.info.baseSize > 0)
     {
         //Expect RAW type of png extension
         Image image = LoadImageFromMemory(GetFileExtension(filename), chunk.data.raw, chunk.info.baseSize);
@@ -319,15 +319,18 @@ LevelPack_t* uncompress_level_pack(Assets_t* assets, const char* name, const cha
 LevelPack_t* add_level_pack_rres(Assets_t* assets, const char* name, const char* filename, const RresFileInfo_t* rres_file)
 {
     int res_id = rresGetResourceId(rres_file->dir, filename);
-
     rresResourceChunk chunk = rresLoadResourceChunk(rres_file->fname, res_id);
 
     LevelPack_t* pack = NULL;
-    if ( chunk.info.id == res_id)
+    if (chunk.info.baseSize > 0 && strcmp(".lpk", (const char*)(chunk.data.props + 1)) == 0)
     {
         FILE* f_in = fmemopen(chunk.data.raw, chunk.info.baseSize, "rb");
         pack = add_level_pack_zst(assets, name, f_in);
         fclose(f_in);
+    }
+    else
+    {
+        printf("Cannot load level pack for %s\n", name);
     }
     rresUnloadResourceChunk(chunk);
     return pack;

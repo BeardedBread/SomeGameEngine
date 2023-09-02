@@ -179,6 +179,7 @@ static LevelPack_t* add_level_pack_zst(Assets_t* assets, const char* name, FILE*
     ZSTD_inBuffer input = { level_decompressor.in_buffer, read, 0 };
     ZSTD_outBuffer output = { level_decompressor.out_buffer, 4, 0 };
 
+    ZSTD_DCtx_reset(level_decompressor.ctx, ZSTD_reset_session_only);
     do
     {
         if (input.pos == input.size)

@@ -1,5 +1,6 @@
 *
 !.gitignore
+!CMakeLists.txt
 !ldtk_repacker.py
 !test_assets.info
 !testLevels.lvldata.zst

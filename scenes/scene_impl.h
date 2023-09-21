@@ -21,6 +21,12 @@ typedef enum TileType {
 
 #define MAX_TILE_SPRITES 32
 
+typedef struct CoinCounter
+{
+    uint16_t current;
+    uint16_t total;
+}CoinCounter_t;
+
 typedef struct LevelSceneData {
     TileGrid_t tilemap;
     RenderTexture2D game_viewport;
@@ -29,6 +35,7 @@ typedef struct LevelSceneData {
     Sprite_t* tile_sprites[MAX_TILE_SPRITES];
     LevelPack_t* level_pack;
     unsigned int current_level;
+    CoinCounter_t coins;
 }LevelSceneData_t;
 
 typedef struct LevelScene {

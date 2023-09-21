@@ -39,7 +39,7 @@ Entity_t* create_crate(EntityManager_t* ent_manager, Assets_t* assets, bool meta
     CBBox_t* p_bbox = add_component(p_crate, CBBOX_COMP_T);
     set_bbox(p_bbox, TILE_SIZE, TILE_SIZE);
     p_bbox->solid = true;
-    p_bbox->fragile = !metal;
+    p_bbox->fragile = false;
 
     CTransform_t* p_ctransform = add_component(p_crate, CTRANSFORM_COMP_T);
     p_ctransform->grav_delay = 7;
@@ -201,4 +201,27 @@ Entity_t* create_explosion(EntityManager_t* ent_manager, Assets_t* assets)
     CLifeTimer_t* p_clifetimer = add_component(p_explosion, CLIFETIMER_T);
     p_clifetimer->life_time = 3;
     return p_explosion;
+}
+
+Entity_t* create_chest(EntityManager_t* ent_manager, Assets_t* assets)
+{
+    Entity_t* p_chest = add_entity(ent_manager, CHEST_ENT_TAG);
+    if (p_chest == NULL) return NULL;
+
+    CBBox_t* p_bbox = add_component(p_chest, CBBOX_COMP_T);
+    set_bbox(p_bbox, TILE_SIZE, TILE_SIZE);
+    p_bbox->solid = true;
+    p_bbox->fragile = true;
+
+    CTransform_t* p_ctransform = add_component(p_chest, CTRANSFORM_COMP_T);
+    p_ctransform->grav_delay = 7;
+    p_ctransform->shape_factor = (Vector2){0.7,0.7};
+    add_component(p_chest, CMOVEMENTSTATE_T);
+    add_component(p_chest, CTILECOORD_COMP_T);
+    CHurtbox_t* p_hurtbox = add_component(p_chest, CHURTBOX_T);
+    p_hurtbox->size = p_bbox->size;
+    p_hurtbox->def = 4;
+    p_hurtbox->damage_src = -1;
+
+    return p_chest;
 }

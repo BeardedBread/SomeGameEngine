@@ -668,10 +668,16 @@ void tile_collision_system(Scene_t* scene)
                         if (p_other_bbox == NULL) continue;
 
                         CTransform_t *p_other_ct = get_component(p_other_ent, CTRANSFORM_COMP_T);
+
+                        SolidType_t solid = p_other_bbox->solid? SOLID : NOT_SOLID;
+                        if (p_ent->m_tag == PLAYER_ENT_TAG && p_other_ent->m_tag == CHEST_ENT_TAG)
+                        {
+                            solid = NOT_SOLID;
+                        }
                         check_collision_and_move(
                             &tilemap, p_ent,
                             &p_other_ct->position, p_other_bbox->size,
-                            p_other_bbox->solid? SOLID : NOT_SOLID
+                            solid
                         );
                     }
                 }
@@ -681,7 +687,7 @@ void tile_collision_system(Scene_t* scene)
         // Post movement edge check to zero out velocity
         uint8_t edges = check_bbox_edges(
             &data->tilemap, p_ent,
-            p_ctransform->position, p_ctransform->prev_position, p_bbox->size, false
+            p_ctransform->position, p_ctransform->prev_position, p_bbox->size, true
         );
         if (edges & (1<<3))
         {
@@ -1447,7 +1453,13 @@ void hitbox_update_system(Scene_t* scene)
                         )
                         {
                             hit = true;
-                            if (p_hitbox->atk > p_other_hurtbox->def)
+
+                            uint8_t full_atk = p_hitbox->atk;
+                            if (p_ent->m_tag == PLAYER_ENT_TAG && p_other_ent->m_tag == CHEST_ENT_TAG)
+                            {
+                                full_atk = p_other_hurtbox->def + 1;
+                            }
+                            if (full_atk > p_other_hurtbox->def)
                             {
                                 p_other_hurtbox->damage_src = ent_idx;
                                 if (p_other_ent->m_tag == CRATES_ENT_TAG)

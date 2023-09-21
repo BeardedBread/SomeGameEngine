@@ -7,6 +7,7 @@ typedef enum EntityTag {
     PLAYER_ENT_TAG,
     ENEMY_ENT_TAG,
     CRATES_ENT_TAG,
+    CHEST_ENT_TAG,
     BOULDER_ENT_TAG,
     DESTRUCTABLE_ENT_TAG,
     DYNMEM_ENT_TAG,
@@ -25,5 +26,6 @@ Entity_t* create_boulder(EntityManager_t* ent_manager, Assets_t* assets);
 Entity_t* create_arrow(EntityManager_t* ent_manager, Assets_t* assets, uint8_t dir);
 Entity_t* create_bomb(EntityManager_t* ent_manager, Assets_t* assets, Vector2 launch_dir);
 Entity_t* create_explosion(EntityManager_t* ent_manager, Assets_t* assets);
+Entity_t* create_chest(EntityManager_t* ent_manager, Assets_t* assets);
 
 #endif // __ENT_IMPL_H

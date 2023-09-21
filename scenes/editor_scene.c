@@ -17,6 +17,7 @@ enum EntitySpawnSelection {
     TOGGLE_SPIKE,
     TOGGLE_WATER,
     TOGGLE_AIR_POCKET,
+    SPAWN_CHEST,
     SPAWN_CRATE,
     SPAWN_CRATE_ARROW_L,
     SPAWN_CRATE_ARROW_R,
@@ -27,7 +28,7 @@ enum EntitySpawnSelection {
     SPAWN_WATER_RUNNER,
 };
 
-#define MAX_SPAWN_TYPE 14
+#define MAX_SPAWN_TYPE 15
 static unsigned int current_spawn_selection = 0;
 static bool metal_toggle = false;
 static bool crate_activation = false;
@@ -48,6 +49,7 @@ static char* get_spawn_selection_string(enum EntitySpawnSelection sel)
         case TOGGLE_SPIKE: return "spike";
         case TOGGLE_WATER: return "water";
         case TOGGLE_AIR_POCKET: return "air pocket";
+        case SPAWN_CHEST: return "chest";
         case SPAWN_CRATE: return (metal_toggle) ? "metal crate" : "wooden crate";
         case SPAWN_CRATE_ARROW_D: return (metal_toggle) ? "metal down arrow crate" : "wooden down arrow crate";
         case SPAWN_CRATE_ARROW_U: return (metal_toggle) ? "metal up arrow crate" : "wooden up arrow crate";
@@ -215,6 +217,9 @@ static void level_scene_render_func(Scene_t* scene)
                 break;
                 case BOULDER_ENT_TAG:
                     colour = GRAY;
+                break;
+                case CHEST_ENT_TAG:
+                    colour = YELLOW;
                 break;
                 default:
                     colour = BLACK;
@@ -449,6 +454,18 @@ static void level_scene_render_func(Scene_t* scene)
     EndDrawing();
 }
 
+static void spawn_chest(Scene_t* scene, unsigned int tile_idx)
+{
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    Entity_t* p_crate = create_chest(&scene->ent_manager, &scene->engine->assets);
+    if (p_crate == NULL) return;
+
+    CTransform_t* p_ctransform = get_component(p_crate, CTRANSFORM_COMP_T);
+    p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
+    p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
+    p_ctransform->active = true;
+}
+
 static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal, ContainerItem_t item, bool active)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
@@ -572,6 +589,9 @@ static void toggle_block_system(Scene_t* scene)
                         p_ct->position.y = (tile_idx / tilemap.width) * tilemap.tile_size;
                     }
                 }
+                break;
+                case SPAWN_CHEST:
+                    spawn_chest(scene, tile_idx);
                 break;
             }
             change_a_tile(&tilemap, tile_idx, new_type);
@@ -819,8 +839,9 @@ void init_sandbox_scene(LevelScene_t* scene)
         Vector2 draw_pos = {0, 0};
         const Color crate_colour = metal_toggle ? GRAY : BROWN;
         const Color draw_colour[MAX_SPAWN_TYPE] = {
-            BLACK, MAROON, ORANGE, ColorAlpha(RAYWHITE, 0.5), ColorAlpha(BLUE, 0.5), ColorAlpha(RAYWHITE, 0.5),
-            crate_colour, crate_colour, crate_colour, crate_colour, crate_colour, crate_colour,
+            BLACK, MAROON, ORANGE, ColorAlpha(RAYWHITE, 0.5), ColorAlpha(BLUE, 0.5), 
+            ColorAlpha(RAYWHITE, 0.5), YELLOW, crate_colour, crate_colour, crate_colour,
+            crate_colour, crate_colour, crate_colour,
             ColorAlpha(RAYWHITE, 0.5), ColorAlpha(RAYWHITE, 0.5)
         };
         for (uint8_t i = 0; i < MAX_SPAWN_TYPE; ++i)

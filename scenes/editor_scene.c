@@ -451,6 +451,10 @@ static void level_scene_render_func(Scene_t* scene)
         static char mempool_stats[512];
         print_mempool_stats(mempool_stats);
         DrawText(mempool_stats, gui_x, gui_y, 12, BLACK);
+
+        gui_y += 300;
+        sprintf(buffer, "Chests: %u / %u", data->coins.current, data->coins.total);
+        DrawText(buffer, gui_x, gui_y, 24, BLACK);
     EndDrawing();
 }
 
@@ -591,7 +595,11 @@ static void toggle_block_system(Scene_t* scene)
                 }
                 break;
                 case SPAWN_CHEST:
-                    spawn_chest(scene, tile_idx);
+                    if (data->coins.total < 65535)
+                    {
+                        spawn_chest(scene, tile_idx);
+                        data->coins.total++;
+                    }
                 break;
             }
             change_a_tile(&tilemap, tile_idx, new_type);
@@ -612,6 +620,13 @@ static void toggle_block_system(Scene_t* scene)
             sc_map_foreach(&tilemap.tiles[tile_idx].entities_set, m_id, ent)
             {
                 if (ent->m_tag == PLAYER_ENT_TAG) continue;
+
+                if (!ent->m_alive) continue;
+
+                if (ent->m_tag == CHEST_ENT_TAG)
+                {
+                    data->coins.total--;
+                }
                 CTileCoord_t* p_tilecoord = get_component(
                     ent, CTILECOORD_COMP_T
                 );

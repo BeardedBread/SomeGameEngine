@@ -1501,6 +1501,10 @@ void hitbox_update_system(Scene_t* scene)
                                 {
                                     // Need to remove immediately, otherwise will interfere with bomb spawning
                                     remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_other_ent);
+                                    if (p_other_ent->m_tag == CHEST_ENT_TAG)
+                                    {
+                                        data->coins.current++;
+                                    }
                                 }
                             }
 

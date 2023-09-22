@@ -53,9 +53,9 @@ Entity_t* create_crate(EntityManager_t* ent_manager, Assets_t* assets, bool meta
 
     CSprite_t* p_cspr = add_component(p_crate, CSPRITE_T);
     p_cspr->sprites = item_sprite_map;
-    if (item != CONTAINER_EMPTY)
     {
         CContainer_t* p_container = add_component(p_crate, CCONTAINER_T);
+        p_container->material = metal? METAL_CONTAINER : WOODEN_CONTAINER;
         p_container->item = item;
     }
     switch(item)

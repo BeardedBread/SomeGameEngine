@@ -137,7 +137,6 @@ uint8_t check_collision_line(const CollideEntity_t* ent, TileGrid_t* grid, bool 
                 CTransform_t *p_ctransform = get_component(p_other_ent, CTRANSFORM_COMP_T);
                 CBBox_t *p_bbox = get_component(p_other_ent, CBBOX_COMP_T);
                 if (p_bbox == NULL || p_ctransform == NULL) continue;
-                //if (p_bbox->solid && !p_bbox->fragile)
                 if (p_bbox->solid)
                 {
                     Rectangle box = {

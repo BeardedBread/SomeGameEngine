@@ -213,7 +213,10 @@ static void level_scene_render_func(Scene_t* scene)
                     colour = RED;
                 break;
                 case CRATES_ENT_TAG:
-                    colour = p_bbox->fragile? BROWN : GRAY;
+                {
+                    CContainer_t* p_container = get_component(p_ent, CCONTAINER_T);
+                    colour = p_container->material == WOODEN_CONTAINER ? BROWN : GRAY;
+                }
                 break;
                 case BOULDER_ENT_TAG:
                     colour = GRAY;
@@ -946,6 +949,7 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &hitbox_update_system);
     sc_array_add(&scene->scene.systems, &player_crushing_system);
     sc_array_add(&scene->scene.systems, &spike_collision_system);
+    sc_array_add(&scene->scene.systems, &edge_velocity_check_system);
     sc_array_add(&scene->scene.systems, &state_transition_update_system);
     sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
     sc_array_add(&scene->scene.systems, &lifetimer_update_system);

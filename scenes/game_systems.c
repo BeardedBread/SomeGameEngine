@@ -684,10 +684,23 @@ void tile_collision_system(Scene_t* scene)
             }
         }
 
+    }
+}
+
+void edge_velocity_check_system(Scene_t* scene)
+{
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    unsigned int ent_idx;
+    CBBox_t* p_bbox;
+    sc_map_foreach(&scene->ent_manager.component_map[CBBOX_COMP_T], ent_idx, p_bbox)
+    {
+        Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
+        CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
+        if (!p_ctransform->active) continue;
         // Post movement edge check to zero out velocity
         uint8_t edges = check_bbox_edges(
             &data->tilemap, p_ent,
-            p_ctransform->position, p_ctransform->prev_position, p_bbox->size, true
+            p_ctransform->position, p_ctransform->prev_position, p_bbox->size, false
         );
         if (edges & (1<<3))
         {
@@ -1443,6 +1456,7 @@ void hitbox_update_system(Scene_t* scene)
                         CHurtbox_t* p_other_hurtbox = get_component(p_other_ent, CHURTBOX_T);
                         if (p_other_hurtbox == NULL) continue;
                         CTransform_t* p_other_ct = get_component(p_other_ent, CTRANSFORM_COMP_T);
+                        CBBox_t* p_other_bbox = get_component(p_other_ent, CBBOX_COMP_T);
                         Vector2 hurtbox_pos = Vector2Add(p_other_ct->position, p_other_hurtbox->offset);
 
                         if (
@@ -1469,16 +1483,26 @@ void hitbox_update_system(Scene_t* scene)
                                     CPlayerState_t* p_pstate = get_component(p_ent, CPLAYERSTATE_T);
                                     if (
                                         p_pstate != NULL
-                                        && p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y
                                     )
                                     {
-                                        p_ctransform->velocity.y = -400;
-                                        if (p_pstate->jump_pressed)
+                                        if (p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y + p_other_bbox->half_size.y / 2)
                                         {
-                                            p_ctransform->velocity.y = -600;
-                                            CJump_t * p_cjump = get_component(p_ent, CJUMP_COMP_T);
-                                            p_cjump->short_hop = false;
-                                            p_cjump->jumped = true;
+                                            p_ctransform->velocity.y = -400;
+                                            if (p_pstate->jump_pressed)
+                                            {
+                                                p_ctransform->velocity.y = -600;
+                                                CJump_t * p_cjump = get_component(p_ent, CJUMP_COMP_T);
+                                                p_cjump->short_hop = false;
+                                                p_cjump->jumped = true;
+                                            }
+                                        }
+                                        else if (p_ctransform->position.y  > p_other_ct->position.y + p_other_bbox->half_size.y * 1.5)
+                                        {
+                                            p_ctransform->velocity.y = 0;
+                                        }
+                                        else
+                                        {
+                                            p_ctransform->velocity.x = 0;
                                         }
                                     }
                                 }

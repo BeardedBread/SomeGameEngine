@@ -1485,7 +1485,7 @@ void hitbox_update_system(Scene_t* scene)
                                         p_pstate != NULL
                                     )
                                     {
-                                        if (p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y + p_other_bbox->half_size.y / 2)
+                                        if (p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y)
                                         {
                                             p_ctransform->velocity.y = -400;
                                             if (p_pstate->jump_pressed)
@@ -1496,7 +1496,7 @@ void hitbox_update_system(Scene_t* scene)
                                                 p_cjump->jumped = true;
                                             }
                                         }
-                                        else if (p_ctransform->position.y  > p_other_ct->position.y + p_other_bbox->half_size.y * 1.5)
+                                        else if (p_ctransform->position.y  >= p_other_ct->position.y + p_other_bbox->size.y)
                                         {
                                             p_ctransform->velocity.y = 0;
                                         }

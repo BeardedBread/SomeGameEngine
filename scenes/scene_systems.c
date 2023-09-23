@@ -38,6 +38,7 @@ void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* t
         sc_map_init_64v(&data->tilemap.tiles[i].entities_set, 16, 0);
         data->tilemap.tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
     }
+    memset(&data->coins, 0, sizeof(data->coins));
 }
 
 void term_level_scene_data(LevelSceneData_t* data)

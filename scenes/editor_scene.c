@@ -676,6 +676,8 @@ static void toggle_block_system(Scene_t* scene)
 static void restart_editor_level(Scene_t* scene)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    memset(&data->coins, 0, sizeof(data->coins));
+
     TileGrid_t tilemap = data->tilemap;
     for (size_t i = 0; i < tilemap.n_tiles;i++)
     {

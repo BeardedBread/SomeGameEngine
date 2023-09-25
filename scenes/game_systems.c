@@ -569,7 +569,6 @@ void spike_collision_system(Scene_t* scene)
         tile_y1 = (tile_y1 < 0) ? 0 : tile_y1;
         tile_y2 = (tile_y2 >= tilemap.height) ? tilemap.height - 1 : tile_y2;
 
-        Vector2 overlap;
         for (unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
         {
             for (unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
@@ -584,7 +583,7 @@ void spike_collision_system(Scene_t* scene)
                             tile_y * TILE_SIZE + tilemap.tiles[tile_idx].offset.y
                         },
                     tilemap.tiles[tile_idx].size,
-                    &overlap);
+                    NULL);
 
                     if (collide)
                     {
@@ -1309,11 +1308,10 @@ void state_transition_update_system(Scene_t* scene)
 
                     uint32_t water_height = data->tilemap.tiles[tile_idx].water_level * WATER_BBOX_STEP;
                     Vector2 tl = {tile_x * data->tilemap.tile_size, (tile_y + 1) * data->tilemap.tile_size - water_height};
-                    Vector2 overlap;
                     in_water |= find_AABB_overlap(
                         p_ctransform->position, p_bbox->size,
                         tl, (Vector2){data->tilemap.tile_size, water_height}
-                        , &overlap
+                        , NULL
                     ) > 0;
                 }
             }
@@ -1422,7 +1420,6 @@ void hitbox_update_system(Scene_t* scene)
                     if (tile_idx >= tilemap.n_tiles) break;
                     unsigned int other_ent_idx;
                     Entity_t* p_other_ent;
-                    Vector2 overlap;
 
                     if (tilemap.tiles[tile_idx].tile_type != EMPTY_TILE)
                     {
@@ -1431,7 +1428,7 @@ void hitbox_update_system(Scene_t* scene)
                         if (
                             find_AABB_overlap(
                                 hitbox_pos, (Vector2){p_hitbox->boxes[i].width, p_hitbox->boxes[i].height},
-                                tile_pos, tilemap.tiles[tile_idx].size, &overlap
+                                tile_pos, tilemap.tiles[tile_idx].size, NULL
                             )
                         )
                         {
@@ -1462,7 +1459,7 @@ void hitbox_update_system(Scene_t* scene)
                         if (
                             find_AABB_overlap(
                                 hitbox_pos, (Vector2){p_hitbox->boxes[i].width, p_hitbox->boxes[i].height},
-                                hurtbox_pos, p_other_hurtbox->size, &overlap
+                                hurtbox_pos, p_other_hurtbox->size, NULL
                             )
                         )
                         {
@@ -1758,12 +1755,11 @@ void level_end_detection_system(Scene_t* scene)
             CTransform_t* p_other_ct = get_component(p_other_ent, CTRANSFORM_COMP_T);
             CBBox_t* p_other_bbox = get_component(p_other_ent, CBBOX_COMP_T);
 
-            Vector2 overlap;
             Vector2 pos = Vector2Subtract(p_ct->position,(Vector2){tilemap.tile_size >> 1, tilemap.tile_size >> 1});
             if (
                 find_AABB_overlap(
                     pos, (Vector2){tilemap.tile_size, tilemap.tile_size},
-                    p_other_ct->position, p_other_bbox->size, &overlap
+                    p_other_ct->position, p_other_bbox->size, NULL
                 )
             )
             {

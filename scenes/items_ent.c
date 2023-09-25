@@ -225,3 +225,12 @@ Entity_t* create_chest(EntityManager_t* ent_manager, Assets_t* assets)
 
     return p_chest;
 }
+
+Entity_t* create_level_end(EntityManager_t* ent_manager, Assets_t* assets)
+{
+    Entity_t* p_flag = add_entity(ent_manager, LEVEL_END_TAG);
+    if (p_flag == NULL) return NULL;
+
+    add_component(p_flag, CTRANSFORM_COMP_T);
+    return p_flag;
+}

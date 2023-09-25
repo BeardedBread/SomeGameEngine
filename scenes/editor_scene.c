@@ -26,9 +26,10 @@ enum EntitySpawnSelection {
     SPAWN_CRATE_BOMB,
     SPAWN_BOULDER,
     SPAWN_WATER_RUNNER,
+    SPAWN_LEVEL_END,
 };
 
-#define MAX_SPAWN_TYPE 15
+#define MAX_SPAWN_TYPE 16
 static unsigned int current_spawn_selection = 0;
 static bool metal_toggle = false;
 static bool crate_activation = false;
@@ -58,6 +59,7 @@ static char* get_spawn_selection_string(enum EntitySpawnSelection sel)
         case SPAWN_CRATE_BOMB: return (metal_toggle) ? "metal bomb crate" : "wooden bomb crate";
         case SPAWN_BOULDER: return "boulder";
         case SPAWN_WATER_RUNNER: return "water runner";
+        case SPAWN_LEVEL_END: return "level end";
         default: return "unknown";
     }
 }
@@ -330,6 +332,12 @@ static void level_scene_render_func(Scene_t* scene)
             }
         }
 
+        sc_map_foreach_value(&scene->ent_manager.entities_map[LEVEL_END_TAG], p_ent)
+        {
+            CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
+            DrawCircleV(p_ct->position, tilemap.tile_size >> 1, (data->coins.current < data->coins.total)? RED : GREEN);
+        }
+
         sc_map_foreach_value(&scene->ent_manager.entities_map[DYNMEM_ENT_TAG], p_ent)
         {
             CWaterRunner_t* p_runner = get_component(p_ent, CWATERRUNNER_T);
@@ -597,6 +605,17 @@ static void toggle_block_system(Scene_t* scene)
                     }
                 }
                 break;
+                case SPAWN_LEVEL_END:
+                {
+                    Entity_t* p_ent = create_level_end(&scene->ent_manager, &scene->engine->assets);
+                    if (p_ent != NULL)
+                    {
+                        CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
+                        p_ct->position.x = (tile_idx % tilemap.width) * tilemap.tile_size + (tilemap.tile_size >> 1);
+                        p_ct->position.y = (tile_idx / tilemap.width) * tilemap.tile_size + (tilemap.tile_size >> 1);;
+                    }
+                }
+                break;
                 case SPAWN_CHEST:
                     if (data->coins.total < 65535)
                     {
@@ -717,6 +736,11 @@ static void restart_editor_level(Scene_t* scene)
             }
         }
     }
+    Entity_t* p_ent;
+    sc_map_foreach_value(&scene->ent_manager.entities_map[LEVEL_END_TAG], p_ent)
+    {
+        remove_entity(&scene->ent_manager, p_ent->m_id);
+    }
     update_entity_manager(&scene->ent_manager);
     for (size_t i = 0; i < tilemap.width; ++i)
     {
@@ -828,6 +852,7 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
                     change_scene(scene->engine, 0);
                 }
             break;
+            case ACTION_NEXTLEVEL:
             case ACTION_RESTART:
                 restart_editor_level(scene);
             break;
@@ -862,7 +887,7 @@ void init_sandbox_scene(LevelScene_t* scene)
             BLACK, MAROON, ORANGE, ColorAlpha(RAYWHITE, 0.5), ColorAlpha(BLUE, 0.5), 
             ColorAlpha(RAYWHITE, 0.5), YELLOW, crate_colour, crate_colour, crate_colour,
             crate_colour, crate_colour, crate_colour,
-            ColorAlpha(RAYWHITE, 0.5), ColorAlpha(RAYWHITE, 0.5)
+            ColorAlpha(RAYWHITE, 0.5), ColorAlpha(RAYWHITE, 0.5), ColorAlpha(RAYWHITE, 0.5) 
         };
         for (uint8_t i = 0; i < MAX_SPAWN_TYPE; ++i)
         {
@@ -918,6 +943,9 @@ void init_sandbox_scene(LevelScene_t* scene)
                 case SPAWN_WATER_RUNNER:
                     DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, ColorAlpha(BLUE, 0.2));
                 break;
+                case SPAWN_LEVEL_END:
+                    DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, GREEN);
+                break;
                 case TOGGLE_AIR_POCKET:
                     DrawRectangleLinesEx((Rectangle){draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
                 break;
@@ -961,6 +989,7 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &player_dir_reset_system);
     sc_array_add(&scene->scene.systems, &update_water_runner_system);
     sc_array_add(&scene->scene.systems, &player_respawn_system);
+    sc_array_add(&scene->scene.systems, &level_end_detection_system);
     sc_array_add(&scene->scene.systems, &toggle_block_system);
 
     // This avoid graphical glitch, not essential

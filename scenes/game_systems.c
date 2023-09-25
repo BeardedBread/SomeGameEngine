@@ -1732,3 +1732,44 @@ void camera_update_system(Scene_t* scene)
     if (min.x > 0) lvl_scene->data.cam.offset.x = width/2.0f - min.x;
     if (min.y > 0) lvl_scene->data.cam.offset.y = height/2.0f - min.y;
 }
+
+void level_end_detection_system(Scene_t* scene)
+{
+    LevelScene_t* lvl_scene = CONTAINER_OF(scene, LevelScene_t, scene);
+    if (lvl_scene->data.coins.current < lvl_scene->data.coins.total) return;
+    Entity_t* p_flag;
+
+    TileGrid_t tilemap = lvl_scene->data.tilemap;
+    sc_map_foreach_value(&scene->ent_manager.entities_map[LEVEL_END_TAG], p_flag)
+    {
+        CTransform_t* p_ct = get_component(p_flag, CTRANSFORM_COMP_T);
+        unsigned int tile_idx = get_tile_idx(
+                p_ct->position.x,
+                p_ct->position.y,
+                tilemap.width
+        );
+
+        unsigned int other_ent_idx;
+        Entity_t* p_other_ent;
+        sc_map_foreach(&tilemap.tiles[tile_idx].entities_set, other_ent_idx, p_other_ent)
+        {
+            if (p_other_ent->m_tag != PLAYER_ENT_TAG) continue;
+
+            CTransform_t* p_other_ct = get_component(p_other_ent, CTRANSFORM_COMP_T);
+            CBBox_t* p_other_bbox = get_component(p_other_ent, CBBOX_COMP_T);
+
+            Vector2 overlap;
+            Vector2 pos = Vector2Subtract(p_ct->position,(Vector2){tilemap.tile_size >> 1, tilemap.tile_size >> 1});
+            if (
+                find_AABB_overlap(
+                    pos, (Vector2){tilemap.tile_size, tilemap.tile_size},
+                    p_other_ct->position, p_other_bbox->size, &overlap
+                )
+            )
+            {
+                do_action(scene, ACTION_NEXTLEVEL, true);
+            }
+        }
+
+    }
+}

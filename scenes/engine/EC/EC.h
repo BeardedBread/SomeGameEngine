@@ -7,13 +7,13 @@
 #include "sc/queue/sc_queue.h"
 
 #define N_TAGS 10
-#define N_COMPONENTS 13
+#define N_COMPONENTS 14
 #define MAX_COMP_POOL_SIZE 1024
 typedef struct EntityManager EntityManager_t;
 typedef struct Entity Entity_t;
 
 typedef enum ComponentEnum {
-    CBBOX_COMP_T,
+    CBBOX_COMP_T = 0,
     CTRANSFORM_COMP_T,
     CTILECOORD_COMP_T,
     CMOVEMENTSTATE_T,
@@ -26,6 +26,7 @@ typedef enum ComponentEnum {
     CMOVEABLE_T,
     CLIFETIMER_T,
     CWATERRUNNER_T,
+    CAIRTIMER_T,
 } ComponentEnum_t;
 
 typedef enum MovementMode {
@@ -58,6 +59,7 @@ typedef struct _CTransform_t {
 typedef struct _CMovementState_t {
     uint8_t ground_state;
     uint8_t water_state;
+    uint8_t x_dir;
 } CMovementState_t;
 
 // This is to store the occupying tiles
@@ -128,6 +130,14 @@ typedef struct _CLifeTimer_t {
     uint8_t timer;
     uint8_t life_time;
 } CLifeTimer_t;
+
+typedef struct _CAirTimer_t {
+    uint8_t max_count;
+    uint8_t curr_count;
+    uint16_t max_ftimer;
+    uint16_t curr_ftimer;
+    uint16_t decay_rate;
+} CAirTimer_t;
 
 typedef struct _BFSTile {
     int32_t to;

@@ -1258,6 +1258,9 @@ void state_transition_update_system(Scene_t* scene)
         CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
         if (p_ctransform == NULL || p_bbox == NULL) continue;
 
+        if (p_ctransform->velocity.x > 0) p_mstate->x_dir = 1;
+        else if (p_ctransform->velocity.x < 0) p_mstate->x_dir = 0;
+
         bool on_ground = check_on_ground(
             p_ent, p_ctransform->position, p_ctransform->prev_position, p_bbox->size,
             &data->tilemap
@@ -1665,6 +1668,78 @@ void lifetimer_update_system(Scene_t* scene)
         if (p_lifetimer->life_time == 0)
         {
             remove_entity_from_tilemap(&scene->ent_manager, &tilemap, get_entity(&scene->ent_manager, ent_idx));
+        }
+    }
+}
+
+void airtimer_update_system(Scene_t* scene)
+{
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    TileGrid_t tilemap = data->tilemap;
+    unsigned int ent_idx;
+    CAirTimer_t* p_air;
+    sc_map_foreach(&scene->ent_manager.component_map[CAIRTIMER_T], ent_idx, p_air)
+    {
+        Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
+        if (!p_ent->m_alive) continue;
+        CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
+        CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+        CMovementState_t* p_movement = get_component(p_ent, CMOVEMENTSTATE_T);
+        if (p_ctransform == NULL || p_bbox == NULL || p_movement == NULL) continue;
+
+        Vector2 point_to_check = {
+            (p_movement->x_dir == 0) ? p_ctransform->position.x : p_ctransform->position.x + p_bbox->size.x,
+            p_ctransform->position.y + p_bbox->half_size.y,
+        };
+
+        unsigned int tile_idx = get_tile_idx(
+            point_to_check.x,
+            point_to_check.y,
+            tilemap.width
+        );
+
+        bool in_water = false;
+        int tile_x = tile_idx % tilemap.width;
+        int tile_y = tile_idx / tilemap.width;
+        uint32_t water_height = data->tilemap.tiles[tile_idx].water_level * WATER_BBOX_STEP;
+        Vector2 tl = {tile_x * data->tilemap.tile_size, (tile_y + 1) * data->tilemap.tile_size - water_height};
+            in_water |= point_in_AABB(
+                point_to_check,
+                (Rectangle){tl.x, tl.y, tilemap.tile_size, water_height}
+            );
+
+        if (!in_water)
+        {
+            p_air->curr_count = p_air->max_count;
+            p_air->curr_ftimer = p_air->max_ftimer * 2; // Lengthen the first
+        }
+        
+        if (p_movement->water_state & 1)
+        {
+            if (p_air->curr_ftimer > p_air->decay_rate)
+            {
+                p_air->curr_ftimer -= p_air->decay_rate;
+            }
+            else
+            {
+                if (p_air->curr_count > 0)
+                {
+                    p_air->curr_count--;
+                    p_air->curr_ftimer = p_air->max_ftimer;
+                }
+                else
+                {
+                    if (p_ent->m_tag == PLAYER_ENT_TAG)
+                    {
+                        p_ent->m_alive = false;
+                    }
+                    else
+                    {
+                        remove_entity_from_tilemap(&scene->ent_manager, &tilemap, get_entity(&scene->ent_manager, ent_idx));
+                    }
+                }
+            
+            }
         }
     }
 }

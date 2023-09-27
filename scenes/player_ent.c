@@ -93,6 +93,12 @@ Entity_t* create_player(EntityManager_t* ent_manager, Assets_t* assets)
     CHurtbox_t* p_hurtbox = add_component(p_ent, CHURTBOX_T);
     p_hurtbox->size = p_bbox->size;
 
+    CAirTimer_t* p_air = add_component(p_ent, CAIRTIMER_T);
+    p_air->max_count = 10;
+    p_air->curr_count = 10;
+    p_air->max_ftimer = 300;
+    p_air->decay_rate = 5;
+
     CSprite_t* p_cspr = add_component(p_ent, CSPRITE_T);
     p_cspr->sprites = player_sprite_map;
     p_cspr->transition_func = &player_sprite_transition_func;

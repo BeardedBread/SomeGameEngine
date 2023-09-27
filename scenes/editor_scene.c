@@ -430,6 +430,9 @@ static void level_scene_render_func(Scene_t* scene)
             CJump_t* p_cjump = get_component(p_ent, CJUMP_COMP_T);
             CPlayerState_t* p_pstate = get_component(p_ent, CPLAYERSTATE_T);
             CMovementState_t* p_mstate = get_component(p_ent, CMOVEMENTSTATE_T);
+
+            CAirTimer_t* p_air = get_component(p_ent, CAIRTIMER_T);
+
             sprintf(buffer, "Pos: %.3f\n %.3f", p_ct->position.x, p_ct->position.y);
             DrawText(buffer, gui_x, gui_y, 12, BLACK);
             sprintf(buffer, "Vel: %.3f\n %.3f", p_ct->velocity.x, p_ct->velocity.y);
@@ -448,6 +451,13 @@ static void level_scene_render_func(Scene_t* scene)
             sprintf(buffer, "Ladder: %u", p_pstate->ladder_state);
             DrawText(buffer, gui_x, gui_y, 12, BLACK);
             gui_y += 30;
+
+            Vector2 air_pos = {data->game_rec.x + data->game_rec.width - 16, data->game_rec.y + data->game_rec.height - 16};
+            for (uint8_t i = 0; i < p_air->curr_count; i++)
+            {
+                DrawCircleV(air_pos, 16, BLUE);
+                air_pos.x -= 32;
+            }
         }
 #endif
         //sprintf(buffer, "Spawn Entity: %s", get_spawn_selection_string(current_spawn_selection));
@@ -983,6 +993,7 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &state_transition_update_system);
     sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
     sc_array_add(&scene->scene.systems, &lifetimer_update_system);
+    sc_array_add(&scene->scene.systems, &airtimer_update_system);
     sc_array_add(&scene->scene.systems, &container_destroy_system);
     sc_array_add(&scene->scene.systems, &sprite_animation_system);
     sc_array_add(&scene->scene.systems, &camera_update_system);

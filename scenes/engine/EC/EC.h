@@ -71,12 +71,13 @@ typedef struct _CTileCoord_t {
 } CTileCoord_t;
 
 typedef struct _CJump_t {
-    unsigned int jumps;
-    unsigned int max_jumps;
     int jump_speed;
+    uint8_t jumps;
+    uint8_t max_jumps;
     bool jumped;
     bool jump_ready;
     bool short_hop;
+    bool jump_released;
 } CJump_t;
 
 typedef enum PlayerState {

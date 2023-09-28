@@ -337,6 +337,7 @@ void player_movement_input_system(Scene_t* scene)
         {
             if (!p_pstate->jump_pressed)
             {
+                p_cjump->jump_released = true;
                 if (!p_cjump->short_hop && p_ctransform->velocity.y < 0)
                 {
                     p_cjump->short_hop = true;
@@ -359,7 +360,7 @@ void player_movement_input_system(Scene_t* scene)
         // Jumps is possible as long as you have a jump
 
         // Check if possible to jump when jump is pressed
-        if (p_pstate->jump_pressed && p_cjump->jumps > 0 && p_cjump->jump_ready)
+        if (p_cjump->jump_released && p_pstate->jump_pressed && p_cjump->jumps > 0 && p_cjump->jump_ready)
         {
             p_pstate->ladder_state = false;
             p_cjump->jumps--;
@@ -381,8 +382,8 @@ void player_movement_input_system(Scene_t* scene)
 
             p_cjump->jumped = true;
             p_cjump->jump_ready = false;
+            p_cjump->jump_released = false;
         }
-
     }
 }
 
@@ -1225,11 +1226,12 @@ void player_ground_air_transition_system(Scene_t* scene)
         // Handle Ground<->Air Transition
         bool in_water = (p_mstate->water_state & 1);
         // Landing or in water
-        if ((p_mstate->ground_state & 1 || in_water || p_pstate->ladder_state) && !p_pstate->jump_pressed )
+        if ((p_mstate->ground_state & 1 || in_water || p_pstate->ladder_state))
         {
             // Recover jumps
             p_cjump->jumps = p_cjump->max_jumps;
             p_cjump->jumped = false;
+            if(!p_cjump->jump_released && !p_pstate->jump_pressed) p_cjump->jump_released = true;
             p_cjump->short_hop = false;
             p_cjump->jump_ready = true;
         }

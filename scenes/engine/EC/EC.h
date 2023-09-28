@@ -221,11 +221,12 @@ static inline void set_bbox(CBBox_t* p_bbox, unsigned int x, unsigned int y)
 }
 
 struct Entity {
+    Vector2 spawn_pos;
     unsigned long m_id;
     unsigned int m_tag;
-    bool m_alive;
     unsigned long components[N_COMPONENTS]; 
     EntityManager_t* manager;
+    bool m_alive;
 };
 
 enum EntityUpdateEvent

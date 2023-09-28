@@ -30,10 +30,13 @@ int main(void)
     init_memory_pools();
 
     init_assets(&engine.assets);
-    //load_from_infofile("res/assets.info", &engine.assets);
-    //init_player_creation("res/player_spr.info", &engine.assets);
+#ifndef NDEBUG
+    load_from_infofile("res/assets_debug.info", &engine.assets);
+    init_player_creation("res/player_spr.info", &engine.assets);
+#else
     load_from_rres("res/myresources.rres", &engine.assets);
     init_player_creation_rres("res/myresources.rres", "player_spr.info", &engine.assets);
+#endif
     init_item_creation(&engine.assets);
 
     LevelScene_t sandbox_scene;
@@ -43,6 +46,12 @@ int main(void)
     LevelScene_t level_scene;
     level_scene.scene.engine = &engine;
     init_game_scene(&level_scene);
+    level_scene.data.tile_sprites[ONEWAY_TILE] = get_sprite(&engine.assets, "tl_owp");
+    level_scene.data.tile_sprites[LADDER] = get_sprite(&engine.assets, "tl_ldr");
+    level_scene.data.tile_sprites[SPIKES] = get_sprite(&engine.assets, "d_spikes");
+    level_scene.data.tile_sprites[SPIKES + TILE_90CWROT] = get_sprite(&engine.assets, "l_spikes");
+    level_scene.data.tile_sprites[SPIKES + TILE_90CCWROT] = get_sprite(&engine.assets, "r_spikes");
+    level_scene.data.tile_sprites[SPIKES + TILE_180ROT] = get_sprite(&engine.assets, "u_spikes");
     LevelPack_t* pack = get_level_pack(&engine.assets, "TestLevels");
     if (pack != NULL)
     {

@@ -101,6 +101,7 @@ Entity_t *add_entity(EntityManager_t* p_manager, unsigned int tag)
     Entity_t* p_ent = new_entity_from_mempool(&e_idx);
     if (p_ent == NULL) return NULL;
 
+    p_ent->spawn_pos = (Vector2){0, 0};
     p_ent->m_tag = tag;
     sc_queue_add_last(&p_manager->to_add, e_idx);
     p_ent->manager = p_manager;

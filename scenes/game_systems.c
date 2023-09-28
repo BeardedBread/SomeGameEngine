@@ -208,10 +208,9 @@ void player_respawn_system(Scene_t* scene)
                 memcpy(&new_ct->position, &p_ct->position, sizeof(p_ct->position));
             }
             p_player->m_alive = true;
-            memset(&p_ct->position, 0, sizeof(p_ct->position));
+            p_ct->position = p_player->spawn_pos;
             memset(&p_ct->velocity, 0, sizeof(p_ct->velocity));
             memset(&p_ct->accel, 0, sizeof(p_ct->accel));
-
         }
     }
 }

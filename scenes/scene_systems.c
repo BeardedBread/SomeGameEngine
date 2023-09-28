@@ -1,4 +1,5 @@
 #include "scene_impl.h"
+#include "water_flow.h"
 #include "ent_impl.h"
 #include "constants.h"
 
@@ -72,30 +73,82 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
         scene->data.tilemap.tiles[i].moveable = true;
         scene->data.tilemap.tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
         sc_map_clear_64v(&scene->data.tilemap.tiles[i].entities_set);
-
-        switch (lvl_map.tiles[i].tile_type)
+        
+        if (lvl_map.tiles[i].tile_type == 1)
         {
-            case 1:
                 change_a_tile(&scene->data.tilemap, i, SOLID_TILE);
-            break;
-            default:
-            break;
         }
-        switch (lvl_map.tiles[i].entity_to_spawn)
-        {
-            case 1:
-            {
-                Entity_t* ent = create_player(&scene->scene.ent_manager, &scene->scene.engine->assets);
-                CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
-                p_ct->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
-                p_ct->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
-            }
-            break;
-            default:
-            break;
-        }
-        scene->data.tilemap.tiles[i].water_level = lvl_map.tiles[i].water;
+
+                scene->data.tilemap.tiles[i].water_level = lvl_map.tiles[i].water;
     }
+    // Two pass
+    for (size_t i = 0; i < scene->data.tilemap.n_tiles;i++)
+    {
+        if (lvl_map.tiles[i].tile_type >= 8 && lvl_map.tiles[i].tile_type < 20)
+        {
+            uint32_t tmp_idx = lvl_map.tiles[i].tile_type - 8;
+            uint32_t item_type = tmp_idx % 6;
+            ContainerItem_t item = CONTAINER_EMPTY;
+            switch (item_type)
+            {
+                case 1: item = CONTAINER_LEFT_ARROW;break;
+                case 2: item = CONTAINER_RIGHT_ARROW;break;
+                case 3: item = CONTAINER_UP_ARROW;break;
+                case 4: item = CONTAINER_DOWN_ARROW;break;
+                case 5: item = CONTAINER_BOMB;break;
+                default: break;
+            }
+
+            Entity_t* ent = create_crate(&scene->scene.ent_manager, &scene->scene.engine->assets, tmp_idx > 5, item);
+            CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
+            p_ct->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+            p_ct->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+        }
+        else
+        {
+        
+            switch (lvl_map.tiles[i].tile_type)
+            {
+                case 2:
+                    change_a_tile(&scene->data.tilemap, i, ONEWAY_TILE);
+                break;
+                case 3:
+                    change_a_tile(&scene->data.tilemap, i, LADDER);
+                break;
+                case 4:
+                case 5:
+                case 6:
+                case 7:
+                    change_a_tile(&scene->data.tilemap, i, SPIKES);
+                break;
+                case 20:
+                {
+                    Entity_t* ent = create_boulder(&scene->scene.ent_manager, &scene->scene.engine->assets);
+                    CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
+                    p_ct->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+                    p_ct->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+                }
+                break;
+                case 21:
+                {
+                    create_water_runner(&scene->scene.ent_manager, lvl_map.width, lvl_map.height, i);
+                }
+                break;
+                case 22:
+                {
+                    Entity_t* ent = create_player(&scene->scene.ent_manager, &scene->scene.engine->assets);
+                    CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
+                    p_ct->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+                    p_ct->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+                    ent->spawn_pos = p_ct->position;
+                }
+                break;
+                default:
+                break;
+            }
+        }
+    }
+
     return true;
 }
 

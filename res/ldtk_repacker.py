@@ -16,19 +16,39 @@ with open(args.filename, 'r') as f:
 #pprint.pprint(level_pack_data)
 ENUMIDS_TILETYPE_MAPPING = {
     'Solid': 1,
-    'Water': 2
+    'WoodenPlat': 2,
+    'Ladder': 3,
+    'LSpike': 4,
+    'RSpike': 5,
+    'USpike': 6,
+    'DSpike': 7,
+    'EmptyWCrate': 8,
+    'LArrowWCrate': 9,
+    'RArrowWCrate': 10,
+    'UArrowWCrate': 11,
+    'DArrowWCrate': 12,
+    'BombWCrate': 13,
+    'EmptyMCrate': 14,
+    'LArrowMCrate': 15,
+    'RArrowMCrate': 16,
+    'UArrowMCrate': 17,
+    'DArrowMCrate': 18,
+    'BombMCrate': 19,
+    'Boulder': 20,
+    'Runner': 21,
+    'Player': 22,
 }
 
-ENTID_MAPPING = {
-    'Player': 1
-}
+#ENTID_MAPPING = {
+#    'Player': 1
+#}
 
 # First go to tilesets and find Simple_tiles identifier, then find enumTags to identifier which tile type is what tileid
 ids_tiletype_map = {}
 tileset_defs = level_pack_data["defs"]["tilesets"]
 
 for ts_def in tileset_defs:
-    if ts_def["identifier"] != "Simple_tiles":
+    if ts_def["identifier"] != "Items_spritesheet":
         continue
     for tag in ts_def["enumTags"]:
         ids_tiletype_map[tag["tileIds"][0]] =  ENUMIDS_TILETYPE_MAPPING[tag["enumValueId"]]
@@ -85,10 +105,10 @@ with open(converted_filename, 'wb+') as out_file:
         for i, water_level in enumerate(water_layout["intGridCsv"]):
             tiles_info[i][2] = water_level
 
+        # Subject to change
         for ent in entity_layout["entityInstances"]:
-            if ent["__identifier"] in ENTID_MAPPING:
-                x,y = ent["__grid"]
-                tiles_info[y*width + x][1] = ENTID_MAPPING[ent["__identifier"]]
+            x,y = ent["__grid"]
+            tiles_info[y*width + x][0] = ENUMIDS_TILETYPE_MAPPING[ent["__identifier"]]
 
         out_file.write(struct.pack("<32s2H", level_name.encode('utf-8'), width, height))
         for tile in tiles_info:

@@ -439,7 +439,7 @@ static void level_scene_render_func(Scene_t* scene)
             DrawText(buffer, gui_x + 80, gui_y, 12, BLACK);
 
             gui_y += 45;
-            sprintf(buffer, "Jumps: %u, %u", p_cjump->jumps, p_cjump->jump_released);
+            sprintf(buffer, "Jumps: %u, %u, %u", p_cjump->jumps, p_cjump->jump_released, p_cjump->coyote_timer);
             DrawText(buffer, gui_x, gui_y, 12, BLACK);
             gui_y += 30;
             sprintf(buffer, "Crouch: %u", p_pstate->is_crouch);

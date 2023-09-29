@@ -370,7 +370,7 @@ void player_movement_input_system(Scene_t* scene)
                 {
                     p_ctransform->velocity.y = -p_cjump->jump_speed;
                 }
-                else
+                else if (p_pstate->ladder_state)
                 {
                     p_ctransform->velocity.y = -p_cjump->jump_speed / 1.4;
                 }
@@ -380,6 +380,7 @@ void player_movement_input_system(Scene_t* scene)
                 p_ctransform->velocity.y = -p_cjump->jump_speed / 1.75;
             }
 
+            p_cjump->coyote_timer = 0;
             p_cjump->jumped = true;
             p_cjump->jump_ready = false;
             p_cjump->jump_released = false;
@@ -1225,8 +1226,13 @@ void player_ground_air_transition_system(Scene_t* scene)
 
         // Handle Ground<->Air Transition
         bool in_water = (p_mstate->water_state & 1);
+        bool jump_recover_cond = (p_mstate->ground_state & 1 || in_water || p_pstate->ladder_state);
         // Landing or in water
-        if ((p_mstate->ground_state & 1 || in_water || p_pstate->ladder_state))
+        if (p_mstate->water_state == 0b10 || p_mstate->ground_state == 0b10)
+        {
+            p_cjump->coyote_timer = 3;
+        }
+        else if (jump_recover_cond)
         {
             // Recover jumps
             p_cjump->jumps = p_cjump->max_jumps;
@@ -1234,13 +1240,21 @@ void player_ground_air_transition_system(Scene_t* scene)
             if(!p_cjump->jump_released && !p_pstate->jump_pressed) p_cjump->jump_released = true;
             p_cjump->short_hop = false;
             p_cjump->jump_ready = true;
+            p_cjump->coyote_timer = 0;
         }
-        else if (p_mstate->water_state == 0b10 || p_mstate->ground_state == 0b10)
+        else
         {
-            p_cjump->jumps -= (p_cjump->jumps > 0)? 1:0; 
-            if (p_mstate->ground_state & 1)
+            if (p_cjump->coyote_timer > 0)
             {
-                p_cjump->jumps++;
+                p_cjump->coyote_timer--;
+            }
+            else
+            {
+                p_cjump->jumps -= (p_cjump->jumps > 0)? 1:0;
+                if (p_mstate->ground_state & 1)
+                {
+                    p_cjump->jumps++;
+                }
             }
         }
     }

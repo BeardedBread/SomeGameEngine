@@ -1,5 +1,6 @@
 .cache/
 build/
+release/
 web/
 compile_commands.json
 .gdb_history

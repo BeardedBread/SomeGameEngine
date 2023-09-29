@@ -74,6 +74,7 @@ typedef struct _CJump_t {
     int jump_speed;
     uint8_t jumps;
     uint8_t max_jumps;
+    uint8_t coyote_timer;
     bool jumped;
     bool jump_ready;
     bool short_hop;

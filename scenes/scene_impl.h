@@ -27,11 +27,22 @@ typedef struct CoinCounter
     uint16_t total;
 }CoinCounter_t;
 
+typedef struct LevelCamera {
+    Camera2D cam;
+    Vector2 target_pos;
+    //Vector2 prev_pos;
+    Vector2 current_vel;
+    float mass;
+    float c; // damping factor
+    float k; // spring constant
+}LevelCamera_t;
+
 typedef struct LevelSceneData {
     TileGrid_t tilemap;
     RenderTexture2D game_viewport;
     Rectangle game_rec;
-    Camera2D cam;
+    //Camera2D cam;
+    LevelCamera_t camera;
     Sprite_t* tile_sprites[MAX_TILE_SPRITES];
     LevelPack_t* level_pack;
     unsigned int current_level;

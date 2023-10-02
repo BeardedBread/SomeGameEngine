@@ -34,7 +34,7 @@ static void level_scene_render_func(Scene_t* scene)
 
     BeginTextureMode(data->game_viewport);
         ClearBackground(WHITE);
-        BeginMode2D(data->cam);
+        BeginMode2D(data->camera.cam);
         for (size_t i = 0; i < tilemap.n_tiles; ++i)
         {
             char buffer[6] = {0};
@@ -240,7 +240,7 @@ static void toggle_block_system(Scene_t* scene)
         && raw_mouse_pos.y < data->game_rec.height
     ) 
     {
-        Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data->cam);
+        Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data->camera.cam);
         unsigned int tile_idx = get_tile_idx(mouse_pos.x, mouse_pos.y, &tilemap);
         if (tile_idx >= MAX_N_TILES) return;
         if (tile_idx == last_tile_idx) return;

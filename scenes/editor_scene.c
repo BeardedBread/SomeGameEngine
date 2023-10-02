@@ -86,13 +86,13 @@ static void level_scene_render_func(Scene_t* scene)
     TileGrid_t tilemap = data->tilemap;
 
     Entity_t* p_ent;
-    Vector2 min = GetScreenToWorld2D((Vector2){data->game_rec.x, data->game_rec.y}, data->cam);
+    Vector2 min = GetScreenToWorld2D((Vector2){data->game_rec.x, data->game_rec.y}, data->camera.cam);
     Vector2 max = GetScreenToWorld2D(
         (Vector2){
             data->game_rec.x + data->game_rec.width,
             data->game_rec.y + data->game_rec.height
         },
-        data->cam
+        data->camera.cam
     );
     min = Vector2Scale(min, 1.0f/tilemap.tile_size);
     max = Vector2Scale(max, 1.0f/tilemap.tile_size);
@@ -103,7 +103,7 @@ static void level_scene_render_func(Scene_t* scene)
 
     BeginTextureMode(data->game_viewport);
         ClearBackground(WHITE);
-        BeginMode2D(data->cam);
+        BeginMode2D(data->camera.cam);
         for (int tile_y = min.y; tile_y <= max.y; tile_y++)
         {
             for (int tile_x = min.x; tile_x <= max.x; tile_x++)
@@ -533,7 +533,7 @@ static void toggle_block_system(Scene_t* scene)
         && raw_mouse_pos.y < data->game_rec.height
     ) 
     {
-        Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data->cam);
+        Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data->camera.cam);
         unsigned int tile_idx = get_tile_idx(mouse_pos.x, mouse_pos.y, &tilemap);
         if (tile_idx >= (tilemap.n_tiles - tilemap.width)) return;
         if (tile_idx == last_tile_idx) return;

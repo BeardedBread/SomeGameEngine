@@ -1125,7 +1125,7 @@ void movement_update_system(Scene_t* scene)
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     TileGrid_t tilemap = data->tilemap;
     // Update movement
-    float delta_time = 0.017; // TODO: Will need to think about delta time handling
+    float delta_time = DELTA_T; // TODO: Will need to think about delta time handling
     CTransform_t * p_ctransform;
     unsigned long ent_idx;
     sc_map_foreach(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], ent_idx, p_ctransform)
@@ -1795,29 +1795,59 @@ void sprite_animation_system(Scene_t* scene)
 
 void camera_update_system(Scene_t* scene)
 {
-    LevelScene_t* lvl_scene = CONTAINER_OF(scene, LevelScene_t, scene);
+    LevelSceneData_t* data = &CONTAINER_OF(scene, LevelScene_t, scene)->data;
     Entity_t* p_player;
-    const int width = lvl_scene->data.game_rec.width;
-    const int height = lvl_scene->data.game_rec.height;
+    const int width = data->game_rec.width;
+    const int height =data->game_rec.height;
+    data->camera.cam.offset = (Vector2){ width/2.0f, height/2.0f };
+
+    Vector2 target_pos = {0};
+    Vector2 target_vel = {0};
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
         CTransform_t* p_ctransform = get_component(p_player, CTRANSFORM_COMP_T);
-        lvl_scene->data.cam.offset = (Vector2){ width/2.0f, height/2.0f };
-        lvl_scene->data.cam.target = p_ctransform->position;
+        target_pos = p_ctransform->position;
+        target_vel = p_ctransform->velocity;
+        CMovementState_t* p_movement = get_component(p_player, CMOVEMENTSTATE_T);
+        target_pos.x += (p_movement->x_dir == 1) ? width/4: -width/4;
     }
+    
+    // Mass-Spring damper update
+    Vector2 x = Vector2Subtract(target_pos, data->camera.cam.target);
+    Vector2 v = Vector2Subtract(data->camera.current_vel, target_vel); 
+    //Vector2 F = Vector2Scale(x, data->camera.k);
+    Vector2 F = 
+        Vector2Subtract(
+            Vector2Scale(x, data->camera.k),
+            Vector2Scale(v, data->camera.c)
+        );
+
+    // Kinematics update
+    const float dt = DELTA_T;
+    Vector2 a_dt = Vector2Scale(F, dt/data->camera.mass);
+    data->camera.cam.target =
+        Vector2Add(
+            data->camera.cam.target,
+                Vector2Add(
+                    Vector2Scale(data->camera.current_vel, dt),
+                    Vector2Scale(a_dt, dt*0.5f)
+                )
+        );
+    data->camera.current_vel = Vector2Add(data->camera.current_vel, a_dt);
+
     Vector2 max = GetWorldToScreen2D(
         (Vector2){
-            fmax(lvl_scene->data.tilemap.width * TILE_SIZE, lvl_scene->data.game_rec.width),
-            fmax(lvl_scene->data.tilemap.height * TILE_SIZE, lvl_scene->data.game_rec.height)
+            fmax(data->tilemap.width * TILE_SIZE, data->game_rec.width),
+            fmax(data->tilemap.height * TILE_SIZE, data->game_rec.height)
         },
-        lvl_scene->data.cam
+        data->camera.cam
     );
-    Vector2 min = GetWorldToScreen2D((Vector2){0, 0}, lvl_scene->data.cam);
+    //Vector2 min = GetWorldToScreen2D((Vector2){0, 0}, data->camera.cam);
 
-    if (max.x < width) lvl_scene->data.cam.offset.x = width - (max.x - width/2.0f);
-    if (max.y < height) lvl_scene->data.cam.offset.y = height - (max.y - height/2.0f);
-    if (min.x > 0) lvl_scene->data.cam.offset.x = width/2.0f - min.x;
-    if (min.y > 0) lvl_scene->data.cam.offset.y = height/2.0f - min.y;
+    //if (max.x < width) data->camera.cam.offset.x = width - (max.x - width/2.0f);
+    //if (max.y < height) data->camera.cam.offset.y = height - (max.y - height/2.0f);
+    //if (min.x > 0) data->camera.cam.offset.x = width/2.0f - min.x;
+    //if (min.y > 0) data->camera.cam.offset.y = height/2.0f - min.y;
 }
 
 void level_end_detection_system(Scene_t* scene)

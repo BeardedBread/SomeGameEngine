@@ -10,9 +10,13 @@ void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* t
     //data->game_rec = (Rectangle){25, 25, VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE};
     data->game_viewport = LoadRenderTexture(view_zone.width, view_zone.height);
     data->game_rec = view_zone;
-    data->cam = (Camera2D){0};
-    data->cam.rotation = 0.0f;
-    data->cam.zoom = 1.0f;
+    //data->camera.cam = (Camera2D){0};
+    memset(&data->camera, 0, sizeof(LevelCamera_t));
+    data->camera.cam.rotation = 0.0f;
+    data->camera.cam.zoom = 1.0f;
+    data->camera.mass = 0.6f;
+    data->camera.c = 2.4f;
+    data->camera.k = 0.1f;
 
     data->tilemap.max_tiles = max_tiles;
     if (tiles != NULL)

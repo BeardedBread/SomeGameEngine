@@ -19,7 +19,7 @@ static void level_scene_render_func(Scene_t* scene)
 
     BeginTextureMode(data->game_viewport);
         ClearBackground(WHITE);
-        BeginMode2D(data->cam);
+        BeginMode2D(data->camera.cam);
         for (size_t i = 0; i < tilemap.n_tiles; ++i)
         {
             char buffer[6] = {0};

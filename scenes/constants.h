@@ -15,6 +15,7 @@
 #define VIEWABLE_MAP_HEIGHT 16
 #endif
 
+#define DELTA_T 0.017
 #define GRAV_ACCEL 1500
 #define JUMP_SPEED 70
 #define MOVE_ACCEL 1300

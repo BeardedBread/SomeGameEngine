@@ -362,11 +362,10 @@ void player_movement_input_system(Scene_t* scene)
         // Check if possible to jump when jump is pressed
         if (p_cjump->jump_released && p_pstate->jump_pressed && p_cjump->jumps > 0 && p_cjump->jump_ready)
         {
-            p_pstate->ladder_state = false;
             p_cjump->jumps--;
             if (!in_water)
             {
-                if (p_mstate->ground_state & 1)
+                if (p_mstate->ground_state & 1 || p_cjump->coyote_timer > 0)
                 {
                     p_ctransform->velocity.y = -p_cjump->jump_speed;
                 }
@@ -380,6 +379,7 @@ void player_movement_input_system(Scene_t* scene)
                 p_ctransform->velocity.y = -p_cjump->jump_speed / 1.75;
             }
 
+            p_pstate->ladder_state = false;
             p_cjump->coyote_timer = 0;
             p_cjump->jumped = true;
             p_cjump->jump_ready = false;

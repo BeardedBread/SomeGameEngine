@@ -14,8 +14,8 @@ void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* t
     memset(&data->camera, 0, sizeof(LevelCamera_t));
     data->camera.cam.rotation = 0.0f;
     data->camera.cam.zoom = 1.0f;
-    data->camera.mass = 0.33f;
-    data->camera.k = 3.2f;
+    data->camera.mass = 0.2f;
+    data->camera.k = 6.2f;
     data->camera.c = 2.2f;
 
     data->tilemap.max_tiles = max_tiles;

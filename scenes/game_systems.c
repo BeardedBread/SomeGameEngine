@@ -1809,13 +1809,14 @@ void camera_update_system(Scene_t* scene)
         target_pos = p_ctransform->position;
         target_vel = p_ctransform->velocity;
         CMovementState_t* p_movement = get_component(p_player, CMOVEMENTSTATE_T);
-        target_pos.x += (p_movement->x_dir == 1) ? width/4: -width/4;
+        target_pos.x += (p_movement->x_dir == 1) ? width/8: -width/8;
+        target_pos.y -= height / 8;
+        //target_pos.y += p_ctransform->velocity.y * 0.08;
     }
     
     // Mass-Spring damper update
     Vector2 x = Vector2Subtract(target_pos, data->camera.cam.target);
     Vector2 v = Vector2Subtract(data->camera.current_vel, target_vel); 
-    //Vector2 F = Vector2Scale(x, data->camera.k);
     Vector2 F = 
         Vector2Subtract(
             Vector2Scale(x, data->camera.k),

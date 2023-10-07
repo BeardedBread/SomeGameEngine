@@ -30,6 +30,7 @@ typedef struct CoinCounter
 typedef struct LevelCamera {
     Camera2D cam;
     Vector2 target_pos;
+    float base_y;
     //Vector2 prev_pos;
     Vector2 current_vel;
     float mass;

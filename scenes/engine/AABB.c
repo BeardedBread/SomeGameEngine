@@ -23,7 +23,7 @@ uint8_t find_AABB_overlap(const Vector2 tl1, const Vector2 sz1, const Vector2 tl
     // Note that we include one extra pixel for checking
     // This avoid overlapping on the border
     Vector2 l1, l2;
-    Vector2 tmp;
+    Vector2 tmp = {0,0};
     uint8_t overlap_x, overlap_y;
     l1.x = tl1.x;
     l1.y = tl1.x + sz1.x;

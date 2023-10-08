@@ -3,7 +3,10 @@
 #define RRES_IMPLEMENTATION
 #include "rres.h"              // Required to read rres data chunks
 
+#include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
 // Load a continuous data buffer from rresResourceChunkData struct
 static unsigned char *LoadDataBuffer(rresResourceChunkData data, unsigned int rawSize)

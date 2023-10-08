@@ -1821,6 +1821,7 @@ void camera_update_system(Scene_t* scene)
         if (p_ctransform->position.y >= data->camera.base_y)
         {
             data->camera.target_pos.y = p_ctransform->position.y;
+            data->camera.target_pos.y += p_ctransform->velocity.y * 0.2;
         }
     }
     data->camera.target_pos.x = Clamp(data->camera.target_pos.x, data->game_rec.width / 2,

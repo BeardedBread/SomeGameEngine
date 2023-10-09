@@ -8,6 +8,8 @@
     #include <emscripten/emscripten.h>
 #endif
 
+static SFX_t sfx_buffer[4] = {0};
+static uint32_t sfx_counts[4] = {0};
 
 Scene_t* scenes[1];
 static GameEngine_t engine =
@@ -15,7 +17,13 @@ static GameEngine_t engine =
     .scenes = scenes,
     .max_scenes = 1,
     .curr_scene = 0,
-    .assets = {0}
+    .assets = {0},
+    .sfx_list = {
+        .sfx = sfx_buffer,
+        .n_sfx = 4,
+        .sfx_queue = sfx_counts,
+        .played_sfx = 0,
+    }
 };
 
 void update_loop(void)
@@ -31,9 +39,11 @@ void update_loop(void)
 
 int main(void)
 {
-    init_engine(&engine);
     InitWindow(1280, 640, "raylib");
     SetTargetFPS(60);
+    InitAudioDevice();
+
+    init_engine(&engine);
     init_memory_pools();
 
     init_assets(&engine.assets);
@@ -46,6 +56,9 @@ int main(void)
     init_player_creation_rres("res/myresources.rres", "player_spr.info", &engine.assets);
 #endif
     init_item_creation(&engine.assets);
+
+    add_sound(&engine.assets, "testsnd", "res/sound.ogg");
+    load_sfx(&engine, "testsnd", 0);
 
     LevelScene_t scene;
     scene.scene.engine = &engine;
@@ -75,6 +88,7 @@ int main(void)
             update_entity_manager(&scene.scene.ent_manager);
             // This is needed to advance time delta
             render_scene(&scene.scene);
+            update_sfx_list(&engine);
             if (WindowShouldClose()) break;
         }
     #endif

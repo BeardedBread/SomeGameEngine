@@ -65,4 +65,12 @@ Font* get_font(Assets_t* assets, const char* name);
 LevelPack_t* get_level_pack(Assets_t* assets, const char* name);
 
 void draw_sprite(Sprite_t* spr, Vector2 pos, bool flip_x);
+
+typedef struct SFX
+{
+    Sound* snd;
+    uint8_t plays;
+    uint8_t cooldown;
+} SFX_t;
+
 #endif // __ASSETS_H

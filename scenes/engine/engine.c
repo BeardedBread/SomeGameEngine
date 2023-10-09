@@ -3,6 +3,7 @@
 void init_engine(GameEngine_t* engine)
 {
     sc_queue_init(&engine->key_buffer);
+    memset(engine->sfx_list.sfx, 0, engine->sfx_list.n_sfx * sizeof(SFX_t));
 }
 
 void deinit_engine(GameEngine_t* engine)
@@ -46,6 +47,38 @@ void change_scene(GameEngine_t* engine, unsigned int idx)
     engine->scenes[engine->curr_scene]->state = SCENE_ENDED;
     engine->curr_scene = idx;
     engine->scenes[engine->curr_scene]->state = SCENE_PLAYING;
+}
+
+bool load_sfx(GameEngine_t* engine, const char* snd_name, uint32_t tag_idx)
+{
+    if (tag_idx >= engine->sfx_list.n_sfx) return false;
+    Sound* snd = get_sound(&engine->assets, snd_name);
+    if (snd == NULL) return false;
+    engine->sfx_list.sfx[tag_idx].snd = snd;
+    engine->sfx_list.sfx[tag_idx].cooldown = 0;
+    engine->sfx_list.sfx[tag_idx].plays = 0;
+}
+
+void play_sfx(GameEngine_t* engine, unsigned int tag_idx)
+{
+    if (tag_idx >= engine->sfx_list.n_sfx) return;
+    SFX_t* sfx = engine->sfx_list.sfx + tag_idx;
+    if (sfx->plays == 0 && sfx->snd != NULL)
+    {
+        PlaySound(*sfx->snd);
+        sfx->plays++;
+        engine->sfx_list.sfx_queue[engine->sfx_list.played_sfx++] = tag_idx;
+    }
+}
+
+void update_sfx_list(GameEngine_t* engine)
+{
+    for (uint32_t i = 0; i< engine->sfx_list.played_sfx; ++i)
+    {
+        uint32_t tag_idx = engine->sfx_list.sfx_queue[i];
+        engine->sfx_list.sfx[tag_idx].plays = 0;
+    }
+    engine->sfx_list.played_sfx = 0;
 }
 
 //void init_scene(Scene_t* scene, SceneType_t scene_type, system_func_t render_func, action_func_t action_func)

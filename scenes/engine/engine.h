@@ -7,15 +7,23 @@
 
 typedef struct Scene Scene_t;
 
+typedef struct SFXList
+{
+    SFX_t* sfx;
+    uint32_t* sfx_queue;
+    uint32_t n_sfx;
+    uint32_t played_sfx;
+} SFXList_t;
+
 typedef struct GameEngine {
     Scene_t **scenes;
     unsigned int max_scenes;
     unsigned int curr_scene;
     Assets_t assets;
+    SFXList_t sfx_list;
     // Maintain own queue to handle key presses
     struct sc_queue_32 key_buffer;
 } GameEngine_t;
-void change_scene(GameEngine_t* engine, unsigned int idx);
 
 //typedef enum SceneType {
 //    LEVEL_SCENE = 0,
@@ -46,6 +54,11 @@ struct Scene {
 void init_engine(GameEngine_t* engine);
 void deinit_engine(GameEngine_t* engine);
 void process_inputs(GameEngine_t* engine, Scene_t* scene);
+
+void change_scene(GameEngine_t* engine, unsigned int idx);
+bool load_sfx(GameEngine_t* engine, const char* snd_name, uint32_t tag_idx);
+void play_sfx(GameEngine_t* engine, unsigned int tag_idx);
+void update_sfx_list(GameEngine_t* engine);
 
 // Inline functions, for convenience
 extern void update_scene(Scene_t* scene);

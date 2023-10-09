@@ -362,6 +362,7 @@ void player_movement_input_system(Scene_t* scene)
         // Check if possible to jump when jump is pressed
         if (p_cjump->jump_released && p_pstate->jump_pressed && p_cjump->jumps > 0 && p_cjump->jump_ready)
         {
+            play_sfx(scene->engine, 0);
             p_cjump->jumps--;
             if (!in_water)
             {

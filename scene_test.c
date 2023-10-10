@@ -8,8 +8,8 @@
     #include <emscripten/emscripten.h>
 #endif
 
-static SFX_t sfx_buffer[4] = {0};
-static uint32_t sfx_counts[4] = {0};
+static SFX_t sfx_buffer[N_SFX] = {0};
+static uint32_t sfx_counts[N_SFX] = {0};
 
 Scene_t* scenes[1];
 static GameEngine_t engine =
@@ -20,7 +20,7 @@ static GameEngine_t engine =
     .assets = {0},
     .sfx_list = {
         .sfx = sfx_buffer,
-        .n_sfx = 4,
+        .n_sfx = N_SFX,
         .sfx_queue = sfx_counts,
         .played_sfx = 0,
     }
@@ -57,8 +57,16 @@ int main(void)
 #endif
     init_item_creation(&engine.assets);
 
-    add_sound(&engine.assets, "testsnd", "res/sound.ogg");
-    load_sfx(&engine, "testsnd", 0);
+    add_sound(&engine.assets, "snd_jump", "res/jump.ogg");
+    add_sound(&engine.assets, "snd_land", "res/land.ogg");
+    add_sound(&engine.assets, "snd_wdrop", "res/water_land.ogg");
+    add_sound(&engine.assets, "snd_bland", "res/boulder_move.ogg");
+    add_sound(&engine.assets, "snd_bubble", "res/bubble.ogg");
+    load_sfx(&engine, "snd_jump", PLAYER_JMP_SFX);
+    load_sfx(&engine, "snd_land", PLAYER_LAND_SFX);
+    load_sfx(&engine, "snd_wdrop", WATER_IN_SFX);
+    load_sfx(&engine, "snd_bland", BOULDER_LAND_SFX);
+    load_sfx(&engine, "snd_bubble", BUBBLE_SFX);
 
     LevelScene_t scene;
     scene.scene.engine = &engine;

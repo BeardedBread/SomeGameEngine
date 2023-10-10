@@ -362,7 +362,7 @@ void player_movement_input_system(Scene_t* scene)
         // Check if possible to jump when jump is pressed
         if (p_cjump->jump_released && p_pstate->jump_pressed && p_cjump->jumps > 0 && p_cjump->jump_ready)
         {
-            play_sfx(scene->engine, 0);
+            play_sfx(scene->engine, PLAYER_JMP_SFX);
             p_cjump->jumps--;
             if (!in_water)
             {
@@ -385,6 +385,12 @@ void player_movement_input_system(Scene_t* scene)
             p_cjump->jumped = true;
             p_cjump->jump_ready = false;
             p_cjump->jump_released = false;
+        }
+        else if (p_mstate->ground_state == 0b01)
+        {
+            // the else if check is to prevent playing the landing sfx
+            // on first frame jumps
+            play_sfx(scene->engine, PLAYER_LAND_SFX);
         }
     }
 }
@@ -899,6 +905,7 @@ void moveable_update_system(Scene_t* scene)
                 p_moveable->gridmove = false;
                 p_bbox->solid = true;
                 p_ctransform->movement_mode = REGULAR_MOVEMENT;
+                play_sfx(scene->engine, BOULDER_LAND_SFX);
             }
             else if (remaining_distance > 0.1)
             {
@@ -1346,6 +1353,17 @@ void state_transition_update_system(Scene_t* scene)
         {
             p_ctransform->active = true;
         }
+        if (p_mstate->ground_state == 0b01)
+        {
+            if (p_ent->m_tag == BOULDER_ENT_TAG)
+            {
+                play_sfx(scene->engine, BOULDER_LAND_SFX);
+            }
+        }
+        if (p_mstate->water_state == 0b01)
+        {
+            play_sfx(scene->engine, WATER_IN_SFX);
+        }
     }
 }
 
@@ -1742,6 +1760,7 @@ void airtimer_update_system(Scene_t* scene)
                 {
                     p_air->curr_count--;
                     p_air->curr_ftimer = p_air->max_ftimer;
+                    play_sfx(scene->engine, BUBBLE_SFX);
                 }
                 else
                 {

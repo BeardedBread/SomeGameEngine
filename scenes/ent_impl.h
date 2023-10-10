@@ -1,19 +1,7 @@
 #ifndef __ENT_IMPL_H
 #define __ENT_IMPL_H
 #include "assets.h"
-
-typedef enum EntityTag {
-    NO_ENT_TAG = 0,
-    PLAYER_ENT_TAG,
-    ENEMY_ENT_TAG,
-    CRATES_ENT_TAG,
-    CHEST_ENT_TAG,
-    BOULDER_ENT_TAG,
-    LEVEL_END_TAG,
-    DESTRUCTABLE_ENT_TAG,
-    DYNMEM_ENT_TAG,
-} EntityTag_t;
-
+#include "assets_tag.h"
 
 bool init_player_creation(const char* info_file, Assets_t* assets);
 bool init_player_creation_rres(const char* rres_file, const char* file, Assets_t* assets);

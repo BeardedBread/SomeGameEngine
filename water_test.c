@@ -1,11 +1,10 @@
 #include "constants.h"
-#include "mempool.h"
-#include "raymath.h"
 #include "scene_impl.h"
 #include "ent_impl.h"
 #include "water_flow.h"
 #include "game_systems.h"
 #include "assets_loader.h"
+#include "raymath.h"
 #include <stdio.h>
 #include <unistd.h>
 
@@ -407,12 +406,9 @@ static void player_simple_movement_system(Scene_t* scene)
 
 int main(void)
 {
-    init_engine(&engine);
     InitWindow(1280, 640, "raylib");
     SetTargetFPS(60);
-    init_memory_pools();
-
-    init_assets(&engine.assets);
+    init_engine(&engine);
 
     LevelScene_t scene;
     scene.scene.engine = &engine;
@@ -474,6 +470,5 @@ int main(void)
     free_scene(&scene.scene);
     term_level_scene_data(&scene.data);
     deinit_engine(&engine);
-    term_assets(&engine.assets);
     CloseWindow();
 }

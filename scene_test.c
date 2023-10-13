@@ -1,4 +1,3 @@
-#include "mempool.h"
 #include "scene_impl.h"
 #include "ent_impl.h"
 #include "assets_loader.h"
@@ -42,11 +41,8 @@ int main(void)
     InitWindow(1280, 640, "raylib");
     SetTargetFPS(60);
     InitAudioDevice();
-
     init_engine(&engine);
-    init_memory_pools();
 
-    init_assets(&engine.assets);
 
 #ifndef NDEBUG
     load_from_infofile("res/assets.info.raw", &engine.assets);
@@ -102,7 +98,6 @@ int main(void)
     #endif
     free_sandbox_scene(&scene);
     deinit_engine(&engine);
-    term_assets(&engine.assets);
     CloseWindow();
 
 }

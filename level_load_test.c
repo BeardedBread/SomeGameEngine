@@ -1,6 +1,4 @@
 #include "constants.h"
-#include "mempool.h"
-#include "raymath.h"
 #include "scene_impl.h"
 #include "ent_impl.h"
 #include "water_flow.h"
@@ -23,9 +21,7 @@ int main(void)
     init_engine(&engine);
     InitWindow(1280, 640, "raylib");
     SetTargetFPS(60);
-    init_memory_pools();
 
-    init_assets(&engine.assets);
     load_from_infofile("res/test_assets.info", &engine.assets);
     LevelPack_t* pack = get_level_pack(&engine.assets, "TestLevels");
     assert(pack != NULL);
@@ -61,7 +57,6 @@ int main(void)
     }
     free_scene(&scene.scene);
     term_level_scene_data(&scene.data);
-    deinit_engine(&engine);
-    term_assets(&engine.assets);
     CloseWindow();
+    deinit_engine(&engine);
 }

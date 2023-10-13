@@ -1,5 +1,5 @@
-#include "mempool.h"
 #include "ent_impl.h"
+#include "mempool.h"
 #include <stdio.h>
 
 int main(void)

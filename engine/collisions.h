@@ -1,7 +1,6 @@
 #ifndef __COLLISION_FUNCS_H
 #define __COLLISION_FUNCS_H
 #include "EC.h"
-#define MAX_TILE_TYPES 16
 
 typedef enum SolidType
 {

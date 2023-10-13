@@ -9,8 +9,8 @@ typedef struct Scene Scene_t;
 
 typedef struct SFXList
 {
-    SFX_t* sfx;
-    uint32_t* sfx_queue;
+    SFX_t sfx[N_SFX];
+    uint32_t sfx_queue[N_SFX];
     uint32_t n_sfx;
     uint32_t played_sfx;
 } SFXList_t;

@@ -12,7 +12,6 @@ typedef enum EntityTag {
     DYNMEM_ENT_TAG,
 } EntityTag_t;
 
-#define N_SFX 18
 typedef enum SFXTag {
     PLAYER_JMP_SFX = 0,
     PLAYER_LAND_SFX,

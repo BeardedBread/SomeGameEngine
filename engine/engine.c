@@ -4,6 +4,7 @@
 void init_engine(GameEngine_t* engine)
 {
     sc_queue_init(&engine->key_buffer);
+    engine->sfx_list.n_sfx = N_SFX;
     memset(engine->sfx_list.sfx, 0, engine->sfx_list.n_sfx * sizeof(SFX_t));
     init_memory_pools();
     init_assets(&engine->assets);

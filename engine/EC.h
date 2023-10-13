@@ -6,9 +6,8 @@
 #include "sc/map/sc_map.h"
 #include "sc/queue/sc_queue.h"
 
-#define N_TAGS 10
-#define N_COMPONENTS 14
-#define MAX_COMP_POOL_SIZE 1024
+#include "engine_conf.h"
+
 typedef struct EntityManager EntityManager_t;
 typedef struct Entity Entity_t;
 

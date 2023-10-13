@@ -7,9 +7,6 @@
     #include <emscripten/emscripten.h>
 #endif
 
-static SFX_t sfx_buffer[N_SFX] = {0};
-static uint32_t sfx_counts[N_SFX] = {0};
-
 Scene_t* scenes[1];
 static GameEngine_t engine =
 {
@@ -17,12 +14,7 @@ static GameEngine_t engine =
     .max_scenes = 1,
     .curr_scene = 0,
     .assets = {0},
-    .sfx_list = {
-        .sfx = sfx_buffer,
-        .n_sfx = N_SFX,
-        .sfx_queue = sfx_counts,
-        .played_sfx = 0,
-    }
+    .sfx_list = {0}
 };
 
 void update_loop(void)

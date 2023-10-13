@@ -1,4 +1,4 @@
-add_subdirectory(EC)
+add_subdirectory(sc)
 add_library(lib_engine STATIC
     assets.c
     AABB.c
@@ -6,6 +6,8 @@ add_library(lib_engine STATIC
     engine.c
     collisions.c
     rres.c
+    mempool.c
+    entManager.c
     ${LIBZSTD_DIR}/lib/libzstd.a
 )
 target_include_directories(lib_engine
@@ -13,9 +15,18 @@ target_include_directories(lib_engine
     ${LIBZSTD_DIR}/include
     PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}
+    ${RAYLIB_DIR}/include
+)
+target_link_directories(lib_engine
+    PUBLIC
+    ${RAYLIB_DIR}/lib
 )
 target_link_libraries(lib_engine
     PUBLIC
-    lib_EC
     zstd
+    raylib
+    sc_queue
+    sc_map
+    sc_array
+    m
 )

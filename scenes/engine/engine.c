@@ -62,6 +62,7 @@ bool load_sfx(GameEngine_t* engine, const char* snd_name, uint32_t tag_idx)
     engine->sfx_list.sfx[tag_idx].snd = snd;
     engine->sfx_list.sfx[tag_idx].cooldown = 0;
     engine->sfx_list.sfx[tag_idx].plays = 0;
+    return true;
 }
 
 void play_sfx(GameEngine_t* engine, unsigned int tag_idx)

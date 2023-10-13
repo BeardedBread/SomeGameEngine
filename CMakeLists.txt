@@ -23,7 +23,7 @@ set(GAME_LIBS
     lib_scenes
 )
 
-
+add_subdirectory(engine)
 add_subdirectory(scenes)
 add_subdirectory(res)
 

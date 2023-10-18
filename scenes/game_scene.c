@@ -16,91 +16,102 @@ static void level_scene_render_func(Scene_t* scene)
     TileGrid_t tilemap = data->tilemap;
 
     Entity_t* p_ent;
+    Vector2 min = GetScreenToWorld2D((Vector2){data->game_rec.x, data->game_rec.y}, data->camera.cam);
+    Vector2 max = GetScreenToWorld2D(
+        (Vector2){
+            data->game_rec.x + data->game_rec.width,
+            data->game_rec.y + data->game_rec.height
+        },
+        data->camera.cam
+    );
+    min = Vector2Scale(min, 1.0f/tilemap.tile_size);
+    max = Vector2Scale(max, 1.0f/tilemap.tile_size);
+    min.x = (int)fmax(0, min.x - 1);
+    min.y = (int)fmax(0, min.y - 1);
+    max.x = (int)fmin(tilemap.width, max.x + 1);
+    max.y = (int)fmin(tilemap.height, max.y + 1);
+
 
     BeginTextureMode(data->game_viewport);
         ClearBackground(WHITE);
         BeginMode2D(data->camera.cam);
-        for (size_t i = 0; i < tilemap.n_tiles; ++i)
+
+        for (int tile_y = min.y; tile_y < max.y; tile_y++)
         {
-            char buffer[6] = {0};
-            int x = (i % tilemap.width) * TILE_SIZE;
-            int y = (i / tilemap.width) * TILE_SIZE;
-            sprintf(buffer, "%u", sc_map_size_64v(&tilemap.tiles[i].entities_set));
+            for (int tile_x = min.x; tile_x < max.x; tile_x++)
+            {
+                int i = tile_x + tile_y * tilemap.width;
+                int x = tile_x * TILE_SIZE;
+                int y = tile_y * TILE_SIZE;
 
-            if (!tilemap.tiles[i].moveable)
-            {
-                // Draw water tile
-                Color water_colour = ColorAlpha(RED, 0.2);
-                DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
-            }
-
-            if (data->tile_sprites[tilemap.tiles[i].tile_type] != NULL)
-            {
-                draw_sprite(data->tile_sprites[tilemap.tiles[i].tile_type], (Vector2){x,y}, false);
-            }
-            else if (tilemap.tiles[i].tile_type == SOLID_TILE)
-            {
-                DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
-            }
-            else if (tilemap.tiles[i].tile_type == ONEWAY_TILE)
-            {
-                DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, MAROON);
-            }
-            else if (tilemap.tiles[i].tile_type == LADDER)
-            {
-                DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, ORANGE);
-            }
-            else if (tilemap.tiles[i].tile_type == SPIKES)
-            {
-                DrawRectangle(
-                    x + tilemap.tiles[i].offset.x, y + tilemap.tiles[i].offset.y,
-                    tilemap.tiles[i].size.x, tilemap.tiles[i].size.y, RED
-                );
-            }
-            if (tilemap.tiles[i].wet)
-            {
+                if (data->tile_sprites[tilemap.tiles[i].tile_type] != NULL)
+                {
+                    draw_sprite(data->tile_sprites[tilemap.tiles[i].tile_type], (Vector2){x,y}, false);
+                }
+                else if (tilemap.tiles[i].tile_type == SOLID_TILE)
+                {
+                    DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
+                }
+                else if (tilemap.tiles[i].tile_type == ONEWAY_TILE)
+                {
+                    DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, MAROON);
+                }
+                else if (tilemap.tiles[i].tile_type == LADDER)
+                {
+                    DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, ORANGE);
+                }
+                else if (tilemap.tiles[i].tile_type == SPIKES)
+                {
+                    DrawRectangle(
+                        x + tilemap.tiles[i].offset.x, y + tilemap.tiles[i].offset.y,
+                        tilemap.tiles[i].size.x, tilemap.tiles[i].size.y, RED
+                    );
+                }
+                if (tilemap.tiles[i].wet)
+                {
 #define SURFACE_THICKNESS 4
-                int up = i - tilemap.width;
-                int bot = i + tilemap.width;
-                int right = i + 1;
-                int left = i - 1;
-                int bot_line = y + TILE_SIZE - tilemap.tiles[i].water_level * WATER_BBOX_STEP - SURFACE_THICKNESS / 2;
-                if (up >= 0 && tilemap.tiles[up].wet)
-                {
-                    DrawLineEx((Vector2){x + TILE_SIZE / 2, y}, (Vector2){x + TILE_SIZE / 2, y + TILE_SIZE - tilemap.tiles[i].water_level * WATER_BBOX_STEP}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
+                    int up = i - tilemap.width;
+                    int bot = i + tilemap.width;
+                    int right = i + 1;
+                    int left = i - 1;
+                    int bot_line = y + TILE_SIZE - tilemap.tiles[i].water_level * WATER_BBOX_STEP - SURFACE_THICKNESS / 2;
+                    if (up >= 0 && tilemap.tiles[up].wet)
+                    {
+                        DrawLineEx((Vector2){x + TILE_SIZE / 2, y}, (Vector2){x + TILE_SIZE / 2, y + TILE_SIZE - tilemap.tiles[i].water_level * WATER_BBOX_STEP}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
+                    }
+
+
+                    if (
+                        bot <= tilemap.n_tiles
+                        && tilemap.tiles[i].water_level == 0
+                        )
+                    {
+                        if (i % tilemap.width != 0 && tilemap.tiles[left].wet && (tilemap.tiles[bot].solid == SOLID || tilemap.tiles[bot-1].solid == SOLID))
+                        {
+                            DrawLineEx((Vector2){x, bot_line}, (Vector2){x + TILE_SIZE / 2, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
+                        }
+                        if (right % tilemap.width != 0 && tilemap.tiles[right].wet && (tilemap.tiles[bot].solid == SOLID || tilemap.tiles[bot+1].solid == SOLID))
+                        {
+                            DrawLineEx((Vector2){x + TILE_SIZE / 2, bot_line}, (Vector2){x + TILE_SIZE, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
+                        }
+                    }
                 }
 
-
-                if (
-                    bot <= tilemap.n_tiles
-                    && tilemap.tiles[i].water_level == 0
-                    )
+                // Draw water tile
+                uint32_t water_height = tilemap.tiles[i].water_level * WATER_BBOX_STEP;
+                // Draw water tile
+                Color water_colour = ColorAlpha(BLUE, 0.5);
+                DrawRectangle(
+                    x,
+                    y + (TILE_SIZE - water_height),
+                    TILE_SIZE,
+                    water_height,
+                    water_colour
+                );
+                if (tilemap.tiles[i].max_water_level < MAX_WATER_LEVEL)
                 {
-                    if (i % tilemap.width != 0 && tilemap.tiles[left].wet && (tilemap.tiles[bot].solid == SOLID || tilemap.tiles[bot-1].solid == SOLID))
-                    {
-                        DrawLineEx((Vector2){x, bot_line}, (Vector2){x + TILE_SIZE / 2, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
-                    }
-                    if (right % tilemap.width != 0 && tilemap.tiles[right].wet && (tilemap.tiles[bot].solid == SOLID || tilemap.tiles[bot+1].solid == SOLID))
-                    {
-                        DrawLineEx((Vector2){x + TILE_SIZE / 2, bot_line}, (Vector2){x + TILE_SIZE, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
-                    }
+                    DrawRectangleLinesEx((Rectangle){x, y, TILE_SIZE, TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
                 }
-            }
-
-            // Draw water tile
-            uint32_t water_height = tilemap.tiles[i].water_level * WATER_BBOX_STEP;
-            // Draw water tile
-            Color water_colour = ColorAlpha(BLUE, 0.5);
-            DrawRectangle(
-                x,
-                y + (TILE_SIZE - water_height),
-                TILE_SIZE,
-                water_height,
-                water_colour
-            );
-            if (tilemap.tiles[i].max_water_level < MAX_WATER_LEVEL)
-            {
-                DrawRectangleLinesEx((Rectangle){x, y, TILE_SIZE, TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
             }
         }
 
@@ -109,6 +120,31 @@ static void level_scene_render_func(Scene_t* scene)
         {
             CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
             CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+
+            // Entity culling
+            Vector2 box_size = {0};
+            if (p_bbox != NULL) box_size = p_bbox->size;
+            if (
+                p_ct->position.x + box_size.x < min.x * tilemap.tile_size
+                || p_ct->position.x > max.x * tilemap.tile_size
+                || p_ct->position.y + box_size.y < min.y * tilemap.tile_size
+                || p_ct->position.y > max.y * tilemap.tile_size
+            ) continue;
+
+            // Render Sprite only
+            CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
+            if (p_cspr != NULL)
+            {
+                const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
+                if (spr.sprite != NULL)
+                {
+                    Vector2 pos = Vector2Add(p_ct->position, spr.offset);
+                    draw_sprite(spr.sprite, pos, p_cspr->flip_x);
+                }
+                continue;
+            }
+
+            // Continue here only if no sprite
             Color colour;
             switch(p_ent->m_tag)
             {
@@ -189,42 +225,6 @@ static void level_scene_render_func(Scene_t* scene)
                     }
                 }
             }
-
-            CHurtbox_t* p_hurtbox = get_component(p_ent, CHURTBOX_T);
-            CHitBoxes_t* p_hitbox = get_component(p_ent, CHITBOXES_T);
-            if (p_hitbox != NULL)
-            {
-                for (uint8_t i = 0;i < p_hitbox->n_boxes; ++i)
-                {
-                    Rectangle rec = {
-                        .x = p_ct->position.x + p_hitbox->boxes[i].x,
-                        .y = p_ct->position.y + p_hitbox->boxes[i].y,
-                        .width = p_hitbox->boxes[i].width,
-                        .height = p_hitbox->boxes[i].height,
-                    };
-                    DrawRectangleLinesEx(rec, 1.5, ORANGE);
-                }
-            }
-            if (p_hurtbox != NULL)
-            {
-                Rectangle rec = {
-                    .x = p_ct->position.x + p_hurtbox->offset.x,
-                    .y = p_ct->position.y + p_hurtbox->offset.y,
-                    .width = p_hurtbox->size.x,
-                    .height = p_hurtbox->size.y,
-                };
-                DrawRectangleLinesEx(rec, 1.5, PURPLE);
-            }
-            CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
-            if (p_cspr != NULL)
-            {
-                const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
-                if (spr.sprite != NULL)
-                {
-                    Vector2 pos = Vector2Add(p_ct->position, spr.offset);
-                    draw_sprite(spr.sprite, pos, p_cspr->flip_x);
-                }
-            }
         }
 
         sc_map_foreach_value(&scene->ent_manager.entities_map[DYNMEM_ENT_TAG], p_ent)
@@ -235,34 +235,14 @@ static void level_scene_render_func(Scene_t* scene)
             unsigned int y = ((p_runner->current_tile) / tilemap.width) * tilemap.tile_size;
             DrawCircle(x+16, y+16, 8, ColorAlpha(BLUE, 0.6));
         }
-        for (size_t i = 0; i < tilemap.n_tiles; ++i)
-        {
-            int x = (i % tilemap.width) * TILE_SIZE;
-            int y = (i / tilemap.width) * TILE_SIZE;
-            sprintf(buffer, "%u", sc_map_size_64v(&tilemap.tiles[i].entities_set));
 
-            if (tilemap.tiles[i].solid > 0)
-            {
-                DrawText(buffer, x, y, 10, WHITE);
-            }
-            else
-            {
-                // Draw water tile
-                DrawText(buffer, x, y, 10, BLACK);
-            }
-        }
-
-        // Draw tile grid
-        for (size_t i = 0; i < tilemap.width; ++i)
-        {
-            int x = (i+1)*TILE_SIZE;
-            DrawLine(x, 0, x, tilemap.height * TILE_SIZE, BLACK);
-        }
-        for (size_t i = 0; i < tilemap.height;++i)
-        {
-            int y = (i+1)*TILE_SIZE;
-            DrawLine(0, y, tilemap.width * TILE_SIZE, y, BLACK);
-        }
+        // Draw Border
+        DrawLine(0, 0, 0, tilemap.height * tilemap.tile_size, BLACK);
+        DrawLine(0, 0, tilemap.width * TILE_SIZE, 0, BLACK);
+        int val = (tilemap.width) * tilemap.tile_size;
+        DrawLine(val, 0, val, tilemap.height * tilemap.tile_size, BLACK);
+        val = (tilemap.height) * tilemap.tile_size;
+        DrawLine(0, val, tilemap.width * TILE_SIZE, val, BLACK);
         EndMode2D();
     EndTextureMode();
 

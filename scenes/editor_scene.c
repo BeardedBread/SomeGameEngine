@@ -98,15 +98,15 @@ static void level_scene_render_func(Scene_t* scene)
     max = Vector2Scale(max, 1.0f/tilemap.tile_size);
     min.x = (int)fmax(0, min.x - 1);
     min.y = (int)fmax(0, min.y - 1);
-    max.x = (int)fmin(tilemap.width-1, max.x + 1);
-    max.y = (int)fmin(tilemap.height-1, max.y + 1);
+    max.x = (int)fmin(tilemap.width, max.x + 1);
+    max.y = (int)fmin(tilemap.height, max.y + 1);
 
     BeginTextureMode(data->game_viewport);
         ClearBackground(WHITE);
         BeginMode2D(data->camera.cam);
-        for (int tile_y = min.y; tile_y <= max.y; tile_y++)
+        for (int tile_y = min.y; tile_y < max.y; tile_y++)
         {
-            for (int tile_x = min.x; tile_x <= max.x; tile_x++)
+            for (int tile_x = min.x; tile_x < max.x; tile_x++)
             {
                 int i = tile_x + tile_y * tilemap.width;
                 int x = tile_x * TILE_SIZE;
@@ -199,14 +199,16 @@ static void level_scene_render_func(Scene_t* scene)
         {
             CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
             CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
-
-            // TODO: Figure out better way to cull this
-            //if (
-            //    p_ct->position.x + p_bbox < min.x * tilemap.tile_size
-            //    || p_ct->position.x + p_bbox->size.x > max.x * tilemap.tile_size
-            //    || p_ct->position.y < min.y * tilemap.tile_size
-            //    || p_ct->position.y + p_bbox->size.y > max.y * tilemap.tile_size
-            //) continue;
+            
+            // Entity culling
+            Vector2 box_size = {0};
+            if (p_bbox != NULL) box_size = p_bbox->size;
+            if (
+                p_ct->position.x + box_size.x < min.x * tilemap.tile_size
+                || p_ct->position.x > max.x * tilemap.tile_size
+                || p_ct->position.y + box_size.y < min.y * tilemap.tile_size
+                || p_ct->position.y > max.y * tilemap.tile_size
+            ) continue;
 
             Color colour;
             switch(p_ent->m_tag)
@@ -346,9 +348,9 @@ static void level_scene_render_func(Scene_t* scene)
             unsigned int y = ((p_runner->current_tile) / tilemap.width) * tilemap.tile_size;
             DrawCircle(x+16, y+16, 8, ColorAlpha(BLUE, 0.6));
         }
-        for (int tile_y = min.y; tile_y <= max.y; tile_y++)
+        for (int tile_y = min.y; tile_y < max.y; tile_y++)
         {
-            for (int tile_x = min.x; tile_x <= max.x; tile_x++)
+            for (int tile_x = min.x; tile_x < max.x; tile_x++)
             {
                 int i = tile_x + tile_y * tilemap.width;
                 int x = tile_x * TILE_SIZE;

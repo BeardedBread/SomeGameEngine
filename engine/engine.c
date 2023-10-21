@@ -119,7 +119,9 @@ inline void update_scene(Scene_t* scene)
 
 inline void render_scene(Scene_t* scene)
 {
+    BeginDrawing();
     scene->render_function(scene);
+    EndDrawing();
 }
 
 inline void do_action(Scene_t* scene, ActionType_t action, bool pressed)

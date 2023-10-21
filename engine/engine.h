@@ -4,6 +4,7 @@
 #include "collisions.h"
 #include "sc/array/sc_array.h"
 #include "assets.h"
+#include "particle_sys.h"
 
 typedef struct Scene Scene_t;
 
@@ -21,6 +22,7 @@ typedef struct GameEngine {
     unsigned int curr_scene;
     Assets_t assets;
     SFXList_t sfx_list;
+    ParticleSystem_t part_sys;
     // Maintain own queue to handle key presses
     struct sc_queue_32 key_buffer;
 } GameEngine_t;

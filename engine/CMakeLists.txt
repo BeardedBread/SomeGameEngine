@@ -8,6 +8,7 @@ add_library(lib_engine STATIC
     rres.c
     mempool.c
     entManager.c
+    particle_sys.c
     ${LIBZSTD_DIR}/lib/libzstd.a
 )
 target_include_directories(lib_engine

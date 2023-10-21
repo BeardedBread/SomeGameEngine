@@ -18,24 +18,27 @@ typedef struct Particle
     Vector2 velocity;
     Vector2 accleration;
     float rotation;
-    bool alive;
+    float size;
     uint32_t timer;
+    bool alive;
 }Particle_t;
+
+typedef void (*particle_update_func_t)(Particle_t* part, void* user_data);
 
 typedef struct EmitterConfig
 {
-    Vector2 launch_range;
-    Vector2 speed_range;
-    Vector2 position;
-    uint32_t particle_lifetime;
-    Vector2 gravity;
-    Vector2 friction_coeff;
+    float launch_range[2];
+    float speed_range[2];
+    uint32_t particle_lifetime[2];
     PartEmitterType_t type;
+    void* user_data;
+    particle_update_func_t update_func;
 }EmitterConfig_t;
 
 typedef struct ParticleEmitter
 {
-    EmitterConfig_t* config;
+    EmitterConfig_t config;
+    Vector2 position;
     Particle_t particles[MAX_PARTICLES];
     uint32_t n_particles;
     uint32_t timer;
@@ -51,8 +54,7 @@ typedef struct IndexList
 
 typedef struct ParticleSystem
 {
-    EmitterConfig_t emitter_configs[MAX_PARTICLE_CONF];
-    ParticleEmitter_t emitters[MAX_PARTICLE_EMITTER];
+    ParticleEmitter_t emitters[MAX_PARTICLE_EMITTER + 1];
     IndexList_t emitter_list[MAX_PARTICLE_EMITTER + 1];
     struct sc_queue_64 free_list;
     uint32_t tail_idx;
@@ -61,7 +63,7 @@ typedef struct ParticleSystem
 }ParticleSystem_t;
 
 void init_particle_system(ParticleSystem_t* system);
-void add_particle_emitter(ParticleSystem_t* system, ParticleEmitter_t* emitter);
+void add_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_emitter);
 void update_particle_system(ParticleSystem_t* system);
 void draw_particle_system(ParticleSystem_t* system);
 void deinit_particle_system(ParticleSystem_t* system);

@@ -52,6 +52,8 @@ void add_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_
         emitter->particles[i].velocity.x = speed * cos(angle);
         emitter->particles[i].velocity.y = speed * sin(angle);
         emitter->particles[i].position = emitter->position;
+        emitter->particles[i].rotation = angle;
+        emitter->particles[i].angular_vel = -10 + 20 * (float)rand() / (float)RAND_MAX;
     }
 }
 void update_particle_system(ParticleSystem_t* system)
@@ -110,11 +112,33 @@ void draw_particle_system(ParticleSystem_t* system)
     {
         ParticleEmitter_t* emitter = system->emitters + emitter_idx;
 
-        for (uint32_t i = 0; i < emitter->n_particles; ++i)
+        Particle_t* part = emitter->particles;
+        for (uint32_t i = 0; i < emitter->n_particles; ++i, ++part)
         {
-            if (emitter->particles[i].alive)
+            if (part->alive)
             {
-                DrawCircleV(emitter->particles[i].position, 5, BLACK);
+                if (emitter->tex == NULL)
+                {
+                    DrawCircleV(part->position, 5, BLACK);
+                }
+                else
+                {
+                    Rectangle source = {
+                        0.0f, 0.0f,
+                        (float)emitter->tex->width, (float)emitter->tex->height
+                    };
+                    
+                    Rectangle dest = {
+                        part->position.x, part->position.y,
+                        (float)emitter->tex->width, (float)emitter->tex->height
+                    };
+                    Vector2 origin = { (float)emitter->tex->width / 2, (float)emitter->tex->height / 2 };
+                    DrawTexturePro(
+                        *emitter->tex,
+                        source, dest, origin,
+                        part->rotation, WHITE
+                    );
+                }
             }
         }
         emitter_idx = system->emitter_list[emitter_idx].next;

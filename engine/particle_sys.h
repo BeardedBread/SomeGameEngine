@@ -13,11 +13,11 @@ typedef enum PartEmitterType
 
 typedef struct Particle
 {
-    Texture2D* tex;
     Vector2 position;
     Vector2 velocity;
     Vector2 accleration;
     float rotation;
+    float angular_vel;
     float size;
     uint32_t timer;
     bool alive;
@@ -41,6 +41,7 @@ typedef struct ParticleEmitter
     Vector2 position;
     Particle_t particles[MAX_PARTICLES];
     uint32_t n_particles;
+    Texture2D* tex;
     uint32_t timer;
     bool one_shot;
     bool finished;

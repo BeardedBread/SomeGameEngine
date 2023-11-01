@@ -10,6 +10,8 @@ void simple_particle_system_update(Particle_t* part, void* user_data)
 {
 
     float delta_time = DELTA_T; // TODO: Will need to think about delta time handling
+    part->rotation += part->angular_vel;
+
     part->velocity =
         Vector2Add(
             part->velocity,
@@ -49,6 +51,7 @@ int main(void)
     static ParticleSystem_t part_sys = {0};
 
     init_particle_system(&part_sys);
+    Texture2D tex = LoadTexture("res/bomb.png");
 
     EmitterConfig_t conf ={
         .launch_range = {0, 360},
@@ -61,6 +64,7 @@ int main(void)
         .config = conf,
         .n_particles = MAX_PARTICLES,
         .one_shot = true,
+        .tex = &tex,
     };
 
     bool key_press = false;
@@ -83,5 +87,7 @@ int main(void)
             draw_particle_system(&part_sys);
         EndDrawing();
     } 
+    UnloadTexture(tex);
     CloseWindow();
+    deinit_particle_system(&part_sys);
 }

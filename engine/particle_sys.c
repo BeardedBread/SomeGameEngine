@@ -54,6 +54,8 @@ void add_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_
         emitter->particles[i].position = emitter->position;
         emitter->particles[i].rotation = angle;
         emitter->particles[i].angular_vel = -10 + 20 * (float)rand() / (float)RAND_MAX;
+        emitter->particles[i].size = 10 + 20 * (float)rand() / (float)RAND_MAX;
+;
     }
 }
 void update_particle_system(ParticleSystem_t* system)
@@ -117,9 +119,19 @@ void draw_particle_system(ParticleSystem_t* system)
         {
             if (part->alive)
             {
-                if (emitter->tex == NULL)
+                if (emitter->tex == NULL || emitter->tex->width == 0)
                 {
-                    DrawCircleV(part->position, 5, BLACK);
+                    Rectangle rect = {
+                        .x = part->position.x,
+                        .y = part->position.y,
+                        .width = part->size,
+                        .height = part->size
+                    };
+                    Vector2 origin = (Vector2){
+                        part->size / 2, 
+                        part->size / 2
+                    };
+                    DrawRectanglePro(rect, origin, part->rotation, BLACK);
                 }
                 else
                 {

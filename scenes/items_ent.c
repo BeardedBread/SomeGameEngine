@@ -2,7 +2,7 @@
 #include "constants.h"
 #include "raymath.h"
 
-static SpriteRenderInfo_t item_sprite_map[18] = {0};
+static SpriteRenderInfo_t item_sprite_map[19] = {0};
 
 bool init_item_creation(Assets_t* assets)
 {
@@ -27,6 +27,7 @@ bool init_item_creation(Assets_t* assets)
     item_sprite_map[16].sprite = get_sprite(assets, "m_b_crate");
     item_sprite_map[17].sprite = get_sprite(assets, "explode");
     item_sprite_map[17].offset = (Vector2){-12, -12};
+    item_sprite_map[18].sprite = get_sprite(assets, "chest");
     return true;
 }
 
@@ -222,6 +223,11 @@ Entity_t* create_chest(EntityManager_t* ent_manager, Assets_t* assets)
     p_hurtbox->size = p_bbox->size;
     p_hurtbox->def = 4;
     p_hurtbox->damage_src = -1;
+
+    CSprite_t* p_cspr = add_component(p_chest, CSPRITE_T);
+    p_cspr->sprites = item_sprite_map;
+    p_cspr->current_idx = 18;
+
 
     return p_chest;
 }

@@ -4,6 +4,7 @@
 #include "EC.h"
 #include "raylib.h"
 #include "rres.h"
+#include "particle_sys.h"
 
 typedef struct Assets
 {
@@ -12,6 +13,7 @@ typedef struct Assets
     struct sc_map_s64 m_fonts;
     struct sc_map_s64 m_sprites;
     struct sc_map_s64 m_levelpacks;
+    struct sc_map_s64 m_emitters;
 }Assets_t;
 
 typedef struct LevelTileInfo
@@ -57,6 +59,7 @@ Texture2D* add_texture_rres(Assets_t* assets, const char* name, const char* file
 LevelPack_t* add_level_pack_rres(Assets_t* assets, const char* name, const char* filename, const RresFileInfo_t* rres_file);
 
 Sprite_t* add_sprite(Assets_t* assets, const char* name, Texture2D* texture);
+ParticleEmitter_t* add_part_emitter(Assets_t* assets, const char* name, Sprite_t* sprite);
 
 Texture2D* get_texture(Assets_t* assets, const char* name);
 Sprite_t* get_sprite(Assets_t* assets, const char* name);

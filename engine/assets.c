@@ -8,7 +8,7 @@
 #include "zstd.h"
 #include <stdio.h>
 
-uint8_t n_loaded[5] = {0};
+uint8_t n_loaded[6] = {0};
 
 // Hard limit number of 
 typedef struct TextureData
@@ -36,12 +36,18 @@ typedef struct LevelPackData
     LevelPack_t pack;
     char name[MAX_NAME_LEN];
 }LevelPackData_t;
+typedef struct PartEmitterData
+{
+    ParticleEmitter_t emitter;
+    char name[MAX_NAME_LEN];
+}ParticleEmitterData_t;
 
 static TextureData_t textures[MAX_TEXTURES];
 static FontData_t fonts[MAX_FONTS];
 static SoundData_t sfx[MAX_SOUNDS];
 static SpriteData_t sprites[MAX_SPRITES];
 static LevelPackData_t levelpacks[MAX_LEVEL_PACK];
+static ParticleEmitterData_t emitters[MAX_PARTICLE_EMITTER];
 
 #define DECOMPRESSOR_INBUF_LEN 4096
 #define DECOMPRESSOR_OUTBUF_LEN 4096
@@ -106,7 +112,7 @@ Sprite_t* add_sprite(Assets_t* assets, const char* name, Texture2D* texture)
 {
     uint8_t spr_idx = n_loaded[1];
     assert(spr_idx < MAX_SPRITES);
-    memset(sprites + spr_idx, 0, sizeof(Sprite_t));
+    memset(sprites + spr_idx, 0, sizeof(SpriteData_t));
     sprites[spr_idx].sprite.texture = texture;
     strncpy(sprites[spr_idx].name, name, MAX_NAME_LEN);
     sc_map_put_s64(&assets->m_sprites, sprites[spr_idx].name, spr_idx);
@@ -134,6 +140,18 @@ Font* add_font(Assets_t* assets, const char* name, const char* path)
     sc_map_put_s64(&assets->m_fonts, fonts[fnt_idx].name, fnt_idx);
     n_loaded[3]++;
     return &fonts[fnt_idx].font;
+}
+
+ParticleEmitter_t* add_part_emitter(Assets_t* assets, const char* name, Sprite_t* sprite)
+{
+    uint8_t emitter_idx = n_loaded[5];
+    assert(emitter_idx < MAX_PARTICLE_EMITTER);
+    memset(emitters + emitter_idx, 0, sizeof(ParticleEmitterData_t));
+    emitters[emitter_idx].emitter.spr = sprite;
+    strncpy(emitters[emitter_idx].name, name, MAX_NAME_LEN);
+    sc_map_put_s64(&assets->m_emitters, emitters[emitter_idx].name, emitter_idx);
+    n_loaded[5]++;
+    return &emitters[emitter_idx].emitter;
 }
 
 LevelPack_t* add_level_pack(Assets_t* assets, const char* name, const char* path)
@@ -164,6 +182,7 @@ LevelPack_t* add_level_pack(Assets_t* assets, const char* name, const char* path
 
     return &levelpacks[pack_idx].pack;
 }
+
 
 static LevelPack_t* add_level_pack_zst(Assets_t* assets, const char* name, FILE* file)
 {
@@ -338,6 +357,7 @@ void init_assets(Assets_t* assets)
     sc_map_init_s64(&assets->m_textures, MAX_TEXTURES, 0);
     sc_map_init_s64(&assets->m_sounds, MAX_SOUNDS, 0);
     sc_map_init_s64(&assets->m_levelpacks, MAX_LEVEL_PACK, 0);
+    sc_map_init_s64(&assets->m_emitters, MAX_PARTICLE_EMITTER, 0);
     level_decompressor.ctx = ZSTD_createDCtx();
 }
 
@@ -365,6 +385,7 @@ void free_all_assets(Assets_t* assets)
     sc_map_clear_s64(&assets->m_sounds);
     sc_map_clear_s64(&assets->m_sprites);
     sc_map_clear_s64(&assets->m_levelpacks);
+    sc_map_clear_s64(&assets->m_emitters);
     memset(n_loaded, 0, sizeof(n_loaded));
 }
 
@@ -376,6 +397,7 @@ void term_assets(Assets_t* assets)
     sc_map_term_s64(&assets->m_sounds);
     sc_map_term_s64(&assets->m_sprites);
     sc_map_term_s64(&assets->m_levelpacks);
+    sc_map_term_s64(&assets->m_emitters);
     ZSTD_freeDCtx(level_decompressor.ctx);
 }
 
@@ -398,6 +420,17 @@ Sprite_t* get_sprite(Assets_t* assets, const char* name)
     }
     return NULL;
 }
+
+ParticleEmitter_t* get_emitter(Assets_t* assets, const char* name)
+{
+    uint8_t emitter_idx = sc_map_get_s64(&assets->m_emitters, name);
+    if (sc_map_found(&assets->m_emitters))
+    {
+        return &emitters[emitter_idx].emitter;
+    }
+    return NULL;
+}
+
 
 Sound* get_sound(Assets_t* assets, const char* name)
 {

@@ -1,6 +1,6 @@
 set(PROJECT_NAME HATPC_remake)
 set(CMAKE_C_COMPILER clang)
-set(CMAKE_C_FLAGS "-Wall")
+set(CMAKE_C_FLAGS "-Wall -Wextra")
 cmake_minimum_required(VERSION 3.22.1)
 project(${PROJECT_NAME} C)
 set(CMAKE_C_STANDARD 99)

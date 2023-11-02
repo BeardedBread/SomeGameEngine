@@ -9,7 +9,6 @@ add_library(lib_engine STATIC
     mempool.c
     entManager.c
     particle_sys.c
-    ${LIBZSTD_DIR}/lib/libzstd.a
 )
 target_include_directories(lib_engine
     PRIVATE
@@ -21,6 +20,7 @@ target_include_directories(lib_engine
 target_link_directories(lib_engine
     PUBLIC
     ${RAYLIB_DIR}/lib
+    ${LIBZSTD_DIR}/lib
 )
 target_link_libraries(lib_engine
     PUBLIC

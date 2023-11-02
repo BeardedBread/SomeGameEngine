@@ -64,7 +64,7 @@ Sound* get_sound(Assets_t* assets, const char* name);
 Font* get_font(Assets_t* assets, const char* name);
 LevelPack_t* get_level_pack(Assets_t* assets, const char* name);
 
-void draw_sprite(Sprite_t* spr, Vector2 pos, bool flip_x);
+void draw_sprite(Sprite_t* spr, Vector2 pos, float rotation, bool flip_x);
 
 typedef struct SFX
 {

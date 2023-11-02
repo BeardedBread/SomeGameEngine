@@ -183,6 +183,7 @@ typedef struct Sprite {
     Texture2D* texture;
     Vector2 frame_size;
     Vector2 origin;
+    Vector2 anchor;
     int frame_count;
     int current_frame;
     int elapsed;

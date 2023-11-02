@@ -52,6 +52,17 @@ int main(void)
 
     init_particle_system(&part_sys);
     Texture2D tex = LoadTexture("res/bomb.png");
+    Sprite_t spr = {
+        .texture = &tex,
+        .frame_size = (Vector2){tex.width, tex.height},
+        .origin = (Vector2){0, 0},
+        .anchor = (Vector2){tex.width / 2, tex.height / 2},
+        .frame_count = 0,
+        .current_frame = 0,
+        .elapsed = 0,
+        .speed = 0,
+        .name = "test_spr"
+    };
 
     EmitterConfig_t conf ={
         .launch_range = {0, 360},
@@ -64,7 +75,7 @@ int main(void)
         .config = conf,
         .n_particles = MAX_PARTICLES,
         .one_shot = true,
-        .tex = &tex,
+        .spr = &spr,
     };
 
     bool key_press = false;

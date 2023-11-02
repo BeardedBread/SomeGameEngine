@@ -429,7 +429,7 @@ LevelPack_t* get_level_pack(Assets_t* assets, const char* name)
     return NULL;
 }
 
-void draw_sprite(Sprite_t* spr, Vector2 pos, bool flip_x)
+void draw_sprite(Sprite_t* spr, Vector2 pos, float rotation, bool flip_x)
 {
     Rectangle rec = {
         spr->origin.x + spr->frame_size.x * spr->current_frame,
@@ -437,5 +437,18 @@ void draw_sprite(Sprite_t* spr, Vector2 pos, bool flip_x)
         spr->frame_size.x * (flip_x ? -1:1),
         spr->frame_size.y
     };
-    DrawTextureRec(*spr->texture, rec, pos, WHITE);
+    //DrawTextureRec(*spr->texture, rec, pos, WHITE);
+    Rectangle dest = {
+        .x = pos.x - spr->anchor.x,
+        .y = pos.y - spr->anchor.y,
+        .width = spr->frame_size.x,
+        .height = spr->frame_size.y
+    };
+    DrawTexturePro(
+        *spr->texture,
+        rec,
+        dest,
+        spr->anchor,
+        rotation, WHITE
+    );
 }

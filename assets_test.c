@@ -43,8 +43,8 @@ int main(void)
             DrawTextEx(*fnt, "Press C to play a sound", (Vector2){64, 64}, 24, 1, RED);
 
             // Draw the static Sprite and animated Sprite
-            draw_sprite(spr, (Vector2){64,128}, false);
-            draw_sprite(spr2, (Vector2){64,180}, true);
+            draw_sprite(spr, (Vector2){64,128}, 0.0f, false);
+            draw_sprite(spr2, (Vector2){64,180}, 0.0f, true);
         EndDrawing();
 
         // Update the animated Sprite

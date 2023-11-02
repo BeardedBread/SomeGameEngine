@@ -3,6 +3,7 @@
 #include "raylib.h"
 #include "engine_conf.h"
 #include "sc_queue.h"
+#include "assets.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -41,7 +42,7 @@ typedef struct ParticleEmitter
     Vector2 position;
     Particle_t particles[MAX_PARTICLES];
     uint32_t n_particles;
-    Texture2D* tex;
+    Sprite_t* spr;
     uint32_t timer;
     bool one_shot;
     bool finished;

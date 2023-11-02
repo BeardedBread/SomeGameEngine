@@ -131,7 +131,7 @@ static void render_regular_game_scene(Scene_t* scene)
 
                 if (data->tile_sprites[tilemap.tiles[i].tile_type] != NULL)
                 {
-                    draw_sprite(data->tile_sprites[tilemap.tiles[i].tile_type], (Vector2){x,y}, false);
+                    draw_sprite(data->tile_sprites[tilemap.tiles[i].tile_type], (Vector2){x,y}, 0.0f, false);
                 }
                 else if (tilemap.tiles[i].tile_type == SOLID_TILE)
                 {
@@ -223,7 +223,7 @@ static void render_regular_game_scene(Scene_t* scene)
                 if (spr.sprite != NULL)
                 {
                     Vector2 pos = Vector2Add(p_ct->position, spr.offset);
-                    draw_sprite(spr.sprite, pos, p_cspr->flip_x);
+                    draw_sprite(spr.sprite, pos, 0.0f, p_cspr->flip_x);
                 }
                 continue;
             }

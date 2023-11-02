@@ -119,7 +119,7 @@ void draw_particle_system(ParticleSystem_t* system)
         {
             if (part->alive)
             {
-                if (emitter->tex == NULL || emitter->tex->width == 0)
+                if (emitter->spr->texture == NULL || emitter->spr->texture->width == 0)
                 {
                     Rectangle rect = {
                         .x = part->position.x,
@@ -135,21 +135,7 @@ void draw_particle_system(ParticleSystem_t* system)
                 }
                 else
                 {
-                    Rectangle source = {
-                        0.0f, 0.0f,
-                        (float)emitter->tex->width, (float)emitter->tex->height
-                    };
-                    
-                    Rectangle dest = {
-                        part->position.x, part->position.y,
-                        (float)emitter->tex->width, (float)emitter->tex->height
-                    };
-                    Vector2 origin = { (float)emitter->tex->width / 2, (float)emitter->tex->height / 2 };
-                    DrawTexturePro(
-                        *emitter->tex,
-                        source, dest, origin,
-                        part->rotation, WHITE
-                    );
+                    draw_sprite(emitter->spr, part->position, part->rotation, false);
                 }
             }
         }

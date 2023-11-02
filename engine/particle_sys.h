@@ -3,7 +3,7 @@
 #include "raylib.h"
 #include "engine_conf.h"
 #include "sc_queue.h"
-#include "assets.h"
+#include "EC.h"
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -32,21 +32,21 @@ typedef struct EmitterConfig
     float speed_range[2];
     uint32_t particle_lifetime[2];
     PartEmitterType_t type;
-    void* user_data;
-    particle_update_func_t update_func;
+    Sprite_t* spr;
+    bool one_shot;
 }EmitterConfig_t;
 
 typedef struct ParticleEmitter
 {
-    EmitterConfig_t config;
+    const EmitterConfig_t* config;
     Vector2 position;
     Particle_t particles[MAX_PARTICLES];
     uint32_t n_particles;
-    Sprite_t* spr;
     uint32_t timer;
-    bool one_shot;
     bool finished;
     bool active;
+    void* user_data;
+    particle_update_func_t update_func;
 }ParticleEmitter_t;
 
 typedef struct IndexList
@@ -56,8 +56,8 @@ typedef struct IndexList
 
 typedef struct ParticleSystem
 {
-    ParticleEmitter_t emitters[MAX_PARTICLE_EMITTER + 1];
-    IndexList_t emitter_list[MAX_PARTICLE_EMITTER + 1];
+    ParticleEmitter_t emitters[MAX_ACTIVE_PARTICLE_EMITTER + 1];
+    IndexList_t emitter_list[MAX_ACTIVE_PARTICLE_EMITTER + 1];
     struct sc_queue_64 free_list;
     uint32_t tail_idx;
     uint32_t n_configs;
@@ -65,7 +65,7 @@ typedef struct ParticleSystem
 }ParticleSystem_t;
 
 void init_particle_system(ParticleSystem_t* system);
-void add_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_emitter);
+void play_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_emitter);
 void update_particle_system(ParticleSystem_t* system);
 void draw_particle_system(ParticleSystem_t* system);
 void deinit_particle_system(ParticleSystem_t* system);

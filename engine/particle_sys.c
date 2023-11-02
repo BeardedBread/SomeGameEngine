@@ -1,4 +1,5 @@
 #include "particle_sys.h"
+#include "assets.h"
 #include <string.h>
 #include <stdlib.h>
 #include <math.h>
@@ -10,14 +11,16 @@ void init_particle_system(ParticleSystem_t* system)
 {
     memset(system, 0, sizeof(ParticleSystem_t));
     sc_queue_init(&system->free_list);
-    for ( uint32_t i = 1; i <= MAX_PARTICLE_EMITTER; ++i)
+    for ( uint32_t i = 1; i <= MAX_ACTIVE_PARTICLE_EMITTER; ++i)
     {
         sc_queue_add_last(&system->free_list, i);
     }
     system->tail_idx = 0;
 }
-void add_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_emitter)
+void play_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_emitter)
 {
+    if (in_emitter == NULL) return;
+
     if (sc_queue_empty(&system->free_list)) return;
     uint32_t idx = sc_queue_del_first(&system->free_list);
     system->emitter_list[system->tail_idx].next = idx;
@@ -33,24 +36,23 @@ void add_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_
     // Generate particles based on type
     for (uint32_t i = 0; i < emitter->n_particles; ++i)
     {
-        uint32_t lifetime = (emitter->config.particle_lifetime[1] - emitter->config.particle_lifetime[0]);
-        emitter->particles[i].timer = emitter->config.particle_lifetime[0];
+        uint32_t lifetime = (emitter->config->particle_lifetime[1] - emitter->config->particle_lifetime[0]);
+        emitter->particles[i].timer = emitter->config->particle_lifetime[0];
         emitter->particles[i].timer += rand() % lifetime;
         emitter->particles[i].alive = true;
 
-        float angle = emitter->config.launch_range[1] - emitter->config.launch_range[0];
+        float angle = emitter->config->launch_range[1] - emitter->config->launch_range[0];
         angle *= (float)rand() / (float)RAND_MAX;
-        angle += emitter->config.launch_range[0];
+        angle += emitter->config->launch_range[0];
         if(angle > 360) angle -= 360;
         if(angle < -360) angle += 360;
-        angle *= PI / 180;
 
-        float speed = emitter->config.speed_range[1] - emitter->config.speed_range[0];
+        float speed = emitter->config->speed_range[1] - emitter->config->speed_range[0];
         speed *= (float)rand() / (float)RAND_MAX;
-        speed += emitter->config.speed_range[0];
+        speed += emitter->config->speed_range[0];
 
-        emitter->particles[i].velocity.x = speed * cos(angle);
-        emitter->particles[i].velocity.y = speed * sin(angle);
+        emitter->particles[i].velocity.x = speed * cos(angle * PI / 180);
+        emitter->particles[i].velocity.y = speed * sin(angle * PI / 180);
         emitter->particles[i].position = emitter->position;
         emitter->particles[i].rotation = angle;
         emitter->particles[i].angular_vel = -10 + 20 * (float)rand() / (float)RAND_MAX;
@@ -72,9 +74,9 @@ void update_particle_system(ParticleSystem_t* system)
         {
             if (emitter->particles[i].alive)
             {
-                if (emitter->config.update_func != NULL)
+                if (emitter->update_func != NULL)
                 {
-                    emitter->config.update_func(emitter->particles + i, emitter->config.user_data);
+                    emitter->update_func(emitter->particles + i, emitter->user_data);
                 }
 
                 // Lifetime update
@@ -119,7 +121,7 @@ void draw_particle_system(ParticleSystem_t* system)
         {
             if (part->alive)
             {
-                if (emitter->spr->texture == NULL || emitter->spr->texture->width == 0)
+                if (emitter->config->spr == NULL)
                 {
                     Rectangle rect = {
                         .x = part->position.x,
@@ -135,7 +137,7 @@ void draw_particle_system(ParticleSystem_t* system)
                 }
                 else
                 {
-                    draw_sprite(emitter->spr, part->position, part->rotation, false);
+                    draw_sprite(emitter->config->spr, part->position, part->rotation, false);
                 }
             }
         }

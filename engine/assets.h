@@ -13,7 +13,7 @@ typedef struct Assets
     struct sc_map_s64 m_fonts;
     struct sc_map_s64 m_sprites;
     struct sc_map_s64 m_levelpacks;
-    struct sc_map_s64 m_emitters;
+    struct sc_map_s64 m_emitter_confs;
 }Assets_t;
 
 typedef struct LevelTileInfo
@@ -59,10 +59,11 @@ Texture2D* add_texture_rres(Assets_t* assets, const char* name, const char* file
 LevelPack_t* add_level_pack_rres(Assets_t* assets, const char* name, const char* filename, const RresFileInfo_t* rres_file);
 
 Sprite_t* add_sprite(Assets_t* assets, const char* name, Texture2D* texture);
-ParticleEmitter_t* add_part_emitter(Assets_t* assets, const char* name, Sprite_t* sprite);
+EmitterConfig_t* add_emitter_conf(Assets_t* assets, const char* name, Sprite_t* sprite);
 
 Texture2D* get_texture(Assets_t* assets, const char* name);
 Sprite_t* get_sprite(Assets_t* assets, const char* name);
+EmitterConfig_t* get_emitter_conf(Assets_t* assets, const char* name);
 Sound* get_sound(Assets_t* assets, const char* name);
 Font* get_font(Assets_t* assets, const char* name);
 LevelPack_t* get_level_pack(Assets_t* assets, const char* name);

@@ -65,17 +65,17 @@ int main(void)
     };
 
     EmitterConfig_t conf ={
+        .one_shot = true,
         .launch_range = {0, 360},
         .speed_range = {400, 2000},
         .particle_lifetime = {30, 110},
-        .update_func = &simple_particle_system_update
+        .spr = (tex.width == 0) ? NULL : &spr,
     };
 
     ParticleEmitter_t emitter = {
-        .config = conf,
+        .config = &conf,
         .n_particles = MAX_PARTICLES,
-        .one_shot = true,
-        .spr = &spr,
+        .update_func = &simple_particle_system_update
     };
 
     bool key_press = false;
@@ -88,7 +88,7 @@ int main(void)
         else if (key_press && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {
             emitter.position = GetMousePosition();
-            add_particle_emitter(&part_sys, &emitter);
+            play_particle_emitter(&part_sys, &emitter);
             key_press = false;
         }
         update_particle_system(&part_sys);

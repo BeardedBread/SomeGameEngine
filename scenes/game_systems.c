@@ -1,9 +1,12 @@
 #include "game_systems.h"
+#include "particle_sys.h"
 #include "ent_impl.h"
 #include "AABB.h"
 #include "EC.h"
 #include "constants.h"
 #include <stdio.h>
+
+void simple_particle_system_update(Particle_t* part, void* user_data);
 
 static const Vector2 GRAVITY = {0, GRAV_ACCEL};
 static const Vector2 UPTHRUST = {0, -GRAV_ACCEL * 1.1};
@@ -1627,6 +1630,19 @@ void container_destroy_system(Scene_t* scene)
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         if (!p_ent->m_alive)
         {
+            if (p_ent->m_tag == CRATES_ENT_TAG)
+            {
+                const CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
+                //const CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+                ParticleEmitter_t emitter = {
+                    .config = get_emitter_conf(&scene->engine->assets, "pe_wood"),
+                    .position = p_ctransform->position,
+                    .n_particles = 3,
+                    .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+                    .update_func = &simple_particle_system_update,
+                };
+                play_particle_emitter(&scene->part_sys, &emitter);
+            }
 
             Entity_t* dmg_src = NULL;
             CHurtbox_t* p_hurtbox = get_component(p_ent, CHURTBOX_T);
@@ -1927,3 +1943,45 @@ void level_end_detection_system(Scene_t* scene)
 
     }
 }
+
+void simple_particle_system_update(Particle_t* part, void* user_data)
+{
+    LevelSceneData_t* lvl_data = (LevelSceneData_t*)user_data;
+    TileGrid_t tilemap = lvl_data->tilemap;
+
+    float delta_time = DELTA_T; // TODO: Will need to think about delta time handling
+    part->velocity =
+        Vector2Add(
+            part->velocity,
+            Vector2Scale(GRAVITY, delta_time)
+        );
+
+    float mag = Vector2Length(part->velocity);
+    part->velocity = Vector2Scale(
+        Vector2Normalize(part->velocity),
+        (mag > PLAYER_MAX_SPEED)? PLAYER_MAX_SPEED:mag
+    );
+    // 3 dp precision
+    if (fabs(part->velocity.x) < 1e-3) part->velocity.x = 0;
+    if (fabs(part->velocity.y) < 1e-3) part->velocity.y = 0;
+
+    part->position = Vector2Add(
+        part->position,
+        Vector2Scale(part->velocity, delta_time)
+    );
+
+    // Level boundary collision
+    unsigned int level_width = tilemap.width * TILE_SIZE;
+    unsigned int level_height = tilemap.height * TILE_SIZE;
+    {
+
+        if(
+            part->position.x < 0 || part->position.x + part->size > level_width
+            || part->position.y < 0 || part->position.y + part->size > level_height
+        )
+        {
+            part->timer = 0;
+        }
+    }
+}
+

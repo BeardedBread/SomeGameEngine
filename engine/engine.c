@@ -94,6 +94,7 @@ void init_scene(Scene_t* scene, system_func_t render_func, action_func_t action_
     sc_map_init_64(&scene->action_map, 32, 0);
     sc_array_init(&scene->systems);
     init_entity_manager(&scene->ent_manager);
+    init_particle_system(&scene->part_sys);
 
     //scene->scene_type = scene_type;
     scene->render_function = render_func;
@@ -106,6 +107,7 @@ void free_scene(Scene_t* scene)
     sc_map_term_64(&scene->action_map);
     sc_array_term(&scene->systems);
     free_entity_manager(&scene->ent_manager);
+    deinit_particle_system(&scene->part_sys);
 }
 
 inline void update_scene(Scene_t* scene)
@@ -115,6 +117,7 @@ inline void update_scene(Scene_t* scene)
     {
         sys(scene);
     }
+    update_particle_system(&scene->part_sys);
 }
 
 inline void render_scene(Scene_t* scene)

@@ -319,6 +319,7 @@ static void render_regular_game_scene(Scene_t* scene)
             unsigned int y = ((p_runner->current_tile) / tilemap.width) * tilemap.tile_size;
             DrawCircle(x+16, y+16, 8, ColorAlpha(BLUE, 0.6));
         }
+        draw_particle_system(&scene->part_sys);
 
         // Draw Border
         DrawLine(0, 0, 0, tilemap.height * tilemap.tile_size, BLACK);

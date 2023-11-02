@@ -14,7 +14,7 @@ static GameEngine_t engine =
     .max_scenes = 1,
     .curr_scene = 0,
     .assets = {0},
-    .sfx_list = {0}
+    .sfx_list = {0},
 };
 
 void update_loop(void)
@@ -34,7 +34,6 @@ int main(void)
     SetTargetFPS(60);
     InitAudioDevice();
     init_engine(&engine);
-
 
 #ifndef NDEBUG
     load_from_infofile("res/assets.info.raw", &engine.assets);
@@ -56,6 +55,7 @@ int main(void)
     load_sfx(&engine, "snd_bland", BOULDER_LAND_SFX);
     load_sfx(&engine, "snd_bubble", BUBBLE_SFX);
 
+
     LevelScene_t scene;
     scene.scene.engine = &engine;
     init_sandbox_scene(&scene);
@@ -67,6 +67,15 @@ int main(void)
     scene.data.tile_sprites[SPIKES + TILE_180ROT] = get_sprite(&engine.assets, "u_spikes");
     scenes[0] = &scene.scene;
     change_scene(&engine, 0);
+
+    EmitterConfig_t* conf = add_emitter_conf(&engine.assets, "pe_wood", get_sprite(&engine.assets, "bomb"));
+    conf->launch_range[0] = 240;
+    conf->launch_range[1] = 300;
+    conf->one_shot = true;
+    conf->speed_range[0] = 200;
+    conf->speed_range[1] = 300;
+    conf->particle_lifetime[0] = 30;
+    conf->particle_lifetime[1] = 110;
 
     #if defined(PLATFORM_WEB)
         puts("Setting emscripten main loop");

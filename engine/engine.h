@@ -22,7 +22,6 @@ typedef struct GameEngine {
     unsigned int curr_scene;
     Assets_t assets;
     SFXList_t sfx_list;
-    ParticleSystem_t part_sys;
     // Maintain own queue to handle key presses
     struct sc_queue_32 key_buffer;
 } GameEngine_t;
@@ -50,6 +49,7 @@ struct Scene {
     EntityManager_t ent_manager;
     //SceneType_t scene_type;
     SceneState_t state;
+    ParticleSystem_t part_sys;
     GameEngine_t *engine;
 };
 

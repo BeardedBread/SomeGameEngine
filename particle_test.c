@@ -58,7 +58,6 @@ int main(void)
         .origin = (Vector2){0, 0},
         .anchor = (Vector2){tex.width / 2, tex.height / 2},
         .frame_count = 0,
-        .current_frame = 0,
         .elapsed = 0,
         .speed = 0,
         .name = "test_spr"

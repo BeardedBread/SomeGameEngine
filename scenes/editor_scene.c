@@ -225,7 +225,7 @@ static void render_editor_game_scene(Scene_t* scene)
                 uint8_t tile_sprite_idx = tilemap.tiles[i].tile_type + tilemap.tiles[i].rotation;
                 if (data->tile_sprites[tile_sprite_idx] != NULL)
                 {
-                    draw_sprite(data->tile_sprites[tile_sprite_idx], (Vector2){x,y}, 0.0f, false);
+                    draw_sprite(data->tile_sprites[tile_sprite_idx], 0, (Vector2){x,y}, 0.0f, false);
                 }
                 else if (tilemap.tiles[i].tile_type == SOLID_TILE)
                 {
@@ -429,7 +429,7 @@ static void render_editor_game_scene(Scene_t* scene)
                 if (spr.sprite != NULL)
                 {
                     Vector2 pos = Vector2Add(p_ct->position, spr.offset);
-                    draw_sprite(spr.sprite, pos, 0.0f, p_cspr->flip_x);
+                    draw_sprite(spr.sprite, p_cspr->current_frame, pos, 0.0f, p_cspr->flip_x);
                 }
             }
         }

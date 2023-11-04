@@ -185,7 +185,6 @@ typedef struct Sprite {
     Vector2 origin;
     Vector2 anchor;
     int frame_count;
-    int current_frame;
     int elapsed;
     int speed;
     char* name;
@@ -205,6 +204,7 @@ typedef struct _CSprite_t {
     bool flip_x;
     bool flip_y;
     bool pause;
+    int current_frame;
 } CSprite_t;
 
 typedef struct _CMoveable_t {

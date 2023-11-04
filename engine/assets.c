@@ -461,10 +461,10 @@ LevelPack_t* get_level_pack(Assets_t* assets, const char* name)
     return NULL;
 }
 
-void draw_sprite(Sprite_t* spr, Vector2 pos, float rotation, bool flip_x)
+void draw_sprite(Sprite_t* spr, int frame_num, Vector2 pos, float rotation, bool flip_x)
 {
     Rectangle rec = {
-        spr->origin.x + spr->frame_size.x * spr->current_frame,
+        spr->origin.x + spr->frame_size.x * frame_num,
         spr->origin.y,
         spr->frame_size.x * (flip_x ? -1:1),
         spr->frame_size.y

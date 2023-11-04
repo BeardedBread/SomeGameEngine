@@ -137,7 +137,7 @@ void draw_particle_system(ParticleSystem_t* system)
                 }
                 else
                 {
-                    draw_sprite(emitter->spr, part->position, part->rotation, false);
+                    draw_sprite(emitter->spr, 0, part->position, part->rotation, false);
                 }
             }
         }

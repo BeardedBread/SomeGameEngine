@@ -31,6 +31,7 @@ int main(void)
     add_font(&assets, "testfont", "res/test_font.ttf");
     Font* fnt = get_font(&assets, "testfont");
 
+    int current_frame = 0;
     while(!WindowShouldClose())
     {
         if (IsKeyReleased(KEY_C))
@@ -43,16 +44,16 @@ int main(void)
             DrawTextEx(*fnt, "Press C to play a sound", (Vector2){64, 64}, 24, 1, RED);
 
             // Draw the static Sprite and animated Sprite
-            draw_sprite(spr, (Vector2){64,128}, 0.0f, false);
-            draw_sprite(spr2, (Vector2){64,180}, 0.0f, true);
+            draw_sprite(spr, 0, (Vector2){64,128}, 0.0f, false);
+            draw_sprite(spr2, current_frame, (Vector2){64,180}, 0.0f, true);
         EndDrawing();
 
         // Update the animated Sprite
         spr2->elapsed++;
         if (spr2->elapsed == spr2->speed)
         {
-            spr2->current_frame++;
-            spr2->current_frame %= spr2->frame_count;
+            current_frame++;
+            current_frame %= spr2->frame_count;
             spr2->elapsed = 0;
         }
     } 

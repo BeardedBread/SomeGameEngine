@@ -1898,14 +1898,14 @@ void sprite_animation_system(Scene_t* scene)
         SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
         if (spr.sprite == NULL) continue;
 
-        if (reset) spr.sprite->current_frame = 0;
+        if (reset) p_cspr->current_frame = 0;
 
         // Animate it (handle frame count)
         spr.sprite->elapsed++;
         if (spr.sprite->elapsed == spr.sprite->speed)
         {
-            spr.sprite->current_frame++;
-            spr.sprite->current_frame %= spr.sprite->frame_count;
+            p_cspr->current_frame++;
+            p_cspr->current_frame %= spr.sprite->frame_count;
             spr.sprite->elapsed = 0;
         }
     }

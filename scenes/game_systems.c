@@ -29,6 +29,50 @@ static inline unsigned int get_tile_idx(int x, int y, unsigned int tilemap_width
     return tile_y * tilemap_width + tile_x;
 }
 
+static inline void destroy_tile(LevelSceneData_t* lvl_data, unsigned int tile_idx)
+{
+    Scene_t* scene = &CONTAINER_OF(lvl_data, LevelScene_t, data)->scene;
+    TileGrid_t tilemap = lvl_data->tilemap;
+
+    Sprite_t* spr = NULL;
+    switch (tilemap.tiles[tile_idx].tile_type)
+    {
+        case LADDER:
+            spr = get_sprite(&scene->engine->assets, "p_ladder");
+        break;
+        case ONEWAY_TILE:
+            spr = get_sprite(&scene->engine->assets, "p_wood");
+        break;
+        case SPIKES:
+            spr = get_sprite(&scene->engine->assets, "p_spike");
+        break;
+        default:
+        break;
+    }
+
+
+    if (spr != NULL)
+    {
+        ParticleEmitter_t emitter = {
+            .spr = spr,
+            .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
+            .position = {
+                .x = tile_idx % tilemap.width * tilemap.tile_size + tilemap.tile_size / 2,
+                .y = tile_idx / tilemap.width * tilemap.tile_size + tilemap.tile_size / 2,
+            },
+            .n_particles = 5,
+            .user_data = lvl_data,
+            .update_func = &simple_particle_system_update,
+        };
+        play_particle_emitter(&scene->part_sys, &emitter);
+    }
+
+    tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
+    tilemap.tiles[tile_idx].solid = NOT_SOLID;
+    tilemap.tiles[tile_idx].moveable = true;
+
+}
+
 // ------------------------- Collision functions ------------------------------------
 // Do not subtract one for the size for any collision check, just pass normally. The extra one is important for AABB test
 
@@ -212,8 +256,22 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
     }
     else if (p_ent->m_tag == CRATES_ENT_TAG)
     {
+        const CContainer_t* p_container = get_component(p_ent, CCONTAINER_T);
         const CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
         //const CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+        ParticleEmitter_t emitter = {
+            .spr = get_sprite(&scene->engine->assets, (p_container->material == WOODEN_CONTAINER) ? "p_wood" : "p_metal"),
+            .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
+            .position = p_ctransform->position,
+            .n_particles = 5,
+            .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+            .update_func = &simple_particle_system_update,
+        };
+        play_particle_emitter(&scene->part_sys, &emitter);
+    }
+    else if (p_ent->m_tag == CHEST_ENT_TAG)
+    {
+        const CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
         ParticleEmitter_t emitter = {
             .spr = get_sprite(&scene->engine->assets, "p_wood"),
             .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
@@ -638,7 +696,7 @@ void spike_collision_system(Scene_t* scene)
                         }
                         else
                         {
-                            tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
+                            destroy_tile(data, tile_idx);
                         }
                     }
                 }
@@ -1399,6 +1457,15 @@ void state_transition_update_system(Scene_t* scene)
         if (p_mstate->water_state == 0b01)
         {
             play_sfx(scene->engine, WATER_IN_SFX);
+            ParticleEmitter_t emitter = {
+                .spr = get_sprite(&scene->engine->assets, "p_water"),
+                .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
+                .position = p_ctransform->position,
+                .n_particles = 5,
+                .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+                .update_func = &simple_particle_system_update,
+            };
+            play_particle_emitter(&scene->part_sys, &emitter);
         }
     }
 }
@@ -1508,7 +1575,7 @@ void hitbox_update_system(Scene_t* scene)
                             hit = true;
                             if (p_hitbox->atk > tilemap.tiles[tile_idx].def)
                             {
-                                change_a_tile(&tilemap, tile_idx, EMPTY_TILE);
+                                destroy_tile(data, tile_idx); 
                                 continue;
                             }
                         }
@@ -1614,6 +1681,7 @@ void hitbox_update_system(Scene_t* scene)
     }
 }
 
+
 void boulder_destroy_wooden_tile_system(Scene_t* scene)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
@@ -1631,24 +1699,19 @@ void boulder_destroy_wooden_tile_system(Scene_t* scene)
                 p_ctransform->position.y + p_bbox->size.y,
                 tilemap.width
         );
-        unsigned int tile_x = (p_ctransform->position.x + p_bbox->half_size.x) / TILE_SIZE;
+        unsigned int tile_x = (p_ctransform->position.x + p_bbox->half_size.x) / tilemap.tile_size;
 
         if (tilemap.tiles[tile_idx].tile_type == ONEWAY_TILE)
         {
-            tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
-            tilemap.tiles[tile_idx].solid = NOT_SOLID;
-            tilemap.tiles[tile_idx].moveable = true;
+            destroy_tile(data, tile_idx); 
             if (tile_x > 0 && tilemap.tiles[tile_idx - 1].tile_type == ONEWAY_TILE)
             {
-                tilemap.tiles[tile_idx - 1].tile_type = EMPTY_TILE;
-                tilemap.tiles[tile_idx - 1].solid = NOT_SOLID;
-                tilemap.tiles[tile_idx - 1].moveable = true;
+                destroy_tile(data, tile_idx - 1); 
             }
+
             if (tile_x < tilemap.width && tilemap.tiles[tile_idx + 1].tile_type == ONEWAY_TILE)
             {
-                tilemap.tiles[tile_idx + 1].tile_type = EMPTY_TILE;
-                tilemap.tiles[tile_idx + 1].solid = NOT_SOLID;
-                tilemap.tiles[tile_idx + 1].moveable = true;
+                destroy_tile(data, tile_idx + 1); 
             }
         }
     }

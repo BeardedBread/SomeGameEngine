@@ -69,13 +69,13 @@ int main(void)
         .launch_range = {0, 360},
         .speed_range = {400, 2000},
         .particle_lifetime = {30, 110},
-        .spr = (tex.width == 0) ? NULL : &spr,
     };
 
     ParticleEmitter_t emitter = {
         .config = &conf,
         .n_particles = MAX_PARTICLES,
-        .update_func = &simple_particle_system_update
+        .update_func = &simple_particle_system_update,
+        .spr = (tex.width == 0) ? NULL : &spr,
     };
 
     bool key_press = false;

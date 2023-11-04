@@ -121,7 +121,7 @@ void draw_particle_system(ParticleSystem_t* system)
         {
             if (part->alive)
             {
-                if (emitter->config->spr == NULL)
+                if (emitter->spr == NULL)
                 {
                     Rectangle rect = {
                         .x = part->position.x,
@@ -137,7 +137,7 @@ void draw_particle_system(ParticleSystem_t* system)
                 }
                 else
                 {
-                    draw_sprite(emitter->config->spr, part->position, part->rotation, false);
+                    draw_sprite(emitter->spr, part->position, part->rotation, false);
                 }
             }
         }

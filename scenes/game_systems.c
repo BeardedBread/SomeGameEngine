@@ -194,6 +194,39 @@ static Vector2 shift_bbox(Vector2 bbox, Vector2 new_bbox, AnchorPoint_t anchor)
     return offset;
 }
 
+void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
+{
+    if (p_ent->m_tag == BOULDER_ENT_TAG)
+    {
+        const CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
+        //const CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+        ParticleEmitter_t emitter = {
+            .spr = get_sprite(&scene->engine->assets, "p_rock"),
+            .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
+            .position = p_ctransform->position,
+            .n_particles = 5,
+            .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+            .update_func = &simple_particle_system_update,
+        };
+        play_particle_emitter(&scene->part_sys, &emitter);
+    }
+    else if (p_ent->m_tag == CRATES_ENT_TAG)
+    {
+        const CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
+        //const CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+        ParticleEmitter_t emitter = {
+            .spr = get_sprite(&scene->engine->assets, "p_wood"),
+            .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
+            .position = p_ctransform->position,
+            .n_particles = 5,
+            .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+            .update_func = &simple_particle_system_update,
+        };
+        play_particle_emitter(&scene->part_sys, &emitter);
+    }
+    remove_entity_from_tilemap(&scene->ent_manager, tilemap, p_ent);
+}
+
 void player_respawn_system(Scene_t* scene)
 {
     Entity_t* p_player;
@@ -1219,7 +1252,7 @@ void movement_update_system(Scene_t* scene)
                 || p_ctransform->position.y < 0 || p_ctransform->position.y > level_height
             )
             {
-                remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_ent);
+                destroy_entity(scene, &tilemap, p_ent);
             }
         
         }
@@ -1555,13 +1588,13 @@ void hitbox_update_system(Scene_t* scene)
                                     {
                                         remove_component(p_other_ent, CHURTBOX_T);
                                         CLifeTimer_t* p_clifetimer = add_component(p_other_ent, CLIFETIMER_T);
-                                        p_clifetimer->life_time = 6;
+                                        p_clifetimer->life_time = 3;
                                     }
                                 }
                                 else
                                 {
                                     // Need to remove immediately, otherwise will interfere with bomb spawning
-                                    remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_other_ent);
+                                    destroy_entity(scene, &tilemap, p_other_ent);
                                     if (p_other_ent->m_tag == CHEST_ENT_TAG)
                                     {
                                         data->coins.current++;
@@ -1576,7 +1609,7 @@ void hitbox_update_system(Scene_t* scene)
         }
         if (p_hitbox->one_hit && hit)
         {
-            remove_entity_from_tilemap(&scene->ent_manager, &tilemap, p_ent);
+            destroy_entity(scene, &tilemap, p_ent);
         }
     }
 }
@@ -1630,20 +1663,6 @@ void container_destroy_system(Scene_t* scene)
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         if (!p_ent->m_alive)
         {
-            if (p_ent->m_tag == CRATES_ENT_TAG)
-            {
-                const CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
-                //const CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
-                ParticleEmitter_t emitter = {
-                    .config = get_emitter_conf(&scene->engine->assets, "pe_wood"),
-                    .position = p_ctransform->position,
-                    .n_particles = 3,
-                    .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
-                    .update_func = &simple_particle_system_update,
-                };
-                play_particle_emitter(&scene->part_sys, &emitter);
-            }
-
             Entity_t* dmg_src = NULL;
             CHurtbox_t* p_hurtbox = get_component(p_ent, CHURTBOX_T);
             if(p_hurtbox != NULL)
@@ -1717,7 +1736,7 @@ void lifetimer_update_system(Scene_t* scene)
         p_lifetimer->life_time--;
         if (p_lifetimer->life_time == 0)
         {
-            remove_entity_from_tilemap(&scene->ent_manager, &tilemap, get_entity(&scene->ent_manager, ent_idx));
+            destroy_entity(scene, &tilemap, get_entity(&scene->ent_manager, ent_idx));
         }
     }
 }
@@ -1786,7 +1805,7 @@ void airtimer_update_system(Scene_t* scene)
                     }
                     else
                     {
-                        remove_entity_from_tilemap(&scene->ent_manager, &tilemap, get_entity(&scene->ent_manager, ent_idx));
+                        destroy_entity(scene, &tilemap, get_entity(&scene->ent_manager, ent_idx));
                     }
                 }
             

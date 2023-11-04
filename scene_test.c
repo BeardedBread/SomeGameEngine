@@ -68,7 +68,7 @@ int main(void)
     scenes[0] = &scene.scene;
     change_scene(&engine, 0);
 
-    EmitterConfig_t* conf = add_emitter_conf(&engine.assets, "pe_wood", get_sprite(&engine.assets, "bomb"));
+    EmitterConfig_t* conf = add_emitter_conf(&engine.assets, "pe_burst", get_sprite(&engine.assets, "bomb"));
     conf->launch_range[0] = 240;
     conf->launch_range[1] = 300;
     conf->one_shot = true;

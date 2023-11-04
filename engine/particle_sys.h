@@ -32,13 +32,13 @@ typedef struct EmitterConfig
     float speed_range[2];
     uint32_t particle_lifetime[2];
     PartEmitterType_t type;
-    Sprite_t* spr;
     bool one_shot;
 }EmitterConfig_t;
 
 typedef struct ParticleEmitter
 {
     const EmitterConfig_t* config;
+    Sprite_t* spr;
     Vector2 position;
     Particle_t particles[MAX_PARTICLES];
     uint32_t n_particles;

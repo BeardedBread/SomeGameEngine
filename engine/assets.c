@@ -147,7 +147,6 @@ EmitterConfig_t* add_emitter_conf(Assets_t* assets, const char* name, Sprite_t* 
     uint8_t emitter_idx = n_loaded[5];
     assert(emitter_idx < MAX_EMITTER_CONF);
     memset(emitter_confs + emitter_idx, 0, sizeof(EmitterConfData_t));
-    emitter_confs[emitter_idx].conf.spr = sprite;
     strncpy(emitter_confs[emitter_idx].name, name, MAX_NAME_LEN);
     sc_map_put_s64(&assets->m_emitter_confs, emitter_confs[emitter_idx].name, emitter_idx);
     n_loaded[5]++;

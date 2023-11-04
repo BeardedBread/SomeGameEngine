@@ -229,6 +229,7 @@ struct Entity {
     unsigned long components[N_COMPONENTS]; 
     EntityManager_t* manager;
     bool m_alive;
+    bool m_active;
 };
 
 enum EntityUpdateEvent

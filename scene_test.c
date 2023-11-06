@@ -44,17 +44,11 @@ int main(void)
 #endif
     init_item_creation(&engine.assets);
 
-    add_sound(&engine.assets, "snd_jump", "res/jump.ogg");
-    add_sound(&engine.assets, "snd_land", "res/land.ogg");
-    add_sound(&engine.assets, "snd_wdrop", "res/water_land.ogg");
-    add_sound(&engine.assets, "snd_bland", "res/boulder_move.ogg");
-    add_sound(&engine.assets, "snd_bubble", "res/bubble.ogg");
     load_sfx(&engine, "snd_jump", PLAYER_JMP_SFX);
     load_sfx(&engine, "snd_land", PLAYER_LAND_SFX);
     load_sfx(&engine, "snd_wdrop", WATER_IN_SFX);
     load_sfx(&engine, "snd_bland", BOULDER_LAND_SFX);
     load_sfx(&engine, "snd_bubble", BUBBLE_SFX);
-
 
     LevelScene_t scene;
     scene.scene.engine = &engine;

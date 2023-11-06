@@ -6,6 +6,8 @@ typedef enum AssetInfoType
 {
     TEXTURE_INFO,
     SPRITE_INFO,
+    SOUND_INFO,
+    EMITTER_INFO,
     LEVELPACK_INFO,
     INVALID_INFO
 }AssetInfoType_t;
@@ -186,6 +188,10 @@ bool load_from_infofile(const char* file, Assets_t* assets)
             {
                 info_type = SPRITE_INFO;
             }
+            else if (strcmp(tmp, "Sound") == 0)
+            {
+                info_type = SOUND_INFO;
+            }
             else if (strcmp(tmp, "LevelPack") == 0)
             {
                 info_type = LEVELPACK_INFO;
@@ -213,7 +219,16 @@ bool load_from_infofile(const char* file, Assets_t* assets)
                         break;
                     }
                     printf("Added texture %s as %s\n", info_str, name);
-                    //strcpy(tmp2, name);
+                }
+                break;
+                case SOUND_INFO:
+                {
+                    if (add_sound(assets, name, info_str) == NULL)
+                    {
+                        printf("Unable to add texture at line %lu\n", line_num);
+                        break;
+                    }
+                    printf("Added sound %s as %s\n", info_str, name);
                 }
                 break;
                 case LEVELPACK_INFO:

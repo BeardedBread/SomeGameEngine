@@ -59,7 +59,7 @@ Texture2D* add_texture_rres(Assets_t* assets, const char* name, const char* file
 LevelPack_t* add_level_pack_rres(Assets_t* assets, const char* name, const char* filename, const RresFileInfo_t* rres_file);
 
 Sprite_t* add_sprite(Assets_t* assets, const char* name, Texture2D* texture);
-EmitterConfig_t* add_emitter_conf(Assets_t* assets, const char* name, Sprite_t* sprite);
+EmitterConfig_t* add_emitter_conf(Assets_t* assets, const char* name);
 
 Texture2D* get_texture(Assets_t* assets, const char* name);
 Sprite_t* get_sprite(Assets_t* assets, const char* name);

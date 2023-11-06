@@ -10,6 +10,7 @@
 typedef enum PartEmitterType
 {
     EMITTER_BURST = 0,
+    EMITTER_UNKNOWN,
 } PartEmitterType_t;
 
 typedef struct Particle

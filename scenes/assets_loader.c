@@ -36,6 +36,27 @@ static bool parse_sprite_info(char* sprite_info_str, SpriteInfo_t* spr_info)
     return data_count == 6;
 }
 
+static bool parse_emitter_info(char* emitter_info_str, EmitterConfig_t* conf)
+{
+    char emitter_type;
+    uint8_t one_shot;
+    int data_count = sscanf(
+        emitter_info_str, "%c,%f-%f,%f-%f,%u-%u,%c",
+        &emitter_type,
+        conf->launch_range, conf->launch_range + 1,
+        conf->speed_range, conf->speed_range + 1,
+        conf->particle_lifetime, conf->particle_lifetime + 1,
+        &one_shot
+    );
+
+    if (data_count == 8)
+    {
+        conf->type = (emitter_type == 'b') ? EMITTER_BURST : EMITTER_UNKNOWN;
+        conf->one_shot = (one_shot == 1);
+    }
+    return data_count == 8;
+}
+
 bool load_from_rres(const char* file, Assets_t* assets)
 {
     RresFileInfo_t rres_file;
@@ -192,6 +213,10 @@ bool load_from_infofile(const char* file, Assets_t* assets)
             {
                 info_type = SOUND_INFO;
             }
+            else if (strcmp(tmp, "Emitter") == 0)
+            {
+                info_type = EMITTER_INFO;
+            }
             else if (strcmp(tmp, "LevelPack") == 0)
             {
                 info_type = LEVELPACK_INFO;
@@ -263,6 +288,19 @@ bool load_from_infofile(const char* file, Assets_t* assets)
                     spr->frame_size = spr_info.frame_size;
                     spr->frame_count = spr_info.frame_count;
                     spr->speed = spr_info.speed;
+                }
+                break;
+                case EMITTER_INFO:
+                {
+                    EmitterConfig_t parsed_conf;
+                    if (!parse_emitter_info(info_str, &parsed_conf))
+                    {
+                        printf("Parse error for emitter %s", name);
+                        break;
+                    }
+                    EmitterConfig_t* conf = add_emitter_conf(assets, name);
+                    *conf = parsed_conf;
+                    printf("Added Emitter %s\n", name);
                 }
                 break;
                 default:

@@ -142,7 +142,7 @@ Font* add_font(Assets_t* assets, const char* name, const char* path)
     return &fonts[fnt_idx].font;
 }
 
-EmitterConfig_t* add_emitter_conf(Assets_t* assets, const char* name, Sprite_t* sprite)
+EmitterConfig_t* add_emitter_conf(Assets_t* assets, const char* name)
 {
     uint8_t emitter_idx = n_loaded[5];
     assert(emitter_idx < MAX_EMITTER_CONF);

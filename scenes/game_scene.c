@@ -28,6 +28,17 @@ static void level_scene_render_func(Scene_t* scene)
             WHITE
         );
 
+        Entity_t* p_ent;
+        sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
+        {
+            CAirTimer_t* p_air = get_component(p_ent, CAIRTIMER_T);
+            Vector2 air_pos = {data->game_rec.x + data->game_rec.width - 16, data->game_rec.y + data->game_rec.height - 16};
+            for (uint8_t i = 0; i < p_air->curr_count; i++)
+            {
+                DrawCircleV(air_pos, 16, BLUE);
+                air_pos.x -= 32;
+            }
+        }
         // For DEBUG
         const int gui_x = data->game_rec.x + data->game_rec.width + 10;
         //sprintf(buffer, "Spawn Entity: %s", get_spawn_selection_string(current_spawn_selection));

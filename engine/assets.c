@@ -183,7 +183,7 @@ LevelPack_t* add_level_pack(Assets_t* assets, const char* name, const char* path
 }
 
 
-static LevelPack_t* add_level_pack_zst(Assets_t* assets, const char* name, FILE* file)
+static LevelPack_t* add_level_pack_zst(Assets_t* assets, const char* name, const uint8_t* zst_buffer, uint32_t len)
 {
     LevelPackData_t* pack_info = levelpacks + n_loaded[4];
     size_t read = 0;
@@ -197,8 +197,14 @@ static LevelPack_t* add_level_pack_zst(Assets_t* assets, const char* name, FILE*
         if (input.pos == input.size)
         {
             puts("Read more");
-            read = fread(level_decompressor.in_buffer, 1, DECOMPRESSOR_INBUF_LEN, file);
+
+            read = (len < DECOMPRESSOR_INBUF_LEN) ? len : DECOMPRESSOR_INBUF_LEN;
+            memcpy(level_decompressor.in_buffer, zst_buffer, read);
+            zst_buffer += read;
+            len -= read;
+
             if (read == 0) break;
+
             input.size = read;
             input.pos = 0;
         }
@@ -234,7 +240,11 @@ static LevelPack_t* add_level_pack_zst(Assets_t* assets, const char* name, FILE*
         {
             if (input.pos == input.size)
             {
-                read = fread(level_decompressor.in_buffer, 1, DECOMPRESSOR_INBUF_LEN, file);
+                read = (len < DECOMPRESSOR_INBUF_LEN) ? len : DECOMPRESSOR_INBUF_LEN;
+                memcpy(level_decompressor.in_buffer, zst_buffer, read);
+                zst_buffer += read;
+                len -= read;
+
                 if (read == 0) break;
                 input.size = read;
                 input.pos = 0;
@@ -273,7 +283,11 @@ static LevelPack_t* add_level_pack_zst(Assets_t* assets, const char* name, FILE*
         {
             if (input.pos == input.size)
             {
-                read = fread(level_decompressor.in_buffer, 1, DECOMPRESSOR_INBUF_LEN, file);
+                read = (len < DECOMPRESSOR_INBUF_LEN) ? len : DECOMPRESSOR_INBUF_LEN;
+                memcpy(level_decompressor.in_buffer, zst_buffer, read);
+                zst_buffer += read;
+                len -= read;
+
                 if (read == 0) break;
                 input.size = read;
                 input.pos = 0;
@@ -322,8 +336,21 @@ LevelPack_t* uncompress_level_pack(Assets_t* assets, const char* name, const cha
     FILE* file = fopen(path, "rb");
     if (file == NULL) return NULL;
 
-    LevelPack_t* pack = add_level_pack_zst(assets, name, file);
+    fseek(file, 0L, SEEK_END);
+    uint32_t sz = ftell(file);
+
+    rewind(file);
+    uint8_t* zst_buffer = malloc(sz);
+    if (zst_buffer == NULL)
+    {
+        fclose(file);
+        return NULL;
+    }
+    fread(zst_buffer, 1, sz, file);
     fclose(file);
+
+    LevelPack_t* pack = add_level_pack_zst(assets, name, zst_buffer, sz);
+    free(zst_buffer);
 
     return pack;
 
@@ -337,9 +364,7 @@ LevelPack_t* add_level_pack_rres(Assets_t* assets, const char* name, const char*
     LevelPack_t* pack = NULL;
     if (chunk.info.baseSize > 0 && strcmp(".lpk", (const char*)(chunk.data.props + 1)) == 0)
     {
-        FILE* f_in = fmemopen(chunk.data.raw, chunk.info.baseSize, "rb");
-        pack = add_level_pack_zst(assets, name, f_in);
-        fclose(f_in);
+        pack = add_level_pack_zst(assets, name, chunk.data.raw, chunk.info.baseSize);
     }
     else
     {

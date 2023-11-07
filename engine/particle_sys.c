@@ -20,6 +20,7 @@ void init_particle_system(ParticleSystem_t* system)
 void play_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_emitter)
 {
     if (in_emitter == NULL) return;
+    if (in_emitter->config == NULL) return;
 
     if (sc_queue_empty(&system->free_list)) return;
     uint32_t idx = sc_queue_del_first(&system->free_list);

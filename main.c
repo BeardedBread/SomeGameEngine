@@ -28,7 +28,7 @@ int main(void)
     InitWindow(screenWidth, screenHeight, "raylib");
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
 #ifndef NDEBUG
-    load_from_infofile("res/assets_debug.info", &engine.assets);
+    load_from_infofile("res/assets.info.raw", &engine.assets);
     init_player_creation("res/player_spr.info", &engine.assets);
 #else
     load_from_rres("res/myresources.rres", &engine.assets);
@@ -92,6 +92,6 @@ int main(void)
     free_sandbox_scene(&sandbox_scene);
     free_game_scene(&level_scene);
     free_menu_scene(&menu_scene);
-    CloseWindow(); 
     deinit_engine(&engine);
+    CloseWindow(); 
 }

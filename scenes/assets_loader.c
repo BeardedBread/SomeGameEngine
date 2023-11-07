@@ -174,6 +174,19 @@ bool load_from_rres(const char* file, Assets_t* assets)
                         spr->speed = spr_info.speed;
                     }
                     break;
+                    case EMITTER_INFO:
+                    {
+                        EmitterConfig_t parsed_conf;
+                        if (!parse_emitter_info(info_str, &parsed_conf))
+                        {
+                            printf("Parse error for emitter %s", name);
+                            break;
+                        }
+                        EmitterConfig_t* conf = add_emitter_conf(assets, name);
+                        *conf = parsed_conf;
+                        printf("Added Emitter %s\n", name);
+                    }
+                    break;
                     default:
                     break;
                 }

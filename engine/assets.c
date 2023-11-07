@@ -93,8 +93,9 @@ Texture2D* add_texture_rres(Assets_t* assets, const char* name, const char* file
     Texture2D* out_tex = NULL;
     if (chunk.info.baseSize > 0)
     {
+        uint32_t sz = chunk.info.baseSize - sizeof(int) - (chunk.data.propCount*sizeof(int));
         //Expect RAW type of png extension
-        Image image = LoadImageFromMemory(GetFileExtension(filename), chunk.data.raw, chunk.info.baseSize);
+        Image image = LoadImageFromMemory(GetFileExtension(filename), chunk.data.raw, sz);
         Texture2D tex = LoadTextureFromImage(image);
         UnloadImage(image); 
         
@@ -106,6 +107,32 @@ Texture2D* add_texture_rres(Assets_t* assets, const char* name, const char* file
     }
     rresUnloadResourceChunk(chunk);
     return out_tex;
+}
+
+Sound* add_sound_rres(Assets_t* assets, const char* name, const char* filename, const RresFileInfo_t* rres_file)
+{
+    uint8_t snd_idx = n_loaded[2];
+    assert(snd_idx < MAX_SOUNDS);
+
+    int res_id = rresGetResourceId(rres_file->dir, filename);
+    rresResourceChunk chunk = rresLoadResourceChunk(rres_file->fname, res_id);
+
+    Sound* out_snd = NULL;
+    if (chunk.info.baseSize > 0)
+    {
+        uint32_t sz = chunk.info.baseSize - sizeof(int) - (chunk.data.propCount*sizeof(int));
+        Wave wave = LoadWaveFromMemory(GetFileExtension(filename), chunk.data.raw, sz);
+        Sound snd = LoadSoundFromWave(wave);
+        UnloadWave(wave); 
+        
+        sfx[snd_idx].sound = snd;
+        strncpy(sfx[snd_idx].name, name, MAX_NAME_LEN);
+        sc_map_put_s64(&assets->m_sounds, sfx[snd_idx].name, snd_idx);
+        n_loaded[2]++;
+        out_snd = &sfx[snd_idx].sound;
+    }
+    rresUnloadResourceChunk(chunk);
+    return out_snd;
 }
 
 Sprite_t* add_sprite(Assets_t* assets, const char* name, Texture2D* texture)
@@ -364,7 +391,8 @@ LevelPack_t* add_level_pack_rres(Assets_t* assets, const char* name, const char*
     LevelPack_t* pack = NULL;
     if (chunk.info.baseSize > 0 && strcmp(".lpk", (const char*)(chunk.data.props + 1)) == 0)
     {
-        pack = add_level_pack_zst(assets, name, chunk.data.raw, chunk.info.baseSize);
+        uint32_t sz = chunk.info.baseSize - sizeof(int) - (chunk.data.propCount*sizeof(int));
+        pack = add_level_pack_zst(assets, name, chunk.data.raw, sz);
     }
     else
     {

@@ -230,6 +230,7 @@ typedef enum AssetInfoType
     TEXTURE_INFO,
     SPRITE_INFO,
     LEVELPACK_INFO,
+    SOUND_INFO,
     INVALID_INFO
 }AssetInfoType_t;
 
@@ -250,7 +251,7 @@ int main(void)
         .reserved = 0           // <reserved>
     };
     
-#define STARTING_CHUNKS 8
+#define STARTING_CHUNKS 64
     // Central Directory
     rresCentralDir central = {
         .count = 0,
@@ -307,6 +308,10 @@ int main(void)
                 {
                     info_type = LEVELPACK_INFO;
                 }
+                else if (strcmp(tmp, "Sound") == 0)
+                {
+                    info_type = SOUND_INFO;
+                }
                 else
                 {
                     info_type = INVALID_INFO;
@@ -331,6 +336,21 @@ int main(void)
                                 rresFile, GetFileExtension(info_str),
                                 central.entries + central.count
                            )
+                        )
+                        {
+                            central.count++;
+                        }
+                    }
+                    break;
+                    case SOUND_INFO:
+                    {
+                        // ---- OGG Sound
+                        if (
+                            addRawData(
+                                &header, info_str,
+                                rresFile, ".ogg",
+                                central.entries + central.count
+                            )
                         )
                         {
                             central.count++;

@@ -3,6 +3,7 @@
 
 void init_engine(GameEngine_t* engine)
 {
+    InitAudioDevice();
     sc_queue_init(&engine->key_buffer);
     engine->sfx_list.n_sfx = N_SFX;
     memset(engine->sfx_list.sfx, 0, engine->sfx_list.n_sfx * sizeof(SFX_t));
@@ -15,6 +16,7 @@ void deinit_engine(GameEngine_t* engine)
     term_assets(&engine->assets);
     free_memory_pools();
     sc_queue_term(&engine->key_buffer);
+    CloseAudioDevice();
 }
 
 void process_inputs(GameEngine_t* engine, Scene_t* scene)

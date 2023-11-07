@@ -32,7 +32,6 @@ int main(void)
 {
     InitWindow(1280, 640, "raylib");
     SetTargetFPS(60);
-    InitAudioDevice();
     init_engine(&engine);
 
 #ifndef NDEBUG

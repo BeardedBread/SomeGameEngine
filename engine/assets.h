@@ -57,6 +57,7 @@ LevelPack_t* uncompress_level_pack(Assets_t* assets, const char* name, const cha
 // Rres version
 Texture2D* add_texture_rres(Assets_t* assets, const char* name, const char* filename, const RresFileInfo_t* rres_file);
 LevelPack_t* add_level_pack_rres(Assets_t* assets, const char* name, const char* filename, const RresFileInfo_t* rres_file);
+Sound* add_sound_rres(Assets_t* assets, const char* name, const char* filename, const RresFileInfo_t* rres_file);
 
 Sprite_t* add_sprite(Assets_t* assets, const char* name, Texture2D* texture);
 EmitterConfig_t* add_emitter_conf(Assets_t* assets, const char* name);

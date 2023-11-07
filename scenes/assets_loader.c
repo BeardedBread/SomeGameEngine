@@ -57,6 +57,21 @@ static bool parse_emitter_info(char* emitter_info_str, EmitterConfig_t* conf)
     return data_count == 8;
 }
 
+static inline AssetInfoType_t get_asset_type(const char* str)
+{
+    if (strcmp(str, "Texture") == 0) return TEXTURE_INFO;
+
+    if (strcmp(str, "Sprite") == 0) return SPRITE_INFO;
+
+    if (strcmp(str, "Sound") == 0) return SOUND_INFO;
+
+    if (strcmp(str, "Emitter") == 0) return EMITTER_INFO;
+
+    if (strcmp(str, "LevelPack") == 0) return LEVELPACK_INFO;
+
+    return INVALID_INFO;
+}
+
 bool load_from_rres(const char* file, Assets_t* assets)
 {
     RresFileInfo_t rres_file;
@@ -91,22 +106,7 @@ bool load_from_rres(const char* file, Assets_t* assets)
             if (tmp[0] == '-')
             {
                 tmp++;
-                if (strcmp(tmp, "Texture") == 0)
-                {
-                    info_type = TEXTURE_INFO;
-                }
-                else if (strcmp(tmp, "Sprite") == 0)
-                {
-                    info_type = SPRITE_INFO;
-                }
-                else if (strcmp(tmp, "LevelPack") == 0)
-                {
-                    info_type = LEVELPACK_INFO;
-                }
-                else
-                {
-                    info_type = INVALID_INFO;
-                }
+                info_type = get_asset_type(tmp);
             }
             else
             {
@@ -139,6 +139,16 @@ bool load_from_rres(const char* file, Assets_t* assets)
                             break;
                         }
                         printf("Added level pack %s as %s\n", info_str, name);
+                    }
+                    break;
+                    case SOUND_INFO:
+                    {
+                        if (add_sound_rres(assets, name, info_str, &rres_file) == NULL)
+                        {
+                            printf("Unable to add sound at line %lu\n", line_num);
+                            break;
+                        }
+                        printf("Added sound %s as %s\n", info_str, name);
                     }
                     break;
                     case SPRITE_INFO:
@@ -201,30 +211,7 @@ bool load_from_infofile(const char* file, Assets_t* assets)
         if (tmp[0] == '-')
         {
             tmp++;
-            if (strcmp(tmp, "Texture") == 0)
-            {
-                info_type = TEXTURE_INFO;
-            }
-            else if (strcmp(tmp, "Sprite") == 0)
-            {
-                info_type = SPRITE_INFO;
-            }
-            else if (strcmp(tmp, "Sound") == 0)
-            {
-                info_type = SOUND_INFO;
-            }
-            else if (strcmp(tmp, "Emitter") == 0)
-            {
-                info_type = EMITTER_INFO;
-            }
-            else if (strcmp(tmp, "LevelPack") == 0)
-            {
-                info_type = LEVELPACK_INFO;
-            }
-            else
-            {
-                info_type = INVALID_INFO;
-            }
+            info_type = get_asset_type(tmp);
         }
         else
         {

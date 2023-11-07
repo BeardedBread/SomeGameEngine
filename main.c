@@ -36,6 +36,12 @@ int main(void)
 #endif
     init_item_creation(&engine.assets);
 
+    load_sfx(&engine, "snd_jump", PLAYER_JMP_SFX);
+    load_sfx(&engine, "snd_land", PLAYER_LAND_SFX);
+    load_sfx(&engine, "snd_wdrop", WATER_IN_SFX);
+    load_sfx(&engine, "snd_bland", BOULDER_LAND_SFX);
+    load_sfx(&engine, "snd_bubble", BUBBLE_SFX);
+
     LevelScene_t sandbox_scene;
     sandbox_scene.scene.engine = &engine;
     init_sandbox_scene(&sandbox_scene);
@@ -82,6 +88,7 @@ int main(void)
         update_entity_manager(&curr_scene->ent_manager);
         // This is needed to advance time delta
         render_scene(curr_scene);
+        update_sfx_list(&engine);
 
         if (curr_scene->state != SCENE_PLAYING)
         {

@@ -6,6 +6,7 @@ typedef enum EntityTag {
     ENEMY_ENT_TAG,
     CRATES_ENT_TAG,
     CHEST_ENT_TAG,
+    ARROW_ENT_TAG,
     BOULDER_ENT_TAG,
     LEVEL_END_TAG,
     DESTRUCTABLE_ENT_TAG,

@@ -282,6 +282,20 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
         };
         play_particle_emitter(&scene->part_sys, &emitter);
     }
+    else if (p_ent->m_tag == ARROW_ENT_TAG)
+    {
+        const CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
+        ParticleEmitter_t emitter = {
+            .spr = get_sprite(&scene->engine->assets, "p_arrow"),
+            .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
+            .position = p_ctransform->position,
+            .n_particles = 2,
+            .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+            .update_func = &simple_particle_system_update,
+        };
+        play_particle_emitter(&scene->part_sys, &emitter);
+    }
+
     remove_entity_from_tilemap(&scene->ent_manager, tilemap, p_ent);
 }
 

@@ -2,7 +2,7 @@
 #include "constants.h"
 #include "raymath.h"
 
-static SpriteRenderInfo_t item_sprite_map[19] = {0};
+static SpriteRenderInfo_t item_sprite_map[20] = {0};
 
 bool init_item_creation(Assets_t* assets)
 {
@@ -28,6 +28,7 @@ bool init_item_creation(Assets_t* assets)
     item_sprite_map[17].sprite = get_sprite(assets, "explode");
     item_sprite_map[17].offset = (Vector2){-12, -12};
     item_sprite_map[18].sprite = get_sprite(assets, "chest");
+    item_sprite_map[19].sprite = get_sprite(assets, "boulder");
     return true;
 }
 
@@ -96,12 +97,17 @@ Entity_t* create_boulder(EntityManager_t* ent_manager, Assets_t* assets)
     p_hurtbox->size = p_bbox->size;
     p_hurtbox->def = 2;
     p_hurtbox->damage_src = -1;
+
+    CSprite_t* p_cspr = add_component(p_boulder, CSPRITE_T);
+    p_cspr->sprites = item_sprite_map;
+    p_cspr->current_idx = 19;
+
     return p_boulder;
 }
 
 Entity_t* create_arrow(EntityManager_t* ent_manager, Assets_t* assets, uint8_t dir)
 {
-    Entity_t* p_arrow = add_entity(ent_manager, DESTRUCTABLE_ENT_TAG);
+    Entity_t* p_arrow = add_entity(ent_manager, ARROW_ENT_TAG);
     if (p_arrow == NULL) return NULL;
 
     add_component(p_arrow, CTILECOORD_COMP_T);

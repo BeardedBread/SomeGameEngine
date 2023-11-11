@@ -1032,18 +1032,19 @@ void moveable_update_system(Scene_t* scene)
             //if (p_ctransform->prev_velocity.y <= 0 && p_ctransform->prev_position.x == p_ctransform->position.x) continue;
 
             TileGrid_t tilemap = (CONTAINER_OF(scene, LevelScene_t, scene)->data).tilemap;
+
+            // Point to check is the one row below
             Vector2 point_to_check = {
                 .x = p_ctransform->position.x + p_bbox->half_size.x,
                 .y = p_ctransform->position.y + p_bbox->size.y + 1
             };
-            int tile_x = point_to_check.x / TILE_SIZE;
-            int tile_y = point_to_check.y / TILE_SIZE;
+            unsigned int tile_x = point_to_check.x / TILE_SIZE;
+            unsigned int tile_y = point_to_check.y / TILE_SIZE;
             if (tile_y >= tilemap.height) continue;
 
             int tile_idx = tile_y * tilemap.width + tile_x;
             unsigned int other_ent_idx;
             bool can_move = false;
-            int tile_y2 = tile_y - 1;
             sc_map_foreach_key(&tilemap.tiles[tile_idx].entities_set, other_ent_idx)
             {
                 if (other_ent_idx == ent_idx) continue;
@@ -1063,7 +1064,7 @@ void moveable_update_system(Scene_t* scene)
                 if (tile_x >= 0 && tile_x < tilemap.width)
                 {
                     unsigned int tile_idx1 = tile_y * tilemap.width + tile_x;
-                    unsigned int tile_idx2 = tile_y2 * tilemap.width + tile_x;
+                    unsigned int tile_idx2 = (tile_y - 1) * tilemap.width + tile_x;
                     if ( tilemap.tiles[tile_idx1].moveable && tilemap.tiles[tile_idx2].moveable )
                     {
                         bool any_solid = false;
@@ -1098,7 +1099,7 @@ void moveable_update_system(Scene_t* scene)
                 if (tile_x >= 0 && tile_x < tilemap.width)
                 {
                     unsigned int tile_idx1 = tile_y * tilemap.width + tile_x;
-                    unsigned int tile_idx2 = tile_y2 * tilemap.width + tile_x;
+                    unsigned int tile_idx2 = (tile_y - 1) * tilemap.width + tile_x;
                     if ( tilemap.tiles[tile_idx1].moveable && tilemap.tiles[tile_idx2].moveable )
                     {
                         bool any_solid = false;
@@ -1135,7 +1136,7 @@ void moveable_update_system(Scene_t* scene)
                 p_moveable->gridmove = true;
                 p_bbox->solid = false;
                 p_moveable->prev_pos = p_ctransform->position;
-                p_moveable->target_pos = Vector2Scale((Vector2){tile_x,tile_y2}, TILE_SIZE); 
+                p_moveable->target_pos = Vector2Scale((Vector2){tile_x,tile_y-1}, TILE_SIZE); 
                 memset(&p_ctransform->velocity, 0, sizeof(p_ctransform->velocity));
                 memset(&p_ctransform->accel, 0, sizeof(p_ctransform->accel));
                 p_ctransform->movement_mode = KINEMATIC_MOVEMENT;

@@ -196,7 +196,7 @@ bool check_on_ground(Entity_t* p_ent, Vector2 pos, Vector2 prev_pos, Vector2 bbo
 
 uint8_t check_bbox_edges(
     TileGrid_t* tilemap,
-    Entity_t* p_ent, Vector2 pos, Vector2 prev_pos, Vector2 bbox,
+    Entity_t* p_ent, Vector2 pos, Vector2 bbox,
     bool ignore_fragile
 )
 {

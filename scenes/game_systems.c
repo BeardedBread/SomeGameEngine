@@ -581,7 +581,7 @@ void player_crushing_system(Scene_t* scene)
 
         uint8_t edges = check_bbox_edges(
             &data->tilemap, p_player,
-            p_ctransform->position, p_ctransform->prev_position, p_bbox->size, true
+            p_ctransform->position, p_bbox->size, true
         );
 
         // There is a second check for to ensure that there is an solid entity/tile overlapping the player bbox
@@ -815,7 +815,7 @@ void edge_velocity_check_system(Scene_t* scene)
         // Post movement edge check to zero out velocity
         uint8_t edges = check_bbox_edges(
             &data->tilemap, p_ent,
-            p_ctransform->position, p_ctransform->prev_position, p_bbox->size, false
+            p_ctransform->position, p_bbox->size, false
         );
         if (edges & (1<<3))
         {
@@ -961,7 +961,7 @@ void global_external_forces_system(Scene_t* scene)
         // Zero out acceleration for contacts with sturdy entites and tiles
         uint8_t edges = check_bbox_edges(
             &data->tilemap, p_ent,
-            p_ctransform->position, p_ctransform->prev_position, p_bbox->size, false
+            p_ctransform->position, p_bbox->size, false
         );
         if (edges & (1<<3))
         {

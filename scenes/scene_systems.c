@@ -205,7 +205,7 @@ void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_ty
             {
                 tilemap->tiles[tile_idx].solid = NOT_SOLID;
             }
-            int down_tile = tile_idx + tilemap->width;
+            unsigned int down_tile = tile_idx + tilemap->width;
             if (down_tile < tilemap->n_tiles && tilemap->tiles[down_tile].tile_type == LADDER)
             {
                 tilemap->tiles[down_tile].solid = (tilemap->tiles[tile_idx].tile_type != LADDER)? ONE_WAY : NOT_SOLID;
@@ -222,7 +222,7 @@ void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_ty
 
     if (last_type == LADDER && new_type != LADDER)
     {
-        int down_tile = tile_idx + tilemap->width;
+        unsigned int down_tile = tile_idx + tilemap->width;
         if (down_tile < tilemap->n_tiles && tilemap->tiles[down_tile].tile_type == LADDER)
         {
             tilemap->tiles[down_tile].solid = ONE_WAY;

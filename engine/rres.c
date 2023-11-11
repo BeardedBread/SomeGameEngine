@@ -42,7 +42,7 @@ static rresResourceChunkData rresLoadResourceChunkData(rresResourceChunkInfo inf
 // Module Functions Definition
 //----------------------------------------------------------------------------------
 // Load one resource chunk for provided id
-rresResourceChunk rresLoadResourceChunk(const char *fileName, int rresId)
+rresResourceChunk rresLoadResourceChunk(const char *fileName, unsigned int rresId)
 {
     rresResourceChunk chunk = { 0 };
 
@@ -139,7 +139,7 @@ void rresUnloadResourceChunk(rresResourceChunk chunk)
 
 // Load resource from file by id
 // NOTE: All resources conected to base id are loaded
-rresResourceMulti rresLoadResourceMulti(const char *fileName, int rresId)
+rresResourceMulti rresLoadResourceMulti(const char *fileName, unsigned int rresId)
 {
     rresResourceMulti rres = { 0 };
 
@@ -252,7 +252,7 @@ void rresUnloadResourceMulti(rresResourceMulti multi)
 }
 
 // Load resource chunk info for provided id
-RRESAPI rresResourceChunkInfo rresLoadResourceChunkInfo(const char *fileName, int rresId)
+RRESAPI rresResourceChunkInfo rresLoadResourceChunkInfo(const char *fileName, unsigned int rresId)
 {
     rresResourceChunkInfo info = { 0 };
     
@@ -443,9 +443,9 @@ unsigned int rresGetDataType(const unsigned char *fourCC)
 
 // Get resource identifier from filename
 // WARNING: It requires the central directory previously loaded
-int rresGetResourceId(rresCentralDir dir, const char *fileName)
+unsigned int rresGetResourceId(rresCentralDir dir, const char *fileName)
 {
-    int id = 0;
+    unsigned int id = 0;
 
     for (unsigned int i = 0, len = 0; i < dir.count; i++)
     {

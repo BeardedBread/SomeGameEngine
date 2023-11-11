@@ -195,7 +195,7 @@ bool init_player_creation_rres(const char* rres_fname, const char* file, Assets_
         return false;
     }
 
-    int res_id = rresGetResourceId(rres_file.dir, file);
+    unsigned int res_id = rresGetResourceId(rres_file.dir, file);
     rresResourceChunk chunk = rresLoadResourceChunk(rres_file.fname, res_id);
     
     bool okay = false;

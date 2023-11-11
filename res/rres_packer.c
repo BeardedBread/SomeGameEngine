@@ -14,7 +14,7 @@ static unsigned char *LoadDataBuffer(rresResourceChunkData data, unsigned int ra
     unsigned char *buffer = (unsigned char *)RRES_CALLOC((data.propCount + 1)*sizeof(unsigned int) + rawSize, 1);
     
     memcpy(buffer, &data.propCount, sizeof(unsigned int));
-    for (int i = 0; i < data.propCount; i++) memcpy(buffer + (i + 1)*sizeof(unsigned int), &data.props[i], sizeof(unsigned int));
+    for (unsigned int i = 0; i < data.propCount; i++) memcpy(buffer + (i + 1)*sizeof(unsigned int), &data.props[i], sizeof(unsigned int));
     memcpy(buffer + (data.propCount + 1)*sizeof(unsigned int), data.raw, rawSize);
     
     return buffer;

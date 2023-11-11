@@ -485,22 +485,22 @@ extern "C" {            // Prevents name mangling of functions
 #endif
 
 // Load only one resource chunk (first resource id found)
-RRESAPI rresResourceChunk rresLoadResourceChunk(const char *fileName, int rresId);  // Load one resource chunk for provided id
+RRESAPI rresResourceChunk rresLoadResourceChunk(const char *fileName, unsigned int rresId);  // Load one resource chunk for provided id
 RRESAPI void rresUnloadResourceChunk(rresResourceChunk chunk);                      // Unload resource chunk from memory
 
 // Load multi resource chunks for a specified rresId
-RRESAPI rresResourceMulti rresLoadResourceMulti(const char *fileName, int rresId);  // Load resource for provided id (multiple resource chunks)
+RRESAPI rresResourceMulti rresLoadResourceMulti(const char *fileName, unsigned int rresId);  // Load resource for provided id (multiple resource chunks)
 RRESAPI void rresUnloadResourceMulti(rresResourceMulti multi);                      // Unload resource from memory (multiple resource chunks)
 
 // Load resource(s) chunk info from file
-RRESAPI rresResourceChunkInfo rresLoadResourceChunkInfo(const char *fileName, int rresId);  // Load resource chunk info for provided id
+RRESAPI rresResourceChunkInfo rresLoadResourceChunkInfo(const char *fileName, unsigned int rresId);  // Load resource chunk info for provided id
 RRESAPI rresResourceChunkInfo *rresLoadResourceChunkInfoAll(const char *fileName, unsigned int *chunkCount); // Load all resource chunks info
 
 RRESAPI rresCentralDir rresLoadCentralDirectory(const char *fileName);              // Load central directory resource chunk from file
 RRESAPI void rresUnloadCentralDirectory(rresCentralDir dir);                        // Unload central directory resource chunk
 
 RRESAPI unsigned int rresGetDataType(const unsigned char *fourCC);                  // Get rresResourceDataType from FourCC code
-RRESAPI int rresGetResourceId(rresCentralDir dir, const char *fileName);            // Get resource id for a provided filename
+RRESAPI unsigned int rresGetResourceId(rresCentralDir dir, const char *fileName);            // Get resource id for a provided filename
                                                                                     // NOTE: It requires CDIR available in the file (it's optinal by design)
 RRESAPI unsigned int rresComputeCRC32(unsigned char *data, int len);                // Compute CRC32 for provided data
 

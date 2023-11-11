@@ -9,18 +9,24 @@
 
 static int setup_mempool(void** state)
 {
+    (void)state;
+
     init_memory_pools();
     return 0;
 }
 
 static int teardown_mempool(void** state)
 {
+    (void)state;
+
     free_memory_pools();
     return 0;
 }
 
 static void test_simple_get_and_free(void **state)
 {
+    (void)state;
+
     unsigned long idx;
     Entity_t* ent = new_entity_from_mempool(&idx);
 

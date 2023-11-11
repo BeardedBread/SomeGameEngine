@@ -8,6 +8,7 @@ static const Vector2 GRAVITY = {0, GRAV_ACCEL};
 
 void simple_particle_system_update(Particle_t* part, void* user_data)
 {
+    (void)user_data;
 
     float delta_time = DELTA_T; // TODO: Will need to think about delta time handling
     part->rotation += part->angular_vel;

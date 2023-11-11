@@ -250,7 +250,7 @@ static void render_editor_game_scene(Scene_t* scene)
                 {
 #define     SURFACE_THICKNESS 4
                     int up = i - tilemap.width;
-                    int bot = i + tilemap.width;
+                    unsigned int bot = i + tilemap.width;
                     int right = i + 1;
                     int left = i - 1;
                     int bot_line = y + TILE_SIZE - tilemap.tiles[i].water_level * WATER_BBOX_STEP - SURFACE_THICKNESS / 2;

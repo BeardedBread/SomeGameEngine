@@ -55,7 +55,7 @@ static unsigned int player_sprite_transition_func(Entity_t* ent)
     return (p_ctrans->velocity.y < 0) ? SPR_PLAYER_JUMP : SPR_PLAYER_FALL;
 }
 
-Entity_t* create_player(EntityManager_t* ent_manager, Assets_t* assets)
+Entity_t* create_player(EntityManager_t* ent_manager)
 {
     Entity_t* p_ent = add_entity(ent_manager, PLAYER_ENT_TAG);
     if (p_ent == NULL) return NULL;
@@ -106,7 +106,7 @@ Entity_t* create_player(EntityManager_t* ent_manager, Assets_t* assets)
     return p_ent;
 }
 
-Entity_t* create_dead_player(EntityManager_t* ent_manager, Assets_t* assets)
+Entity_t* create_dead_player(EntityManager_t* ent_manager)
 {
     Entity_t* p_ent = add_entity(ent_manager, NO_ENT_TAG);
     if (p_ent == NULL) return NULL;

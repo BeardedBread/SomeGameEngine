@@ -357,7 +357,7 @@ void init_game_scene(LevelScene_t* scene)
         (Rectangle){25, 25, 32*TILE_SIZE, 18*TILE_SIZE}
     );
 
-    create_player(&scene->scene.ent_manager, &scene->scene.engine->assets);
+    create_player(&scene->scene.ent_manager);
     update_entity_manager(&scene->scene.ent_manager);
 
     // insert level scene systems

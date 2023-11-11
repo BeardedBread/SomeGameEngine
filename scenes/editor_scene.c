@@ -491,7 +491,7 @@ static void render_editor_game_scene(Scene_t* scene)
 static void spawn_chest(Scene_t* scene, unsigned int tile_idx)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
-    Entity_t* p_crate = create_chest(&scene->ent_manager, &scene->engine->assets);
+    Entity_t* p_crate = create_chest(&scene->ent_manager);
     if (p_crate == NULL) return;
 
     CTransform_t* p_ctransform = get_component(p_crate, CTRANSFORM_COMP_T);
@@ -503,7 +503,7 @@ static void spawn_chest(Scene_t* scene, unsigned int tile_idx)
 static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal, ContainerItem_t item, bool active)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
-    Entity_t* p_crate = create_crate(&scene->ent_manager, &scene->engine->assets, metal, item);
+    Entity_t* p_crate = create_crate(&scene->ent_manager, metal, item);
     if (p_crate == NULL) return;
 
     CTransform_t* p_ctransform = get_component(p_crate, CTRANSFORM_COMP_T);
@@ -515,7 +515,7 @@ static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal, Conta
 static void spawn_boulder(Scene_t* scene, unsigned int tile_idx)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
-    Entity_t* p_boulder = create_boulder(&scene->ent_manager, &scene->engine->assets);
+    Entity_t* p_boulder = create_boulder(&scene->ent_manager);
     if (p_boulder == NULL) return;
 
     CTransform_t* p_ctransform = get_component(p_boulder, CTRANSFORM_COMP_T);
@@ -626,7 +626,7 @@ static void toggle_block_system(Scene_t* scene)
                 break;
                 case SPAWN_LEVEL_END:
                 {
-                    Entity_t* p_ent = create_level_end(&scene->ent_manager, &scene->engine->assets);
+                    Entity_t* p_ent = create_level_end(&scene->ent_manager);
                     if (p_ent != NULL)
                     {
                         CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
@@ -981,7 +981,7 @@ void init_sandbox_scene(LevelScene_t* scene)
 
     EndTextureMode();
 
-    create_player(&scene->scene.ent_manager, &scene->scene.engine->assets);
+    create_player(&scene->scene.ent_manager);
     update_entity_manager(&scene->scene.ent_manager);
 
     // insert level scene systems

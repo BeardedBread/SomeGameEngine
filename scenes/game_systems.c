@@ -309,7 +309,7 @@ void player_respawn_system(Scene_t* scene)
         if (!p_player->m_alive)
         {
             CTransform_t* p_ct = get_component(p_player, CTRANSFORM_COMP_T);
-            Entity_t* ent = create_dead_player(&scene->ent_manager, &scene->engine->assets);
+            Entity_t* ent = create_dead_player(&scene->ent_manager);
             if (ent != NULL)
             {
                 CTransform_t* new_ct = get_component(ent, CTRANSFORM_COMP_T);
@@ -1751,16 +1751,16 @@ void container_destroy_system(Scene_t* scene)
             switch (p_container->item)
             {
                 case CONTAINER_LEFT_ARROW:
-                    new_ent = create_arrow(&scene->ent_manager, &scene->engine->assets, 0);
+                    new_ent = create_arrow(&scene->ent_manager, 0);
                 break;
                 case CONTAINER_RIGHT_ARROW:
-                    new_ent = create_arrow(&scene->ent_manager, &scene->engine->assets, 1);
+                    new_ent = create_arrow(&scene->ent_manager, 1);
                 break;
                 case CONTAINER_UP_ARROW:
-                    new_ent = create_arrow(&scene->ent_manager, &scene->engine->assets, 2);
+                    new_ent = create_arrow(&scene->ent_manager, 2);
                 break;
                 case CONTAINER_DOWN_ARROW:
-                    new_ent = create_arrow(&scene->ent_manager, &scene->engine->assets, 3);
+                    new_ent = create_arrow(&scene->ent_manager, 3);
                 break;
                 case CONTAINER_BOMB:
                     if (dmg_src != NULL && dmg_src->m_tag == PLAYER_ENT_TAG)
@@ -1778,15 +1778,15 @@ void container_destroy_system(Scene_t* scene)
                         {
                             launch_dir.x = -1;
                         }
-                        new_ent = create_bomb(&scene->ent_manager, &scene->engine->assets, launch_dir);
+                        new_ent = create_bomb(&scene->ent_manager, launch_dir);
                     }
                     else
                     {
-                        new_ent = create_explosion(&scene->ent_manager, &scene->engine->assets);
+                        new_ent = create_explosion(&scene->ent_manager); 
                     }
                 break;
                 case CONTAINER_EXPLOSION:
-                    new_ent = create_explosion(&scene->ent_manager, &scene->engine->assets);
+                    new_ent = create_explosion(&scene->ent_manager);
                 break;
                 default:
                     new_ent = NULL;

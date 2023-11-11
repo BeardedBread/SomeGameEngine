@@ -424,7 +424,7 @@ int main(void)
         unsigned int tile_idx = (scene.data.tilemap.height - 1) * scene.data.tilemap.width + i;
         change_a_tile(&scene.data.tilemap, tile_idx, SOLID_TILE);
     }
-    create_player(&scene.scene.ent_manager, &scene.scene.engine->assets);
+    create_player(&scene.scene.ent_manager);
     update_entity_manager(&scene.scene.ent_manager);
 
     scene.data.tile_sprites[ONEWAY_TILE] = get_sprite(&engine.assets, "tl_owp");

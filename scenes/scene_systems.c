@@ -103,7 +103,7 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
                 default: break;
             }
 
-            Entity_t* ent = create_crate(&scene->scene.ent_manager, &scene->scene.engine->assets, tmp_idx > 5, item);
+            Entity_t* ent = create_crate(&scene->scene.ent_manager, tmp_idx > 5, item);
             CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
             p_ct->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
             p_ct->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
@@ -127,7 +127,7 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
                 break;
                 case 20:
                 {
-                    Entity_t* ent = create_boulder(&scene->scene.ent_manager, &scene->scene.engine->assets);
+                    Entity_t* ent = create_boulder(&scene->scene.ent_manager);
                     CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
                     p_ct->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
                     p_ct->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
@@ -140,7 +140,7 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
                 break;
                 case 22:
                 {
-                    Entity_t* ent = create_player(&scene->scene.ent_manager, &scene->scene.engine->assets);
+                    Entity_t* ent = create_player(&scene->scene.ent_manager);
                     CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
                     p_ct->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
                     p_ct->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;

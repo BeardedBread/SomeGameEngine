@@ -33,7 +33,7 @@ bool init_item_creation(Assets_t* assets)
 }
 
 
-Entity_t* create_crate(EntityManager_t* ent_manager, Assets_t* assets, bool metal, ContainerItem_t item)
+Entity_t* create_crate(EntityManager_t* ent_manager, bool metal, ContainerItem_t item)
 {
     Entity_t* p_crate = add_entity(ent_manager, CRATES_ENT_TAG);
     if (p_crate == NULL) return NULL;
@@ -75,7 +75,7 @@ Entity_t* create_crate(EntityManager_t* ent_manager, Assets_t* assets, bool meta
     return p_crate;
 }
 
-Entity_t* create_boulder(EntityManager_t* ent_manager, Assets_t* assets)
+Entity_t* create_boulder(EntityManager_t* ent_manager)
 {
     Entity_t* p_boulder = add_entity(ent_manager, BOULDER_ENT_TAG);
     if (p_boulder == NULL) return NULL;
@@ -105,7 +105,7 @@ Entity_t* create_boulder(EntityManager_t* ent_manager, Assets_t* assets)
     return p_boulder;
 }
 
-Entity_t* create_arrow(EntityManager_t* ent_manager, Assets_t* assets, uint8_t dir)
+Entity_t* create_arrow(EntityManager_t* ent_manager, uint8_t dir)
 {
     Entity_t* p_arrow = add_entity(ent_manager, ARROW_ENT_TAG);
     if (p_arrow == NULL) return NULL;
@@ -151,7 +151,7 @@ Entity_t* create_arrow(EntityManager_t* ent_manager, Assets_t* assets, uint8_t d
     return p_arrow;
 }
 
-Entity_t* create_bomb(EntityManager_t* ent_manager, Assets_t* assets, Vector2 launch_dir)
+Entity_t* create_bomb(EntityManager_t* ent_manager, Vector2 launch_dir)
 {
     Entity_t* p_bomb = add_entity(ent_manager, DESTRUCTABLE_ENT_TAG);
     if (p_bomb == NULL) return NULL;
@@ -183,7 +183,7 @@ Entity_t* create_bomb(EntityManager_t* ent_manager, Assets_t* assets, Vector2 la
     return p_bomb;
 }
 
-Entity_t* create_explosion(EntityManager_t* ent_manager, Assets_t* assets)
+Entity_t* create_explosion(EntityManager_t* ent_manager)
 {
     Entity_t* p_explosion = add_entity(ent_manager, DESTRUCTABLE_ENT_TAG);
     if (p_explosion == NULL) return NULL;
@@ -210,7 +210,7 @@ Entity_t* create_explosion(EntityManager_t* ent_manager, Assets_t* assets)
     return p_explosion;
 }
 
-Entity_t* create_chest(EntityManager_t* ent_manager, Assets_t* assets)
+Entity_t* create_chest(EntityManager_t* ent_manager)
 {
     Entity_t* p_chest = add_entity(ent_manager, CHEST_ENT_TAG);
     if (p_chest == NULL) return NULL;
@@ -238,7 +238,7 @@ Entity_t* create_chest(EntityManager_t* ent_manager, Assets_t* assets)
     return p_chest;
 }
 
-Entity_t* create_level_end(EntityManager_t* ent_manager, Assets_t* assets)
+Entity_t* create_level_end(EntityManager_t* ent_manager)
 {
     Entity_t* p_flag = add_entity(ent_manager, LEVEL_END_TAG);
     if (p_flag == NULL) return NULL;

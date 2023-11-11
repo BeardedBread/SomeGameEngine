@@ -7,13 +7,18 @@ void init_entity_manager(EntityManager_t* p_manager)
     {
         sc_map_init_64v(p_manager->component_map + i, MAX_COMP_POOL_SIZE, 0);
     }
-    for (size_t i = 0; i < N_TAGS; ++i)
-    {
-        sc_map_init_64v(p_manager->entities_map + i, MAX_COMP_POOL_SIZE, 0);
-    }
+    memset(p_manager->tag_map_inited, 0, sizeof(p_manager->tag_map_inited));
     sc_queue_init(&p_manager->to_add);
     sc_queue_init(&p_manager->to_remove);
     sc_queue_init(&p_manager->to_update);
+}
+
+void init_entity_tag_map(EntityManager_t* p_manager, unsigned int tag_number, unsigned int initial_size)
+{
+    if (tag_number >= N_TAGS) return;
+
+    sc_map_init_64v(p_manager->entities_map + tag_number, initial_size, 0);
+    p_manager->tag_map_inited[tag_number] = true;
 }
 
 void update_entity_manager(EntityManager_t* p_manager)
@@ -27,7 +32,10 @@ void update_entity_manager(EntityManager_t* p_manager)
     {
         Entity_t *p_entity = get_entity_wtih_id(e_idx);
         sc_map_put_64v(&p_manager->entities, e_idx, (void *)p_entity);
-        sc_map_put_64v(&p_manager->entities_map[p_entity->m_tag], e_idx, (void *)p_entity);
+        if (p_manager->tag_map_inited[p_entity->m_tag])
+        {
+            sc_map_put_64v(&p_manager->entities_map[p_entity->m_tag], e_idx, (void *)p_entity);
+        }
     }
     sc_queue_clear(&p_manager->to_add);
 
@@ -42,7 +50,10 @@ void update_entity_manager(EntityManager_t* p_manager)
             sc_map_del_64v(&p_manager->component_map[i], e_idx);
             p_entity->components[i] = MAX_COMP_POOL_SIZE;
         }
-        sc_map_del_64v(&p_manager->entities_map[p_entity->m_tag], e_idx);
+        if (p_manager->tag_map_inited[p_entity->m_tag])
+        {
+            sc_map_del_64v(&p_manager->entities_map[p_entity->m_tag], e_idx);
+        }
         free_entity_to_mempool(e_idx);
         sc_map_del_64v(&p_manager->entities, e_idx);
     }
@@ -88,7 +99,10 @@ void free_entity_manager(EntityManager_t* p_manager)
     }
     for (size_t i = 0; i < N_TAGS; ++i)
     {
-        sc_map_term_64v(p_manager->entities_map + i);
+        if (p_manager->tag_map_inited[i])
+        {
+            sc_map_term_64v(p_manager->entities_map + i);
+        }
     }
     sc_queue_term(&p_manager->to_add);
     sc_queue_term(&p_manager->to_remove);

@@ -252,6 +252,7 @@ struct EntityManager {
     // All fields are Read-Only
     struct sc_map_64v entities; // ent id : entity
     struct sc_map_64v entities_map[N_TAGS]; // [{ent id: ent}]
+    bool tag_map_inited[N_TAGS];
     struct sc_map_64v component_map[N_COMPONENTS]; // [{ent id: comp}, ...]
     struct sc_queue_uint to_add;
     struct sc_queue_uint to_remove;
@@ -259,6 +260,7 @@ struct EntityManager {
 };
 
 void init_entity_manager(EntityManager_t* p_manager);
+void init_entity_tag_map(EntityManager_t* p_manager, unsigned int tag_number, unsigned int initial_size);
 void update_entity_manager(EntityManager_t* p_manager);
 void clear_entity_manager(EntityManager_t* p_manager);
 void free_entity_manager(EntityManager_t* p_manager);

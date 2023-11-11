@@ -35,7 +35,7 @@ static void exec_component_function(Scene_t* scene, int sel)
 static void menu_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
     MenuSceneData_t* data = &(CONTAINER_OF(scene, MenuScene_t, scene)->data);
-    int new_selection = data->selected_comp;
+    unsigned int new_selection = data->selected_comp;
     if (!pressed)
     {
         if (data->mode == MOUSE_MODE)
@@ -47,10 +47,21 @@ static void menu_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             switch(action)
             {
                 case ACTION_UP:
-                    new_selection--;
+                    if (new_selection == 0)
+                    {
+                        new_selection = data->max_comp - 1;
+                    }
+                    else
+                    {
+                        new_selection--;
+                    }
                 break;
                 case ACTION_DOWN:
                     new_selection++;
+                    if (new_selection == data->max_comp)
+                    {
+                        new_selection = 0;
+                    }
                 break;
                 case ACTION_LEFT:
                 break;
@@ -61,9 +72,7 @@ static void menu_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             }
         }
         data->buttons[data->selected_comp].state = STATE_NORMAL;
-        if (new_selection < 0) new_selection = data->max_comp - 1;
-        if (new_selection >= data->max_comp) new_selection = 0;
-        printf("new: %d, old %d\n", new_selection, data->selected_comp);
+        printf("new: %u, old %u\n", new_selection, data->selected_comp);
 
         data->buttons[new_selection].state = STATE_FOCUSED;
         data->selected_comp = new_selection;

@@ -75,8 +75,8 @@ typedef enum GuiMode {
 
 typedef struct MenuSceneData {
     UIComp_t buttons[4];
-    int selected_comp;
-    int max_comp;
+    unsigned int selected_comp;
+    unsigned int max_comp;
     GuiMode_t mode;
 } MenuSceneData_t;
 

@@ -148,9 +148,9 @@ typedef struct _BFSTile {
 
 typedef struct _BFSTileMap {
     BFSTile_t* tilemap;
-    uint32_t width;
-    uint32_t height;
-    uint32_t len;
+    int32_t width;
+    int32_t height;
+    int32_t len;
 }BFSTileMap_t;
 
 typedef enum _WaterRunnerState

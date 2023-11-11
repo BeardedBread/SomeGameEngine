@@ -180,7 +180,7 @@ void update_water_runner_system(Scene_t* scene)
         switch (p_crunner->state)
         {
             case BFS_RESET:
-                for (size_t i = 0; i < p_crunner->bfs_tilemap.len; ++i)
+                for (int32_t i = 0; i < p_crunner->bfs_tilemap.len; ++i)
                 {
                     //p_crunner->bfs_tilemap.tilemap[i].to = -1;
                     p_crunner->bfs_tilemap.tilemap[i].from = -1;
@@ -254,7 +254,7 @@ void update_water_runner_system(Scene_t* scene)
                 int start_tile =
                     (p_crunner->current_tile / p_crunner->bfs_tilemap.width) * p_crunner->bfs_tilemap.width;
 
-                for (size_t i = 0; i < p_crunner->bfs_tilemap.width; ++i)
+                for (int32_t i = 0; i < p_crunner->bfs_tilemap.width; ++i)
                 {
                     p_crunner->bfs_tilemap.tilemap[start_tile + i].reachable = false;
                 }

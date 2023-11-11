@@ -68,7 +68,7 @@ static void level_scene_render_func(Scene_t* scene)
 
 
                 if (
-                    bot <= tilemap.n_tiles
+                    (unsigned int)bot <= tilemap.n_tiles
                     && tilemap.tiles[bot].water_level < MAX_WATER_LEVEL
                     && tilemap.tiles[i].water_level == 0
                     )

@@ -46,7 +46,10 @@ Entity_t* create_crate(EntityManager_t* ent_manager, bool metal, ContainerItem_t
     CTransform_t* p_ctransform = add_component(p_crate, CTRANSFORM_COMP_T);
     p_ctransform->grav_delay = 7;
     p_ctransform->shape_factor = metal ? (Vector2){0.7,0.7} : (Vector2){0.8,0.8} ;
-    add_component(p_crate, CMOVEMENTSTATE_T);
+    CMovementState_t* p_move = add_component(p_crate, CMOVEMENTSTATE_T);
+    p_move->ground_state |= 3;
+
+
     add_component(p_crate, CTILECOORD_COMP_T);
     CHurtbox_t* p_hurtbox = add_component(p_crate, CHURTBOX_T);
     p_hurtbox->size = p_bbox->size;
@@ -89,7 +92,9 @@ Entity_t* create_boulder(EntityManager_t* ent_manager)
     p_ctransform->grav_delay = 5;
     p_ctransform->active = true;
     p_ctransform->shape_factor = (Vector2){0.6, 0.6};
-    add_component(p_boulder, CMOVEMENTSTATE_T);
+    CMovementState_t* p_move = add_component(p_boulder, CMOVEMENTSTATE_T);
+    p_move->ground_state |= 3;
+
     add_component(p_boulder, CTILECOORD_COMP_T);
     CMoveable_t* p_cmove = add_component(p_boulder, CMOVEABLE_T);
     p_cmove->move_speed = 8;

@@ -74,7 +74,9 @@ Entity_t* create_player(EntityManager_t* ent_manager)
     p_cjump->jump_ready = true;
     add_component(p_ent, CPLAYERSTATE_T);
     add_component(p_ent, CTILECOORD_COMP_T);
-    add_component(p_ent, CMOVEMENTSTATE_T);
+
+    CMovementState_t* p_move = add_component(p_ent, CMOVEMENTSTATE_T);
+    p_move->ground_state |= 3;
     CHitBoxes_t* p_hitbox = add_component(p_ent, CHITBOXES_T);
     p_hitbox->n_boxes = 2;
     p_hitbox->boxes[0] = (Rectangle) {

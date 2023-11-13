@@ -498,6 +498,8 @@ void player_movement_input_system(Scene_t* scene)
         {
             // the else if check is to prevent playing the landing sfx
             // on first frame jumps
+            // This is also why this is done here instead of in the 
+            // state transition function
             play_sfx(scene->engine, PLAYER_LAND_SFX);
         }
     }

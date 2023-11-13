@@ -32,5 +32,6 @@ typedef enum SFXTag {
     BOMB_RELEASE_SFX,
     EXPLOSION_SFX,
     BUBBLE_SFX,
+    COIN_SFX,
 } SFXTag_t;
 #endif

@@ -281,6 +281,7 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
             .update_func = &simple_particle_system_update,
         };
         play_particle_emitter(&scene->part_sys, &emitter);
+        play_sfx(scene->engine, COIN_SFX);
     }
     else if (p_ent->m_tag == ARROW_ENT_TAG)
     {
@@ -294,6 +295,7 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
             .update_func = &simple_particle_system_update,
         };
         play_particle_emitter(&scene->part_sys, &emitter);
+        play_sfx(scene->engine, ARROW_DESTROY_SFX);
     }
 
     remove_entity_from_tilemap(&scene->ent_manager, tilemap, p_ent);
@@ -1470,6 +1472,10 @@ void state_transition_update_system(Scene_t* scene)
             {
                 play_sfx(scene->engine, BOULDER_LAND_SFX);
             }
+            else if (p_ent->m_tag == CRATES_ENT_TAG)
+            {
+                play_sfx(scene->engine, WOOD_LAND_SFX);
+            }
         }
         if (p_mstate->water_state == 0b01)
         {
@@ -1755,15 +1761,19 @@ void container_destroy_system(Scene_t* scene)
             {
                 case CONTAINER_LEFT_ARROW:
                     new_ent = create_arrow(&scene->ent_manager, 0);
+                    play_sfx(scene->engine, ARROW_RELEASE_SFX);
                 break;
                 case CONTAINER_RIGHT_ARROW:
                     new_ent = create_arrow(&scene->ent_manager, 1);
+                    play_sfx(scene->engine, ARROW_RELEASE_SFX);
                 break;
                 case CONTAINER_UP_ARROW:
                     new_ent = create_arrow(&scene->ent_manager, 2);
+                    play_sfx(scene->engine, ARROW_RELEASE_SFX);
                 break;
                 case CONTAINER_DOWN_ARROW:
                     new_ent = create_arrow(&scene->ent_manager, 3);
+                    play_sfx(scene->engine, ARROW_RELEASE_SFX);
                 break;
                 case CONTAINER_BOMB:
                     if (dmg_src != NULL && dmg_src->m_tag == PLAYER_ENT_TAG)
@@ -1782,19 +1792,37 @@ void container_destroy_system(Scene_t* scene)
                             launch_dir.x = -1;
                         }
                         new_ent = create_bomb(&scene->ent_manager, launch_dir);
+                        play_sfx(scene->engine, BOMB_RELEASE_SFX);
                     }
                     else
                     {
                         new_ent = create_explosion(&scene->ent_manager); 
+                        play_sfx(scene->engine, EXPLOSION_SFX);
                     }
                 break;
                 case CONTAINER_EXPLOSION:
                     new_ent = create_explosion(&scene->ent_manager);
+                    play_sfx(scene->engine, EXPLOSION_SFX);
                 break;
                 default:
                     new_ent = NULL;
                 break;
             }
+            if (
+                p_container->item != CONTAINER_EXPLOSION
+                && p_container->item != CONTAINER_BOMB
+            )
+            {
+                    if (p_container->material == WOODEN_CONTAINER)
+                    {
+                        play_sfx(scene->engine, WOOD_DESTROY_SFX);
+                    }
+                    else
+                    {
+                        play_sfx(scene->engine, METAL_DESTROY_SFX);
+                    }
+            }
+
             if (new_ent != NULL)
             {
                 CTransform_t* new_p_ct = get_component(new_ent, CTRANSFORM_COMP_T);

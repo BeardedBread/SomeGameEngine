@@ -3,13 +3,17 @@
 uint8_t find_1D_overlap(Vector2 l1, Vector2 l2, float* overlap)
 {
    // No Overlap
-    if (l1.y <= l2.x || l2.y <= l1.x) return 0;
+    if (l1.y < l2.x || l2.y < l1.x) return 0;
 
-    if (l1.x >= l2.x && l1.y <= l2.y)
+    if (
+        (l1.x >= l2.x && l1.y <= l2.y)
+        || (l2.x >= l1.x && l2.y <= l1.y)
+    )
     {
         // Complete Overlap, any direction is possible
         // Cannot give a singular value, but return something anyways
-        *overlap = l2.y-l2.x + l1.y-l1.x;
+        //*overlap = l2.y-l2.x + l1.y-l1.x;
+        *overlap = fmin(fabs(l2.y-l2.x), fabs(l1.y-l1.x));
         return 2;
     }
     //Partial overlap

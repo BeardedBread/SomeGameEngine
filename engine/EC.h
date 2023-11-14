@@ -59,6 +59,7 @@ typedef struct _CMovementState_t {
     uint8_t ground_state;
     uint8_t water_state;
     uint8_t x_dir;
+    float water_overlap;
 } CMovementState_t;
 
 // This is to store the occupying tiles

@@ -44,6 +44,7 @@ void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* t
         data->tilemap.tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
     }
     memset(&data->coins, 0, sizeof(data->coins));
+    data->show_grid = false;
 }
 
 void term_level_scene_data(LevelSceneData_t* data)

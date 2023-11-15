@@ -42,12 +42,12 @@ typedef struct LevelSceneData {
     TileGrid_t tilemap;
     RenderTexture2D game_viewport;
     Rectangle game_rec;
-    //Camera2D cam;
     LevelCamera_t camera;
     Sprite_t* tile_sprites[MAX_TILE_SPRITES];
     LevelPack_t* level_pack;
     unsigned int current_level;
     CoinCounter_t coins;
+    bool show_grid;
 }LevelSceneData_t;
 
 typedef struct LevelScene {

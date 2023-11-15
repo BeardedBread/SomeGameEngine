@@ -16,5 +16,6 @@ typedef enum ActionType
     ACTION_RESTART,
     ACTION_NEXTLEVEL,
     ACTION_PREVLEVEL,
+    ACTION_TOGGLE_GRID,
 }ActionType_t;
 #endif // __ACTIONS_H

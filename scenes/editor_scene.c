@@ -451,38 +451,41 @@ static void render_editor_game_scene(Scene_t* scene)
 
         draw_particle_system(&scene->part_sys);
 
-        for (int tile_y = min.y; tile_y < max.y; tile_y++)
+        if (data->show_grid)
         {
-            for (int tile_x = min.x; tile_x < max.x; tile_x++)
+            for (int tile_y = min.y; tile_y < max.y; tile_y++)
             {
-                int i = tile_x + tile_y * tilemap.width;
-                int x = tile_x * TILE_SIZE;
-                int y = tile_y * TILE_SIZE;
-
-                sprintf(buffer, "%u", sc_map_size_64v(&tilemap.tiles[i].entities_set));
-
-                if (tilemap.tiles[i].solid > 0)
+                for (int tile_x = min.x; tile_x < max.x; tile_x++)
                 {
-                    DrawText(buffer, x, y, 10, WHITE);
-                }
-                else
-                {
-                    // Draw water tile
-                    DrawText(buffer, x, y, 10, BLACK);
+                    int i = tile_x + tile_y * tilemap.width;
+                    int x = tile_x * TILE_SIZE;
+                    int y = tile_y * TILE_SIZE;
+
+                    sprintf(buffer, "%u", sc_map_size_64v(&tilemap.tiles[i].entities_set));
+
+                    if (tilemap.tiles[i].solid > 0)
+                    {
+                        DrawText(buffer, x, y, 10, WHITE);
+                    }
+                    else
+                    {
+                        // Draw water tile
+                        DrawText(buffer, x, y, 10, BLACK);
+                    }
                 }
             }
-        }
 
-        // Draw tile grid
-        for (size_t i = min.x; i < max.x; ++i)
-        {
-            int x = (i+1)*TILE_SIZE;
-            DrawLine(x, 0, x, tilemap.height * TILE_SIZE, BLACK);
-        }
-        for (size_t i = min.y; i < max.y;++i)
-        {
-            int y = (i+1)*TILE_SIZE;
-            DrawLine(0, y, tilemap.width * TILE_SIZE, y, BLACK);
+            // Draw tile grid
+            for (size_t i = min.x; i < max.x; ++i)
+            {
+                int x = (i+1)*TILE_SIZE;
+                DrawLine(x, 0, x, tilemap.height * TILE_SIZE, BLACK);
+            }
+            for (size_t i = min.y; i < max.y;++i)
+            {
+                int y = (i+1)*TILE_SIZE;
+                DrawLine(0, y, tilemap.width * TILE_SIZE, y, BLACK);
+            }
         }
         EndMode2D();
     EndTextureMode();
@@ -770,6 +773,7 @@ static void restart_editor_level(Scene_t* scene)
 
 static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     CPlayerState_t* p_playerstate;
     sc_map_foreach_value(&scene->ent_manager.component_map[CPLAYERSTATE_T], p_playerstate)
     {
@@ -875,6 +879,12 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             case ACTION_RESTART:
                 restart_editor_level(scene);
             break;
+            case ACTION_TOGGLE_GRID:
+                if (!pressed)
+                {
+                    data->show_grid = !data->show_grid;
+                }
+            break;
             default:
             break;
         }
@@ -894,6 +904,7 @@ void init_sandbox_scene(LevelScene_t* scene)
         &scene->data, MAX_N_TILES, all_tiles,
         (Rectangle){25, 25, VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE}
     );
+    scene->data.show_grid = true;
     for (size_t i = 0; i < scene->data.tilemap.width; ++i)
     {
         unsigned int tile_idx = (scene->data.tilemap.height - 1) * scene->data.tilemap.width + i;
@@ -1035,6 +1046,7 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_map_put_64(&scene->scene.action_map, KEY_T, ACTION_CRATE_ACTIVATION);
     sc_map_put_64(&scene->scene.action_map, KEY_L, ACTION_EXIT);
     sc_map_put_64(&scene->scene.action_map, KEY_R, ACTION_RESTART);
+    sc_map_put_64(&scene->scene.action_map, KEY_H, ACTION_TOGGLE_GRID);
 
 }
 

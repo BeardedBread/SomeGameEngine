@@ -1701,6 +1701,7 @@ void boulder_destroy_wooden_tile_system(Scene_t* scene)
 
         if (tilemap.tiles[tile_idx].tile_type == ONEWAY_TILE)
         {
+            play_sfx(scene->engine, WOOD_DESTROY_SFX);
             destroy_tile(data, tile_idx); 
             if (tile_x > 0 && tilemap.tiles[tile_idx - 1].tile_type == ONEWAY_TILE)
             {

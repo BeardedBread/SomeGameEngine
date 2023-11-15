@@ -3,7 +3,7 @@
 uint8_t find_1D_overlap(Vector2 l1, Vector2 l2, float* overlap)
 {
    // No Overlap
-    if (l1.y < l2.x || l2.y < l1.x) return 0;
+    if (l1.y <= l2.x || l2.y <= l1.x) return 0;
 
     if (
         (l1.x >= l2.x && l1.y <= l2.y)
@@ -110,13 +110,13 @@ bool line_in_AABB(Vector2 p1, Vector2 p2, Rectangle box)
     l1.y = p2.x;
     l2.x = box.x;
     l2.y = box.x + box.width;
+    uint8_t x_res = find_1D_overlap(l1, l2, &overlap.x);
 
-    find_1D_overlap(l1, l2, &overlap.x);
     l1.x = p1.y;
     l1.y = p2.y;
     l2.x = box.y;
     l2.y = box.y + box.height;
-    find_1D_overlap(l1, l2, &overlap.y);
+    uint8_t y_res = find_1D_overlap(l1, l2, &overlap.y);
 
-    return (overlap.x != 0 && overlap.y != 0);
+    return (x_res != 0 && y_res != 0);
 }

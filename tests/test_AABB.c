@@ -86,7 +86,7 @@ static void test_AABB_overlap(void **state)
     p2.x = 10;
     p2.y = 10;
     assert_int_equal(find_AABB_overlap(p1, sz1, p2, sz2, &overlap), 2); // Smaller one is complete overlap
-    assert_int_equal(find_AABB_overlap(p2, sz2, p1, sz1, &overlap), 1); // Bigger on is not
+    assert_int_equal(find_AABB_overlap(p2, sz2, p1, sz1, &overlap), 2); // This is also considered complete overlap
 
     p2.x = 15;
     p2.y = 15;

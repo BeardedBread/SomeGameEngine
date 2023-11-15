@@ -875,11 +875,20 @@ void friction_coefficient_update_system(Scene_t* scene)
 
 
         // Friction
-        if (p_mstate != NULL && p_mstate->water_state & 1)
+        if (p_mstate != NULL)
         {
             // Apply water friction
             // Consistent in all direction
-            p_ct->fric_coeff = (Vector2){-WATER_FRICTION, -WATER_FRICTION};
+            p_ct->fric_coeff = Vector2Add(
+                Vector2Scale(
+                    (Vector2){-WATER_FRICTION, -WATER_FRICTION},
+                    p_mstate->water_overlap
+                ),
+                Vector2Scale(
+                    (Vector2){-GROUND_X_FRICTION, -GROUND_Y_FRICTION},
+                    (1 - p_mstate->water_overlap)
+                )
+            );
         }
         else
         {
@@ -914,45 +923,6 @@ void global_external_forces_system(Scene_t* scene)
         {
             p_ctransform->grav_timer--;
             continue;
-        }
-
-        // Upthrust depends on water overlapping
-        if (p_bbox != NULL)
-        {
-            unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
-            unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
-            unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
-            unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
-            float water_area = 0;
-            for (unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
-            {
-                for (unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
-                {
-                    unsigned int tile_idx = tile_y * data->tilemap.width + tile_x;
-                    if (data->tilemap.tiles[tile_idx].water_level > 0)
-                    {
-                        uint32_t water_height = data->tilemap.tiles[tile_idx].water_level * WATER_BBOX_STEP;
-                        Vector2 water_tl = {
-                            .x = (tile_idx % data->tilemap.width) * data->tilemap.tile_size,
-                            .y = (tile_idx / data->tilemap.width + 1) * data->tilemap.tile_size - water_height};
-
-                        Vector2 water_sz = {
-                            .x = data->tilemap.tile_size,
-                            .y = water_height,
-                        };
-                        
-                        Vector2 overlap;
-                        if (find_AABB_overlap(
-                            p_ctransform->position, p_bbox->size,
-                            water_tl, water_sz, &overlap
-                        ))
-                        {
-                            water_area += fabs(overlap.x * overlap.y);
-                        }
-                    }
-                }
-            }
-            p_mstate->water_overlap = water_area/(p_bbox->size.x * p_bbox->size.y);
         }
 
         if (!(p_mstate->ground_state & 1))
@@ -1425,7 +1395,44 @@ void state_transition_update_system(Scene_t* scene)
             p_ctransform->grav_timer = p_ctransform->grav_delay;
         }
 
-        bool in_water = p_mstate->water_overlap > 0.4;
+        // Upthrust depends on water overlapping
+        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
+        unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
+        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
+        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
+        float water_area = 0;
+        for (unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
+        {
+            for (unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
+            {
+                unsigned int tile_idx = tile_y * data->tilemap.width + tile_x;
+                if (data->tilemap.tiles[tile_idx].water_level > 0)
+                {
+                    uint32_t water_height = data->tilemap.tiles[tile_idx].water_level * WATER_BBOX_STEP;
+                    Vector2 water_tl = {
+                        .x = (tile_idx % data->tilemap.width) * data->tilemap.tile_size,
+                        .y = (tile_idx / data->tilemap.width + 1) * data->tilemap.tile_size - water_height};
+
+                    Vector2 water_sz = {
+                        .x = data->tilemap.tile_size,
+                        .y = water_height,
+                    };
+                    
+                    Vector2 overlap;
+                    if (find_AABB_overlap(
+                        p_ctransform->position, p_bbox->size,
+                        water_tl, water_sz, &overlap
+                    ))
+                    {
+                        water_area += fabs(overlap.x * overlap.y);
+                    }
+                }
+            }
+        }
+        p_mstate->water_overlap = water_area/(p_bbox->size.x * p_bbox->size.y);
+
+
+        bool in_water = p_mstate->water_overlap > 0;
         p_mstate->ground_state <<= 1;
         p_mstate->ground_state |= on_ground? 1:0;
         p_mstate->ground_state &= 3;

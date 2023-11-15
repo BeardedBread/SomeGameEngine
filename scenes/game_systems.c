@@ -1844,7 +1844,7 @@ void airtimer_update_system(Scene_t* scene)
 
         Vector2 point_to_check = {
             (p_movement->x_dir == 0) ? p_ctransform->position.x : p_ctransform->position.x + p_bbox->size.x,
-            p_ctransform->position.y + p_bbox->half_size.y,
+            p_ctransform->position.y + p_bbox->half_size.y / 2,
         };
 
         unsigned int tile_idx = get_tile_idx(

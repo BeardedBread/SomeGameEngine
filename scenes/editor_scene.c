@@ -213,14 +213,12 @@ static void render_editor_game_scene(Scene_t* scene)
                 int y = tile_y * TILE_SIZE;
 
 
-    #if !defined(PLATFORM_WEB)
-                if (!tilemap.tiles[i].moveable)
-                {
-                    // Draw water tile
-                    Color water_colour = ColorAlpha(RED, 0.2);
-                    DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
-                }
-    #endif
+                //if (!tilemap.tiles[i].moveable)
+                //{
+                //    // Draw water tile
+                //    Color water_colour = ColorAlpha(RED, 0.2);
+                //    DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
+                //}
 
                 uint8_t tile_sprite_idx = tilemap.tiles[i].tile_type + tilemap.tiles[i].rotation;
                 if (data->tile_sprites[tile_sprite_idx] != NULL)

@@ -67,10 +67,7 @@ static inline void destroy_tile(LevelSceneData_t* lvl_data, unsigned int tile_id
         play_particle_emitter(&scene->part_sys, &emitter);
     }
 
-    tilemap.tiles[tile_idx].tile_type = EMPTY_TILE;
-    tilemap.tiles[tile_idx].solid = NOT_SOLID;
-    tilemap.tiles[tile_idx].moveable = true;
-
+    change_a_tile(&tilemap, tile_idx, EMPTY_TILE);
 }
 
 // ------------------------- Collision functions ------------------------------------

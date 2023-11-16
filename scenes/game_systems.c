@@ -759,12 +759,19 @@ void tile_collision_system(Scene_t* scene)
                 if(tilemap.tiles[tile_idx].tile_type != EMPTY_TILE)
                 {
                     Vector2 other;
-                    other.x = (tile_idx % tilemap.width) * TILE_SIZE + tilemap.tiles[tile_idx].offset.x;
-                    other.y = (tile_idx / tilemap.width) * TILE_SIZE + tilemap.tiles[tile_idx].offset.y; // Precision loss is intentional
+                    other.x =
+                        (tile_idx % tilemap.width) * tilemap.tile_size
+                        + tilemap.tiles[tile_idx].offset.x;
+                    other.y =
+                        (tile_idx / tilemap.width) * tilemap.tile_size
+                        + tilemap.tiles[tile_idx].offset.y; // Precision loss is intentional
 
                     check_collision_and_move(
                         &tilemap, p_ent,
-                        &other, tilemap.tiles[tile_idx].size, tilemap.tiles[tile_idx].solid
+                        &other, 
+                        //tilemap.tiles[tile_idx].size,
+                        (Vector2){tilemap.tile_size, tilemap.tile_size},
+                        tilemap.tiles[tile_idx].solid
                     );
 
                 }

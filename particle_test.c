@@ -79,6 +79,7 @@ int main(void)
     };
 
     bool key_press = false;
+    char text_buffer[32];
     while(!WindowShouldClose())
     {
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
@@ -92,10 +93,11 @@ int main(void)
             key_press = false;
         }
         update_particle_system(&part_sys);
-
+        sprintf(text_buffer, "free: %u", get_number_of_free_emitter(&part_sys));
         BeginDrawing();
             ClearBackground(RAYWHITE);
             draw_particle_system(&part_sys);
+            DrawText(text_buffer, 0, 0, 16, BLACK);
         EndDrawing();
     } 
     UnloadTexture(tex);

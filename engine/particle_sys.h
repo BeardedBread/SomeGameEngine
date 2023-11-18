@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+typedef uint16_t EmitterHandle;
+
 typedef enum PartEmitterType
 {
     EMITTER_BURST = 0,
@@ -23,6 +25,7 @@ typedef struct Particle
     float size;
     uint32_t timer;
     bool alive;
+    bool spawned;
 }Particle_t;
 
 typedef void (*particle_update_func_t)(Particle_t* part, void* user_data);
@@ -66,7 +69,16 @@ typedef struct ParticleSystem
 }ParticleSystem_t;
 
 void init_particle_system(ParticleSystem_t* system);
+uint16_t get_number_of_free_emitter(ParticleSystem_t* system);
+
+// For one-shots
 void play_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_emitter);
+
+EmitterHandle load_in_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_emitter);
+void play_emitter_handle(ParticleSystem_t* system, EmitterHandle handle);
+void pause_emitter_handle(ParticleSystem_t* system, EmitterHandle handle);
+void unload_emitter_handle(ParticleSystem_t* system, EmitterHandle handle);
+
 void update_particle_system(ParticleSystem_t* system);
 void draw_particle_system(ParticleSystem_t* system);
 void deinit_particle_system(ParticleSystem_t* system);

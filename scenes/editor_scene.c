@@ -274,17 +274,6 @@ static void render_editor_game_scene(Scene_t* scene)
                     }
                 }
 
-                // Draw water tile
-                uint32_t water_height = tilemap.tiles[i].water_level * WATER_BBOX_STEP;
-                // Draw water tile
-                Color water_colour = ColorAlpha(BLUE, 0.5);
-                DrawRectangle(
-                    x,
-                    y + (TILE_SIZE - water_height),
-                    TILE_SIZE,
-                    water_height,
-                    water_colour
-                );
                 if (tilemap.tiles[i].max_water_level < MAX_WATER_LEVEL)
                 {
                     DrawRectangleLinesEx((Rectangle){x, y, TILE_SIZE, TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
@@ -436,6 +425,27 @@ static void render_editor_game_scene(Scene_t* scene)
         {
             CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
             DrawCircleV(p_ct->position, tilemap.tile_size >> 1, (data->coins.current < data->coins.total)? RED : GREEN);
+        }
+
+        for (int tile_y = min.y; tile_y < max.y; tile_y++)
+        {
+            for (int tile_x = min.x; tile_x < max.x; tile_x++)
+            {
+                int i = tile_x + tile_y * tilemap.width;
+                int x = tile_x * TILE_SIZE;
+                int y = tile_y * TILE_SIZE;
+
+                uint32_t water_height = tilemap.tiles[i].water_level * WATER_BBOX_STEP;
+                // Draw water tile
+                Color water_colour = ColorAlpha(BLUE, 0.5);
+                DrawRectangle(
+                    x,
+                    y + (TILE_SIZE - water_height),
+                    TILE_SIZE,
+                    water_height,
+                    water_colour
+                );
+            }
         }
 
         sc_map_foreach_value(&scene->ent_manager.entities_map[DYNMEM_ENT_TAG], p_ent)

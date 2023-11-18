@@ -11,8 +11,9 @@ typedef uint16_t EmitterHandle;
 
 typedef enum PartEmitterType
 {
-    EMITTER_BURST = 0,
-    EMITTER_UNKNOWN,
+    EMITTER_UNKNOWN = 0,
+    EMITTER_BURST,
+    EMITTER_STREAM,
 } PartEmitterType_t;
 
 typedef struct Particle
@@ -56,6 +57,7 @@ typedef struct ParticleEmitter
 typedef struct IndexList
 {
     uint32_t next;
+    bool playing;
 }IndexList_t;
 
 typedef struct ParticleSystem
@@ -77,6 +79,7 @@ void play_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in
 EmitterHandle load_in_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_emitter);
 void play_emitter_handle(ParticleSystem_t* system, EmitterHandle handle);
 void pause_emitter_handle(ParticleSystem_t* system, EmitterHandle handle);
+void update_emitter_handle_position(ParticleSystem_t* system, EmitterHandle handle, Vector2 pos);
 void unload_emitter_handle(ParticleSystem_t* system, EmitterHandle handle);
 
 void update_particle_system(ParticleSystem_t* system);

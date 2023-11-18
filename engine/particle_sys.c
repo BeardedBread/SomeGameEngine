@@ -61,15 +61,35 @@ uint16_t load_in_particle_emitter(ParticleSystem_t* system, const ParticleEmitte
     {
         system->emitters[idx].n_particles = MAX_PARTICLES;
     }
+    system->emitter_list[idx].playing = false;
     return idx;
 }
 
 void play_emitter_handle(ParticleSystem_t* system, uint16_t handle)
 {
     if (handle == 0) return;
-    system->emitter_list[system->tail_idx].next = handle;
-    system->tail_idx = handle;
-    system->emitter_list[handle].next = 0;
+    if (!system->emitter_list[handle].playing)
+    {
+        ParticleEmitter_t* emitter = system->emitters + handle;
+        if (emitter->config->type == EMITTER_BURST)
+        {
+            for (uint32_t i = 0; i < emitter->n_particles; ++i)
+            {
+                spawn_particle(emitter, i);
+            }
+        }
+        else if (emitter->config->type == EMITTER_STREAM)
+        {
+            // TODO: deal with stream type
+            //spawn_particle(emitter, 0);
+        }
+        system->emitter_list[system->tail_idx].next = handle;
+        system->tail_idx = handle;
+        system->emitter_list[handle].next = 0;
+        system->emitter_list[handle].playing = true;
+    }
+    system->emitters[handle].active = true;
+
 }
 
 // An emitter cannot be unloaded or paused mid-way when particles to still
@@ -77,8 +97,16 @@ void play_emitter_handle(ParticleSystem_t* system, uint16_t handle)
 void pause_emitter_handle(ParticleSystem_t* system, uint16_t handle)
 {
     if (handle == 0) return;
+    if (!system->emitter_list[handle].playing) return;
     
     system->emitters[handle].active = false;
+}
+
+void update_emitter_handle_position(ParticleSystem_t* system, EmitterHandle handle, Vector2 pos)
+{
+    if (handle == 0) return;
+    
+    system->emitters[handle].position = pos;
 }
 
 void unload_emitter_handle(ParticleSystem_t* system, uint16_t handle)
@@ -94,17 +122,6 @@ void play_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in
     uint16_t idx = load_in_particle_emitter(system, in_emitter);
     if (idx == 0) return;
 
-    ParticleEmitter_t* emitter = system->emitters + idx;
-    // Generate particles based on type
-    // Burst type need to generate all at once
-    // TODO: stream type need to generate one at a time
-    if (emitter->config->type == EMITTER_BURST)
-    {
-        for (uint32_t i = 0; i < emitter->n_particles; ++i)
-        {
-            spawn_particle(emitter, i);
-        }
-    }
     play_emitter_handle(system, idx);
 }
 
@@ -134,29 +151,32 @@ void update_particle_system(ParticleSystem_t* system)
                 if (emitter->particles[i].timer == 0)
                 {
                     emitter->particles[i].alive = false;
+                }
+            }
+
+            if (!emitter->particles[i].alive)
+            {
+                if (emitter->config->one_shot || !emitter->active)
+                {
                     inactive_count++;
                 }
-                // TODO: If streaming and not one shot, immediately revive the particle
-            }
-            else
-            {
-                inactive_count++;
+                else
+                {
+                    // If not one shot, immediately revive the particle
+                    spawn_particle(emitter, i); 
+                }
             }
         }
         if (inactive_count == emitter->n_particles)
         {
-            // TODO: If burst and not one shot, revive all particles
-            emitter->active = false;
-        }
-
-        if (!emitter->active)
-        {
+            // Stop playing only if all particles is inactive
             if (!emitter->finished && emitter->config->one_shot)
             {
                 emitter->finished = true;
             }
             system->emitter_list[prev_idx].next = system->emitter_list[emitter_idx].next;
             system->emitter_list[emitter_idx].next = 0;
+            system->emitter_list[emitter_idx].playing = false;
             if (system->tail_idx == emitter_idx)
             {
                 system->tail_idx = prev_idx;

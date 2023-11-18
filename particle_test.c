@@ -69,6 +69,7 @@ int main(void)
         .launch_range = {0, 360},
         .speed_range = {400, 2000},
         .particle_lifetime = {30, 110},
+        .type = EMITTER_BURST,
     };
 
     ParticleEmitter_t emitter = {
@@ -78,20 +79,59 @@ int main(void)
         .spr = (tex.width == 0) ? NULL : &spr,
     };
 
+    EmitterConfig_t conf2 ={
+        .one_shot = false,
+        .launch_range = {0, 360},
+        .speed_range = {300, 800},
+        .particle_lifetime = {15, 30},
+        .type = EMITTER_BURST,
+    };
+
+    ParticleEmitter_t emitter2 = {
+        .config = &conf2,
+        .n_particles = MAX_PARTICLES,
+        .update_func = &simple_particle_system_update,
+        .spr = (tex.width == 0) ? NULL : &spr,
+    };
+
+    EmitterHandle han = load_in_particle_emitter(&part_sys, &emitter2);
+    assert(han != 0);
+
     bool key_press = false;
+    uint8_t key2_press = 0;
     char text_buffer[32];
     while(!WindowShouldClose())
     {
+        Vector2 mouse_pos = GetMousePosition();
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
         {
             key_press = true;
         }
         else if (key_press && IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
         {
-            emitter.position = GetMousePosition();
+            emitter.position = mouse_pos;
             play_particle_emitter(&part_sys, &emitter);
             key_press = false;
         }
+
+        key2_press <<= 1;
+        key2_press |= IsMouseButtonDown(MOUSE_RIGHT_BUTTON)? 1: 0;
+        key2_press &= 0b11;
+
+        if (key2_press == 0b01)
+        {
+            update_emitter_handle_position(&part_sys, han, mouse_pos);
+            play_emitter_handle(&part_sys, han);
+        }
+        else if(key2_press == 0b11)
+        {
+            update_emitter_handle_position(&part_sys, han, mouse_pos);
+        }
+        else if (key2_press == 0b10)
+        {
+            pause_emitter_handle(&part_sys, han);
+        }
+
         update_particle_system(&part_sys);
         sprintf(text_buffer, "free: %u", get_number_of_free_emitter(&part_sys));
         BeginDrawing();

@@ -43,6 +43,7 @@ static inline void spawn_particle(ParticleEmitter_t* emitter, uint32_t idx)
     emitter->particles[idx].rotation = angle;
     emitter->particles[idx].angular_vel = -10 + 20 * (float)rand() / (float)RAND_MAX;
     emitter->particles[idx].size = 10 + 20 * (float)rand() / (float)RAND_MAX;
+    emitter->particles[idx].spawned = true;
 ;
 }
 
@@ -82,6 +83,14 @@ void play_emitter_handle(ParticleSystem_t* system, uint16_t handle)
         {
             // TODO: deal with stream type
             //spawn_particle(emitter, 0);
+            uint32_t incr = 0;
+            for (uint32_t i = 0; i < emitter->n_particles; ++i)
+            {
+                emitter->particles[i].timer = incr;
+                emitter->particles[i].alive = false;
+                emitter->particles[i].spawned = false;
+                incr += emitter->config->initial_spawn_delay;
+            }
         }
         system->emitter_list[system->tail_idx].next = handle;
         system->tail_idx = handle;
@@ -97,7 +106,7 @@ void play_emitter_handle(ParticleSystem_t* system, uint16_t handle)
 void pause_emitter_handle(ParticleSystem_t* system, uint16_t handle)
 {
     if (handle == 0) return;
-    if (!system->emitter_list[handle].playing) return;
+    //if (!system->emitter_list[handle].playing) return;
     
     system->emitters[handle].active = false;
 }
@@ -146,21 +155,32 @@ void update_particle_system(ParticleSystem_t* system)
                     emitter->update_func(emitter->particles + i, emitter->user_data);
                 }
 
-                // Lifetime update
-                if (emitter->particles[i].timer > 0) emitter->particles[i].timer--;
-                if (emitter->particles[i].timer == 0)
+            }
+            // Lifetime update
+            if (emitter->particles[i].timer > 0) emitter->particles[i].timer--;
+            if (emitter->particles[i].timer == 0)
+            {
+                if (emitter->particles[i].spawned)
                 {
                     emitter->particles[i].alive = false;
+                }
+                else
+                {
+                    emitter->particles[i].spawned = true;
                 }
             }
 
             if (!emitter->particles[i].alive)
             {
-                if (emitter->config->one_shot || !emitter->active)
+                if (!emitter->active)
                 {
                     inactive_count++;
                 }
-                else
+                else if (emitter->config->one_shot)
+                {
+                    inactive_count++;
+                }
+                else if (emitter->particles[i].spawned)
                 {
                     // If not one shot, immediately revive the particle
                     spawn_particle(emitter, i); 

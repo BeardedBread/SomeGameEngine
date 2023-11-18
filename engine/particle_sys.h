@@ -36,6 +36,7 @@ typedef struct EmitterConfig
     float launch_range[2];
     float speed_range[2];
     uint32_t particle_lifetime[2];
+    uint32_t initial_spawn_delay;
     PartEmitterType_t type;
     bool one_shot;
 }EmitterConfig_t;

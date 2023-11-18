@@ -81,10 +81,11 @@ int main(void)
 
     EmitterConfig_t conf2 ={
         .one_shot = false,
-        .launch_range = {0, 360},
+        .launch_range = {45, 135},
         .speed_range = {300, 800},
         .particle_lifetime = {15, 30},
-        .type = EMITTER_BURST,
+        .initial_spawn_delay = 5,
+        .type = EMITTER_STREAM,
     };
 
     ParticleEmitter_t emitter2 = {

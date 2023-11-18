@@ -52,7 +52,7 @@ static bool parse_emitter_info(char* emitter_info_str, EmitterConfig_t* conf)
     if (data_count == 8)
     {
         conf->type = (emitter_type == 'b') ? EMITTER_BURST : EMITTER_UNKNOWN;
-        conf->one_shot = (one_shot == 1);
+        conf->one_shot = (one_shot == '1');
     }
     return data_count == 8;
 }

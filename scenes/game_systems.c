@@ -1623,9 +1623,7 @@ void hitbox_update_system(Scene_t* scene)
 
                                     CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
                                     CPlayerState_t* p_pstate = get_component(p_ent, CPLAYERSTATE_T);
-                                    if (
-                                        p_pstate != NULL
-                                    )
+                                    if (p_pstate != NULL)
                                     {
                                         if (p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y)
                                         {
@@ -1660,7 +1658,22 @@ void hitbox_update_system(Scene_t* scene)
                                     {
                                         remove_component(p_other_ent, CHURTBOX_T);
                                         CLifeTimer_t* p_clifetimer = add_component(p_other_ent, CLIFETIMER_T);
-                                        p_clifetimer->life_time = 3;
+                                        if (p_other_ent->m_tag == CRATES_ENT_TAG)
+                                        {
+                                            CContainer_t* p_container = get_component(p_other_ent, CCONTAINER_T);
+                                            if (p_container->item == CONTAINER_BOMB)
+                                            {
+                                                p_clifetimer->life_time = 6;
+                                            }
+                                            else
+                                            {
+                                                p_clifetimer->life_time = 3;
+                                            }
+                                        }
+                                        else
+                                        {
+                                            p_clifetimer->life_time = 3;
+                                        }
                                     }
                                 }
                                 else

@@ -89,6 +89,7 @@ int main(void)
     EmitterConfig_t conf2 ={
         .one_shot = false,
         .launch_range = {45, 135},
+        //.launch_range = {0, 360},
         .speed_range = {300, 800},
         .particle_lifetime = {15, 30},
         .initial_spawn_delay = 5,
@@ -127,9 +128,8 @@ int main(void)
 
         if (key2_press == 0b01)
         {
+            emitter2.position = mouse_pos;
             han = play_particle_emitter(&part_sys, &emitter2);
-            update_emitter_handle_position(&part_sys, han, mouse_pos);
-            //play_emitter_handle(&part_sys, han);
         }
         else if(key2_press == 0b11)
         {

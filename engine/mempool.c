@@ -77,6 +77,7 @@ static CMoveable_t cmoveable_buffer[MAX_COMP_POOL_SIZE];
 static CLifeTimer_t clifetimer_buffer[MAX_COMP_POOL_SIZE];
 static CWaterRunner_t cwaterrunner_buffer[32];
 static CAirTimer_t cairtimer_buffer[8]; // Only player is expected to have this
+static CEmitter_t cemitter_buffer[MAX_COMP_POOL_SIZE]; // Only player is expected to have this
 
 // Static allocate mempools
 static MemPool_t comp_mempools[N_COMPONENTS] = {
@@ -94,6 +95,7 @@ static MemPool_t comp_mempools[N_COMPONENTS] = {
     {clifetimer_buffer, MAX_COMP_POOL_SIZE, sizeof(CLifeTimer_t), NULL, {0}},
     {cwaterrunner_buffer, 32, sizeof(CWaterRunner_t), NULL, {0}},
     {cairtimer_buffer, 8, sizeof(CAirTimer_t), NULL, {0}},
+    {cemitter_buffer, MAX_COMP_POOL_SIZE, sizeof(CEmitter_t), NULL, {0}},
 };
 static MemPool_t ent_mempool = {
     .buffer = entity_buffer,

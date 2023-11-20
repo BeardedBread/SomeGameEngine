@@ -7,8 +7,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef uint16_t EmitterHandle;
-
 typedef enum PartEmitterType
 {
     EMITTER_UNKNOWN = 0,
@@ -86,6 +84,7 @@ void play_emitter_handle(ParticleSystem_t* system, EmitterHandle handle);
 void stop_emitter_handle(ParticleSystem_t* system, EmitterHandle handle);
 void update_emitter_handle_position(ParticleSystem_t* system, EmitterHandle handle, Vector2 pos);
 void unload_emitter_handle(ParticleSystem_t* system, EmitterHandle handle);
+bool is_emitter_handle_alive(ParticleSystem_t* system, EmitterHandle handle);
 
 void update_particle_system(ParticleSystem_t* system);
 void draw_particle_system(ParticleSystem_t* system);

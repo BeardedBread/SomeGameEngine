@@ -26,6 +26,7 @@ typedef enum ComponentEnum {
     CLIFETIMER_T,
     CWATERRUNNER_T,
     CAIRTIMER_T,
+    CEMITTER_T,
 } ComponentEnum_t;
 
 typedef enum MovementMode {
@@ -214,6 +215,13 @@ typedef struct _CMoveable_t {
     Vector2 target_pos;
     bool gridmove;
 } CMoveable_t;
+
+typedef uint16_t EmitterHandle;
+typedef struct _CEmitter_t
+{
+    EmitterHandle handle;
+    Vector2 offset;
+} CEmitter_t;
 
 static inline void set_bbox(CBBox_t* p_bbox, unsigned int x, unsigned int y)
 {

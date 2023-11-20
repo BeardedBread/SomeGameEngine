@@ -17,6 +17,6 @@
 #define MAX_TILE_TYPES 16
 
 #define N_TAGS 10
-#define N_COMPONENTS 14
+#define N_COMPONENTS 15
 #define MAX_COMP_POOL_SIZE 1024
 #endif // _ENGINE_CONF_H

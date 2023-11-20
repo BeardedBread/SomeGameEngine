@@ -1495,6 +1495,10 @@ void state_transition_update_system(Scene_t* scene)
                     };
                     p_emitter->handle = play_particle_emitter(&scene->part_sys, &emitter);
                 }
+                else
+                {
+                    play_emitter_handle(&scene->part_sys, p_emitter->handle);
+                }
             }
         }
     }

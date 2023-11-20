@@ -130,7 +130,7 @@ bool is_emitter_handle_alive(ParticleSystem_t* system, EmitterHandle handle)
 {
     if (handle == 0) return false;
 
-    return system->emitters[handle].active;
+    return !system->emitters[handle].finished;
 }
 
 EmitterHandle play_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_emitter)

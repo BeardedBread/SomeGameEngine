@@ -13,6 +13,7 @@ void global_external_forces_system(Scene_t* scene);
 void movement_update_system(Scene_t* scene);
 void player_ground_air_transition_system(Scene_t* scene);
 void state_transition_update_system(Scene_t* scene);
+void update_entity_emitter_system(Scene_t* scene);
 void update_tilemap_system(Scene_t* scene);
 void hitbox_update_system(Scene_t* scene);
 void edge_velocity_check_system(Scene_t* scene);

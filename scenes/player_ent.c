@@ -105,6 +105,8 @@ Entity_t* create_player(EntityManager_t* ent_manager)
     p_cspr->sprites = player_sprite_map;
     p_cspr->transition_func = &player_sprite_transition_func;
 
+    add_component(p_ent, CEMITTER_T);
+
     return p_ent;
 }
 

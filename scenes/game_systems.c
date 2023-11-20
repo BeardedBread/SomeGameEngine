@@ -7,6 +7,8 @@
 #include <stdio.h>
 
 void simple_particle_system_update(Particle_t* part, void* user_data);
+void floating_particle_system_update(Particle_t* part, void* user_data);
+bool check_in_water(const ParticleEmitter_t* emitter);
 
 static const Vector2 GRAVITY = {0, GRAV_ACCEL};
 static const Vector2 UPTHRUST = {0, -GRAV_ACCEL * 1.1};
@@ -1469,8 +1471,47 @@ void state_transition_update_system(Scene_t* scene)
                 .n_particles = 5,
                 .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
                 .update_func = &simple_particle_system_update,
+                .emitter_update_func = NULL,
             };
             play_particle_emitter(&scene->part_sys, &emitter);
+
+        }
+
+        if (p_mstate->water_state & 1)
+        {
+            CEmitter_t* p_emitter = get_component(p_ent, CEMITTER_T);
+            if (p_emitter != NULL)
+            {
+                if (!is_emitter_handle_alive(&scene->part_sys, p_emitter->handle))
+                {
+                    ParticleEmitter_t emitter = {
+                        .spr = get_sprite(&scene->engine->assets, "p_water"),
+                        .config = get_emitter_conf(&scene->engine->assets, "pe_bubbling"),
+                        .position = p_ctransform->position,
+                        .n_particles = 5,
+                        .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+                        .update_func = &floating_particle_system_update,
+                        .emitter_update_func = &check_in_water,
+                    };
+                    p_emitter->handle = play_particle_emitter(&scene->part_sys, &emitter);
+                }
+            }
+        }
+    }
+}
+
+void update_entity_emitter_system(Scene_t* scene)
+{
+    CEmitter_t* p_emitter;
+    unsigned long ent_idx;
+    sc_map_foreach(&scene->ent_manager.component_map[CEMITTER_T], ent_idx, p_emitter)
+    {
+        Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
+        CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
+        CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+        if (is_emitter_handle_alive(&scene->part_sys, p_emitter->handle))
+        {
+            update_emitter_handle_position(&scene->part_sys, p_emitter->handle, p_ctransform->position);
         }
     }
 }
@@ -2067,6 +2108,30 @@ void level_end_detection_system(Scene_t* scene)
     }
 }
 
+static inline bool is_point_in_water(Vector2 pos, TileGrid_t tilemap)
+{
+    unsigned int tile_idx = get_tile_idx(
+            pos.x,
+            pos.y,
+            tilemap.width
+    );
+    int tile_x = tile_idx % tilemap.width;
+    int tile_y = tile_idx / tilemap.width;
+    uint32_t water_height = tilemap.tiles[tile_idx].water_level * WATER_BBOX_STEP;
+    Vector2 tl = {tile_x * tilemap.tile_size, (tile_y + 1) * tilemap.tile_size - water_height};
+    return point_in_AABB(
+        pos,
+        (Rectangle){tl.x, tl.y, tilemap.tile_size, water_height}
+    );
+}
+
+bool check_in_water(const ParticleEmitter_t* emitter)
+{
+    LevelSceneData_t* lvl_data = (LevelSceneData_t*)emitter->user_data;
+    TileGrid_t tilemap = lvl_data->tilemap;
+    return is_point_in_water(emitter->position, tilemap);
+}
+
 void simple_particle_system_update(Particle_t* part, void* user_data)
 {
     LevelSceneData_t* lvl_data = (LevelSceneData_t*)user_data;
@@ -2093,18 +2158,53 @@ void simple_particle_system_update(Particle_t* part, void* user_data)
         Vector2Scale(part->velocity, delta_time)
     );
 
+    Vector2 center = Vector2AddValue(
+        part->position,
+        part->size / 2
+    );
     // Level boundary collision
     unsigned int level_width = tilemap.width * TILE_SIZE;
     unsigned int level_height = tilemap.height * TILE_SIZE;
-    {
 
-        if(
-            part->position.x < 0 || part->position.x + part->size > level_width
-            || part->position.y < 0 || part->position.y + part->size > level_height
-        )
-        {
-            part->timer = 0;
-        }
+    if(
+        center.x < 0 || center.x + part->size > level_width
+        || center.y < 0 || center.y + part->size > level_height
+    )
+    {
+        part->timer = 0;
     }
 }
 
+void floating_particle_system_update(Particle_t* part, void* user_data)
+{
+    LevelSceneData_t* lvl_data = (LevelSceneData_t*)user_data;
+    TileGrid_t tilemap = lvl_data->tilemap;
+
+    float delta_time = DELTA_T; // TODO: Will need to think about delta time handling
+    part->position = Vector2Add(
+        part->position,
+        Vector2Scale(part->velocity, delta_time)
+    );
+
+    Vector2 center = Vector2AddValue(
+        part->position,
+        part->size / 2
+    );
+    // Level boundary collision
+    unsigned int level_width = tilemap.width * TILE_SIZE;
+    unsigned int level_height = tilemap.height * TILE_SIZE;
+
+    if(
+        center.x < 0 || center.x + part->size > level_width
+        || center.y < 0 || center.y + part->size > level_height
+    )
+    {
+        part->timer = 0;
+    }
+
+    center.y = part->position.y;
+    if (!is_point_in_water(center, tilemap))
+    {
+        part->timer = 0;
+    }
+}

@@ -45,6 +45,12 @@ void simple_particle_system_update(Particle_t* part, void* user_data)
         }
     }
 }
+
+static bool check_mouse_click(const ParticleEmitter_t* emitter)
+{
+    return IsMouseButtonDown(MOUSE_RIGHT_BUTTON);
+}
+
 int main(void)
 {
     InitWindow(1280, 640, "raylib");
@@ -76,6 +82,7 @@ int main(void)
         .config = &conf,
         .n_particles = MAX_PARTICLES,
         .update_func = &simple_particle_system_update,
+        .emitter_update_func = NULL,
         .spr = (tex.width == 0) ? NULL : &spr,
     };
 
@@ -92,15 +99,14 @@ int main(void)
         .config = &conf2,
         .n_particles = MAX_PARTICLES,
         .update_func = &simple_particle_system_update,
+        .emitter_update_func = &check_mouse_click,
         .spr = (tex.width == 0) ? NULL : &spr,
     };
-
-    EmitterHandle han = load_in_particle_emitter(&part_sys, &emitter2);
-    assert(han != 0);
 
     bool key_press = false;
     uint8_t key2_press = 0;
     char text_buffer[32];
+    EmitterHandle han = 0;
     while(!WindowShouldClose())
     {
         Vector2 mouse_pos = GetMousePosition();
@@ -121,8 +127,9 @@ int main(void)
 
         if (key2_press == 0b01)
         {
+            han = play_particle_emitter(&part_sys, &emitter2);
             update_emitter_handle_position(&part_sys, han, mouse_pos);
-            play_emitter_handle(&part_sys, han);
+            //play_emitter_handle(&part_sys, han);
         }
         else if(key2_press == 0b11)
         {
@@ -130,7 +137,8 @@ int main(void)
         }
         else if (key2_press == 0b10)
         {
-            pause_emitter_handle(&part_sys, han);
+            stop_emitter_handle(&part_sys, han);
+            han = 0;
         }
 
         update_particle_system(&part_sys);

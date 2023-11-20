@@ -29,7 +29,10 @@ typedef struct Particle
     bool spawned;
 }Particle_t;
 
+typedef struct ParticleEmitter ParticleEmitter_t;
+
 typedef void (*particle_update_func_t)(Particle_t* part, void* user_data);
+typedef bool (*emitter_check_func_t)(const ParticleEmitter_t* emitter);
 
 typedef struct EmitterConfig
 {
@@ -41,7 +44,7 @@ typedef struct EmitterConfig
     bool one_shot;
 }EmitterConfig_t;
 
-typedef struct ParticleEmitter
+struct ParticleEmitter
 {
     const EmitterConfig_t* config;
     Sprite_t* spr;
@@ -53,7 +56,8 @@ typedef struct ParticleEmitter
     bool active;
     void* user_data;
     particle_update_func_t update_func;
-}ParticleEmitter_t;
+    emitter_check_func_t emitter_update_func;
+};
 
 typedef struct IndexList
 {
@@ -75,11 +79,11 @@ void init_particle_system(ParticleSystem_t* system);
 uint16_t get_number_of_free_emitter(ParticleSystem_t* system);
 
 // For one-shots
-void play_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_emitter);
+EmitterHandle play_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_emitter);
 
 EmitterHandle load_in_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_emitter);
 void play_emitter_handle(ParticleSystem_t* system, EmitterHandle handle);
-void pause_emitter_handle(ParticleSystem_t* system, EmitterHandle handle);
+void stop_emitter_handle(ParticleSystem_t* system, EmitterHandle handle);
 void update_emitter_handle_position(ParticleSystem_t* system, EmitterHandle handle, Vector2 pos);
 void unload_emitter_handle(ParticleSystem_t* system, EmitterHandle handle);
 

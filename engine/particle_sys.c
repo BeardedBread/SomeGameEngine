@@ -103,7 +103,7 @@ void play_emitter_handle(ParticleSystem_t* system, uint16_t handle)
 
 // An emitter cannot be unloaded or paused mid-way when particles to still
 // emitting, so defer into update function to do so
-void pause_emitter_handle(ParticleSystem_t* system, uint16_t handle)
+void stop_emitter_handle(ParticleSystem_t* system, EmitterHandle handle)
 {
     if (handle == 0) return;
     //if (!system->emitter_list[handle].playing) return;
@@ -118,7 +118,7 @@ void update_emitter_handle_position(ParticleSystem_t* system, EmitterHandle hand
     system->emitters[handle].position = pos;
 }
 
-void unload_emitter_handle(ParticleSystem_t* system, uint16_t handle)
+void unload_emitter_handle(ParticleSystem_t* system, EmitterHandle handle)
 {
     if (handle == 0) return;
 
@@ -126,12 +126,13 @@ void unload_emitter_handle(ParticleSystem_t* system, uint16_t handle)
     system->emitters[handle].finished = true;
 }
 
-void play_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_emitter)
+EmitterHandle play_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_emitter)
 {
-    uint16_t idx = load_in_particle_emitter(system, in_emitter);
-    if (idx == 0) return;
+    EmitterHandle idx = load_in_particle_emitter(system, in_emitter);
+    if (idx == 0) return 0 ;
 
     play_emitter_handle(system, idx);
+    return idx;
 }
 
 void update_particle_system(ParticleSystem_t* system)
@@ -143,6 +144,12 @@ void update_particle_system(ParticleSystem_t* system)
     {
         ParticleEmitter_t* emitter = system->emitters + emitter_idx;
         uint32_t inactive_count = 0;
+
+        if (emitter->emitter_update_func != NULL && emitter->active)
+        {
+            emitter->active = emitter->emitter_update_func(emitter);
+        }
+
         for (uint32_t i = 0; i < emitter->n_particles; ++i)
         {
             // TODO: If a particle is not spawned, run its timer. Spawn on zero
@@ -187,10 +194,11 @@ void update_particle_system(ParticleSystem_t* system)
                 }
             }
         }
+
         if (inactive_count == emitter->n_particles)
         {
             // Stop playing only if all particles is inactive
-            if (!emitter->finished && emitter->config->one_shot)
+            if (!emitter->finished)
             {
                 emitter->finished = true;
             }
@@ -213,6 +221,7 @@ void update_particle_system(ParticleSystem_t* system)
         emitter_idx = system->emitter_list[emitter_idx].next;
     }
 }
+
 void draw_particle_system(ParticleSystem_t* system)
 {
     uint32_t emitter_idx = system->emitter_list[0].next;

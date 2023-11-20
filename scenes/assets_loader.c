@@ -41,20 +41,28 @@ static bool parse_emitter_info(char* emitter_info_str, EmitterConfig_t* conf)
     char emitter_type;
     uint8_t one_shot;
     int data_count = sscanf(
-        emitter_info_str, "%c,%f-%f,%f-%f,%u-%u,%c",
+        emitter_info_str, "%c,%f-%f,%f-%f,%u-%u,%u,%c",
         &emitter_type,
         conf->launch_range, conf->launch_range + 1,
         conf->speed_range, conf->speed_range + 1,
         conf->particle_lifetime, conf->particle_lifetime + 1,
-        &one_shot
+        &conf->initial_spawn_delay, &one_shot
     );
 
-    if (data_count == 8)
+    if (data_count == 9)
     {
-        conf->type = (emitter_type == 'b') ? EMITTER_BURST : EMITTER_UNKNOWN;
+        conf->type = EMITTER_UNKNOWN;
+        if (emitter_type == 'b')
+        {
+            conf->type = EMITTER_BURST;
+        }
+        else if (emitter_type == 's')
+        {
+            conf->type = EMITTER_STREAM;
+        }
         conf->one_shot = (one_shot == '1');
     }
-    return data_count == 8;
+    return data_count == 9;
 }
 
 static inline AssetInfoType_t get_asset_type(const char* str)

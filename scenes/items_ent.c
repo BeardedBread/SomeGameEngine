@@ -183,6 +183,15 @@ Entity_t* create_bomb(EntityManager_t* ent_manager, Vector2 launch_dir)
     p_ctransform->position.y += (TILE_SIZE - 25) / 2;
 
     p_ctransform->velocity = Vector2Scale(Vector2Normalize(launch_dir), 500);
+
+    if (launch_dir.x > 0)
+    {
+        p_ctransform->position.x += TILE_SIZE/ 2;
+    }
+    else if (launch_dir.x < 0)
+    {
+        p_ctransform->position.x -= TILE_SIZE / 2;
+    }
     return p_bomb;
 }
 

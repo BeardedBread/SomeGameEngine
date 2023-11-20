@@ -172,6 +172,10 @@ static void level_scene_render_func(Scene_t* scene)
         DrawText(buffer, gui_x, gui_y, 12, BLACK);
 
         gui_y += 30;
+        sprintf(buffer, "part sys free: %u", get_number_of_free_emitter(&scene->part_sys));
+        DrawText(buffer, gui_x, gui_y, 12, BLACK);
+
+        gui_y += 30;
         print_mempool_stats(buffer);
         DrawText(buffer, gui_x, gui_y, 12, BLACK);
 
@@ -1022,6 +1026,7 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &spike_collision_system);
     sc_array_add(&scene->scene.systems, &edge_velocity_check_system);
     sc_array_add(&scene->scene.systems, &state_transition_update_system);
+    sc_array_add(&scene->scene.systems, &update_entity_emitter_system);
     sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);
     sc_array_add(&scene->scene.systems, &lifetimer_update_system);
     sc_array_add(&scene->scene.systems, &airtimer_update_system);

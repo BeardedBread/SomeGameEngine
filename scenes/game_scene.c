@@ -191,22 +191,11 @@ static void render_regular_game_scene(Scene_t* scene)
                             DrawLineEx((Vector2){x + TILE_SIZE / 2, bot_line}, (Vector2){x + TILE_SIZE, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
                         }
                     }
-                }
 
-                // Draw water tile
-                uint32_t water_height = tilemap.tiles[i].water_level * WATER_BBOX_STEP;
-                // Draw water tile
-                Color water_colour = ColorAlpha(BLUE, 0.5);
-                DrawRectangle(
-                    x,
-                    y + (TILE_SIZE - water_height),
-                    TILE_SIZE,
-                    water_height,
-                    water_colour
-                );
-                if (tilemap.tiles[i].max_water_level < MAX_WATER_LEVEL)
-                {
-                    DrawRectangleLinesEx((Rectangle){x, y, TILE_SIZE, TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
+                    if (tilemap.tiles[i].max_water_level < MAX_WATER_LEVEL)
+                    {
+                        DrawRectangleLinesEx((Rectangle){x, y, TILE_SIZE, TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
+                    }
                 }
             }
         }
@@ -322,6 +311,7 @@ static void render_regular_game_scene(Scene_t* scene)
             }
         }
 
+
         sc_map_foreach_value(&scene->ent_manager.entities_map[DYNMEM_ENT_TAG], p_ent)
         {
             CWaterRunner_t* p_runner = get_component(p_ent, CWATERRUNNER_T);
@@ -331,6 +321,27 @@ static void render_regular_game_scene(Scene_t* scene)
             DrawCircle(x+16, y+16, 8, ColorAlpha(BLUE, 0.6));
         }
         draw_particle_system(&scene->part_sys);
+
+        // Draw water tile
+        for (int tile_y = min.y; tile_y < max.y; tile_y++)
+        {
+            for (int tile_x = min.x; tile_x < max.x; tile_x++)
+            {
+                int i = tile_x + tile_y * tilemap.width;
+                int x = tile_x * TILE_SIZE;
+                int y = tile_y * TILE_SIZE;
+
+                uint32_t water_height = tilemap.tiles[i].water_level * WATER_BBOX_STEP;
+                Color water_colour = ColorAlpha(BLUE, 0.5);
+                DrawRectangle(
+                    x,
+                    y + (TILE_SIZE - water_height),
+                    TILE_SIZE,
+                    water_height,
+                    water_colour
+                );
+            }
+        }
 
         // Draw Border
         DrawLine(0, 0, 0, tilemap.height * tilemap.tile_size, BLACK);

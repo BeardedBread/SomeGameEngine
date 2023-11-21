@@ -431,6 +431,9 @@ static void render_editor_game_scene(Scene_t* scene)
             DrawCircleV(p_ct->position, tilemap.tile_size >> 1, (data->coins.current < data->coins.total)? RED : GREEN);
         }
 
+        draw_particle_system(&scene->part_sys);
+
+        // Draw water tile
         for (int tile_y = min.y; tile_y < max.y; tile_y++)
         {
             for (int tile_x = min.x; tile_x < max.x; tile_x++)
@@ -440,7 +443,6 @@ static void render_editor_game_scene(Scene_t* scene)
                 int y = tile_y * TILE_SIZE;
 
                 uint32_t water_height = tilemap.tiles[i].water_level * WATER_BBOX_STEP;
-                // Draw water tile
                 Color water_colour = ColorAlpha(BLUE, 0.5);
                 DrawRectangle(
                     x,
@@ -461,7 +463,6 @@ static void render_editor_game_scene(Scene_t* scene)
             DrawCircle(x+16, y+16, 8, ColorAlpha(BLUE, 0.6));
         }
 
-        draw_particle_system(&scene->part_sys);
 
         if (data->show_grid)
         {

@@ -136,7 +136,7 @@ bool is_emitter_handle_alive(ParticleSystem_t* system, EmitterHandle handle)
 EmitterHandle play_particle_emitter(ParticleSystem_t* system, const ParticleEmitter_t* in_emitter)
 {
     EmitterHandle idx = load_in_particle_emitter(system, in_emitter);
-    if (idx == 0) return 0 ;
+    if (idx == 0) return 0;
 
     play_emitter_handle(system, idx);
     return idx;
@@ -181,23 +181,27 @@ void update_particle_system(ParticleSystem_t* system)
                 else
                 {
                     emitter->particles[i].spawned = true;
+                    spawn_particle(emitter, i); 
                 }
             }
 
-            if (!emitter->particles[i].alive)
+            if (emitter->particles[i].spawned)
             {
-                if (!emitter->active)
+                if (!emitter->particles[i].alive)
                 {
-                    inactive_count++;
-                }
-                else if (emitter->config->one_shot)
-                {
-                    inactive_count++;
-                }
-                else if (emitter->particles[i].spawned)
-                {
-                    // If not one shot, immediately revive the particle
-                    spawn_particle(emitter, i); 
+                    if (!emitter->active)
+                    {
+                        inactive_count++;
+                    }
+                    else if (emitter->config->one_shot)
+                    {
+                        inactive_count++;
+                    }
+                    else
+                    {
+                        // If not one shot, immediately revive the particle
+                        spawn_particle(emitter, i); 
+                    }
                 }
             }
         }

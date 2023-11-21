@@ -8,10 +8,11 @@ set(RAYLIB_DIR /usr/local/lib CACHE FILEPATH "directory to Raylib")
 set(LIBZSTD_DIR /usr/local/lib CACHE FILEPATH "directory to zstd")
 
 if (EMSCRIPTEN)
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DPLATFORM_WEB")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY")
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -s USE_GLFW=3 -s ASSERTIONS=1 -s WASM=1 -s ASYNCIFY  -s TOTAL_MEMORY=16777216 -s TOTAL_STACK=1048576 --preload-file ./res ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+
 set(CMAKE_EXECUTABLE_SUFFIX ".html")
 endif ()
 
@@ -25,7 +26,9 @@ set(GAME_LIBS
 
 add_subdirectory(engine)
 add_subdirectory(scenes)
+if (NOT EMSCRIPTEN)
 add_subdirectory(res)
+endif ()
 
 add_executable(${PROJECT_NAME}
     main.c

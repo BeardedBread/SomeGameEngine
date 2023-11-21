@@ -65,6 +65,7 @@ static inline void destroy_tile(LevelSceneData_t* lvl_data, unsigned int tile_id
             .n_particles = 5,
             .user_data = lvl_data,
             .update_func = &simple_particle_system_update,
+            .emitter_update_func = NULL,
         };
         play_particle_emitter(&scene->part_sys, &emitter);
     }
@@ -250,6 +251,7 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
             .n_particles = 5,
             .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
             .update_func = &simple_particle_system_update,
+            .emitter_update_func = NULL,
         };
         play_particle_emitter(&scene->part_sys, &emitter);
     }
@@ -265,6 +267,7 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
             .n_particles = 5,
             .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
             .update_func = &simple_particle_system_update,
+            .emitter_update_func = NULL,
         };
         play_particle_emitter(&scene->part_sys, &emitter);
     }
@@ -278,8 +281,21 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
             .n_particles = 5,
             .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
             .update_func = &simple_particle_system_update,
+            .emitter_update_func = NULL,
         };
         play_particle_emitter(&scene->part_sys, &emitter);
+
+        ParticleEmitter_t emitter2 = {
+            .spr = get_sprite(&scene->engine->assets, "p_coin"),
+            .config = get_emitter_conf(&scene->engine->assets, "pe_single"),
+            .position = p_ctransform->position,
+            .n_particles = 1,
+            .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+            .update_func = &simple_particle_system_update,
+            .emitter_update_func = NULL,
+        };
+        play_particle_emitter(&scene->part_sys, &emitter2);
+
         play_sfx(scene->engine, COIN_SFX);
     }
     else if (p_ent->m_tag == ARROW_ENT_TAG)
@@ -292,6 +308,7 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
             .n_particles = 2,
             .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
             .update_func = &simple_particle_system_update,
+            .emitter_update_func = NULL,
         };
         play_particle_emitter(&scene->part_sys, &emitter);
         play_sfx(scene->engine, ARROW_DESTROY_SFX);
@@ -1484,10 +1501,13 @@ void state_transition_update_system(Scene_t* scene)
             {
                 if (!is_emitter_handle_alive(&scene->part_sys, p_emitter->handle))
                 {
+                    Vector2 new_pos = p_ctransform->position;
+                    new_pos.y += p_bbox->half_size.y;
+
                     ParticleEmitter_t emitter = {
                         .spr = get_sprite(&scene->engine->assets, "p_water"),
                         .config = get_emitter_conf(&scene->engine->assets, "pe_bubbling"),
-                        .position = p_ctransform->position,
+                        .position = new_pos,
                         .n_particles = 5,
                         .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
                         .update_func = &floating_particle_system_update,
@@ -1513,9 +1533,11 @@ void update_entity_emitter_system(Scene_t* scene)
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
         CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+        Vector2 new_pos = p_ctransform->position;
+        new_pos.y += p_bbox->half_size.y;
         if (is_emitter_handle_alive(&scene->part_sys, p_emitter->handle))
         {
-            update_emitter_handle_position(&scene->part_sys, p_emitter->handle, p_ctransform->position);
+            update_emitter_handle_position(&scene->part_sys, p_emitter->handle, new_pos);
         }
     }
 }
@@ -1944,6 +1966,16 @@ void airtimer_update_system(Scene_t* scene)
                 {
                     p_air->curr_count--;
                     p_air->curr_ftimer = p_air->max_ftimer;
+                    ParticleEmitter_t emitter = {
+                        .spr = get_sprite(&scene->engine->assets, "p_bigbubble"),
+                        .config = get_emitter_conf(&scene->engine->assets, "pe_slow"),
+                        .position = p_ctransform->position,
+                        .n_particles = 1,
+                        .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+                        .update_func = &floating_particle_system_update,
+                        .emitter_update_func = NULL,
+                    };
+                    play_particle_emitter(&scene->part_sys, &emitter);
                     play_sfx(scene->engine, BUBBLE_SFX);
                 }
                 else
@@ -2179,7 +2211,7 @@ void simple_particle_system_update(Particle_t* part, void* user_data)
     }
 }
 
-void floating_particle_system_update(Particle_t* part, void* user_data)
+void simple_float_particle_system_update(Particle_t* part, void* user_data)
 {
     LevelSceneData_t* lvl_data = (LevelSceneData_t*)user_data;
     TileGrid_t tilemap = lvl_data->tilemap;
@@ -2205,8 +2237,21 @@ void floating_particle_system_update(Particle_t* part, void* user_data)
     {
         part->timer = 0;
     }
+}
 
+void floating_particle_system_update(Particle_t* part, void* user_data)
+{
+    simple_float_particle_system_update(part, user_data);
+
+    LevelSceneData_t* lvl_data = (LevelSceneData_t*)user_data;
+    TileGrid_t tilemap = lvl_data->tilemap;
+
+    Vector2 center = Vector2AddValue(
+        part->position,
+        part->size / 2
+    );
     center.y = part->position.y;
+
     if (!is_point_in_water(center, tilemap))
     {
         part->timer = 0;

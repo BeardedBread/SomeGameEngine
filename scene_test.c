@@ -26,6 +26,7 @@ void update_loop(void)
     update_entity_manager(&scene->ent_manager);
     // This is needed to advance time delta
     render_scene(scene);
+    update_sfx_list(&engine);
 }
 
 int main(void)

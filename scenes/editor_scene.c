@@ -126,15 +126,13 @@ static void level_scene_render_func(Scene_t* scene)
         const int gui_x = data->game_rec.x + data->game_rec.width + 10;
         int gui_y = 15;
 
-    #if !defined(PLATFORM_WEB)
         sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
         {
+    #if !defined(PLATFORM_WEB)
             CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
             CJump_t* p_cjump = get_component(p_ent, CJUMP_COMP_T);
             CPlayerState_t* p_pstate = get_component(p_ent, CPLAYERSTATE_T);
             CMovementState_t* p_mstate = get_component(p_ent, CMOVEMENTSTATE_T);
-
-            CAirTimer_t* p_air = get_component(p_ent, CAIRTIMER_T);
 
             sprintf(buffer, "Pos: %.3f\n %.3f", p_ct->position.x, p_ct->position.y);
             DrawText(buffer, gui_x, gui_y, 12, BLACK);
@@ -155,6 +153,9 @@ static void level_scene_render_func(Scene_t* scene)
             DrawText(buffer, gui_x, gui_y, 12, BLACK);
             gui_y += 30;
 
+#endif
+            CAirTimer_t* p_air = get_component(p_ent, CAIRTIMER_T);
+
             Vector2 air_pos = {data->game_rec.x + data->game_rec.width - 16, data->game_rec.y + data->game_rec.height - 16};
             for (uint8_t i = 0; i < p_air->curr_count; i++)
             {
@@ -162,7 +163,6 @@ static void level_scene_render_func(Scene_t* scene)
                 air_pos.x -= 32;
             }
         }
-#endif
         //sprintf(buffer, "Spawn Entity: %s", get_spawn_selection_string(current_spawn_selection));
         //DrawText(buffer, gui_x, 240, 12, BLACK);
         sprintf(buffer, "Number of Entities: %u", sc_map_size_64v(&scene->ent_manager.entities));

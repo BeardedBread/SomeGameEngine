@@ -181,17 +181,18 @@ bool check_on_ground(Entity_t* p_ent, Vector2 pos, Vector2 prev_pos, Vector2 bbo
     Vector2 new_pos = Vector2Add(pos, (Vector2){0, 1});
     CollideEntity_t ent = {
         .p_ent = p_ent,
-        .bbox = (Rectangle){new_pos.x, new_pos.y + bbox_sz.y - 1, bbox_sz.x, 1},
+        .bbox = (Rectangle){new_pos.x, new_pos.y + bbox_sz.y, bbox_sz.x, 1},
         .prev_bbox = (Rectangle){prev_pos.x, prev_pos.y, bbox_sz.x, bbox_sz.y},
         .area = (TileArea_t){
             .tile_x1 = (new_pos.x) / grid->tile_size,
-            .tile_y1 = (new_pos.y + bbox_sz.y - 1) / grid->tile_size,
-            .tile_x2 = (new_pos.x + bbox_sz.x - 1) / grid->tile_size,
-            .tile_y2 = (new_pos.y + bbox_sz.y - 1) / grid->tile_size
+            .tile_y1 = (new_pos.y + bbox_sz.y) / grid->tile_size,
+            .tile_x2 = (new_pos.x + bbox_sz.x) / grid->tile_size,
+            .tile_y2 = (new_pos.y + bbox_sz.y) / grid->tile_size
         }
     };
     
-    return check_collision(&ent, grid, true);
+    return check_collision_line(&ent, grid, false);
+    //return check_collision(&ent, grid, true);
 }
 
 uint8_t check_bbox_edges(

@@ -81,15 +81,15 @@ Entity_t* create_player(EntityManager_t* ent_manager)
     p_hitbox->n_boxes = 2;
     p_hitbox->boxes[0] = (Rectangle) {
         .x = 0,
-        .y = -1,
-        .width = p_bbox->size.x - 1,
-        .height = p_bbox->size.y + 2,
+        .y = -2,
+        .width = p_bbox->size.x,
+        .height = p_bbox->size.y + 4,
     };
     p_hitbox->boxes[1] = (Rectangle) {
-        .x =  -1,
+        .x =  -2,
         .y = 0,
-        .width = p_bbox->size.x + 2,
-        .height = p_bbox->size.y - 1,
+        .width = p_bbox->size.x + 4,
+        .height = p_bbox->size.y,
     };
     p_hitbox->atk = 2;
     CHurtbox_t* p_hurtbox = add_component(p_ent, CHURTBOX_T);

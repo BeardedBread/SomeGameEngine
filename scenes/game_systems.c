@@ -581,9 +581,8 @@ void player_bbox_update_system(Scene_t* scene)
         }
 
         CHitBoxes_t* p_hitbox = get_component(p_player, CHITBOXES_T);
-        p_hitbox->boxes[0].height = p_bbox->size.y + 2;
-        //p_hitbox->boxes[1].y = p_bbox->size.y / 4;
-        p_hitbox->boxes[1].height = p_bbox->size.y - 1;
+        p_hitbox->boxes[0].height = p_bbox->size.y + 4;
+        p_hitbox->boxes[1].height = p_bbox->size.y;
         CHurtbox_t* p_hurtbox = get_component(p_player, CHURTBOX_T);
         p_hurtbox->size = p_bbox->size;
     }
@@ -1592,8 +1591,8 @@ void hitbox_update_system(Scene_t* scene)
 
             unsigned int tile_x1 = (hitbox_pos.x) / TILE_SIZE;
             unsigned int tile_y1 = (hitbox_pos.y) / TILE_SIZE;
-            unsigned int tile_x2 = (hitbox_pos.x + p_hitbox->boxes[i].width - 1) / TILE_SIZE;
-            unsigned int tile_y2 = (hitbox_pos.y + p_hitbox->boxes[i].height - 1) / TILE_SIZE;
+            unsigned int tile_x2 = (hitbox_pos.x + p_hitbox->boxes[i].width) / TILE_SIZE;
+            unsigned int tile_y2 = (hitbox_pos.y + p_hitbox->boxes[i].height) / TILE_SIZE;
             tile_x2 = (tile_x2 >= tilemap.width) ? tilemap.width - 1 : tile_x2;
             tile_y2 = (tile_y2 >= tilemap.height) ? tilemap.width - 1 : tile_y2;
 

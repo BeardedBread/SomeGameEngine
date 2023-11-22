@@ -177,7 +177,6 @@ uint8_t check_collision_offset(Entity_t* p_ent, Vector2 pos, Vector2 bbox_sz, Ti
 
 bool check_on_ground(Entity_t* p_ent, Vector2 pos, Vector2 prev_pos, Vector2 bbox_sz, TileGrid_t* grid)
 {
-    //return check_collision_at(ent_idx, pos, bbox_sz, grid, (Vector2){0, 1}, p_manager);
     Vector2 new_pos = Vector2Add(pos, (Vector2){0, 1});
     CollideEntity_t ent = {
         .p_ent = p_ent,
@@ -191,8 +190,7 @@ bool check_on_ground(Entity_t* p_ent, Vector2 pos, Vector2 prev_pos, Vector2 bbo
         }
     };
     
-    return check_collision_line(&ent, grid, false);
-    //return check_collision(&ent, grid, true);
+    return check_collision_line(&ent, grid, true) == 1;
 }
 
 uint8_t check_bbox_edges(

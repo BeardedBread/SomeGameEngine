@@ -1473,7 +1473,7 @@ void state_transition_update_system(Scene_t* scene)
             {
                 play_sfx(scene->engine, BOULDER_LAND_SFX);
             }
-            else if (p_ent->m_tag == CRATES_ENT_TAG)
+            else if (p_ent->m_tag == CRATES_ENT_TAG || p_ent->m_tag == CHEST_ENT_TAG)
             {
                 play_sfx(scene->engine, WOOD_LAND_SFX);
             }

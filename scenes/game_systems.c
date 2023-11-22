@@ -1494,33 +1494,6 @@ void state_transition_update_system(Scene_t* scene)
 
         }
 
-        if (p_mstate->water_state & 1)
-        {
-            CEmitter_t* p_emitter = get_component(p_ent, CEMITTER_T);
-            if (p_emitter != NULL)
-            {
-                if (!is_emitter_handle_alive(&scene->part_sys, p_emitter->handle))
-                {
-                    Vector2 new_pos = p_ctransform->position;
-                    new_pos.y += p_bbox->half_size.y;
-
-                    ParticleEmitter_t emitter = {
-                        .spr = get_sprite(&scene->engine->assets, "p_water"),
-                        .config = get_emitter_conf(&scene->engine->assets, "pe_bubbling"),
-                        .position = new_pos,
-                        .n_particles = 5,
-                        .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
-                        .update_func = &floating_particle_system_update,
-                        .emitter_update_func = &check_in_water,
-                    };
-                    p_emitter->handle = play_particle_emitter(&scene->part_sys, &emitter);
-                }
-                else
-                {
-                    play_emitter_handle(&scene->part_sys, p_emitter->handle);
-                }
-            }
-        }
     }
 }
 
@@ -1928,7 +1901,7 @@ void airtimer_update_system(Scene_t* scene)
         if (p_ctransform == NULL || p_bbox == NULL || p_movement == NULL) continue;
 
         Vector2 point_to_check = {
-            (p_movement->x_dir == 0) ? p_ctransform->position.x : p_ctransform->position.x + p_bbox->size.x,
+            p_ctransform->position.x + p_bbox->half_size.x,
             p_ctransform->position.y + p_bbox->half_size.y / 2,
         };
 
@@ -1943,19 +1916,43 @@ void airtimer_update_system(Scene_t* scene)
         int tile_y = tile_idx / tilemap.width;
         uint32_t water_height = data->tilemap.tiles[tile_idx].water_level * WATER_BBOX_STEP;
         Vector2 tl = {tile_x * data->tilemap.tile_size, (tile_y + 1) * data->tilemap.tile_size - water_height};
-            in_water |= point_in_AABB(
-                point_to_check,
-                (Rectangle){tl.x, tl.y, tilemap.tile_size, water_height}
-            );
+        in_water |= point_in_AABB(
+            point_to_check,
+            (Rectangle){tl.x, tl.y, tilemap.tile_size, water_height}
+        );
 
         if (!in_water)
         {
             p_air->curr_count = p_air->max_count;
             p_air->curr_ftimer = p_air->max_ftimer * 2; // Lengthen the first
         }
-        
-        if (p_movement->water_state & 1)
+        else
         {
+            CEmitter_t* p_emitter = get_component(p_ent, CEMITTER_T);
+            if (p_emitter != NULL)
+            {
+                if (!is_emitter_handle_alive(&scene->part_sys, p_emitter->handle))
+                {
+                    Vector2 new_pos = p_ctransform->position;
+                    new_pos.y += p_bbox->half_size.y;
+
+                    ParticleEmitter_t emitter = {
+                        .spr = get_sprite(&scene->engine->assets, "p_water"),
+                        .config = get_emitter_conf(&scene->engine->assets, "pe_bubbling"),
+                        .position = new_pos,
+                        .n_particles = 5,
+                        .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+                        .update_func = &floating_particle_system_update,
+                        .emitter_update_func = &check_in_water,
+                    };
+                    p_emitter->handle = play_particle_emitter(&scene->part_sys, &emitter);
+                }
+                else
+                {
+                    play_emitter_handle(&scene->part_sys, p_emitter->handle);
+                }
+            }
+
             if (p_air->curr_ftimer > p_air->decay_rate)
             {
                 p_air->curr_ftimer -= p_air->decay_rate;
@@ -1989,7 +1986,6 @@ void airtimer_update_system(Scene_t* scene)
                         destroy_entity(scene, &tilemap, get_entity(&scene->ent_manager, ent_idx));
                     }
                 }
-            
             }
         }
     }

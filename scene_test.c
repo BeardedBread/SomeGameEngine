@@ -5,6 +5,10 @@
 #include <unistd.h>
 #if defined(PLATFORM_WEB)
     #include <emscripten/emscripten.h>
+    #include <emscripten/html5.h>
+    EM_BOOL keyDownCallback(int eventType, const EmscriptenKeyboardEvent *event, void* userData) {
+        return true; // Just preventDefault everything lol
+    }
 #endif
 
 Scene_t* scenes[1];
@@ -72,6 +76,8 @@ int main(void)
 
     #if defined(PLATFORM_WEB)
         puts("Setting emscripten main loop");
+        emscripten_set_keypress_callback("#canvas", NULL, 1, keyDownCallback);
+        emscripten_set_keydown_callback("#canvas", NULL, 1, keyDownCallback);
         emscripten_set_main_loop(update_loop, 0, 1);
     #else
         puts("Regular main loop");

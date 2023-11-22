@@ -20,6 +20,14 @@ uint16_t get_number_of_free_emitter(ParticleSystem_t* system)
     return sc_queue_size(&system->free_list);
 }
 
+static inline float generate_randrange(float lo, float hi)
+{
+    float val = hi - lo;
+    val *= (float)rand() / (float)RAND_MAX;
+    val += lo;
+    return val;
+}
+
 static inline void spawn_particle(ParticleEmitter_t* emitter, uint32_t idx)
 {
     uint32_t lifetime = (emitter->config->particle_lifetime[1] - emitter->config->particle_lifetime[0]);
@@ -27,21 +35,22 @@ static inline void spawn_particle(ParticleEmitter_t* emitter, uint32_t idx)
     emitter->particles[idx].timer += rand() % lifetime;
     emitter->particles[idx].alive = true;
 
-    float angle = emitter->config->launch_range[1] - emitter->config->launch_range[0];
-    angle *= (float)rand() / (float)RAND_MAX;
-    angle += emitter->config->launch_range[0];
+    float angle = generate_randrange(emitter->config->launch_range[0], emitter->config->launch_range[1]);
     if(angle > 360) angle -= 360;
     if(angle < -360) angle += 360;
 
-    float speed = emitter->config->speed_range[1] - emitter->config->speed_range[0];
-    speed *= (float)rand() / (float)RAND_MAX;
-    speed += emitter->config->speed_range[0];
+    float speed = generate_randrange(emitter->config->speed_range[0], emitter->config->speed_range[1]);
 
     emitter->particles[idx].velocity.x = speed * cos(angle * PI / 180);
     emitter->particles[idx].velocity.y = speed * sin(angle * PI / 180);
     emitter->particles[idx].position = emitter->position;
-    emitter->particles[idx].rotation = angle;
-    emitter->particles[idx].angular_vel = -10 + 20 * (float)rand() / (float)RAND_MAX;
+    
+    emitter->particles[idx].rotation = generate_randrange(
+        emitter->config->angle_range[0], emitter->config->angle_range[1]
+    );
+    emitter->particles[idx].angular_vel = generate_randrange(
+        emitter->config->rotation_range[0], emitter->config->rotation_range[1]
+    );
     emitter->particles[idx].size = 10 + 20 * (float)rand() / (float)RAND_MAX;
     emitter->particles[idx].spawned = true;
 ;

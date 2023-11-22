@@ -74,6 +74,8 @@ int main(void)
         .one_shot = true,
         .launch_range = {0, 360},
         .speed_range = {400, 2000},
+        .angle_range = {0, 360},
+        .rotation_range = {-10, 10},
         .particle_lifetime = {30, 110},
         .type = EMITTER_BURST,
     };
@@ -91,6 +93,8 @@ int main(void)
         .launch_range = {45, 135},
         //.launch_range = {0, 360},
         .speed_range = {300, 800},
+        .angle_range = {0, 1},
+        .rotation_range = {0, 1},
         .particle_lifetime = {15, 30},
         .initial_spawn_delay = 5,
         .type = EMITTER_STREAM,

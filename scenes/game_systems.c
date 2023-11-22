@@ -1675,6 +1675,10 @@ void hitbox_update_system(Scene_t* scene)
                                                 p_cjump->short_hop = false;
                                                 p_cjump->jumped = true;
                                             }
+                                            if (p_ent->m_tag == PLAYER_ENT_TAG)
+                                            {
+                                                data->camera.base_y = p_ctransform->position.y;
+                                            }
                                         }
                                         else if (p_ctransform->position.y  >= p_other_ct->position.y + p_other_bbox->size.y)
                                         {
@@ -2048,7 +2052,7 @@ void camera_update_system(Scene_t* scene)
             || (p_pstate->ladder_state & 1)
         )
         {
-            data->camera.base_y  = p_ctransform->position.y;
+            data->camera.base_y = p_ctransform->position.y;
         }
         if (p_ctransform->position.y >= data->camera.base_y)
         {

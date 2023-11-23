@@ -1504,9 +1504,9 @@ void update_entity_emitter_system(Scene_t* scene)
     {
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
-        CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
-        Vector2 new_pos = p_ctransform->position;
-        new_pos.y += p_bbox->half_size.y;
+        //CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+        Vector2 new_pos = Vector2Add(p_ctransform->position,p_emitter->offset);
+        //new_pos.y += p_bbox->half_size.y;
         if (is_emitter_handle_alive(&scene->part_sys, p_emitter->handle))
         {
             update_emitter_handle_position(&scene->part_sys, p_emitter->handle, new_pos);
@@ -1936,13 +1936,14 @@ void airtimer_update_system(Scene_t* scene)
             {
                 if (!is_emitter_handle_alive(&scene->part_sys, p_emitter->handle))
                 {
-                    Vector2 new_pos = p_ctransform->position;
-                    new_pos.y += p_bbox->half_size.y;
+                    //Vector2 new_pos = p_ctransform->position;
+                    //new_pos.y += p_bbox->half_size.y;
 
                     ParticleEmitter_t emitter = {
                         .spr = get_sprite(&scene->engine->assets, "p_water"),
                         .config = get_emitter_conf(&scene->engine->assets, "pe_bubbling"),
-                        .position = new_pos,
+                        //.position = new_pos,
+                        .position = p_ctransform->position,
                         .n_particles = 5,
                         .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
                         .update_func = &floating_particle_system_update,

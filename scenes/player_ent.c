@@ -105,7 +105,8 @@ Entity_t* create_player(EntityManager_t* ent_manager)
     p_cspr->sprites = player_sprite_map;
     p_cspr->transition_func = &player_sprite_transition_func;
 
-    add_component(p_ent, CEMITTER_T);
+    CEmitter_t* p_emitter = add_component(p_ent, CEMITTER_T);
+    p_emitter->offset = (Vector2){7,0};
 
     return p_ent;
 }

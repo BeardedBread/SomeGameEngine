@@ -842,47 +842,103 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
                 for (uint8_t i = SPAWN_CRATE; i <= SPAWN_CRATE_BOMB; ++i)
                 {
                     DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, crate_colour);
+                    Sprite_t* spr;
                     Vector2 half_size = {SELECTION_TILE_HALFSIZE, SELECTION_TILE_HALFSIZE};
                     switch (i)
                     {
+                        case SPAWN_CRATE:
+                            spr = get_sprite(&scene->engine->assets, metal_toggle? "m_crate":"w_crate");
+                            if (spr != NULL)
+                            {
+                                draw_sprite(spr, 0, draw_pos, 0.0, false);
+                            }
+                        break;
                         case SPAWN_CRATE_ARROW_L:
-                            DrawLine(
-                                draw_pos.x,
-                                draw_pos.y + half_size.y,
-                                draw_pos.x + half_size.x,
-                                draw_pos.y + half_size.y,
-                                BLACK
-                            );
+                            spr = get_sprite(&scene->engine->assets, metal_toggle? "m_la_crate":"w_la_crate");
+                            if (spr == NULL)
+                            {
+                                DrawLine(
+                                    draw_pos.x,
+                                    draw_pos.y + half_size.y,
+                                    draw_pos.x + half_size.x,
+                                    draw_pos.y + half_size.y,
+                                    BLACK
+                                );
+                            }
+                            else
+                            {
+                                draw_sprite(spr, 0, draw_pos, 0.0, false);
+                            }
                         break;
                         case SPAWN_CRATE_ARROW_R:
-                            DrawLine(
-                                draw_pos.x + half_size.x,
-                                draw_pos.y + half_size.y,
-                                draw_pos.x + half_size.x * 2,
-                                draw_pos.y + half_size.y,
-                                BLACK
-                            );
+                        {
+                            Sprite_t* spr = get_sprite(&scene->engine->assets, metal_toggle? "m_ra_crate":"w_ra_crate");
+                            if (spr == NULL)
+                            {
+                                DrawLine(
+                                    draw_pos.x + half_size.x,
+                                    draw_pos.y + half_size.y,
+                                    draw_pos.x + half_size.x * 2,
+                                    draw_pos.y + half_size.y,
+                                    BLACK
+                                );
+                            }
+                            else
+                            {
+                                draw_sprite(spr, 0, draw_pos, 0.0, false);
+                            }
+                        }
                         break;
                         case SPAWN_CRATE_ARROW_U:
-                            DrawLine(
-                                draw_pos.x + half_size.x,
-                                draw_pos.y,
-                                draw_pos.x + half_size.x,
-                                draw_pos.y + half_size.y,
-                                BLACK
-                            );
+                        {
+                            Sprite_t* spr = get_sprite(&scene->engine->assets, metal_toggle? "m_ua_crate":"w_ua_crate");
+                            if (spr == NULL)
+                            {
+                                DrawLine(
+                                    draw_pos.x + half_size.x,
+                                    draw_pos.y,
+                                    draw_pos.x + half_size.x,
+                                    draw_pos.y + half_size.y,
+                                    BLACK
+                                );
+                            }
+                            else
+                            {
+                                draw_sprite(spr, 0, draw_pos, 0.0, false);
+                            }
+                        }
                         break;
                         case SPAWN_CRATE_ARROW_D:
-                            DrawLine(
-                                draw_pos.x + half_size.x,
-                                draw_pos.y + half_size.y,
-                                draw_pos.x + half_size.x,
-                                draw_pos.y + half_size.y * 2,
-                                BLACK
-                            );
+                        {
+                            Sprite_t* spr = get_sprite(&scene->engine->assets, metal_toggle? "m_da_crate":"w_da_crate");
+                            if (spr == NULL)
+                            {
+                                DrawLine(
+                                    draw_pos.x + half_size.x,
+                                    draw_pos.y + half_size.y,
+                                    draw_pos.x + half_size.x,
+                                    draw_pos.y + half_size.y * 2,
+                                    BLACK
+                                );
+                            }
+                            else
+                            {
+                                draw_sprite(spr, 0, draw_pos, 0.0, false);
+                            }
+                        }
                         break;
                         case SPAWN_CRATE_BOMB:
-                            DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, BLACK);
+                        {
+                            Sprite_t* spr = get_sprite(&scene->engine->assets, metal_toggle? "m_b_crate":"w_b_crate");
+                            if (spr == NULL)
+                            {
+                                DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, BLACK);
+                            }
+                            else
+                            {
+                                draw_sprite(spr, 0, draw_pos, 0.0, false);
+                            }
+                        }
                         break;
                     }
                     draw_pos.x += SELECTION_TILE_SIZE;
@@ -934,6 +990,13 @@ void init_sandbox_scene(LevelScene_t* scene)
         (Rectangle){25, 25, VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE}
     );
     scene->data.show_grid = true;
+    scene->data.tile_sprites[ONEWAY_TILE] = get_sprite(&scene->scene.engine->assets, "tl_owp");
+    scene->data.tile_sprites[LADDER] = get_sprite(&scene->scene.engine->assets, "tl_ldr");
+    scene->data.tile_sprites[SPIKES] = get_sprite(&scene->scene.engine->assets, "d_spikes");
+    scene->data.tile_sprites[SPIKES + TILE_90CWROT] = get_sprite(&scene->scene.engine->assets, "l_spikes");
+    scene->data.tile_sprites[SPIKES + TILE_90CCWROT] = get_sprite(&scene->scene.engine->assets, "r_spikes");
+    scene->data.tile_sprites[SPIKES + TILE_180ROT] = get_sprite(&scene->scene.engine->assets, "u_spikes");
+
     for (size_t i = 0; i < scene->data.tilemap.width; ++i)
     {
         unsigned int tile_idx = (scene->data.tilemap.height - 1) * scene->data.tilemap.width + i;
@@ -954,63 +1017,160 @@ void init_sandbox_scene(LevelScene_t* scene)
         for (uint8_t i = 0; i < MAX_SPAWN_TYPE; ++i)
         {
             DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, draw_colour[i]);
+            Sprite_t* spr;
             Vector2 half_size = {SELECTION_TILE_HALFSIZE, SELECTION_TILE_HALFSIZE};
             switch (i)
             {
+                case TOGGLE_ONEWAY:
+                    if (scene->data.tile_sprites[ONEWAY_TILE] != NULL)
+                    {
+                        DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, LIGHTGRAY);
+                        draw_sprite(scene->data.tile_sprites[ONEWAY_TILE], 0, draw_pos, 0.0, false);
+                    }
+                break;
+                case TOGGLE_LADDER:
+                    if (scene->data.tile_sprites[LADDER] != NULL)
+                    {
+                        DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, LIGHTGRAY);
+                        draw_sprite(scene->data.tile_sprites[LADDER], 0, draw_pos, 0.0, false);
+                    }
+                break;
                 case TOGGLE_SPIKE:
-                    DrawRectangle(draw_pos.x, draw_pos.y + SELECTION_TILE_HALFSIZE, SELECTION_TILE_SIZE, SELECTION_TILE_HALFSIZE, RED);
+                    if (scene->data.tile_sprites[SPIKES] != NULL)
+                    {
+                        draw_sprite(scene->data.tile_sprites[SPIKES], 0, draw_pos, 0.0, false);
+                    }
+                    else
+                    {
+                        DrawRectangle(draw_pos.x, draw_pos.y + SELECTION_TILE_HALFSIZE, SELECTION_TILE_SIZE, SELECTION_TILE_HALFSIZE, RED);
+                    }
                 break;
                 case SPAWN_BOULDER:
                     DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, GRAY);
                 break;
+                case SPAWN_CHEST:
+                    spr = get_sprite(&scene->scene.engine->assets, "chest");
+                    if (spr == NULL)
+                    {
+                        DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, draw_colour[i]);
+                    }
+                    else
+                    {
+                        draw_sprite(spr, 0, draw_pos, 0.0, false);
+                    }
+                break;
+                case SPAWN_CRATE:
+                    spr = get_sprite(&scene->scene.engine->assets, metal_toggle? "m_crate":"w_crate");
+                    if (spr == NULL)
+                    {
+                        DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, draw_colour[i]);
+                    }
+                    else
+                    {
+                        draw_sprite(spr, 0, draw_pos, 0.0, false);
+                    }
+                break;
                 case SPAWN_CRATE_ARROW_L:
-                    DrawLine(
-                        draw_pos.x,
-                        draw_pos.y + half_size.y,
-                        draw_pos.x + half_size.x,
-                        draw_pos.y + half_size.y,
-                        BLACK
-                    );
+                    spr = get_sprite(&scene->scene.engine->assets, metal_toggle? "m_la_crate":"w_la_crate");
+                    if (spr == NULL)
+                    {
+                        DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, draw_colour[i]);
+                        DrawLine(
+                            draw_pos.x,
+                            draw_pos.y + half_size.y,
+                            draw_pos.x + half_size.x,
+                            draw_pos.y + half_size.y,
+                            BLACK
+                        );
+                    }
+                    else
+                    {
+                        draw_sprite(spr, 0, draw_pos, 0.0, false);
+                    }
                 break;
                 case SPAWN_CRATE_ARROW_R:
-                    DrawLine(
-                        draw_pos.x + half_size.x,
-                        draw_pos.y + half_size.y,
-                        draw_pos.x + half_size.x * 2,
-                        draw_pos.y + half_size.y,
-                        BLACK
-                    );
+                {
+                    Sprite_t* spr = get_sprite(&scene->scene.engine->assets, metal_toggle? "m_ra_crate":"w_ra_crate");
+                    if (spr == NULL)
+                    {
+                        DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, draw_colour[i]);
+                        DrawLine(
+                            draw_pos.x + half_size.x,
+                            draw_pos.y + half_size.y,
+                            draw_pos.x + half_size.x * 2,
+                            draw_pos.y + half_size.y,
+                            BLACK
+                        );
+                    }
+                    else
+                    {
+                        draw_sprite(spr, 0, draw_pos, 0.0, false);
+                    }
+                }
                 break;
                 case SPAWN_CRATE_ARROW_U:
-                    DrawLine(
-                        draw_pos.x + half_size.x,
-                        draw_pos.y,
-                        draw_pos.x + half_size.x,
-                        draw_pos.y + half_size.y,
-                        BLACK
-                    );
+                {
+                    Sprite_t* spr = get_sprite(&scene->scene.engine->assets, metal_toggle? "m_ua_crate":"w_ua_crate");
+                    if (spr == NULL)
+                    {
+                        DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, draw_colour[i]);
+                        DrawLine(
+                            draw_pos.x + half_size.x,
+                            draw_pos.y,
+                            draw_pos.x + half_size.x,
+                            draw_pos.y + half_size.y,
+                            BLACK
+                        );
+                    }
+                    else
+                    {
+                        draw_sprite(spr, 0, draw_pos, 0.0, false);
+                    }
+                }
                 break;
                 case SPAWN_CRATE_ARROW_D:
-                    DrawLine(
-                        draw_pos.x + half_size.x,
-                        draw_pos.y + half_size.y,
-                        draw_pos.x + half_size.x,
-                        draw_pos.y + half_size.y * 2,
-                        BLACK
-                    );
+                {
+                    Sprite_t* spr = get_sprite(&scene->scene.engine->assets, metal_toggle? "m_da_crate":"w_da_crate");
+                    if (spr == NULL)
+                    {
+                        DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, draw_colour[i]);
+                        DrawLine(
+                            draw_pos.x + half_size.x,
+                            draw_pos.y + half_size.y,
+                            draw_pos.x + half_size.x,
+                            draw_pos.y + half_size.y * 2,
+                            BLACK
+                        );
+                    }
+                    else
+                    {
+                        draw_sprite(spr, 0, draw_pos, 0.0, false);
+                    }
+                }
                 break;
                 case SPAWN_CRATE_BOMB:
-                    DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, BLACK);
+                {
+                    Sprite_t* spr = get_sprite(&scene->scene.engine->assets, metal_toggle? "m_b_crate":"w_b_crate");
+                    if (spr == NULL)
+                    {
+                        DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, BLACK);
+                    }
+                    else
+                    {
+                        draw_sprite(spr, 0, draw_pos, 0.0, false);
+                    }
+                }
                 break;
                 case SPAWN_WATER_RUNNER:
                     DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, ColorAlpha(BLUE, 0.2));
                 break;
-                case SPAWN_LEVEL_END:
-                    DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, GREEN);
-                break;
                 case TOGGLE_AIR_POCKET:
                     DrawRectangleLinesEx((Rectangle){draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
                 break;
+                case SPAWN_LEVEL_END:
+                    DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, GREEN);
+                break;
+
             }
             draw_pos.x += SELECTION_TILE_SIZE;
         }

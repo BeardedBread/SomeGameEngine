@@ -79,7 +79,9 @@ static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
     return MAX_N_TILES;
 }
 
+// This means you might be able to have two editor scene without running into problems
 static RenderTexture2D selection_section;
+#define SELECTION_RENDER_HEIGHT  (SELECTION_REGION_HEIGHT * 3)
 static void level_scene_render_func(Scene_t* scene)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
@@ -98,7 +100,7 @@ static void level_scene_render_func(Scene_t* scene)
             WHITE
         );
         draw_rec.width = SELECTION_REGION_WIDTH;
-        draw_rec.height = -(SELECTION_REGION_HEIGHT * 2 + 10);
+        draw_rec.height = -SELECTION_RENDER_HEIGHT;
 
 
         Vector2 draw_pos = {data->game_rec.x, data->game_rec.y + data->game_rec.height + SELECTION_GAP};
@@ -290,6 +292,12 @@ static void render_editor_game_scene(Scene_t* scene)
         {
             CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
             CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+
+            // Draw the spawn point
+            if (p_ent->m_tag == PLAYER_ENT_TAG)
+            {
+                DrawCircleV(p_ent->spawn_pos, 6, PURPLE);
+            }
             
             // Entity culling
             Vector2 box_size = {0};
@@ -787,9 +795,11 @@ static void restart_editor_level(Scene_t* scene)
 static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
-    CPlayerState_t* p_playerstate;
-    sc_map_foreach_value(&scene->ent_manager.component_map[CPLAYERSTATE_T], p_playerstate)
+    Entity_t* p_player;
+    //sc_map_foreach_value(&scene->ent_manager.component_map[CPLAYERSTATE_T], p_playerstate)
+    sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
+        CPlayerState_t* p_playerstate = get_component(p_player, CPLAYERSTATE_T);
         switch(action)
         {
             case ACTION_UP:
@@ -898,6 +908,12 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
                     data->show_grid = !data->show_grid;
                 }
             break;
+            case ACTION_SET_SPAWNPOINT:
+            {
+                CTransform_t* p_ct = get_component(p_player, CTRANSFORM_COMP_T);
+                p_player->spawn_pos = p_ct->position;
+            }
+            break;
             default:
             break;
         }
@@ -923,7 +939,7 @@ void init_sandbox_scene(LevelScene_t* scene)
         unsigned int tile_idx = (scene->data.tilemap.height - 1) * scene->data.tilemap.width + i;
         change_a_tile(&scene->data.tilemap, tile_idx, SOLID_TILE);
     }
-    selection_section = LoadRenderTexture(SELECTION_REGION_WIDTH, SELECTION_REGION_HEIGHT * 2 + 10);
+    selection_section = LoadRenderTexture(SELECTION_REGION_WIDTH, SELECTION_RENDER_HEIGHT);
 
     BeginTextureMode(selection_section);
         ClearBackground(LIGHTGRAY);
@@ -1000,7 +1016,7 @@ void init_sandbox_scene(LevelScene_t* scene)
         }
 
         draw_pos.y += SELECTION_TILE_SIZE + 2;
-        DrawText("R to reset the map, Q/E to cycle the selection,\nF to toggle metal crates. T to toggle crate spawn behaviour", 0, draw_pos.y, 14, BLACK);
+        DrawText("R to reset the map, Q/E to cycle the selection,\nF to toggle metal crates. T to toggle crate spawn behaviour\nH to toggle grid, V to set spawn point", 0, draw_pos.y, 14, BLACK);
 
 
     EndTextureMode();
@@ -1061,6 +1077,7 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_map_put_64(&scene->scene.action_map, KEY_L, ACTION_EXIT);
     sc_map_put_64(&scene->scene.action_map, KEY_R, ACTION_RESTART);
     sc_map_put_64(&scene->scene.action_map, KEY_H, ACTION_TOGGLE_GRID);
+    sc_map_put_64(&scene->scene.action_map, KEY_V, ACTION_SET_SPAWNPOINT);
 
 }
 

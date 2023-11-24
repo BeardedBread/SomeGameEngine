@@ -1070,7 +1070,7 @@ void moveable_update_system(Scene_t* scene)
                     CBBox_t* p_other_bbox = get_component(other_ent, CBBOX_COMP_T);
                     CTransform_t* p_other_ct = get_component(other_ent, CTRANSFORM_COMP_T);
                     Rectangle box = {p_other_ct->position.x, p_other_ct->position.y, p_other_bbox->size.x, p_other_bbox->size.y};
-                    if (!point_in_AABB(point_to_check, box)) continue;
+                    if (!point_in_AABB(point_to_check, box) || Vector2LengthSqr(p_other_ct->velocity) != 0) continue;
                 }
 
                 tile_x = (p_ctransform->position.x) / TILE_SIZE - 1;
@@ -1092,7 +1092,9 @@ void moveable_update_system(Scene_t* scene)
                             CBBox_t* p_other_bbox = get_component(other_ent, CBBOX_COMP_T);
                             if (p_other_bbox != NULL)
                             {
-                                any_solid |= p_other_bbox->solid;
+                                //any_solid |= p_other_bbox->solid;
+                                any_solid |= true;
+                                break;
                             }
                         }
                         sc_map_foreach_key(&tilemap.tiles[tile_idx2].entities_set, idx_to_check)
@@ -1101,7 +1103,9 @@ void moveable_update_system(Scene_t* scene)
                             CBBox_t* p_other_bbox = get_component(other_ent, CBBOX_COMP_T);
                             if (p_other_bbox != NULL)
                             {
-                                any_solid |= p_other_bbox->solid;
+                                //any_solid |= p_other_bbox->solid;
+                                any_solid |= true;
+                                break;
                             }
                         }
                         if (!any_solid)

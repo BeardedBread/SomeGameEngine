@@ -1079,7 +1079,10 @@ void moveable_update_system(Scene_t* scene)
                 {
                     unsigned int tile_idx1 = tile_y * tilemap.width + tile_x;
                     unsigned int tile_idx2 = (tile_y - 1) * tilemap.width + tile_x;
-                    if ( tilemap.tiles[tile_idx1].moveable && tilemap.tiles[tile_idx2].moveable )
+                    if ( 
+                        (tilemap.tiles[tile_idx1].moveable || tilemap.tiles[tile_idx1].tile_type == ONEWAY_TILE)
+                        && tilemap.tiles[tile_idx2].moveable 
+                    )
                     {
                         bool any_solid = false;
                         unsigned int idx_to_check;
@@ -1114,7 +1117,10 @@ void moveable_update_system(Scene_t* scene)
                 {
                     unsigned int tile_idx1 = tile_y * tilemap.width + tile_x;
                     unsigned int tile_idx2 = (tile_y - 1) * tilemap.width + tile_x;
-                    if ( tilemap.tiles[tile_idx1].moveable && tilemap.tiles[tile_idx2].moveable )
+                    if (
+                        (tilemap.tiles[tile_idx1].moveable || tilemap.tiles[tile_idx1].tile_type == ONEWAY_TILE)
+                        && tilemap.tiles[tile_idx2].moveable
+                    )
                     {
                         bool any_solid = false;
                         unsigned int idx_to_check;
@@ -1753,11 +1759,11 @@ void boulder_destroy_wooden_tile_system(Scene_t* scene)
         const CTransform_t* p_ctransform = get_component(p_boulder, CTRANSFORM_COMP_T);
         const CBBox_t* p_bbox = get_component(p_boulder, CBBOX_COMP_T);
 
-        if (p_ctransform->velocity.y <= 0) continue;
+        //if (p_ctransform->velocity.y <= 0) continue;
 
         unsigned int tile_idx = get_tile_idx(
                 p_ctransform->position.x + p_bbox->half_size.x,
-                p_ctransform->position.y + p_bbox->size.y,
+                p_ctransform->position.y + p_bbox->size.y + 1,
                 tilemap.width
         );
         unsigned int tile_x = (p_ctransform->position.x + p_bbox->half_size.x) / tilemap.tile_size;

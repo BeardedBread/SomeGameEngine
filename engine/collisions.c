@@ -155,18 +155,17 @@ uint8_t check_collision_line(const CollideEntity_t* ent, TileGrid_t* grid, bool 
 }
 
 // TODO: This should be a point collision check, not an  AABB check
-uint8_t check_collision_offset(Entity_t* p_ent, Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid, Vector2 offset)
+uint8_t check_collision_at(Entity_t* p_ent, Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid)
 {
-    Vector2 new_pos = Vector2Add(pos, offset);
     CollideEntity_t ent = {
         .p_ent = p_ent,
-        .bbox = (Rectangle){new_pos.x, new_pos.y, bbox_sz.x, bbox_sz.y},
+        .bbox = (Rectangle){pos.x, pos.y, bbox_sz.x, bbox_sz.y},
         .prev_bbox = (Rectangle){pos.x, pos.y, bbox_sz.x, bbox_sz.y},
         .area = (TileArea_t){
-            .tile_x1 = (new_pos.x) / grid->tile_size,
-            .tile_y1 = (new_pos.y) / grid->tile_size,
-            .tile_x2 = (new_pos.x + bbox_sz.x - 1) / grid->tile_size,
-            .tile_y2 = (new_pos.y + bbox_sz.y - 1) / grid->tile_size
+            .tile_x1 = (pos.x) / grid->tile_size,
+            .tile_y1 = (pos.y) / grid->tile_size,
+            .tile_x2 = (pos.x + bbox_sz.x - 1) / grid->tile_size,
+            .tile_y2 = (pos.y + bbox_sz.y - 1) / grid->tile_size
         }
     };
     

@@ -134,7 +134,7 @@ static bool check_collision_and_move(
         Vector2 point_to_test = {0};
         point_to_test.x = ent->position.x;
         point_to_test.y = other_pos->y - p_bbox->size.y + 1;
-        if (!check_collision_offset(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
+        if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap))
         {
             ent->position = point_to_test;
             goto collision_end;
@@ -142,7 +142,7 @@ static bool check_collision_and_move(
 
         point_to_test.x = other_pos->x - p_bbox->size.x + 1;
         point_to_test.y = ent->position.y;
-        if (!check_collision_offset(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
+        if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap))
         {
             ent->position = point_to_test;
             goto collision_end;
@@ -150,7 +150,7 @@ static bool check_collision_and_move(
 
         point_to_test.x = other_pos->x + other_bbox.x - 1;
         point_to_test.y = ent->position.y;
-        if (!check_collision_offset(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
+        if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap))
         {
             ent->position = point_to_test;
             goto collision_end;
@@ -158,7 +158,7 @@ static bool check_collision_and_move(
 
         point_to_test.x = ent->position.x;
         point_to_test.y = other_pos->y + other_bbox.y - 1;
-        if (!check_collision_offset(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
+        if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap))
         {
             ent->position = point_to_test;
             goto collision_end;
@@ -465,9 +465,12 @@ void player_movement_input_system(Scene_t* scene)
             }
         }
 
-        uint8_t collide_type = check_collision_offset(
-                p_player, p_player->position, p_bbox->size,
-                &tilemap, (Vector2){0, p_bbox->size.y - PLAYER_HEIGHT}
+        Vector2 point_to_check = Vector2Add(
+            p_player->position,
+            (Vector2){0, p_bbox->size.y - PLAYER_HEIGHT}
+        );
+        uint8_t collide_type = check_collision_at(
+                p_player, point_to_check, p_bbox->size, &tilemap
         );
         if (collide_type == 1)
         {
@@ -561,10 +564,10 @@ void player_bbox_update_system(Scene_t* scene)
             }
         }
 
+        Vector2 point_to_check = Vector2Add(p_player->position, offset);
         if (
-            check_collision_offset(
-                p_player, p_player->position, new_bbox,
-                &tilemap, offset 
+            check_collision_at(
+                p_player, point_to_check, new_bbox, &tilemap
             ) != 1
         )
         {

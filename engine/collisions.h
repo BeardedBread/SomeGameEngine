@@ -59,7 +59,7 @@ typedef struct CollideEntity {
 void remove_entity_from_tilemap(EntityManager_t *p_manager, TileGrid_t* tilemap, Entity_t* p_ent);
 uint8_t check_collision(const CollideEntity_t* ent, TileGrid_t* grid, bool check_oneway);
 uint8_t check_collision_line(const CollideEntity_t* ent, TileGrid_t* grid, bool check_oneway);
-uint8_t check_collision_offset(Entity_t* p_ent, Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid, Vector2 offset);
+uint8_t check_collision_at(Entity_t* p_ent, Vector2 pos, Vector2 bbox_sz, TileGrid_t* grid);
 bool check_on_ground(Entity_t* p_ent, Vector2 prev_pos, Vector2 bbox_sz, TileGrid_t* grid);
 uint8_t check_bbox_edges(TileGrid_t* tilemap, Entity_t* p_ent, Vector2 bbox, bool ignore_fragile);
 #endif // __COLLISION_FUNCS_H

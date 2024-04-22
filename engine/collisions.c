@@ -65,9 +65,8 @@ uint8_t check_collision(const CollideEntity_t* ent, TileGrid_t* grid, bool check
             {
                 if (ent->p_ent->m_id == p_other_ent->m_id) continue;
                 if (!ent->p_ent->m_alive) continue;
-                CTransform_t *p_ctransform = get_component(p_other_ent, CTRANSFORM_COMP_T);
                 CBBox_t *p_bbox = get_component(p_other_ent, CBBOX_COMP_T);
-                if (p_bbox == NULL || p_ctransform == NULL) continue;
+                if (p_bbox == NULL) continue;
                 //if (p_bbox->solid && !p_bbox->fragile)
                 if (p_bbox->solid)
                 {
@@ -75,7 +74,7 @@ uint8_t check_collision(const CollideEntity_t* ent, TileGrid_t* grid, bool check
                         find_AABB_overlap(
                             (Vector2){ent->bbox.x, ent->bbox.y},
                             (Vector2){ent->bbox.width, ent->bbox.height},
-                            p_ctransform->position, p_bbox->size, &overlap
+                            p_other_ent->position, p_bbox->size, &overlap
                         )
                     )
                     {
@@ -134,14 +133,13 @@ uint8_t check_collision_line(const CollideEntity_t* ent, TileGrid_t* grid, bool 
             {
                 if (ent->p_ent->m_id == p_other_ent->m_id) continue;
                 if (!ent->p_ent->m_alive) continue;
-                CTransform_t *p_ctransform = get_component(p_other_ent, CTRANSFORM_COMP_T);
                 CBBox_t *p_bbox = get_component(p_other_ent, CBBOX_COMP_T);
-                if (p_bbox == NULL || p_ctransform == NULL) continue;
+                if (p_bbox == NULL) continue;
                 if (p_bbox->solid)
                 {
                     Rectangle box = {
-                        .x = p_ctransform->position.x,
-                        .y = p_ctransform->position.y,
+                        .x = p_other_ent->position.x,
+                        .y = p_other_ent->position.y,
                         .width = p_bbox->size.x,
                         .height = p_bbox->size.y,
                     };

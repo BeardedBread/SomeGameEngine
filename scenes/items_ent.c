@@ -159,6 +159,17 @@ Entity_t* create_bomb(EntityManager_t* ent_manager, Vector2 launch_dir)
     Entity_t* p_bomb = add_entity(ent_manager, DESTRUCTABLE_ENT_TAG);
     if (p_bomb == NULL) return NULL;
 
+    p_bomb->position.x += (TILE_SIZE - 25) / 2;
+    p_bomb->position.y += (TILE_SIZE - 25) / 2;
+    if (launch_dir.x > 0)
+    {
+        p_bomb->position.x += TILE_SIZE/ 2;
+    }
+    else if (launch_dir.x < 0)
+    {
+        p_bomb->position.x -= TILE_SIZE / 2;
+    }
+
     add_component(p_bomb, CTILECOORD_COMP_T);
     add_component(p_bomb, CMOVEMENTSTATE_T);
     CHitBoxes_t* p_hitbox = add_component(p_bomb, CHITBOXES_T);
@@ -179,19 +190,9 @@ Entity_t* create_bomb(EntityManager_t* ent_manager, Vector2 launch_dir)
     p_ctransform->active = true; 
     p_ctransform->shape_factor = (Vector2){0.1, 0.1};
     p_ctransform->movement_mode = REGULAR_MOVEMENT;
-    p_ctransform->position.x += (TILE_SIZE - 25) / 2;
-    p_ctransform->position.y += (TILE_SIZE - 25) / 2;
 
     p_ctransform->velocity = Vector2Scale(Vector2Normalize(launch_dir), 500);
 
-    if (launch_dir.x > 0)
-    {
-        p_ctransform->position.x += TILE_SIZE/ 2;
-    }
-    else if (launch_dir.x < 0)
-    {
-        p_ctransform->position.x -= TILE_SIZE / 2;
-    }
     return p_bomb;
 }
 
@@ -200,6 +201,8 @@ Entity_t* create_explosion(EntityManager_t* ent_manager)
     Entity_t* p_explosion = add_entity(ent_manager, DESTRUCTABLE_ENT_TAG);
     if (p_explosion == NULL) return NULL;
 
+    p_explosion->position.x -= 16;
+    p_explosion->position.y -= 16;
     add_component(p_explosion, CTILECOORD_COMP_T);
     CHitBoxes_t* p_hitbox = add_component(p_explosion, CHITBOXES_T);
     p_hitbox->n_boxes = 1;
@@ -209,8 +212,6 @@ Entity_t* create_explosion(EntityManager_t* ent_manager)
     CTransform_t* p_ctransform = add_component(p_explosion, CTRANSFORM_COMP_T);
     p_ctransform->movement_mode = KINEMATIC_MOVEMENT;
     p_ctransform->active = true;
-    p_ctransform->position.x -= 16;
-    p_ctransform->position.y -= 16;
     p_hitbox->boxes[0] = (Rectangle){0, 0, TILE_SIZE + 32, TILE_SIZE + 32};
 
     CSprite_t* p_cspr = add_component(p_explosion, CSPRITE_T);

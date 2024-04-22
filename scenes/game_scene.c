@@ -202,17 +202,16 @@ static void render_regular_game_scene(Scene_t* scene)
 
         sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
         {
-            CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
             CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
 
             // Entity culling
             Vector2 box_size = {0};
             if (p_bbox != NULL) box_size = p_bbox->size;
             if (
-                p_ct->position.x + box_size.x < min.x * tilemap.tile_size
-                || p_ct->position.x > max.x * tilemap.tile_size
-                || p_ct->position.y + box_size.y < min.y * tilemap.tile_size
-                || p_ct->position.y > max.y * tilemap.tile_size
+                p_ent->position.x + box_size.x < min.x * tilemap.tile_size
+                || p_ent->position.x > max.x * tilemap.tile_size
+                || p_ent->position.y + box_size.y < min.y * tilemap.tile_size
+                || p_ent->position.y > max.y * tilemap.tile_size
             ) continue;
 
             // Render Sprite only
@@ -222,7 +221,7 @@ static void render_regular_game_scene(Scene_t* scene)
                 const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
                 if (spr.sprite != NULL)
                 {
-                    Vector2 pos = Vector2Add(p_ct->position, spr.offset);
+                    Vector2 pos = Vector2Add(p_ent->position, spr.offset);
                     draw_sprite(spr.sprite, p_cspr->current_frame, pos, 0.0f, p_cspr->flip_x);
                 }
                 continue;
@@ -250,11 +249,11 @@ static void render_regular_game_scene(Scene_t* scene)
             {
                 if (p_ent->m_tag == BOULDER_ENT_TAG)
                 {
-                    DrawCircleV(Vector2Add(p_ct->position, p_bbox->half_size), p_bbox->half_size.x, colour);
+                    DrawCircleV(Vector2Add(p_ent->position, p_bbox->half_size), p_bbox->half_size.x, colour);
                 }
                 else
                 {
-                    DrawRectangle(p_ct->position.x, p_ct->position.y, p_bbox->size.x, p_bbox->size.y, colour);
+                    DrawRectangle(p_ent->position.x, p_ent->position.y, p_bbox->size.x, p_bbox->size.y, colour);
                 }
 
                 if (p_ent->m_tag == CRATES_ENT_TAG)
@@ -266,42 +265,42 @@ static void render_regular_game_scene(Scene_t* scene)
                         {
                             case CONTAINER_LEFT_ARROW:
                                 DrawLine(
-                                    p_ct->position.x,
-                                    p_ct->position.y + p_bbox->half_size.y,
-                                    p_ct->position.x + p_bbox->half_size.x,
-                                    p_ct->position.y + p_bbox->half_size.y,
+                                    p_ent->position.x,
+                                    p_ent->position.y + p_bbox->half_size.y,
+                                    p_ent->position.x + p_bbox->half_size.x,
+                                    p_ent->position.y + p_bbox->half_size.y,
                                     BLACK
                                 );
                             break;
                             case CONTAINER_RIGHT_ARROW:
                                 DrawLine(
-                                    p_ct->position.x + p_bbox->half_size.x,
-                                    p_ct->position.y + p_bbox->half_size.y,
-                                    p_ct->position.x + p_bbox->size.x,
-                                    p_ct->position.y + p_bbox->half_size.y,
+                                    p_ent->position.x + p_bbox->half_size.x,
+                                    p_ent->position.y + p_bbox->half_size.y,
+                                    p_ent->position.x + p_bbox->size.x,
+                                    p_ent->position.y + p_bbox->half_size.y,
                                     BLACK
                                 );
                             break;
                             case CONTAINER_UP_ARROW:
                                 DrawLine(
-                                    p_ct->position.x + p_bbox->half_size.x,
-                                    p_ct->position.y,
-                                    p_ct->position.x + p_bbox->half_size.x,
-                                    p_ct->position.y + p_bbox->half_size.y,
+                                    p_ent->position.x + p_bbox->half_size.x,
+                                    p_ent->position.y,
+                                    p_ent->position.x + p_bbox->half_size.x,
+                                    p_ent->position.y + p_bbox->half_size.y,
                                     BLACK
                                 );
                             break;
                             case CONTAINER_DOWN_ARROW:
                                 DrawLine(
-                                    p_ct->position.x + p_bbox->half_size.x,
-                                    p_ct->position.y + p_bbox->half_size.y,
-                                    p_ct->position.x + p_bbox->half_size.x,
-                                    p_ct->position.y + p_bbox->size.y,
+                                    p_ent->position.x + p_bbox->half_size.x,
+                                    p_ent->position.y + p_bbox->half_size.y,
+                                    p_ent->position.x + p_bbox->half_size.x,
+                                    p_ent->position.y + p_bbox->size.y,
                                     BLACK
                                 );
                             break;
                             case CONTAINER_BOMB:
-                                DrawCircleV(Vector2Add(p_ct->position, p_bbox->half_size), p_bbox->half_size.x, BLACK);
+                                DrawCircleV(Vector2Add(p_ent->position, p_bbox->half_size), p_bbox->half_size.x, BLACK);
                             break;
                             default:
                             break;

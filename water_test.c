@@ -108,7 +108,7 @@ static void level_scene_render_func(Scene_t* scene)
                 const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
                 if (spr.sprite != NULL)
                 {
-                    Vector2 pos = Vector2Add(p_ct->position, spr.offset);
+                    Vector2 pos = Vector2Add(p_ent->position, spr.offset);
                     draw_sprite(spr.sprite, p_cspr->current_frame, pos, 0.0f, p_cspr->flip_x);
                 }
             }
@@ -318,8 +318,8 @@ static void toggle_block_system(Scene_t* scene)
                 if (p_ent == NULL) return;
 
                 CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
-                p_ct->position.x = (tile_idx % tilemap.width) * tilemap.tile_size; 
-                p_ct->position.y = (tile_idx / tilemap.width) * tilemap.tile_size; 
+                p_ent->position.x = (tile_idx % tilemap.width) * tilemap.tile_size; 
+                p_ent->position.y = (tile_idx / tilemap.width) * tilemap.tile_size; 
             }
             else
             {

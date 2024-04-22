@@ -223,9 +223,8 @@ void update_water_runner_system(Scene_t* scene)
                     while (move_left)
                     {
                         p_crunner->current_tile = p_crunner->bfs_tilemap.tilemap[p_crunner->current_tile].to;
-                        CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
-                        p_ct->position.x = (p_crunner->current_tile % tilemap.width) * tilemap.tile_size; 
-                        p_ct->position.y = (p_crunner->current_tile / tilemap.width) * tilemap.tile_size; 
+                        ent->position.x = (p_crunner->current_tile % tilemap.width) * tilemap.tile_size; 
+                        ent->position.y = (p_crunner->current_tile / tilemap.width) * tilemap.tile_size; 
 
                         Tile_t* tile = tilemap.tiles + p_crunner->current_tile;
                         tile->wet = true;

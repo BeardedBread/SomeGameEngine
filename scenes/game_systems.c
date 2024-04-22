@@ -86,7 +86,7 @@ static bool check_collision_and_move(
     CBBox_t* p_bbox = get_component(ent, CBBOX_COMP_T);
     Vector2 overlap = {0,0};
     Vector2 prev_overlap = {0,0};
-    uint8_t overlap_mode = find_AABB_overlap(p_ct->position, p_bbox->size, *other_pos, other_bbox, &overlap);
+    uint8_t overlap_mode = find_AABB_overlap(ent->position, p_bbox->size, *other_pos, other_bbox, &overlap);
     if (overlap_mode == 1)
     {
         // If there is collision, use previous overlap to determine direction
@@ -119,53 +119,53 @@ static bool check_collision_and_move(
             // One way collision is a bit special
             if (
                 p_ct->prev_position.y + p_bbox->size.y - 1 < other_pos->y
-                && p_ct->position.y + p_bbox->size.y - 1 >= other_pos->y
+                && ent->position.y + p_bbox->size.y - 1 >= other_pos->y
             )
             {
-                offset.y = other_pos->y - (p_ct->position.y + p_bbox->size.y);
+                offset.y = other_pos->y - (ent->position.y + p_bbox->size.y);
             }
         }
-        p_ct->position = Vector2Add(p_ct->position, offset);
+        ent->position = Vector2Add(ent->position, offset);
     }
     else if (overlap_mode == 2)
     {
         if ( other_solid != SOLID ) goto collision_end;
         // On complete overlap, find a free space in this order: top, left, right, bottom
         Vector2 point_to_test = {0};
-        point_to_test.x = p_ct->position.x;
+        point_to_test.x = ent->position.x;
         point_to_test.y = other_pos->y - p_bbox->size.y + 1;
         if (!check_collision_offset(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
         {
-            p_ct->position = point_to_test;
+            ent->position = point_to_test;
             goto collision_end;
         }
 
         point_to_test.x = other_pos->x - p_bbox->size.x + 1;
-        point_to_test.y = p_ct->position.y;
+        point_to_test.y = ent->position.y;
         if (!check_collision_offset(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
         {
-            p_ct->position = point_to_test;
+            ent->position = point_to_test;
             goto collision_end;
         }
 
         point_to_test.x = other_pos->x + other_bbox.x - 1;
-        point_to_test.y = p_ct->position.y;
+        point_to_test.y = ent->position.y;
         if (!check_collision_offset(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
         {
-            p_ct->position = point_to_test;
+            ent->position = point_to_test;
             goto collision_end;
         }
 
-        point_to_test.x = p_ct->position.x;
+        point_to_test.x = ent->position.x;
         point_to_test.y = other_pos->y + other_bbox.y - 1;
         if (!check_collision_offset(ent, point_to_test, p_bbox->size, tilemap, (Vector2){0}))
         {
-            p_ct->position = point_to_test;
+            ent->position = point_to_test;
             goto collision_end;
         }
         // If no free space, Move up no matter what
-        p_ct->position.x = p_ct->position.x;
-        p_ct->position.y = other_pos->y - p_bbox->size.y + 1;
+        //p_ct->position.x = p_ct->position.x;
+        ent->position.y = other_pos->y - p_bbox->size.y + 1;
     }
 collision_end:
     return overlap_mode > 0;
@@ -242,12 +242,10 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
 {
     if (p_ent->m_tag == BOULDER_ENT_TAG)
     {
-        const CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
-        //const CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
         ParticleEmitter_t emitter = {
             .spr = get_sprite(&scene->engine->assets, "p_rock"),
             .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
-            .position = p_ctransform->position,
+            .position = p_ent->position,
             .n_particles = 5,
             .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
             .update_func = &simple_particle_system_update,
@@ -258,12 +256,10 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
     else if (p_ent->m_tag == CRATES_ENT_TAG)
     {
         const CContainer_t* p_container = get_component(p_ent, CCONTAINER_T);
-        const CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
-        //const CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
         ParticleEmitter_t emitter = {
             .spr = get_sprite(&scene->engine->assets, (p_container->material == WOODEN_CONTAINER) ? "p_wood" : "p_metal"),
             .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
-            .position = p_ctransform->position,
+            .position = p_ent->position,
             .n_particles = 5,
             .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
             .update_func = &simple_particle_system_update,
@@ -273,11 +269,10 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
     }
     else if (p_ent->m_tag == CHEST_ENT_TAG)
     {
-        const CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
         ParticleEmitter_t emitter = {
             .spr = get_sprite(&scene->engine->assets, "p_wood"),
             .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
-            .position = p_ctransform->position,
+            .position = p_ent->position,
             .n_particles = 5,
             .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
             .update_func = &simple_particle_system_update,
@@ -288,7 +283,7 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
         ParticleEmitter_t emitter2 = {
             .spr = get_sprite(&scene->engine->assets, "p_coin"),
             .config = get_emitter_conf(&scene->engine->assets, "pe_single"),
-            .position = p_ctransform->position,
+            .position = p_ent->position,
             .n_particles = 1,
             .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
             .update_func = &simple_particle_system_update,
@@ -300,11 +295,10 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
     }
     else if (p_ent->m_tag == ARROW_ENT_TAG)
     {
-        const CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
         ParticleEmitter_t emitter = {
             .spr = get_sprite(&scene->engine->assets, "p_arrow"),
             .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
-            .position = p_ctransform->position,
+            .position = p_ent->position,
             .n_particles = 2,
             .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
             .update_func = &simple_particle_system_update,
@@ -330,11 +324,10 @@ void player_respawn_system(Scene_t* scene)
             Entity_t* ent = create_dead_player(&scene->ent_manager);
             if (ent != NULL)
             {
-                CTransform_t* new_ct = get_component(ent, CTRANSFORM_COMP_T);
-                memcpy(&new_ct->position, &p_ct->position, sizeof(p_ct->position));
+                ent->position = p_player->position;
             }
             p_player->m_alive = true;
-            p_ct->position = p_player->spawn_pos;
+            p_player->position = p_player->spawn_pos;
             memset(&p_ct->velocity, 0, sizeof(p_ct->velocity));
             memset(&p_ct->accel, 0, sizeof(p_ct->accel));
         }
@@ -374,14 +367,14 @@ void player_movement_input_system(Scene_t* scene)
             if (p_pstate->player_dir.y < 0)
             {
                 unsigned int tile_idx = get_tile_idx(
-                    p_ctransform->position.x + p_bbox->half_size.x,
-                    p_ctransform->position.y + p_bbox->half_size.y,
+                    p_player->position.x + p_bbox->half_size.x,
+                    p_player->position.y + p_bbox->half_size.y,
                     data->tilemap.width
                 );
                 if (tilemap.tiles[tile_idx].tile_type == LADDER && p_ctransform->velocity.y >= 0)
                 {
                     p_pstate->ladder_state = true;
-                    p_ctransform->position.y--;
+                    p_player->position.y--;
                 }
             }
             else if (p_pstate->player_dir.y > 0)
@@ -391,31 +384,31 @@ void player_movement_input_system(Scene_t* scene)
                 if (p_mstate->ground_state & 1)
                 {
                     tile_idx = get_tile_idx(
-                        p_ctransform->position.x + p_bbox->half_size.x,
-                        p_ctransform->position.y + p_bbox->size.y,
+                        p_player->position.x + p_bbox->half_size.x,
+                        p_player->position.y + p_bbox->size.y,
                         data->tilemap.width
                     );
                 }
                 else
                 {
                     tile_idx = get_tile_idx(
-                        p_ctransform->position.x + p_bbox->half_size.x,
-                        p_ctransform->position.y + p_bbox->half_size.y,
+                        p_player->position.x + p_bbox->half_size.x,
+                        p_player->position.y + p_bbox->half_size.y,
                         data->tilemap.width
                     );
                 }
                 if (tile_idx < tilemap.n_tiles && tilemap.tiles[tile_idx].tile_type == LADDER)
                 {
                     p_pstate->ladder_state = true;
-                    p_ctransform->position.y++;
+                    p_player->position.y++;
                 }
             }
         }
         else
         {
-            unsigned int tile_x = (p_ctransform->position.x + p_bbox->half_size.x) / TILE_SIZE;
-            unsigned int tile_y1 = (p_ctransform->position.y + p_bbox->half_size.y) / TILE_SIZE;
-            unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
+            unsigned int tile_x =  (p_player->position.x + p_bbox->half_size.x) / TILE_SIZE;
+            unsigned int tile_y1 = (p_player->position.y + p_bbox->half_size.y) / TILE_SIZE;
+            unsigned int tile_y2 = (p_player->position.y + p_bbox->size.y) / TILE_SIZE;
             
             p_pstate->ladder_state = false;
             if (!(p_mstate->ground_state & 1))
@@ -432,7 +425,7 @@ void player_movement_input_system(Scene_t* scene)
                 p_ctransform->velocity.x = p_pstate->player_dir.x * 40;
                 if (p_pstate->player_dir.y != 0)
                 {
-                    p_ctransform->position.x = tile_x * TILE_SIZE + 1;
+                    p_player->position.x = tile_x * TILE_SIZE + 1;
                 }
             }
         }
@@ -473,7 +466,7 @@ void player_movement_input_system(Scene_t* scene)
         }
 
         uint8_t collide_type = check_collision_offset(
-                p_player, p_ctransform->position, p_bbox->size,
+                p_player, p_player->position, p_bbox->size,
                 &tilemap, (Vector2){0, p_bbox->size.y - PLAYER_HEIGHT}
         );
         if (collide_type == 1)
@@ -531,7 +524,6 @@ void player_bbox_update_system(Scene_t* scene)
     Entity_t* p_player;
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
-        CTransform_t* p_ctransform = get_component(p_player, CTRANSFORM_COMP_T);
         CBBox_t* p_bbox = get_component(p_player, CBBOX_COMP_T);
         CPlayerState_t* p_pstate = get_component(p_player, CPLAYERSTATE_T);
         CMovementState_t* p_mstate = get_component(p_player, CMOVEMENTSTATE_T);
@@ -571,13 +563,13 @@ void player_bbox_update_system(Scene_t* scene)
 
         if (
             check_collision_offset(
-                p_player, p_ctransform->position, new_bbox,
+                p_player, p_player->position, new_bbox,
                 &tilemap, offset 
             ) != 1
         )
         {
             set_bbox(p_bbox, new_bbox.x, new_bbox.y);
-            p_ctransform->position = Vector2Add(p_ctransform->position, offset);
+            p_player->position = Vector2Add(p_player->position, offset);
         }
 
         CHitBoxes_t* p_hitbox = get_component(p_player, CHITBOXES_T);
@@ -595,12 +587,11 @@ void player_crushing_system(Scene_t* scene)
     Entity_t* p_player;
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
-        CTransform_t* p_ctransform = get_component(p_player, CTRANSFORM_COMP_T);
         CBBox_t* p_bbox = get_component(p_player, CBBOX_COMP_T);
 
         uint8_t edges = check_bbox_edges(
             &data->tilemap, p_player,
-            p_ctransform->position, p_bbox->size, true
+            p_player->position, p_bbox->size, true
         );
 
         // There is a second check for to ensure that there is an solid entity/tile overlapping the player bbox
@@ -612,13 +603,13 @@ void player_crushing_system(Scene_t* scene)
             CollideEntity_t ent = 
             {
                 .p_ent = p_player,
-                .bbox = (Rectangle){p_ctransform->position.x, p_ctransform->position.y, p_bbox->size.x, 1},
-                .prev_bbox = (Rectangle){p_ctransform->position.x, p_ctransform->position.y, p_bbox->size.x, p_bbox->size.y},
+                .bbox = (Rectangle){p_player->position.x, p_player->position.y, p_bbox->size.x, 1},
+                .prev_bbox = (Rectangle){p_player->position.x, p_player->position.y, p_bbox->size.x, p_bbox->size.y},
                 .area = (TileArea_t){
-                    .tile_x1 = (p_ctransform->position.x) / TILE_SIZE,
-                    .tile_y1 = (p_ctransform->position.y) / TILE_SIZE,
-                    .tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE,
-                    .tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE,
+                    .tile_x1 = (p_player->position.x) / TILE_SIZE,
+                    .tile_y1 = (p_player->position.y) / TILE_SIZE,
+                    .tile_x2 = (p_player->position.x + p_bbox->size.x - 1) / TILE_SIZE,
+                    .tile_y2 = (p_player->position.y + p_bbox->size.y - 1) / TILE_SIZE,
                 }
             };
             
@@ -629,7 +620,7 @@ void player_crushing_system(Scene_t* scene)
                 collide |= 1 << 1;
             }
             
-            ent.bbox.y = p_ctransform->position.y + p_bbox->size.y;
+            ent.bbox.y = p_player->position.y + p_bbox->size.y;
             collide_type = check_collision_line(&ent, &data->tilemap, true);
             if (collide_type == 1)
             {
@@ -649,13 +640,13 @@ void player_crushing_system(Scene_t* scene)
             CollideEntity_t ent = 
             {
                 .p_ent = p_player,
-                .bbox = (Rectangle){p_ctransform->position.x, p_ctransform->position.y, 1, p_bbox->size.y},
-                .prev_bbox = (Rectangle){p_ctransform->position.x, p_ctransform->position.y, p_bbox->size.x, p_bbox->size.y},
+                .bbox = (Rectangle){p_player->position.x, p_player->position.y, 1, p_bbox->size.y},
+                .prev_bbox = (Rectangle){p_player->position.x, p_player->position.y, p_bbox->size.x, p_bbox->size.y},
                 .area = (TileArea_t){
-                    .tile_x1 = (p_ctransform->position.x) / TILE_SIZE,
-                    .tile_y1 = (p_ctransform->position.y) / TILE_SIZE,
-                    .tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE,
-                    .tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE,
+                    .tile_x1 = (p_player->position.x) / TILE_SIZE,
+                    .tile_y1 = (p_player->position.y) / TILE_SIZE,
+                    .tile_x2 = (p_player->position.x + p_bbox->size.x - 1) / TILE_SIZE,
+                    .tile_y2 = (p_player->position.y + p_bbox->size.y - 1) / TILE_SIZE,
                 }
             };
 
@@ -667,7 +658,7 @@ void player_crushing_system(Scene_t* scene)
             }
 
             //Right
-            ent.bbox.x = p_ctransform->position.x + p_bbox->size.x; // 2 to account for the previous subtraction
+            ent.bbox.x = p_player->position.x + p_bbox->size.x; // 2 to account for the previous subtraction
             collide_type = check_collision_line(&ent, &data->tilemap, false);
             if (collide_type == 1)
             {
@@ -693,11 +684,10 @@ void spike_collision_system(Scene_t* scene)
     sc_map_foreach(&scene->ent_manager.component_map[CBBOX_COMP_T], ent_idx, p_bbox)
     {
         Entity_t* p_ent = get_entity(&scene->ent_manager, ent_idx);
-        CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
-        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
-        unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
-        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
-        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE;
+        unsigned int tile_x1 = (p_ent->position.x) / TILE_SIZE;
+        unsigned int tile_y1 = (p_ent->position.y) / TILE_SIZE;
+        unsigned int tile_x2 = (p_ent->position.x + p_bbox->size.x - 1) / TILE_SIZE;
+        unsigned int tile_y2 = (p_ent->position.y + p_bbox->size.y - 1) / TILE_SIZE;
 
         tile_x1 = (tile_x1 < 0) ? 0 : tile_x1;
         tile_x2 = (tile_x2 >= tilemap.width) ? tilemap.width - 1 : tile_x2;
@@ -712,7 +702,7 @@ void spike_collision_system(Scene_t* scene)
                 if(tilemap.tiles[tile_idx].tile_type == SPIKES)
                 {
                     uint8_t collide = find_AABB_overlap(
-                        p_ctransform->position, p_bbox->size, 
+                        p_ent->position, p_bbox->size, 
                         (Vector2){
                             tile_x * TILE_SIZE + tilemap.tiles[tile_idx].offset.x,
                             tile_y * TILE_SIZE + tilemap.tiles[tile_idx].offset.y
@@ -759,10 +749,10 @@ void tile_collision_system(Scene_t* scene)
         // exclude self
         // This has an extra pixel when gathering potential collision, just to avoid missing any
         // This is only done here, collision methods do not have this
-        unsigned int tile_x1 = (p_ctransform->position.x - 1) / TILE_SIZE;
-        unsigned int tile_y1 = (p_ctransform->position.y - 1) / TILE_SIZE;
-        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
-        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
+        unsigned int tile_x1 = (p_ent->position.x - 1) / TILE_SIZE;
+        unsigned int tile_y1 = (p_ent->position.y - 1) / TILE_SIZE;
+        unsigned int tile_x2 = (p_ent->position.x + p_bbox->size.x) / TILE_SIZE;
+        unsigned int tile_y2 = (p_ent->position.y + p_bbox->size.y) / TILE_SIZE;
 
         tile_x1 = (tile_x1 < 0) ? 0 : tile_x1;
         tile_x2 = (tile_x2 >= tilemap.width) ? tilemap.width - 1 : tile_x2;
@@ -808,8 +798,6 @@ void tile_collision_system(Scene_t* scene)
                         CBBox_t *p_other_bbox = get_component(p_other_ent, CBBOX_COMP_T);
                         if (p_other_bbox == NULL) continue;
 
-                        CTransform_t *p_other_ct = get_component(p_other_ent, CTRANSFORM_COMP_T);
-
                         SolidType_t solid = p_other_bbox->solid? SOLID : NOT_SOLID;
                         if (p_ent->m_tag == PLAYER_ENT_TAG && p_other_ent->m_tag == CHEST_ENT_TAG)
                         {
@@ -817,7 +805,7 @@ void tile_collision_system(Scene_t* scene)
                         }
                         check_collision_and_move(
                             &tilemap, p_ent,
-                            &p_other_ct->position, p_other_bbox->size,
+                            &p_other_ent->position, p_other_bbox->size,
                             solid
                         );
                     }
@@ -841,7 +829,7 @@ void edge_velocity_check_system(Scene_t* scene)
         // Post movement edge check to zero out velocity
         uint8_t edges = check_bbox_edges(
             &data->tilemap, p_ent,
-            p_ctransform->position, p_bbox->size, false
+            p_ent->position, p_bbox->size, false
         );
         if (edges & (1<<3))
         {
@@ -862,26 +850,26 @@ void edge_velocity_check_system(Scene_t* scene)
 
         // Deal with float precision, by rounding when it is near to an integer enough by 2 dp
         float decimal;
-        float fractional = modff(p_ctransform->position.x, &decimal);
+        float fractional = modff(p_ent->position.x, &decimal);
         if (fractional > 0.99)
         {
-            p_ctransform->position.x = decimal;
-            (p_ctransform->position.x > 0) ? p_ctransform->position.x++ : p_ctransform->position.x--;
+            p_ent->position.x = decimal;
+            (p_ent->position.x > 0) ? p_ent->position.x++ : p_ent->position.x--;
         }
         else if (fractional < 0.01)
         {
-            p_ctransform->position.x = decimal;
+            p_ent->position.x = decimal;
         }
 
-        fractional = modff(p_ctransform->position.y, &decimal);
+        fractional = modff(p_ent->position.y, &decimal);
         if (fractional > 0.99)
         {
-            p_ctransform->position.y = decimal;
-            (p_ctransform->position.y > 0) ? p_ctransform->position.y++ : p_ctransform->position.y--;
+            p_ent->position.y = decimal;
+            (p_ent->position.y > 0) ? p_ent->position.y++ : p_ent->position.y--;
         }
         else if (fractional < 0.01)
         {
-            p_ctransform->position.y = decimal;
+            p_ent->position.y = decimal;
         }
     }
 }
@@ -975,7 +963,7 @@ void global_external_forces_system(Scene_t* scene)
         // Zero out acceleration for contacts with sturdy entites and tiles
         uint8_t edges = check_bbox_edges(
             &data->tilemap, p_ent,
-            p_ctransform->position, p_bbox->size, false
+            p_ent->position, p_bbox->size, false
         );
         if (edges & (1<<3))
         {
@@ -1019,11 +1007,11 @@ void moveable_update_system(Scene_t* scene)
 
         if (p_moveable->gridmove)
         {
-            float remaining_distance = p_moveable->target_pos.x - p_ctransform->position.x;
+            float remaining_distance = p_moveable->target_pos.x - p_ent->position.x;
             if (fabs(remaining_distance) < 0.1)
             {
                 p_ctransform->prev_position = p_moveable->prev_pos;
-                p_ctransform->position = p_moveable->target_pos;
+                p_ent->position = p_moveable->target_pos;
                 p_moveable->gridmove = false;
                 p_bbox->solid = true;
                 p_ctransform->movement_mode = REGULAR_MOVEMENT;
@@ -1031,11 +1019,11 @@ void moveable_update_system(Scene_t* scene)
             }
             else if (remaining_distance > 0.1)
             {
-                p_ctransform->position.x +=  (remaining_distance > p_moveable->move_speed) ? p_moveable->move_speed : remaining_distance;
+                p_ent->position.x +=  (remaining_distance > p_moveable->move_speed) ? p_moveable->move_speed : remaining_distance;
             }
             else
             {
-                p_ctransform->position.x +=  (remaining_distance < -p_moveable->move_speed) ? -p_moveable->move_speed : remaining_distance;
+                p_ent->position.x +=  (remaining_distance < -p_moveable->move_speed) ? -p_moveable->move_speed : remaining_distance;
                 memset(&p_ctransform->velocity, 0, sizeof(p_ctransform->velocity));
             }
         }
@@ -1049,8 +1037,8 @@ void moveable_update_system(Scene_t* scene)
 
             // Point to check is the one row below
             Vector2 point_to_check = {
-                .x = p_ctransform->position.x + p_bbox->half_size.x,
-                .y = p_ctransform->position.y + p_bbox->size.y + 1
+                .x = p_ent->position.x + p_bbox->half_size.x,
+                .y = p_ent->position.y + p_bbox->size.y + 1
             };
             unsigned int tile_x = point_to_check.x / TILE_SIZE;
             unsigned int tile_y = point_to_check.y / TILE_SIZE;
@@ -1069,11 +1057,11 @@ void moveable_update_system(Scene_t* scene)
                     Entity_t* other_ent = get_entity(&scene->ent_manager, other_ent_idx);
                     CBBox_t* p_other_bbox = get_component(other_ent, CBBOX_COMP_T);
                     CTransform_t* p_other_ct = get_component(other_ent, CTRANSFORM_COMP_T);
-                    Rectangle box = {p_other_ct->position.x, p_other_ct->position.y, p_other_bbox->size.x, p_other_bbox->size.y};
+                    Rectangle box = {other_ent->position.x, other_ent->position.y, p_other_bbox->size.x, p_other_bbox->size.y};
                     if (!point_in_AABB(point_to_check, box) || Vector2LengthSqr(p_other_ct->velocity) != 0) continue;
                 }
 
-                tile_x = (p_ctransform->position.x) / TILE_SIZE - 1;
+                tile_x = (p_ent->position.x) / TILE_SIZE - 1;
 
                 if (tile_x >= 0 && tile_x < tilemap.width)
                 {
@@ -1159,7 +1147,7 @@ void moveable_update_system(Scene_t* scene)
             {
                 p_moveable->gridmove = true;
                 p_bbox->solid = false;
-                p_moveable->prev_pos = p_ctransform->position;
+                p_moveable->prev_pos = p_ent->position;
                 p_moveable->target_pos = Vector2Scale((Vector2){tile_x,tile_y-1}, TILE_SIZE); 
                 memset(&p_ctransform->velocity, 0, sizeof(p_ctransform->velocity));
                 memset(&p_ctransform->accel, 0, sizeof(p_ctransform->accel));
@@ -1189,7 +1177,7 @@ void player_pushing_system(Scene_t* scene)
 
         CTransform_t* p_ctransform = get_component(p_player, CTRANSFORM_COMP_T);
         CBBox_t* p_bbox = get_component(p_player, CBBOX_COMP_T);
-        Vector2 point_to_check = p_ctransform->position;
+        Vector2 point_to_check = p_player->position;
         point_to_check.y += p_bbox->half_size.y;
         if (p_pstate->player_dir.x > 0)
         {
@@ -1221,15 +1209,15 @@ void player_pushing_system(Scene_t* scene)
             CTransform_t *p_other_ct = get_component(p_other_ent, CTRANSFORM_COMP_T);
             CBBox_t *p_other_bbox = get_component(p_other_ent, CBBOX_COMP_T);
             Rectangle box = {
-                .x = p_other_ct->position.x,
-                .y = p_other_ct->position.y,
+                .x = p_other_ent->position.x,
+                .y = p_other_ent->position.y,
                 .width = p_other_bbox->size.x,
                 .height = p_other_bbox->size.y
             };
             if (point_in_AABB(point_to_check, box))
             {
-                Vector2 target_pos = p_other_ct->position;
-                if (p_ctransform->position.x < p_other_ct->position.x)
+                Vector2 target_pos = p_other_ent->position;
+                if (p_player->position.x < p_other_ent->position.x)
                 {
                     target_pos.x += TILE_SIZE;
                     tile_x++;
@@ -1249,7 +1237,7 @@ void player_pushing_system(Scene_t* scene)
                     )
                     {
                         p_other_moveable->gridmove = true;
-                        p_other_moveable->prev_pos = p_other_ct->position;
+                        p_other_moveable->prev_pos = p_other_ent->position;
                         p_other_moveable->target_pos = target_pos;
                         memset(&p_ctransform->velocity, 0, sizeof(p_ctransform->velocity));
                         memset(&p_ctransform->accel, 0, sizeof(p_ctransform->accel));
@@ -1298,46 +1286,46 @@ void movement_update_system(Scene_t* scene)
         if (fabs(p_ctransform->velocity.x) < 1e-3) p_ctransform->velocity.x = 0;
         if (fabs(p_ctransform->velocity.y) < 1e-3) p_ctransform->velocity.y = 0;
 
+        Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         // Store previous position before update
-        p_ctransform->prev_position = p_ctransform->position;
-        p_ctransform->position = Vector2Add(
-            p_ctransform->position,
+        p_ctransform->prev_position = p_ent->position;
+        p_ent->position = Vector2Add(
+            p_ent->position,
             Vector2Scale(p_ctransform->velocity, delta_time)
         );
         memset(&p_ctransform->accel, 0, sizeof(p_ctransform->accel));
 
         // Level boundary collision
-        Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
         unsigned int level_width = tilemap.width * TILE_SIZE;
         unsigned int level_height = tilemap.height * TILE_SIZE;
         if (p_bbox != NULL)
         {
 
-            if(p_ctransform->position.x < 0 || p_ctransform->position.x + p_bbox->size.x > level_width)
+            if(p_ent->position.x < 0 || p_ent->position.x + p_bbox->size.x > level_width)
             {
-                p_ctransform->position.x = (p_ctransform->position.x < 0) ? 0 : p_ctransform->position.x;
-                if (p_ctransform->position.x + p_bbox->size.x > level_width)
+                p_ent->position.x = (p_ent->position.x < 0) ? 0 : p_ent->position.x;
+                if (p_ent->position.x + p_bbox->size.x > level_width)
                 {
-                    p_ctransform->position.x =  level_width - p_bbox->size.x;
+                    p_ent->position.x =  level_width - p_bbox->size.x;
                 }
                 else
                 {
-                    p_ctransform->position.x = p_ctransform->position.x;
+                    p_ent->position.x = p_ent->position.x;
                 }
                 p_ctransform->velocity.x = 0;
             }
             
-            if(p_ctransform->position.y < 0 || p_ctransform->position.y + p_bbox->size.y > level_height)
+            if(p_ent->position.y < 0 || p_ent->position.y + p_bbox->size.y > level_height)
             {
-                p_ctransform->position.y = (p_ctransform->position.y < 0) ? 0 : p_ctransform->position.y;
-                if (p_ctransform->position.y + p_bbox->size.y > level_height)
+                p_ent->position.y = (p_ent->position.y < 0) ? 0 : p_ent->position.y;
+                if (p_ent->position.y + p_bbox->size.y > level_height)
                 {
-                    p_ctransform->position.y = level_height - p_bbox->size.y;
+                    p_ent->position.y = level_height - p_bbox->size.y;
                 }
                 else
                 {
-                    p_ctransform->position.y = p_ctransform->position.y;
+                    p_ent->position.y = p_ent->position.y;
                 }
                 p_ctransform->velocity.y = 0;
             }
@@ -1345,8 +1333,8 @@ void movement_update_system(Scene_t* scene)
         else
         {
             if (
-                p_ctransform->position.x < 0 || p_ctransform->position.x > level_width
-                || p_ctransform->position.y < 0 || p_ctransform->position.y > level_height
+                p_ent->position.x < 0 || p_ent->position.x > level_width
+                || p_ent->position.y < 0 || p_ent->position.y > level_height
             )
             {
                 destroy_entity(scene, &tilemap, p_ent);
@@ -1418,7 +1406,7 @@ void state_transition_update_system(Scene_t* scene)
         else if (p_ctransform->velocity.x < 0) p_mstate->x_dir = 0;
 
         bool on_ground = check_on_ground(
-            p_ent, p_ctransform->position, p_ctransform->prev_position, p_bbox->size,
+            p_ent, p_ent->position, p_ctransform->prev_position, p_bbox->size,
             &data->tilemap
         );
 
@@ -1428,10 +1416,10 @@ void state_transition_update_system(Scene_t* scene)
         }
 
         // Upthrust depends on water overlapping
-        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
-        unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
-        unsigned int tile_x2 = (p_ctransform->position.x + p_bbox->size.x) / TILE_SIZE;
-        unsigned int tile_y2 = (p_ctransform->position.y + p_bbox->size.y) / TILE_SIZE;
+        unsigned int tile_x1 = (p_ent->position.x) / TILE_SIZE;
+        unsigned int tile_y1 = (p_ent->position.y) / TILE_SIZE;
+        unsigned int tile_x2 = (p_ent->position.x + p_bbox->size.x) / TILE_SIZE;
+        unsigned int tile_y2 = (p_ent->position.y + p_bbox->size.y) / TILE_SIZE;
         float water_area = 0;
         for (unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
         {
@@ -1452,7 +1440,7 @@ void state_transition_update_system(Scene_t* scene)
                     
                     Vector2 overlap;
                     if (find_AABB_overlap(
-                        p_ctransform->position, p_bbox->size,
+                        p_ent->position, p_bbox->size,
                         water_tl, water_sz, &overlap
                     ))
                     {
@@ -1493,7 +1481,7 @@ void state_transition_update_system(Scene_t* scene)
             ParticleEmitter_t emitter = {
                 .spr = get_sprite(&scene->engine->assets, "p_water"),
                 .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
-                .position = p_ctransform->position,
+                .position = p_ent->position,
                 .n_particles = 5,
                 .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
                 .update_func = &simple_particle_system_update,
@@ -1513,10 +1501,7 @@ void update_entity_emitter_system(Scene_t* scene)
     sc_map_foreach(&scene->ent_manager.component_map[CEMITTER_T], ent_idx, p_emitter)
     {
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
-        CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
-        //CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
-        Vector2 new_pos = Vector2Add(p_ctransform->position,p_emitter->offset);
-        //new_pos.y += p_bbox->half_size.y;
+        Vector2 new_pos = Vector2Add(p_ent->position,p_emitter->offset);
         if (is_emitter_handle_alive(&scene->part_sys, p_emitter->handle))
         {
             update_emitter_handle_position(&scene->part_sys, p_emitter->handle, new_pos);
@@ -1551,14 +1536,14 @@ void update_tilemap_system(Scene_t* scene)
 
         // Compute new occupied tile positions and add
         // Extend the check by a little to avoid missing
-        unsigned int tile_x1 = (p_ctransform->position.x) / TILE_SIZE;
-        unsigned int tile_y1 = (p_ctransform->position.y) / TILE_SIZE;
-        unsigned int tile_x2 = (p_ctransform->position.x) / TILE_SIZE;
-        unsigned int tile_y2 = (p_ctransform->position.y) / TILE_SIZE;
+        unsigned int tile_x1 = (p_ent->position.x) / TILE_SIZE;
+        unsigned int tile_y1 = (p_ent->position.y) / TILE_SIZE;
+        unsigned int tile_x2 = (p_ent->position.x) / TILE_SIZE;
+        unsigned int tile_y2 = (p_ent->position.y) / TILE_SIZE;
         if (p_bbox != NULL)
         {
-            tile_x2 = (p_ctransform->position.x + p_bbox->size.x - 1) / TILE_SIZE;
-            tile_y2 = (p_ctransform->position.y + p_bbox->size.y - 1) / TILE_SIZE;
+            tile_x2 = (p_ent->position.x + p_bbox->size.x - 1) / TILE_SIZE;
+            tile_y2 = (p_ent->position.y + p_bbox->size.y - 1) / TILE_SIZE;
         }
         tile_x2 = (tile_x2 >= tilemap.width) ? tilemap.width - 1 : tile_x2;
         tile_y2 = (tile_y2 >= tilemap.height) ? tilemap.width - 1 : tile_y2;
@@ -1595,8 +1580,8 @@ void hitbox_update_system(Scene_t* scene)
         for (uint8_t i = 0; i < p_hitbox->n_boxes; ++i)
         {
             Vector2 hitbox_pos = {
-                .x = p_ctransform->position.x + p_hitbox->boxes[i].x,
-                .y = p_ctransform->position.y + p_hitbox->boxes[i].y,
+                .x = p_ent->position.x + p_hitbox->boxes[i].x,
+                .y = p_ent->position.y + p_hitbox->boxes[i].y,
             };
 
             unsigned int tile_x1 = (hitbox_pos.x) / TILE_SIZE;
@@ -1646,9 +1631,8 @@ void hitbox_update_system(Scene_t* scene)
 
                         CHurtbox_t* p_other_hurtbox = get_component(p_other_ent, CHURTBOX_T);
                         if (p_other_hurtbox == NULL) continue;
-                        CTransform_t* p_other_ct = get_component(p_other_ent, CTRANSFORM_COMP_T);
                         CBBox_t* p_other_bbox = get_component(p_other_ent, CBBOX_COMP_T);
-                        Vector2 hurtbox_pos = Vector2Add(p_other_ct->position, p_other_hurtbox->offset);
+                        Vector2 hurtbox_pos = Vector2Add(p_other_ent->position, p_other_hurtbox->offset);
 
                         if (
                             find_AABB_overlap(
@@ -1674,7 +1658,7 @@ void hitbox_update_system(Scene_t* scene)
                                     CPlayerState_t* p_pstate = get_component(p_ent, CPLAYERSTATE_T);
                                     if (p_pstate != NULL)
                                     {
-                                        if (p_ctransform->position.y + p_bbox->size.y <= p_other_ct->position.y)
+                                        if (p_ent->position.y + p_bbox->size.y <= p_other_ent->position.y)
                                         {
                                             p_ctransform->velocity.y = -400;
                                             if (p_pstate->jump_pressed)
@@ -1686,10 +1670,10 @@ void hitbox_update_system(Scene_t* scene)
                                             }
                                             if (p_ent->m_tag == PLAYER_ENT_TAG)
                                             {
-                                                data->camera.base_y = p_ctransform->position.y;
+                                                data->camera.base_y = p_ent->position.y;
                                             }
                                         }
-                                        else if (p_ctransform->position.y  >= p_other_ct->position.y + p_other_bbox->size.y)
+                                        else if (p_ent->position.y  >= p_other_ent->position.y + p_other_bbox->size.y)
                                         {
                                             p_ctransform->velocity.y = 0;
                                         }
@@ -1760,17 +1744,17 @@ void boulder_destroy_wooden_tile_system(Scene_t* scene)
     Entity_t* p_boulder;
     sc_map_foreach_value(&scene->ent_manager.entities_map[BOULDER_ENT_TAG], p_boulder)
     {
-        const CTransform_t* p_ctransform = get_component(p_boulder, CTRANSFORM_COMP_T);
+        //const CTransform_t* p_ctransform = get_component(p_boulder, CTRANSFORM_COMP_T);
         const CBBox_t* p_bbox = get_component(p_boulder, CBBOX_COMP_T);
 
         //if (p_ctransform->velocity.y <= 0) continue;
 
         unsigned int tile_idx = get_tile_idx(
-                p_ctransform->position.x + p_bbox->half_size.x,
-                p_ctransform->position.y + p_bbox->size.y + 1,
+                p_boulder->position.x + p_bbox->half_size.x,
+                p_boulder->position.y + p_bbox->size.y + 1,
                 tilemap.width
         );
-        unsigned int tile_x = (p_ctransform->position.x + p_bbox->half_size.x) / tilemap.tile_size;
+        unsigned int tile_x = (p_boulder->position.x + p_bbox->half_size.x) / tilemap.tile_size;
 
         if (tilemap.tiles[tile_idx].tile_type == ONEWAY_TILE)
         {
@@ -1827,16 +1811,14 @@ void container_destroy_system(Scene_t* scene)
                 case CONTAINER_BOMB:
                     if (dmg_src != NULL && dmg_src->m_tag == PLAYER_ENT_TAG)
                     {
-                        const CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
                         const CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
-                        const CTransform_t* dmg_src_ctransform = get_component(dmg_src, CTRANSFORM_COMP_T);
                         const CBBox_t* dmg_src_bbox = get_component(dmg_src, CBBOX_COMP_T);
                         Vector2 launch_dir = {0, -1};
-                        if (dmg_src_ctransform->position.x + dmg_src_bbox->size.x <= p_ctransform->position.x)
+                        if (dmg_src->position.x + dmg_src_bbox->size.x <= p_ent->position.x)
                         {
                             launch_dir.x = 1;
                         }
-                        else if (dmg_src_ctransform->position.x >= p_ctransform->position.x + p_bbox->size.x)
+                        else if (dmg_src->position.x >= p_ent->position.x + p_bbox->size.x)
                         {
                             launch_dir.x = -1;
                         }
@@ -1874,9 +1856,7 @@ void container_destroy_system(Scene_t* scene)
 
             if (new_ent != NULL)
             {
-                CTransform_t* new_p_ct = get_component(new_ent, CTRANSFORM_COMP_T);
-                CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
-                new_p_ct->position = Vector2Add(new_p_ct->position, p_ct->position);
+                new_ent->position = Vector2Add(new_ent->position, p_ent->position);
             }
         }
     }
@@ -1908,14 +1888,13 @@ void airtimer_update_system(Scene_t* scene)
     {
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         if (!p_ent->m_alive) continue;
-        CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
         CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
         CMovementState_t* p_movement = get_component(p_ent, CMOVEMENTSTATE_T);
-        if (p_ctransform == NULL || p_bbox == NULL || p_movement == NULL) continue;
+        if (p_bbox == NULL || p_movement == NULL) continue;
 
         Vector2 point_to_check = {
-            p_ctransform->position.x + p_bbox->half_size.x,
-            p_ctransform->position.y + p_bbox->half_size.y / 2,
+            p_ent->position.x + p_bbox->half_size.x,
+            p_ent->position.y + p_bbox->half_size.y / 2,
         };
 
         unsigned int tile_idx = get_tile_idx(
@@ -1953,7 +1932,7 @@ void airtimer_update_system(Scene_t* scene)
                         .spr = get_sprite(&scene->engine->assets, "p_water"),
                         .config = get_emitter_conf(&scene->engine->assets, "pe_bubbling"),
                         //.position = new_pos,
-                        .position = p_ctransform->position,
+                        .position = p_ent->position,
                         .n_particles = 5,
                         .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
                         .update_func = &floating_particle_system_update,
@@ -1980,7 +1959,7 @@ void airtimer_update_system(Scene_t* scene)
                     ParticleEmitter_t emitter = {
                         .spr = get_sprite(&scene->engine->assets, "p_bigbubble"),
                         .config = get_emitter_conf(&scene->engine->assets, "pe_slow"),
-                        .position = p_ctransform->position,
+                        .position = p_ent->position,
                         .n_particles = 1,
                         .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
                         .update_func = &floating_particle_system_update,
@@ -2051,7 +2030,7 @@ void camera_update_system(Scene_t* scene)
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
         CTransform_t* p_ctransform = get_component(p_player, CTRANSFORM_COMP_T);
-        data->camera.target_pos.x = p_ctransform->position.x;
+        data->camera.target_pos.x = p_player->position.x;
         target_vel = p_ctransform->velocity;
         CMovementState_t* p_movement = get_component(p_player, CMOVEMENTSTATE_T);
         CPlayerState_t* p_pstate = get_component(p_player, CPLAYERSTATE_T);
@@ -2062,11 +2041,11 @@ void camera_update_system(Scene_t* scene)
             || (p_pstate->ladder_state & 1)
         )
         {
-            data->camera.base_y = p_ctransform->position.y;
+            data->camera.base_y = p_player->position.y;
         }
-        if (p_ctransform->position.y >= data->camera.base_y)
+        if (p_player->position.y >= data->camera.base_y)
         {
-            data->camera.target_pos.y = p_ctransform->position.y;
+            data->camera.target_pos.y = p_player->position.y;
             data->camera.target_pos.y += p_ctransform->velocity.y * 0.2;
         }
     }
@@ -2123,10 +2102,9 @@ void level_end_detection_system(Scene_t* scene)
     TileGrid_t tilemap = lvl_scene->data.tilemap;
     sc_map_foreach_value(&scene->ent_manager.entities_map[LEVEL_END_TAG], p_flag)
     {
-        CTransform_t* p_ct = get_component(p_flag, CTRANSFORM_COMP_T);
         unsigned int tile_idx = get_tile_idx(
-                p_ct->position.x,
-                p_ct->position.y,
+                p_flag->position.x,
+                p_flag->position.y,
                 tilemap.width
         );
 
@@ -2136,14 +2114,13 @@ void level_end_detection_system(Scene_t* scene)
         {
             if (p_other_ent->m_tag != PLAYER_ENT_TAG) continue;
 
-            CTransform_t* p_other_ct = get_component(p_other_ent, CTRANSFORM_COMP_T);
             CBBox_t* p_other_bbox = get_component(p_other_ent, CBBOX_COMP_T);
 
-            Vector2 pos = Vector2Subtract(p_ct->position,(Vector2){tilemap.tile_size >> 1, tilemap.tile_size >> 1});
+            Vector2 pos = Vector2Subtract(p_flag->position,(Vector2){tilemap.tile_size >> 1, tilemap.tile_size >> 1});
             if (
                 find_AABB_overlap(
                     pos, (Vector2){tilemap.tile_size, tilemap.tile_size},
-                    p_other_ct->position, p_other_bbox->size, NULL
+                    p_other_ent->position, p_other_bbox->size, NULL
                 )
             )
             {

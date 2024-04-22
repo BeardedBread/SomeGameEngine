@@ -45,7 +45,6 @@ typedef struct _CBBox_t {
 typedef struct _CTransform_t {
     Vector2 prev_position;
     Vector2 prev_velocity;
-    Vector2 position;
     Vector2 velocity;
     Vector2 accel;
     Vector2 fric_coeff;
@@ -233,6 +232,7 @@ static inline void set_bbox(CBBox_t* p_bbox, unsigned int x, unsigned int y)
 
 struct Entity {
     Vector2 spawn_pos;
+    Vector2 position;
     unsigned long m_id;
     unsigned int m_tag;
     unsigned long components[N_COMPONENTS]; 

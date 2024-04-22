@@ -105,9 +105,8 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
             }
 
             Entity_t* ent = create_crate(&scene->scene.ent_manager, tmp_idx > 5, item);
-            CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
-            p_ct->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
-            p_ct->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+            ent->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+            ent->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
         }
         else
         {
@@ -129,9 +128,8 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
                 case 20:
                 {
                     Entity_t* ent = create_boulder(&scene->scene.ent_manager);
-                    CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
-                    p_ct->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
-                    p_ct->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+                    ent->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+                    ent->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
                 }
                 break;
                 case 21:
@@ -142,10 +140,9 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
                 case 22:
                 {
                     Entity_t* ent = create_player(&scene->scene.ent_manager);
-                    CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
-                    p_ct->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
-                    p_ct->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
-                    ent->spawn_pos = p_ct->position;
+                    ent->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+                    ent->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+                    ent->spawn_pos = ent->position;
                 }
                 break;
                 default:

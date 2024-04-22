@@ -136,7 +136,7 @@ static void level_scene_render_func(Scene_t* scene)
             CPlayerState_t* p_pstate = get_component(p_ent, CPLAYERSTATE_T);
             CMovementState_t* p_mstate = get_component(p_ent, CMOVEMENTSTATE_T);
 
-            sprintf(buffer, "Pos: %.3f\n %.3f", p_ct->position.x, p_ct->position.y);
+            sprintf(buffer, "Pos: %.3f\n %.3f", p_ent->position.x, p_ent->position.y);
             DrawText(buffer, gui_x, gui_y, 12, BLACK);
             sprintf(buffer, "Vel: %.3f\n %.3f", p_ct->velocity.x, p_ct->velocity.y);
             DrawText(buffer, gui_x + 80, gui_y, 12, BLACK);
@@ -290,7 +290,6 @@ static void render_editor_game_scene(Scene_t* scene)
         char buffer[64] = {0};
         sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
         {
-            CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
             CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
 
             // Draw the spawn point
@@ -303,10 +302,10 @@ static void render_editor_game_scene(Scene_t* scene)
             Vector2 box_size = {0};
             if (p_bbox != NULL) box_size = p_bbox->size;
             if (
-                p_ct->position.x + box_size.x < min.x * tilemap.tile_size
-                || p_ct->position.x > max.x * tilemap.tile_size
-                || p_ct->position.y + box_size.y < min.y * tilemap.tile_size
-                || p_ct->position.y > max.y * tilemap.tile_size
+                p_ent->position.x + box_size.x < min.x * tilemap.tile_size
+                || p_ent->position.x > max.x * tilemap.tile_size
+                || p_ent->position.y + box_size.y < min.y * tilemap.tile_size
+                || p_ent->position.y > max.y * tilemap.tile_size
             ) continue;
 
             Color colour;
@@ -336,11 +335,11 @@ static void render_editor_game_scene(Scene_t* scene)
             {
                 if (p_ent->m_tag == BOULDER_ENT_TAG)
                 {
-                    DrawCircleV(Vector2Add(p_ct->position, p_bbox->half_size), p_bbox->half_size.x, colour);
+                    DrawCircleV(Vector2Add(p_ent->position, p_bbox->half_size), p_bbox->half_size.x, colour);
                 }
                 else
                 {
-                    DrawRectangle(p_ct->position.x, p_ct->position.y, p_bbox->size.x, p_bbox->size.y, colour);
+                    DrawRectangle(p_ent->position.x, p_ent->position.y, p_bbox->size.x, p_bbox->size.y, colour);
                 }
 
                 if (p_ent->m_tag == CRATES_ENT_TAG)
@@ -352,42 +351,42 @@ static void render_editor_game_scene(Scene_t* scene)
                         {
                             case CONTAINER_LEFT_ARROW:
                                 DrawLine(
-                                    p_ct->position.x,
-                                    p_ct->position.y + p_bbox->half_size.y,
-                                    p_ct->position.x + p_bbox->half_size.x,
-                                    p_ct->position.y + p_bbox->half_size.y,
+                                    p_ent->position.x,
+                                    p_ent->position.y + p_bbox->half_size.y,
+                                    p_ent->position.x + p_bbox->half_size.x,
+                                    p_ent->position.y + p_bbox->half_size.y,
                                     BLACK
                                 );
                             break;
                             case CONTAINER_RIGHT_ARROW:
                                 DrawLine(
-                                    p_ct->position.x + p_bbox->half_size.x,
-                                    p_ct->position.y + p_bbox->half_size.y,
-                                    p_ct->position.x + p_bbox->size.x,
-                                    p_ct->position.y + p_bbox->half_size.y,
+                                    p_ent->position.x + p_bbox->half_size.x,
+                                    p_ent->position.y + p_bbox->half_size.y,
+                                    p_ent->position.x + p_bbox->size.x,
+                                    p_ent->position.y + p_bbox->half_size.y,
                                     BLACK
                                 );
                             break;
                             case CONTAINER_UP_ARROW:
                                 DrawLine(
-                                    p_ct->position.x + p_bbox->half_size.x,
-                                    p_ct->position.y,
-                                    p_ct->position.x + p_bbox->half_size.x,
-                                    p_ct->position.y + p_bbox->half_size.y,
+                                    p_ent->position.x + p_bbox->half_size.x,
+                                    p_ent->position.y,
+                                    p_ent->position.x + p_bbox->half_size.x,
+                                    p_ent->position.y + p_bbox->half_size.y,
                                     BLACK
                                 );
                             break;
                             case CONTAINER_DOWN_ARROW:
                                 DrawLine(
-                                    p_ct->position.x + p_bbox->half_size.x,
-                                    p_ct->position.y + p_bbox->half_size.y,
-                                    p_ct->position.x + p_bbox->half_size.x,
-                                    p_ct->position.y + p_bbox->size.y,
+                                    p_ent->position.x + p_bbox->half_size.x,
+                                    p_ent->position.y + p_bbox->half_size.y,
+                                    p_ent->position.x + p_bbox->half_size.x,
+                                    p_ent->position.y + p_bbox->size.y,
                                     BLACK
                                 );
                             break;
                             case CONTAINER_BOMB:
-                                DrawCircleV(Vector2Add(p_ct->position, p_bbox->half_size), p_bbox->half_size.x, BLACK);
+                                DrawCircleV(Vector2Add(p_ent->position, p_bbox->half_size), p_bbox->half_size.x, BLACK);
                             break;
                             default:
                             break;
@@ -403,8 +402,8 @@ static void render_editor_game_scene(Scene_t* scene)
                 for (uint8_t i = 0;i < p_hitbox->n_boxes; ++i)
                 {
                     Rectangle rec = {
-                        .x = p_ct->position.x + p_hitbox->boxes[i].x,
-                        .y = p_ct->position.y + p_hitbox->boxes[i].y,
+                        .x = p_ent->position.x + p_hitbox->boxes[i].x,
+                        .y = p_ent->position.y + p_hitbox->boxes[i].y,
                         .width = p_hitbox->boxes[i].width,
                         .height = p_hitbox->boxes[i].height,
                     };
@@ -414,8 +413,8 @@ static void render_editor_game_scene(Scene_t* scene)
             if (p_hurtbox != NULL)
             {
                 Rectangle rec = {
-                    .x = p_ct->position.x + p_hurtbox->offset.x,
-                    .y = p_ct->position.y + p_hurtbox->offset.y,
+                    .x = p_ent->position.x + p_hurtbox->offset.x,
+                    .y = p_ent->position.y + p_hurtbox->offset.y,
                     .width = p_hurtbox->size.x,
                     .height = p_hurtbox->size.y,
                 };
@@ -427,7 +426,7 @@ static void render_editor_game_scene(Scene_t* scene)
                 const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
                 if (spr.sprite != NULL)
                 {
-                    Vector2 pos = Vector2Add(p_ct->position, spr.offset);
+                    Vector2 pos = Vector2Add(p_ent->position, spr.offset);
                     draw_sprite(spr.sprite, p_cspr->current_frame, pos, 0.0f, p_cspr->flip_x);
                 }
             }
@@ -435,8 +434,7 @@ static void render_editor_game_scene(Scene_t* scene)
 
         sc_map_foreach_value(&scene->ent_manager.entities_map[LEVEL_END_TAG], p_ent)
         {
-            CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
-            DrawCircleV(p_ct->position, tilemap.tile_size >> 1, (data->coins.current < data->coins.total)? RED : GREEN);
+            DrawCircleV(p_ent->position, tilemap.tile_size >> 1, (data->coins.current < data->coins.total)? RED : GREEN);
         }
 
         draw_particle_system(&scene->part_sys);
@@ -518,9 +516,10 @@ static void spawn_chest(Scene_t* scene, unsigned int tile_idx)
     Entity_t* p_crate = create_chest(&scene->ent_manager);
     if (p_crate == NULL) return;
 
+    p_crate->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
+    p_crate->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
+
     CTransform_t* p_ctransform = get_component(p_crate, CTRANSFORM_COMP_T);
-    p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
-    p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
     p_ctransform->active = true;
 }
 
@@ -529,10 +528,10 @@ static void spawn_crate(Scene_t* scene, unsigned int tile_idx, bool metal, Conta
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     Entity_t* p_crate = create_crate(&scene->ent_manager, metal, item);
     if (p_crate == NULL) return;
+    p_crate->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
+    p_crate->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
 
     CTransform_t* p_ctransform = get_component(p_crate, CTRANSFORM_COMP_T);
-    p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
-    p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
     p_ctransform->active = active;
 }
 
@@ -542,9 +541,8 @@ static void spawn_boulder(Scene_t* scene, unsigned int tile_idx)
     Entity_t* p_boulder = create_boulder(&scene->ent_manager);
     if (p_boulder == NULL) return;
 
-    CTransform_t* p_ctransform = get_component(p_boulder, CTRANSFORM_COMP_T);
-    p_ctransform->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
-    p_ctransform->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
+    p_boulder->position.x = (tile_idx % data->tilemap.width) * TILE_SIZE;
+    p_boulder->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
 }
 
 static void toggle_block_system(Scene_t* scene)
@@ -642,9 +640,8 @@ static void toggle_block_system(Scene_t* scene)
                     Entity_t* p_ent = create_water_runner(&scene->ent_manager, DEFAULT_MAP_WIDTH, DEFAULT_MAP_HEIGHT, tile_idx);
                     if (p_ent != NULL)
                     {
-                        CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
-                        p_ct->position.x = (tile_idx % tilemap.width) * tilemap.tile_size;
-                        p_ct->position.y = (tile_idx / tilemap.width) * tilemap.tile_size;
+                        p_ent->position.x = (tile_idx % tilemap.width) * tilemap.tile_size;
+                        p_ent->position.y = (tile_idx / tilemap.width) * tilemap.tile_size;
                     }
                 }
                 break;
@@ -653,9 +650,8 @@ static void toggle_block_system(Scene_t* scene)
                     Entity_t* p_ent = create_level_end(&scene->ent_manager);
                     if (p_ent != NULL)
                     {
-                        CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
-                        p_ct->position.x = (tile_idx % tilemap.width) * tilemap.tile_size + (tilemap.tile_size >> 1);
-                        p_ct->position.y = (tile_idx / tilemap.width) * tilemap.tile_size + (tilemap.tile_size >> 1);;
+                        p_ent->position.x = (tile_idx % tilemap.width) * tilemap.tile_size + (tilemap.tile_size >> 1);
+                        p_ent->position.y = (tile_idx / tilemap.width) * tilemap.tile_size + (tilemap.tile_size >> 1);;
                     }
                 }
                 break;
@@ -966,8 +962,7 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             break;
             case ACTION_SET_SPAWNPOINT:
             {
-                CTransform_t* p_ct = get_component(p_player, CTRANSFORM_COMP_T);
-                p_player->spawn_pos = p_ct->position;
+                p_player->spawn_pos = p_player->position;
             }
             break;
             default:

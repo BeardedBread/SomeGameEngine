@@ -8,7 +8,7 @@
 #include "zstd.h"
 #include <stdio.h>
 
-uint8_t n_loaded[6] = {0};
+uint8_t n_loaded[N_ASSETS_TYPE] = {0};
 
 // Hard limit number of 
 typedef struct TextureData
@@ -70,7 +70,7 @@ static void unload_level_pack(LevelPack_t pack)
 // Maybe need a circular buffer??
 Texture2D* add_texture(Assets_t* assets, const char* name, const char* path)
 {
-    uint8_t tex_idx = n_loaded[0];
+    uint8_t tex_idx = n_loaded[AST_TEXTURE];
     assert(tex_idx < MAX_TEXTURES);
     Texture2D tex = LoadTexture(path);
     if (tex.width == 0 || tex.height == 0) return NULL;
@@ -78,13 +78,13 @@ Texture2D* add_texture(Assets_t* assets, const char* name, const char* path)
     textures[tex_idx].texture = tex;
     strncpy(textures[tex_idx].name, name, MAX_NAME_LEN);
     sc_map_put_s64(&assets->m_textures, textures[tex_idx].name, tex_idx);
-    n_loaded[0]++;
+    n_loaded[AST_TEXTURE]++;
     return &textures[tex_idx].texture;
 }
 
 Texture2D* add_texture_rres(Assets_t* assets, const char* name, const char* filename, const RresFileInfo_t* rres_file)
 {
-    uint8_t tex_idx = n_loaded[0];
+    uint8_t tex_idx = n_loaded[AST_TEXTURE];
     assert(tex_idx < MAX_TEXTURES);
 
     int res_id = rresGetResourceId(rres_file->dir, filename);
@@ -102,7 +102,7 @@ Texture2D* add_texture_rres(Assets_t* assets, const char* name, const char* file
         textures[tex_idx].texture = tex;
         strncpy(textures[tex_idx].name, name, MAX_NAME_LEN);
         sc_map_put_s64(&assets->m_textures, textures[tex_idx].name, tex_idx);
-        n_loaded[0]++;
+        n_loaded[AST_TEXTURE]++;
         out_tex = &textures[tex_idx].texture;
     }
     rresUnloadResourceChunk(chunk);
@@ -111,7 +111,7 @@ Texture2D* add_texture_rres(Assets_t* assets, const char* name, const char* file
 
 Sound* add_sound_rres(Assets_t* assets, const char* name, const char* filename, const RresFileInfo_t* rres_file)
 {
-    uint8_t snd_idx = n_loaded[2];
+    uint8_t snd_idx = n_loaded[AST_SOUND];
     assert(snd_idx < MAX_SOUNDS);
 
     int res_id = rresGetResourceId(rres_file->dir, filename);
@@ -128,55 +128,69 @@ Sound* add_sound_rres(Assets_t* assets, const char* name, const char* filename, 
         sfx[snd_idx].sound = snd;
         strncpy(sfx[snd_idx].name, name, MAX_NAME_LEN);
         sc_map_put_s64(&assets->m_sounds, sfx[snd_idx].name, snd_idx);
-        n_loaded[2]++;
+        n_loaded[AST_SOUND]++;
         out_snd = &sfx[snd_idx].sound;
     }
     rresUnloadResourceChunk(chunk);
     return out_snd;
 }
 
+Texture2D* add_texture_from_img(Assets_t* assets, const char* name, Image img)
+{
+    uint8_t tex_idx = n_loaded[AST_TEXTURE];
+    assert(tex_idx < MAX_TEXTURES);
+    Texture2D tex = LoadTextureFromImage(img);
+    if (tex.width == 0 || tex.height == 0) return NULL;
+
+    textures[tex_idx].texture = tex;
+    strncpy(textures[tex_idx].name, name, MAX_NAME_LEN);
+    sc_map_put_s64(&assets->m_textures, textures[tex_idx].name, tex_idx);
+    n_loaded[AST_TEXTURE]++;
+    return &textures[tex_idx].texture;
+}
+
 Sprite_t* add_sprite(Assets_t* assets, const char* name, Texture2D* texture)
 {
-    uint8_t spr_idx = n_loaded[1];
+    uint8_t spr_idx = n_loaded[AST_SPRITE];
     assert(spr_idx < MAX_SPRITES);
     memset(sprites + spr_idx, 0, sizeof(SpriteData_t));
     sprites[spr_idx].sprite.texture = texture;
     strncpy(sprites[spr_idx].name, name, MAX_NAME_LEN);
     sc_map_put_s64(&assets->m_sprites, sprites[spr_idx].name, spr_idx);
-    n_loaded[1]++;
+    n_loaded[AST_SPRITE]++;
     return &sprites[spr_idx].sprite;
 }
 
 Sound* add_sound(Assets_t* assets, const char* name, const char* path)
 {
-    uint8_t snd_idx = n_loaded[2];
+    uint8_t snd_idx = n_loaded[AST_SOUND];
     assert(snd_idx < MAX_SOUNDS);
     sfx[snd_idx].sound = LoadSound(path);
     strncpy(sfx[snd_idx].name, name, MAX_NAME_LEN);
     sc_map_put_s64(&assets->m_sounds, sfx[snd_idx].name, snd_idx);
-    n_loaded[2]++;
+    n_loaded[AST_SOUND]++;
     return &sfx[snd_idx].sound;
 }
 
 Font* add_font(Assets_t* assets, const char* name, const char* path)
 {
-    uint8_t fnt_idx = n_loaded[3];
+    uint8_t fnt_idx = n_loaded[AST_FONT];
     assert(fnt_idx < MAX_FONTS);
     fonts[fnt_idx].font = LoadFont(path);
     strncpy(fonts[fnt_idx].name, name, MAX_NAME_LEN);
     sc_map_put_s64(&assets->m_fonts, fonts[fnt_idx].name, fnt_idx);
-    n_loaded[3]++;
+    n_loaded[AST_FONT]++;
     return &fonts[fnt_idx].font;
 }
 
 EmitterConfig_t* add_emitter_conf(Assets_t* assets, const char* name)
 {
-    uint8_t emitter_idx = n_loaded[5];
+    uint8_t emitter_idx = n_loaded[AST_EMITTER_CONF];
     assert(emitter_idx < MAX_EMITTER_CONF);
     memset(emitter_confs + emitter_idx, 0, sizeof(EmitterConfData_t));
     strncpy(emitter_confs[emitter_idx].name, name, MAX_NAME_LEN);
     sc_map_put_s64(&assets->m_emitter_confs, emitter_confs[emitter_idx].name, emitter_idx);
-    n_loaded[5]++;
+    n_loaded[AST_EMITTER_CONF]++;
     return &emitter_confs[emitter_idx].conf;
 }
 
@@ -185,7 +199,7 @@ LevelPack_t* add_level_pack(Assets_t* assets, const char* name, const char* path
     FILE* file = fopen(path, "rb");
     if (file == NULL) return NULL;
 
-    LevelPackData_t* pack_info = levelpacks + n_loaded[4];
+    LevelPackData_t* pack_info = levelpacks + n_loaded[AST_LEVELPACK];
     fread(&pack_info->pack.n_levels, sizeof(uint32_t), 1, file);
     pack_info->pack.levels = calloc(pack_info->pack.n_levels, sizeof(LevelMap_t));
 
@@ -201,10 +215,10 @@ LevelPack_t* add_level_pack(Assets_t* assets, const char* name, const char* path
     }
     
     fclose(file);
-    uint8_t pack_idx = n_loaded[4];
+    uint8_t pack_idx = n_loaded[AST_LEVELPACK];
     strncpy(pack_info->name, name, MAX_NAME_LEN);
     sc_map_put_s64(&assets->m_levelpacks, levelpacks[pack_idx].name, pack_idx);
-    n_loaded[4]++;
+    n_loaded[AST_LEVELPACK]++;
 
     return &levelpacks[pack_idx].pack;
 }
@@ -212,7 +226,7 @@ LevelPack_t* add_level_pack(Assets_t* assets, const char* name, const char* path
 
 static LevelPack_t* add_level_pack_zst(Assets_t* assets, const char* name, const uint8_t* zst_buffer, uint32_t len)
 {
-    LevelPackData_t* pack_info = levelpacks + n_loaded[4];
+    LevelPackData_t* pack_info = levelpacks + n_loaded[AST_LEVELPACK];
     size_t read = 0;
 
     ZSTD_inBuffer input = { level_decompressor.in_buffer, read, 0 };
@@ -350,10 +364,10 @@ load_end:
     }
 
     pack_info->pack.n_levels = lvls;
-    uint8_t pack_idx = n_loaded[4];
+    uint8_t pack_idx = n_loaded[AST_LEVELPACK];
     strncpy(pack_info->name, name, MAX_NAME_LEN);
     sc_map_put_s64(&assets->m_levelpacks, levelpacks[pack_idx].name, pack_idx);
-    n_loaded[4]++;
+    n_loaded[AST_LEVELPACK]++;
 
     return &levelpacks[pack_idx].pack;
 }
@@ -415,19 +429,19 @@ void init_assets(Assets_t* assets)
 
 void free_all_assets(Assets_t* assets)
 {
-    for (uint8_t i = 0; i < n_loaded[0]; ++i)
+    for (uint8_t i = 0; i < n_loaded[AST_TEXTURE]; ++i)
     {
         UnloadTexture(textures[i].texture);
     }
-    for (uint8_t i = 0; i < n_loaded[2]; ++i)
+    for (uint8_t i = 0; i < n_loaded[AST_SOUND]; ++i)
     {
         UnloadSound(sfx[i].sound);
     }
-    for (uint8_t i = 0; i < n_loaded[3]; ++i)
+    for (uint8_t i = 0; i < n_loaded[AST_FONT]; ++i)
     {
         UnloadFont(fonts[i].font);
     }
-    for (uint8_t i = 0; i < n_loaded[4]; ++i)
+    for (uint8_t i = 0; i < n_loaded[AST_LEVELPACK]; ++i)
     {
         unload_level_pack(levelpacks[i].pack);
     }

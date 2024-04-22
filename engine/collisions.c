@@ -173,9 +173,9 @@ uint8_t check_collision_offset(Entity_t* p_ent, Vector2 pos, Vector2 bbox_sz, Ti
     return check_collision(&ent, grid, false);
 }
 
-bool check_on_ground(Entity_t* p_ent, Vector2 pos, Vector2 prev_pos, Vector2 bbox_sz, TileGrid_t* grid)
+bool check_on_ground(Entity_t* p_ent, Vector2 prev_pos, Vector2 bbox_sz, TileGrid_t* grid)
 {
-    Vector2 new_pos = Vector2Add(pos, (Vector2){0, 1});
+    Vector2 new_pos = Vector2Add(p_ent->position, (Vector2){0, 1});
     CollideEntity_t ent = {
         .p_ent = p_ent,
         .bbox = (Rectangle){new_pos.x, new_pos.y + bbox_sz.y, bbox_sz.x, 1},
@@ -193,12 +193,13 @@ bool check_on_ground(Entity_t* p_ent, Vector2 pos, Vector2 prev_pos, Vector2 bbo
 
 uint8_t check_bbox_edges(
     TileGrid_t* tilemap,
-    Entity_t* p_ent, Vector2 pos, Vector2 bbox,
+    Entity_t* p_ent, Vector2 bbox,
     bool ignore_fragile
 )
 {
     uint8_t detected = 0;
 
+    Vector2 pos = p_ent->position;
     // Too lazy to adjust the tile area to check, so just make a big one
     CollideEntity_t ent = 
     {

@@ -230,3 +230,8 @@ void print_mempool_stats(char* buffer)
         );
     }
 }
+
+uint32_t get_num_of_free_entities(void)
+{
+    return ent_mempool.free_list.count;
+}

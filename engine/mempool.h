@@ -13,4 +13,5 @@ void* get_component_wtih_id(ComponentEnum_t comp_type, unsigned long idx);
 void free_component_to_mempool(ComponentEnum_t comp_type, unsigned long idx);
 
 void print_mempool_stats(char* buffer);
+uint32_t get_num_of_free_entities(void);
 #endif //__MEMPOOL_H

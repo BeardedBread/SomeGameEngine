@@ -47,6 +47,8 @@ struct Scene {
     system_func_t render_function;
     action_func_t action_function;
     EntityManager_t ent_manager;
+    float delta_time;
+    float time_scale;
     //SceneType_t scene_type;
     SceneState_t state;
     ParticleSystem_t part_sys;
@@ -63,7 +65,7 @@ void play_sfx(GameEngine_t* engine, unsigned int tag_idx);
 void update_sfx_list(GameEngine_t* engine);
 
 // Inline functions, for convenience
-extern void update_scene(Scene_t* scene);
+extern void update_scene(Scene_t* scene, float delta_time);
 extern void render_scene(Scene_t* scene);
 extern void do_action(Scene_t* scene, ActionType_t action, bool pressed);
 

@@ -44,7 +44,7 @@ Entity_t* create_crate(EntityManager_t* ent_manager, bool metal, ContainerItem_t
     p_bbox->fragile = false;
 
     CTransform_t* p_ctransform = add_component(p_crate, CTRANSFORM_COMP_T);
-    p_ctransform->grav_delay = 7;
+    p_ctransform->grav_delay = 0.20f;
     p_ctransform->shape_factor = metal ? (Vector2){0.7,0.7} : (Vector2){0.8,0.8} ;
     add_component(p_crate, CMOVEMENTSTATE_T);
 
@@ -87,7 +87,7 @@ Entity_t* create_boulder(EntityManager_t* ent_manager)
     p_bbox->fragile = false;
 
     CTransform_t* p_ctransform = add_component(p_boulder, CTRANSFORM_COMP_T);
-    p_ctransform->grav_delay = 5;
+    p_ctransform->grav_delay = 1.0f/12;
     p_ctransform->active = true;
     p_ctransform->shape_factor = (Vector2){0.6, 0.6};
     CMovementState_t* p_move = add_component(p_boulder, CMOVEMENTSTATE_T);
@@ -95,7 +95,7 @@ Entity_t* create_boulder(EntityManager_t* ent_manager)
 
     add_component(p_boulder, CTILECOORD_COMP_T);
     CMoveable_t* p_cmove = add_component(p_boulder, CMOVEABLE_T);
-    p_cmove->move_speed = 8;
+    p_cmove->move_speed = 480;
     CHurtbox_t* p_hurtbox = add_component(p_boulder, CHURTBOX_T);
     p_hurtbox->size = p_bbox->size;
     p_hurtbox->def = 2;
@@ -219,7 +219,7 @@ Entity_t* create_explosion(EntityManager_t* ent_manager)
     p_cspr->current_idx = 17;
 
     CLifeTimer_t* p_clifetimer = add_component(p_explosion, CLIFETIMER_T);
-    p_clifetimer->life_time = 3;
+    p_clifetimer->life_time = 0.05f;
     return p_explosion;
 }
 
@@ -234,7 +234,7 @@ Entity_t* create_chest(EntityManager_t* ent_manager)
     p_bbox->fragile = true;
 
     CTransform_t* p_ctransform = add_component(p_chest, CTRANSFORM_COMP_T);
-    p_ctransform->grav_delay = 7;
+    p_ctransform->grav_delay = 0.3f;
     p_ctransform->shape_factor = (Vector2){0.7,0.7};
     add_component(p_chest, CMOVEMENTSTATE_T);
     add_component(p_chest, CTILECOORD_COMP_T);

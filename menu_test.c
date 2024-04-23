@@ -2,10 +2,12 @@
 #include "scene_impl.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <math.h>
 
 // Maintain own queue to handle key presses
 struct sc_queue_32 key_buffer;
 
+const float DT = 1.0f/60.0f;
 int main(void)
 {
     sc_queue_init(&key_buffer);
@@ -48,7 +50,9 @@ int main(void)
             sc_queue_add_last(&key_buffer, button);
         }
 
-        update_scene(&scene.scene);
+        float frame_time = GetFrameTime();
+        float delta_time = fminf(frame_time, DT);
+        update_scene(&scene.scene, delta_time);
         update_entity_manager(&scene.scene.ent_manager);
         // This is needed to advance time delta
         BeginDrawing();

@@ -102,6 +102,7 @@ void init_scene(Scene_t* scene, system_func_t render_func, action_func_t action_
     scene->render_function = render_func;
     scene->action_function = action_func;
     scene->state = SCENE_ENDED;
+    scene->time_scale = 1.0f;
 }
 
 void free_scene(Scene_t* scene)
@@ -112,14 +113,15 @@ void free_scene(Scene_t* scene)
     deinit_particle_system(&scene->part_sys);
 }
 
-inline void update_scene(Scene_t* scene)
+inline void update_scene(Scene_t* scene, float delta_time)
 {
+    scene->delta_time = delta_time * scene->time_scale;
     system_func_t sys;
     sc_array_foreach(&scene->systems, sys)
     {
         sys(scene);
     }
-    update_particle_system(&scene->part_sys);
+    update_particle_system(&scene->part_sys, scene->delta_time);
 }
 
 inline void render_scene(Scene_t* scene)

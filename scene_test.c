@@ -3,6 +3,7 @@
 #include "assets_loader.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <math.h>
 #if defined(PLATFORM_WEB)
     #include <emscripten/emscripten.h>
     #include <emscripten/html5.h>
@@ -10,6 +11,7 @@
         return true; // Just preventDefault everything lol
     }
 #endif
+const float DT = 1.0f/60.0f;
 
 Scene_t* scenes[1];
 static GameEngine_t engine =
@@ -26,7 +28,9 @@ void update_loop(void)
     Scene_t* scene = engine.scenes[engine.curr_scene];
     process_inputs(&engine, scene);
 
-    update_scene(scene);
+    float frame_time = GetFrameTime();
+    float delta_time = fminf(frame_time, DT);
+    update_scene(scene, delta_time);
     update_entity_manager(&scene->ent_manager);
     // This is needed to advance time delta
     render_scene(scene);
@@ -75,6 +79,7 @@ int main(void)
         emscripten_set_main_loop(update_loop, 0, 1);
     #else
         puts("Regular main loop");
+        const float DT = 1.0f/60.0f;
         while(true)
         {
 
@@ -82,7 +87,10 @@ int main(void)
             // appear in the polling of raylib
             process_inputs(&engine, &scene.scene);
 
-            update_scene(&scene.scene);
+            float frame_time = GetFrameTime();
+            float delta_time = fminf(frame_time, DT);
+
+            update_scene(&scene.scene, delta_time);
             update_entity_manager(&scene.scene.ent_manager);
             // This is needed to advance time delta
             render_scene(&scene.scene);

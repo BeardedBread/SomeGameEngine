@@ -63,7 +63,7 @@ static inline void destroy_tile(LevelSceneData_t* lvl_data, unsigned int tile_id
                 .y = tile_idx / tilemap.width * tilemap.tile_size + tilemap.tile_size / 2,
             },
             .n_particles = 5,
-            .user_data = lvl_data,
+            .user_data = CONTAINER_OF(lvl_data, LevelScene_t, data),
             .update_func = &simple_particle_system_update,
             .emitter_update_func = NULL,
         };
@@ -247,7 +247,7 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
             .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
             .position = p_ent->position,
             .n_particles = 5,
-            .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+            .user_data = CONTAINER_OF(scene, LevelScene_t, scene),
             .update_func = &simple_particle_system_update,
             .emitter_update_func = NULL,
         };
@@ -261,7 +261,7 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
             .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
             .position = p_ent->position,
             .n_particles = 5,
-            .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+            .user_data = CONTAINER_OF(scene, LevelScene_t, scene),
             .update_func = &simple_particle_system_update,
             .emitter_update_func = NULL,
         };
@@ -274,7 +274,7 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
             .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
             .position = p_ent->position,
             .n_particles = 5,
-            .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+            .user_data = CONTAINER_OF(scene, LevelScene_t, scene),
             .update_func = &simple_particle_system_update,
             .emitter_update_func = NULL,
         };
@@ -285,7 +285,7 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
             .config = get_emitter_conf(&scene->engine->assets, "pe_single"),
             .position = p_ent->position,
             .n_particles = 1,
-            .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+            .user_data = CONTAINER_OF(scene, LevelScene_t, scene),
             .update_func = &simple_particle_system_update,
             .emitter_update_func = NULL,
         };
@@ -300,7 +300,7 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
             .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
             .position = p_ent->position,
             .n_particles = 2,
-            .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+            .user_data = CONTAINER_OF(scene, LevelScene_t, scene),
             .update_func = &simple_particle_system_update,
             .emitter_update_func = NULL,
         };
@@ -932,9 +932,9 @@ void global_external_forces_system(Scene_t* scene)
         CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
         CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
 
-        if (p_ctransform->grav_timer > 0)
+        if (p_ctransform->grav_timer > 0.0f)
         {
-            p_ctransform->grav_timer--;
+            p_ctransform->grav_timer -= scene->delta_time;
             continue;
         }
 
@@ -1022,11 +1022,13 @@ void moveable_update_system(Scene_t* scene)
             }
             else if (remaining_distance > 0.1)
             {
-                p_ent->position.x +=  (remaining_distance > p_moveable->move_speed) ? p_moveable->move_speed : remaining_distance;
+                float x_to_move = p_moveable->move_speed * scene->delta_time;
+                p_ent->position.x +=  (remaining_distance > x_to_move) ? x_to_move : remaining_distance;
             }
             else
             {
-                p_ent->position.x +=  (remaining_distance < -p_moveable->move_speed) ? -p_moveable->move_speed : remaining_distance;
+                float x_to_move = p_moveable->move_speed * scene->delta_time;
+                p_ent->position.x +=  (remaining_distance < -x_to_move) ? -x_to_move : remaining_distance;
                 memset(&p_ctransform->velocity, 0, sizeof(p_ctransform->velocity));
             }
         }
@@ -1083,8 +1085,8 @@ void moveable_update_system(Scene_t* scene)
                             CBBox_t* p_other_bbox = get_component(other_ent, CBBOX_COMP_T);
                             if (p_other_bbox != NULL)
                             {
-                                //any_solid |= p_other_bbox->solid;
-                                any_solid |= true;
+                                any_solid |= p_other_bbox->solid;
+                                //any_solid |= true;
                                 break;
                             }
                         }
@@ -1094,8 +1096,8 @@ void moveable_update_system(Scene_t* scene)
                             CBBox_t* p_other_bbox = get_component(other_ent, CBBOX_COMP_T);
                             if (p_other_bbox != NULL)
                             {
-                                //any_solid |= p_other_bbox->solid;
-                                any_solid |= true;
+                                any_solid |= p_other_bbox->solid;
+                                //any_solid |= true;
                                 break;
                             }
                         }
@@ -1257,7 +1259,7 @@ void movement_update_system(Scene_t* scene)
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     TileGrid_t tilemap = data->tilemap;
     // Update movement
-    float delta_time = DELTA_T; // TODO: Will need to think about delta time handling
+    float delta_time = scene->delta_time;
     CTransform_t * p_ctransform;
     unsigned long ent_idx;
     sc_map_foreach(&scene->ent_manager.component_map[CTRANSFORM_COMP_T], ent_idx, p_ctransform)
@@ -1486,7 +1488,7 @@ void state_transition_update_system(Scene_t* scene)
                 .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
                 .position = p_ent->position,
                 .n_particles = 5,
-                .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+                .user_data = (CONTAINER_OF(scene, LevelScene_t, scene)),
                 .update_func = &simple_particle_system_update,
                 .emitter_update_func = NULL,
             };
@@ -1703,16 +1705,16 @@ void hitbox_update_system(Scene_t* scene)
                                             CContainer_t* p_container = get_component(p_other_ent, CCONTAINER_T);
                                             if (p_container->item == CONTAINER_BOMB)
                                             {
-                                                p_clifetimer->life_time = 6;
+                                                p_clifetimer->life_time = 0.1f;
                                             }
                                             else
                                             {
-                                                p_clifetimer->life_time = 3;
+                                                p_clifetimer->life_time = 0.05f;
                                             }
                                         }
                                         else
                                         {
-                                            p_clifetimer->life_time = 3;
+                                            p_clifetimer->life_time = 0.05f;
                                         }
                                     }
                                 }
@@ -1873,8 +1875,9 @@ void lifetimer_update_system(Scene_t* scene)
     CLifeTimer_t* p_lifetimer;
     sc_map_foreach(&scene->ent_manager.component_map[CLIFETIMER_T], ent_idx, p_lifetimer)
     {
-        p_lifetimer->life_time--;
-        if (p_lifetimer->life_time == 0)
+        p_lifetimer->life_time -= scene->delta_time;
+
+        if (p_lifetimer->life_time <= 0.0f)
         {
             destroy_entity(scene, &tilemap, get_entity(&scene->ent_manager, ent_idx));
         }
@@ -1937,7 +1940,7 @@ void airtimer_update_system(Scene_t* scene)
                         //.position = new_pos,
                         .position = p_ent->position,
                         .n_particles = 5,
-                        .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+                        .user_data = CONTAINER_OF(scene, LevelScene_t, scene),
                         .update_func = &floating_particle_system_update,
                         .emitter_update_func = &check_in_water,
                     };
@@ -1949,22 +1952,22 @@ void airtimer_update_system(Scene_t* scene)
                 }
             }
 
-            if (p_air->curr_ftimer > p_air->decay_rate)
+            if (p_air->curr_ftimer > p_air->decay_rate * scene->delta_time)
             {
-                p_air->curr_ftimer -= p_air->decay_rate;
+                p_air->curr_ftimer -= p_air->decay_rate * scene->delta_time;
             }
             else
             {
                 if (p_air->curr_count > 0)
                 {
                     p_air->curr_count--;
-                    p_air->curr_ftimer = p_air->max_ftimer;
+                    p_air->curr_ftimer += p_air->max_ftimer;
                     ParticleEmitter_t emitter = {
                         .spr = get_sprite(&scene->engine->assets, "p_bigbubble"),
                         .config = get_emitter_conf(&scene->engine->assets, "pe_slow"),
                         .position = p_ent->position,
                         .n_particles = 1,
-                        .user_data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data),
+                        .user_data = CONTAINER_OF(scene, LevelScene_t, scene),
                         .update_func = &floating_particle_system_update,
                         .emitter_update_func = NULL,
                     };
@@ -2011,12 +2014,18 @@ void sprite_animation_system(Scene_t* scene)
         if (reset) p_cspr->current_frame = 0;
 
         // Animate it (handle frame count)
-        spr.sprite->elapsed++;
-        if (spr.sprite->elapsed == spr.sprite->speed)
+        p_cspr->fractional += scene->delta_time;
+        const float ANIM_FRAME_RATE = 1.0f/24;
+        if (p_cspr->fractional > ANIM_FRAME_RATE)
         {
-            p_cspr->current_frame++;
-            p_cspr->current_frame %= spr.sprite->frame_count;
-            spr.sprite->elapsed = 0;
+            p_cspr->fractional -= ANIM_FRAME_RATE;
+            spr.sprite->elapsed++;
+            if (spr.sprite->elapsed == spr.sprite->speed)
+            {
+                p_cspr->current_frame++;
+                p_cspr->current_frame %= spr.sprite->frame_count;
+                spr.sprite->elapsed = 0;
+            }
         }
     }
 }
@@ -2062,15 +2071,15 @@ void camera_update_system(Scene_t* scene)
     float v = data->camera.current_vel.x - target_vel.x; 
     float F = data->camera.k * x - data->camera.c * v;
     // Kinematics update
-    const float dt = DELTA_T;
+    const float dt = scene->delta_time;
     float a_dt = F * dt / data->camera.mass;
     data->camera.cam.target.x += (data->camera.current_vel.x + a_dt * 0.5) * dt;
 
     data->camera.current_vel.x += a_dt;
 
     // Simple lerp for y direction
-    float dy = data->camera.target_pos.y - data->camera.cam.target.y;
-    data->camera.cam.target.y += dy * 0.1;
+    float dy = (data->camera.target_pos.y - data->camera.cam.target.y);
+    data->camera.cam.target.y += dy * 0.1f;
 
     Vector2 max = GetWorldToScreen2D(
         (Vector2){
@@ -2160,10 +2169,10 @@ bool check_in_water(const ParticleEmitter_t* emitter)
 
 void simple_particle_system_update(Particle_t* part, void* user_data)
 {
-    LevelSceneData_t* lvl_data = (LevelSceneData_t*)user_data;
-    TileGrid_t tilemap = lvl_data->tilemap;
+    LevelScene_t* scene = (LevelScene_t*)user_data;
+    TileGrid_t tilemap = scene->data.tilemap;
 
-    float delta_time = DELTA_T; // TODO: Will need to think about delta time handling
+    float delta_time = scene->scene.delta_time;
     part->velocity =
         Vector2Add(
             part->velocity,
@@ -2203,10 +2212,10 @@ void simple_particle_system_update(Particle_t* part, void* user_data)
 
 void simple_float_particle_system_update(Particle_t* part, void* user_data)
 {
-    LevelSceneData_t* lvl_data = (LevelSceneData_t*)user_data;
-    TileGrid_t tilemap = lvl_data->tilemap;
+    LevelScene_t* scene = (LevelScene_t*)user_data;
+    TileGrid_t tilemap = scene->data.tilemap;
 
-    float delta_time = DELTA_T; // TODO: Will need to think about delta time handling
+    float delta_time = scene->scene.delta_time;
     part->position = Vector2Add(
         part->position,
         Vector2Scale(part->velocity, delta_time)
@@ -2233,8 +2242,8 @@ void floating_particle_system_update(Particle_t* part, void* user_data)
 {
     simple_float_particle_system_update(part, user_data);
 
-    LevelSceneData_t* lvl_data = (LevelSceneData_t*)user_data;
-    TileGrid_t tilemap = lvl_data->tilemap;
+    LevelScene_t* scene = (LevelScene_t*)user_data;
+    TileGrid_t tilemap = scene->data.tilemap;
 
     Vector2 center = Vector2AddValue(
         part->position,

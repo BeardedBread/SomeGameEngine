@@ -151,7 +151,7 @@ EmitterHandle play_particle_emitter(ParticleSystem_t* system, const ParticleEmit
     return idx;
 }
 
-void update_particle_system(ParticleSystem_t* system)
+void update_particle_system(ParticleSystem_t* system, float delta_time)
 {
     uint32_t emitter_idx = system->emitter_list[0].next;
     uint32_t prev_idx = 0;

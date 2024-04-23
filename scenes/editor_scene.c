@@ -961,9 +961,20 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
                 }
             break;
             case ACTION_SET_SPAWNPOINT:
-            {
                 p_player->spawn_pos = p_player->position;
-            }
+            break;
+            case ACTION_TOGGLE_TIMESLOW:
+                if (!pressed)
+                {
+                    if (scene->time_scale < 1.0f)
+                    {
+                        scene->time_scale = 1.0f;
+                    }
+                    else
+                    {
+                        scene->time_scale = 0.5f;
+                    }
+                }
             break;
             default:
             break;
@@ -1233,6 +1244,7 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_map_put_64(&scene->scene.action_map, KEY_R, ACTION_RESTART);
     sc_map_put_64(&scene->scene.action_map, KEY_B, ACTION_TOGGLE_GRID);
     sc_map_put_64(&scene->scene.action_map, KEY_V, ACTION_SET_SPAWNPOINT);
+    sc_map_put_64(&scene->scene.action_map, KEY_U, ACTION_TOGGLE_TIMESLOW);
 
 }
 

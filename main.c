@@ -4,6 +4,7 @@
 #include "ent_impl.h"
 #include "mempool.h"
 #include <stdio.h>
+#include <math.h>
 #define N_SCENES 4
 
 Scene_t *scenes[N_SCENES];
@@ -79,6 +80,7 @@ int main(void)
     scenes[2] = &sandbox_scene.scene;
     change_scene(&engine, 0);
 
+    const float DT = 1.0f/60.0f;
     while (!WindowShouldClose())
     {
         // This entire key processing relies on the assumption that a pressed key will
@@ -92,7 +94,11 @@ int main(void)
 
         process_inputs(&engine, curr_scene);
 
-        update_scene(curr_scene);
+
+        float frame_time = GetFrameTime();
+        float delta_time = fminf(frame_time, DT);
+
+        update_scene(curr_scene, delta_time);
         update_entity_manager(&curr_scene->ent_manager);
         // This is needed to advance time delta
         render_scene(curr_scene);

@@ -6,6 +6,7 @@
 #include "assets_loader.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <math.h>
 
 Scene_t* scenes[1];
 static GameEngine_t engine =
@@ -39,10 +40,14 @@ int main(void)
     scenes[0] = &scene.scene;
     change_scene(&engine, 0);
 
+    const float DT = 1.0f/60.0f;
     while(true)
     {
+        float frame_time = GetFrameTime();
+        float delta_time = fminf(frame_time, DT);
+
         process_inputs(&engine, &scene.scene);
-        update_scene(&scene.scene);
+        update_scene(&scene.scene, delta_time);
         update_entity_manager(&scene.scene.ent_manager);
         // This is needed to advance time delta
         render_scene(&scene.scene);

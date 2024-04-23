@@ -88,7 +88,7 @@ void update_emitter_handle_position(ParticleSystem_t* system, EmitterHandle hand
 void unload_emitter_handle(ParticleSystem_t* system, EmitterHandle handle);
 bool is_emitter_handle_alive(ParticleSystem_t* system, EmitterHandle handle);
 
-void update_particle_system(ParticleSystem_t* system);
+void update_particle_system(ParticleSystem_t* system, float delta_time);
 void draw_particle_system(ParticleSystem_t* system);
 void deinit_particle_system(ParticleSystem_t* system);
 #endif // _PARTICLE_SYSTEM_H

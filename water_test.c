@@ -451,10 +451,14 @@ int main(void)
     sc_map_put_64(&scene.scene.action_map, KEY_P, ACTION_METAL_TOGGLE);
 
 
+    const float DT = 1.0f/60.0f;
     while(true)
     {
+        float frame_time = GetFrameTime();
+        float delta_time = fminf(frame_time, DT);
+
         process_inputs(&engine, &scene.scene);
-        update_scene(&scene.scene);
+        update_scene(&scene.scene, delta_time);
         update_entity_manager(&scene.scene.ent_manager);
         // This is needed to advance time delta
         render_scene(&scene.scene);

@@ -49,8 +49,8 @@ typedef struct _CTransform_t {
     Vector2 accel;
     Vector2 fric_coeff;
     Vector2 shape_factor;
-    int8_t grav_delay;
-    int8_t grav_timer;
+    float grav_delay;
+    float grav_timer;
     MovementMode_t movement_mode;
     bool active;
 } CTransform_t;
@@ -129,16 +129,15 @@ typedef struct _CHurtbox_t {
 } CHurtbox_t;
 
 typedef struct _CLifeTimer_t {
-    uint8_t timer;
-    uint8_t life_time;
+    float life_time;
 } CLifeTimer_t;
 
 typedef struct _CAirTimer_t {
+    float max_ftimer;
+    float curr_ftimer;
+    float decay_rate;
     uint8_t max_count;
     uint8_t curr_count;
-    uint16_t max_ftimer;
-    uint16_t curr_ftimer;
-    uint16_t decay_rate;
 } CAirTimer_t;
 
 typedef struct _BFSTile {
@@ -177,6 +176,7 @@ typedef struct _CWaterRunner {
     uint8_t movement_delay;
     int8_t movement_speed;
     int16_t counter;
+    float fractional;
 }CWaterRunner_t;
 
 // Credits to bedroomcoders.co.uk for this
@@ -206,6 +206,7 @@ typedef struct _CSprite_t {
     bool flip_y;
     bool pause;
     int current_frame;
+    float fractional;
 } CSprite_t;
 
 typedef struct _CMoveable_t {

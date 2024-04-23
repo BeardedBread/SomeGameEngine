@@ -8,9 +8,7 @@ static const Vector2 GRAVITY = {0, GRAV_ACCEL};
 
 void simple_particle_system_update(Particle_t* part, void* user_data)
 {
-    (void)user_data;
-
-    float delta_time = DELTA_T; // TODO: Will need to think about delta time handling
+    float delta_time = *(float*)user_data; // TODO: Will need to think about delta time handling
     part->rotation += part->angular_vel;
 
     part->velocity =
@@ -70,6 +68,9 @@ int main(void)
         .name = "test_spr"
     };
 
+    const float DT = 1.0f/60.0f;
+    float delta_time = 0.0f;
+
     EmitterConfig_t conf ={
         .one_shot = true,
         .launch_range = {0, 360},
@@ -86,6 +87,7 @@ int main(void)
         .update_func = &simple_particle_system_update,
         .emitter_update_func = NULL,
         .spr = (tex.width == 0) ? NULL : &spr,
+        .user_data = &delta_time,
     };
 
     EmitterConfig_t conf2 ={
@@ -106,6 +108,7 @@ int main(void)
         .update_func = &simple_particle_system_update,
         .emitter_update_func = &check_mouse_click,
         .spr = (tex.width == 0) ? NULL : &spr,
+        .user_data = &delta_time,
     };
 
     bool key_press = false;
@@ -114,6 +117,8 @@ int main(void)
     EmitterHandle han = 0;
     while(!WindowShouldClose())
     {
+        float frame_time = GetFrameTime();
+        delta_time = fminf(frame_time, DT);
         Vector2 mouse_pos = GetMousePosition();
         if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
         {
@@ -145,7 +150,7 @@ int main(void)
             han = 0;
         }
 
-        update_particle_system(&part_sys);
+        update_particle_system(&part_sys, delta_time);
         sprintf(text_buffer, "free: %u", get_number_of_free_emitter(&part_sys));
         BeginDrawing();
             ClearBackground(RAYWHITE);

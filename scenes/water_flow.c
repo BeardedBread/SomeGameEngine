@@ -289,6 +289,11 @@ void update_water_runner_system(Scene_t* scene)
             break;
             case SCANLINE_FILL:
             {
+                const float FILL_RATE = 1.0f/24;
+                p_crunner->fractional += scene->delta_time;
+                if (p_crunner->fractional < FILL_RATE) break;
+
+                p_crunner->fractional -= FILL_RATE;
                 // Unsigned usage here is okay
                 unsigned int start_tile =
                     (p_crunner->current_tile / p_crunner->bfs_tilemap.width) * p_crunner->bfs_tilemap.width;

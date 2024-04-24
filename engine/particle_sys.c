@@ -163,7 +163,7 @@ void update_particle_system(ParticleSystem_t* system, float delta_time)
 
         if (emitter->emitter_update_func != NULL && emitter->active)
         {
-            emitter->active = emitter->emitter_update_func(emitter);
+            emitter->active = emitter->emitter_update_func(emitter, delta_time);
         }
 
         for (uint32_t i = 0; i < emitter->n_particles; ++i)
@@ -175,7 +175,7 @@ void update_particle_system(ParticleSystem_t* system, float delta_time)
             {
                 if (emitter->update_func != NULL)
                 {
-                    emitter->update_func(emitter->particles + i, emitter->user_data);
+                    emitter->update_func(emitter->particles + i, emitter->user_data, delta_time);
                 }
 
             }

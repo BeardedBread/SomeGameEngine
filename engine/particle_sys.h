@@ -29,8 +29,8 @@ typedef struct Particle
 
 typedef struct ParticleEmitter ParticleEmitter_t;
 
-typedef void (*particle_update_func_t)(Particle_t* part, void* user_data);
-typedef bool (*emitter_check_func_t)(const ParticleEmitter_t* emitter);
+typedef void (*particle_update_func_t)(Particle_t* part, void* user_data, float delta_time);
+typedef bool (*emitter_check_func_t)(const ParticleEmitter_t* emitter, float delta_time);
 
 typedef struct EmitterConfig
 {

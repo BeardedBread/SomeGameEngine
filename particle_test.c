@@ -6,9 +6,9 @@
 #include "constants.h"
 static const Vector2 GRAVITY = {0, GRAV_ACCEL};
 
-void simple_particle_system_update(Particle_t* part, void* user_data)
+void simple_particle_system_update(Particle_t* part, void* user_data, float delta_time)
 {
-    float delta_time = *(float*)user_data; // TODO: Will need to think about delta time handling
+    (void)user_data;
     part->rotation += part->angular_vel;
 
     part->velocity =
@@ -44,7 +44,7 @@ void simple_particle_system_update(Particle_t* part, void* user_data)
     }
 }
 
-static bool check_mouse_click(const ParticleEmitter_t* emitter)
+static bool check_mouse_click(const ParticleEmitter_t* emitter, float delta_time)
 {
     return IsMouseButtonDown(MOUSE_RIGHT_BUTTON);
 }
@@ -108,7 +108,7 @@ int main(void)
         .update_func = &simple_particle_system_update,
         .emitter_update_func = &check_mouse_click,
         .spr = (tex.width == 0) ? NULL : &spr,
-        .user_data = &delta_time,
+        .user_data = NULL,
     };
 
     bool key_press = false;

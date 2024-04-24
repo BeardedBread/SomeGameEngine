@@ -6,9 +6,9 @@
 #include "constants.h"
 #include <stdio.h>
 
-void simple_particle_system_update(Particle_t* part, void* user_data);
-void floating_particle_system_update(Particle_t* part, void* user_data);
-bool check_in_water(const ParticleEmitter_t* emitter);
+void simple_particle_system_update(Particle_t* part, void* user_data, float delta_time);
+void floating_particle_system_update(Particle_t* part, void* user_data, float delta_time);
+bool check_in_water(const ParticleEmitter_t* emitter, float delta_time);
 
 static const Vector2 GRAVITY = {0, GRAV_ACCEL};
 static const Vector2 UPTHRUST = {0, -GRAV_ACCEL * 1.1};
@@ -2158,19 +2158,20 @@ static inline bool is_point_in_water(Vector2 pos, TileGrid_t tilemap)
     );
 }
 
-bool check_in_water(const ParticleEmitter_t* emitter)
+bool check_in_water(const ParticleEmitter_t* emitter, float delta_time)
 {
+    (void)delta_time;
+
     LevelScene_t* scene = (LevelScene_t*)emitter->user_data;
     TileGrid_t tilemap = scene->data.tilemap;
     return is_point_in_water(emitter->position, tilemap);
 }
 
-void simple_particle_system_update(Particle_t* part, void* user_data)
+void simple_particle_system_update(Particle_t* part, void* user_data, float delta_time)
 {
     LevelScene_t* scene = (LevelScene_t*)user_data;
     TileGrid_t tilemap = scene->data.tilemap;
 
-    float delta_time = scene->scene.delta_time;
     part->velocity =
         Vector2Add(
             part->velocity,
@@ -2208,12 +2209,11 @@ void simple_particle_system_update(Particle_t* part, void* user_data)
     }
 }
 
-void simple_float_particle_system_update(Particle_t* part, void* user_data)
+void simple_float_particle_system_update(Particle_t* part, void* user_data, float delta_time)
 {
     LevelScene_t* scene = (LevelScene_t*)user_data;
     TileGrid_t tilemap = scene->data.tilemap;
 
-    float delta_time = scene->scene.delta_time;
     part->position = Vector2Add(
         part->position,
         Vector2Scale(part->velocity, delta_time)
@@ -2236,9 +2236,9 @@ void simple_float_particle_system_update(Particle_t* part, void* user_data)
     }
 }
 
-void floating_particle_system_update(Particle_t* part, void* user_data)
+void floating_particle_system_update(Particle_t* part, void* user_data, float delta_time)
 {
-    simple_float_particle_system_update(part, user_data);
+    simple_float_particle_system_update(part, user_data, delta_time);
 
     LevelScene_t* scene = (LevelScene_t*)user_data;
     TileGrid_t tilemap = scene->data.tilemap;

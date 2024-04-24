@@ -24,11 +24,11 @@ typedef enum AnchorPoint {
     AP_BOT_RIGHT,
 } AnchorPoint_t;
 
-static inline unsigned int get_tile_idx(int x, int y, unsigned int tilemap_width)
+static inline unsigned int get_tile_idx(int x, int y, TileGrid_t gridmap)
 {
-    unsigned int tile_x = x / TILE_SIZE;
-    unsigned int tile_y = y / TILE_SIZE;
-    return tile_y * tilemap_width + tile_x;
+    unsigned int tile_x = x / gridmap.tile_size;
+    unsigned int tile_y = y / gridmap.tile_size;
+    return tile_y * gridmap.tile_size + tile_x;
 }
 
 static inline void destroy_tile(LevelSceneData_t* lvl_data, unsigned int tile_idx)
@@ -369,7 +369,7 @@ void player_movement_input_system(Scene_t* scene)
                 unsigned int tile_idx = get_tile_idx(
                     p_player->position.x + p_bbox->half_size.x,
                     p_player->position.y + p_bbox->half_size.y,
-                    data->tilemap.width
+                    data->tilemap
                 );
                 if (tilemap.tiles[tile_idx].tile_type == LADDER && p_ctransform->velocity.y >= 0)
                 {
@@ -386,7 +386,7 @@ void player_movement_input_system(Scene_t* scene)
                     tile_idx = get_tile_idx(
                         p_player->position.x + p_bbox->half_size.x,
                         p_player->position.y + p_bbox->size.y,
-                        data->tilemap.width
+                        data->tilemap
                     );
                 }
                 else
@@ -394,7 +394,7 @@ void player_movement_input_system(Scene_t* scene)
                     tile_idx = get_tile_idx(
                         p_player->position.x + p_bbox->half_size.x,
                         p_player->position.y + p_bbox->half_size.y,
-                        data->tilemap.width
+                        data->tilemap
                     );
                 }
                 if (tile_idx < tilemap.n_tiles && tilemap.tiles[tile_idx].tile_type == LADDER)
@@ -1757,7 +1757,7 @@ void boulder_destroy_wooden_tile_system(Scene_t* scene)
         unsigned int tile_idx = get_tile_idx(
                 p_boulder->position.x + p_bbox->half_size.x,
                 p_boulder->position.y + p_bbox->size.y + 1,
-                tilemap.width
+                tilemap
         );
         unsigned int tile_x = (p_boulder->position.x + p_bbox->half_size.x) / tilemap.tile_size;
 
@@ -1906,7 +1906,7 @@ void airtimer_update_system(Scene_t* scene)
         unsigned int tile_idx = get_tile_idx(
             point_to_check.x,
             point_to_check.y,
-            tilemap.width
+            tilemap
         );
 
         bool in_water = false;
@@ -2117,7 +2117,7 @@ void level_end_detection_system(Scene_t* scene)
         unsigned int tile_idx = get_tile_idx(
                 p_flag->position.x,
                 p_flag->position.y,
-                tilemap.width
+                tilemap
         );
 
         unsigned int other_ent_idx;
@@ -2145,11 +2145,9 @@ void level_end_detection_system(Scene_t* scene)
 
 static inline bool is_point_in_water(Vector2 pos, TileGrid_t tilemap)
 {
-    unsigned int tile_idx = get_tile_idx(
-            pos.x,
-            pos.y,
-            tilemap.width
-    );
+    unsigned int tile_idx = get_tile_idx(pos.x, pos.y, tilemap);
+    if (tile_idx >= tilemap.n_tiles) return false;
+
     int tile_x = tile_idx % tilemap.width;
     int tile_y = tile_idx / tilemap.width;
     uint32_t water_height = tilemap.tiles[tile_idx].water_level * WATER_BBOX_STEP;
@@ -2162,8 +2160,8 @@ static inline bool is_point_in_water(Vector2 pos, TileGrid_t tilemap)
 
 bool check_in_water(const ParticleEmitter_t* emitter)
 {
-    LevelSceneData_t* lvl_data = (LevelSceneData_t*)emitter->user_data;
-    TileGrid_t tilemap = lvl_data->tilemap;
+    LevelScene_t* scene = (LevelScene_t*)emitter->user_data;
+    TileGrid_t tilemap = scene->data.tilemap;
     return is_point_in_water(emitter->position, tilemap);
 }
 

@@ -98,8 +98,8 @@ Entity_t* create_player(EntityManager_t* ent_manager)
     CAirTimer_t* p_air = add_component(p_ent, CAIRTIMER_T);
     p_air->max_count = 10;
     p_air->curr_count = 10;
-    p_air->max_ftimer = 300;
-    p_air->decay_rate = 5;
+    p_air->max_ftimer = 1.0f;
+    p_air->decay_rate = 1.0f;
 
     CSprite_t* p_cspr = add_component(p_ent, CSPRITE_T);
     p_cspr->sprites = player_sprite_map;

@@ -28,7 +28,7 @@ static inline unsigned int get_tile_idx(int x, int y, TileGrid_t gridmap)
 {
     unsigned int tile_x = x / gridmap.tile_size;
     unsigned int tile_y = y / gridmap.tile_size;
-    return tile_y * gridmap.tile_size + tile_x;
+    return tile_y * gridmap.width + tile_x;
 }
 
 static inline void destroy_tile(LevelSceneData_t* lvl_data, unsigned int tile_idx)
@@ -1895,8 +1895,7 @@ void airtimer_update_system(Scene_t* scene)
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         if (!p_ent->m_alive) continue;
         CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
-        CMovementState_t* p_movement = get_component(p_ent, CMOVEMENTSTATE_T);
-        if (p_bbox == NULL || p_movement == NULL) continue;
+        if (p_bbox == NULL) continue;
 
         Vector2 point_to_check = {
             p_ent->position.x + p_bbox->half_size.x,

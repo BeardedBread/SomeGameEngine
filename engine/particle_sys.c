@@ -1,8 +1,8 @@
 #include "particle_sys.h"
 #include "assets.h"
+#include "raymath.h"
 #include <string.h>
 #include <stdlib.h>
-#include <math.h>
 
 void init_particle_system(ParticleSystem_t* system)
 {
@@ -30,9 +30,9 @@ static inline float generate_randrange(float lo, float hi)
 
 static inline void spawn_particle(ParticleEmitter_t* emitter, uint32_t idx)
 {
-    uint32_t lifetime = (emitter->config->particle_lifetime[1] - emitter->config->particle_lifetime[0]);
+    float lifetime = (emitter->config->particle_lifetime[1] - emitter->config->particle_lifetime[0]);
     emitter->particles[idx].timer = emitter->config->particle_lifetime[0];
-    emitter->particles[idx].timer += rand() % lifetime;
+    emitter->particles[idx].timer += lifetime * rand()/ (float)RAND_MAX;
     emitter->particles[idx].alive = true;
 
     float angle = generate_randrange(emitter->config->launch_range[0], emitter->config->launch_range[1]);
@@ -92,7 +92,7 @@ void play_emitter_handle(ParticleSystem_t* system, uint16_t handle)
         {
             // TODO: deal with stream type
             //spawn_particle(emitter, 0);
-            uint32_t incr = 0;
+            float incr = 0;
             for (uint32_t i = 0; i < emitter->n_particles; ++i)
             {
                 emitter->particles[i].timer = incr;
@@ -179,9 +179,9 @@ void update_particle_system(ParticleSystem_t* system, float delta_time)
                 }
 
             }
-            // Lifetime update
-            if (emitter->particles[i].timer > 0) emitter->particles[i].timer--;
-            if (emitter->particles[i].timer == 0)
+
+            emitter->particles[i].timer -= delta_time;
+            if (emitter->particles[i].timer <= 0.0f)
             {
                 if (emitter->particles[i].spawned)
                 {
@@ -222,6 +222,10 @@ void update_particle_system(ParticleSystem_t* system, float delta_time)
             {
                 emitter->finished = true;
             }
+        }
+
+        if (emitter->finished)
+        {
             system->emitter_list[prev_idx].next = system->emitter_list[emitter_idx].next;
             system->emitter_list[emitter_idx].next = 0;
             system->emitter_list[emitter_idx].playing = false;

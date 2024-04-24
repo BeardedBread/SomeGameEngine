@@ -41,7 +41,7 @@ static bool parse_emitter_info(char* emitter_info_str, EmitterConfig_t* conf)
     char emitter_type;
     uint8_t one_shot;
     int data_count = sscanf(
-        emitter_info_str, "%c,%f-%f,%f-%f,%f-%f,%f-%f,%u-%u,%u,%c",
+        emitter_info_str, "%c,%f-%f,%f-%f,%f-%f,%f-%f,%f-%f,%f,%c",
         &emitter_type,
         conf->launch_range, conf->launch_range + 1,
         conf->speed_range, conf->speed_range + 1,

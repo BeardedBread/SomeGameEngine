@@ -123,6 +123,9 @@ static void level_scene_render_func(Scene_t* scene)
         draw_pos.y += SELECTION_TILE_SIZE + 5;
         sprintf(buffer, "Crate %s on spawn", crate_activation? "active" : "inactive");
         DrawText(buffer, draw_pos.x, draw_pos.y, 20, BLACK);
+        draw_pos.y += SELECTION_TILE_SIZE + 5;
+        sprintf(buffer, "Time scale: %.2f", scene->time_scale);
+        DrawText(buffer, draw_pos.x, draw_pos.y, 20, BLACK);
 
         // For DEBUG
         const int gui_x = data->game_rec.x + data->game_rec.width + 10;
@@ -972,7 +975,7 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
                     }
                     else
                     {
-                        scene->time_scale = 0.5f;
+                        scene->time_scale = 0.25f;
                     }
                 }
             break;

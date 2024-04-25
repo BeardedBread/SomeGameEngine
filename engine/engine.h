@@ -49,6 +49,7 @@ struct Scene {
     EntityManager_t ent_manager;
     float delta_time;
     float time_scale;
+    Vector2 mouse_pos;
     //SceneType_t scene_type;
     SceneState_t state;
     ParticleSystem_t part_sys;

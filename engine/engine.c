@@ -21,6 +21,9 @@ void deinit_engine(GameEngine_t* engine)
 
 void process_inputs(GameEngine_t* engine, Scene_t* scene)
 {
+    Vector2 raw_mouse_pos = GetMousePosition();
+    scene->mouse_pos = raw_mouse_pos;
+
     unsigned int sz = sc_queue_size(&engine->key_buffer);
     // Process any existing pressed key
     for (size_t i = 0; i < sz; i++)
@@ -47,6 +50,33 @@ void process_inputs(GameEngine_t* engine, Scene_t* scene)
         if (!sc_map_found(&scene->action_map)) continue;
         do_action(scene, action, true);
         sc_queue_add_last(&engine->key_buffer, button);
+    }
+
+    
+    // Mouse button handling
+    ActionType_t action = sc_map_get_64(&scene->action_map, MOUSE_BUTTON_RIGHT);
+    if (sc_map_found(&scene->action_map))
+    {
+        if (IsMouseButtonDown(MOUSE_BUTTON_RIGHT))
+        {
+            do_action(scene, action, true);
+        }
+        else if (IsMouseButtonReleased(MOUSE_BUTTON_RIGHT))
+        {
+            do_action(scene, action, false);
+        }
+    }
+    action = sc_map_get_64(&scene->action_map, MOUSE_BUTTON_LEFT);
+    if (sc_map_found(&scene->action_map))
+    {
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        {
+            do_action(scene, action, true);
+        }
+        else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        {
+            do_action(scene, action, false);
+        }
     }
 }
 

@@ -19,5 +19,7 @@ typedef enum ActionType
     ACTION_TOGGLE_GRID,
     ACTION_SET_SPAWNPOINT,
     ACTION_TOGGLE_TIMESLOW,
+    ACTION_SPAWN_TILE,
+    ACTION_REMOVE_TILE,
 }ActionType_t;
 #endif // __ACTIONS_H

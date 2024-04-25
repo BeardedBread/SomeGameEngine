@@ -548,16 +548,14 @@ static void spawn_boulder(Scene_t* scene, unsigned int tile_idx)
     p_boulder->position.y = (tile_idx / data->tilemap.width) * TILE_SIZE;
 }
 
-static void toggle_block_system(Scene_t* scene)
+static void toggle_block_system(Scene_t* scene, ActionType_t action, bool pressed)
 {
-    // TODO: This system is not good as the interface between raw input and actions is broken
     static unsigned int last_tile_idx = MAX_N_TILES;
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     TileGrid_t tilemap = data->tilemap;
-    Vector2 raw_mouse_pos = {GetMouseX(), GetMouseY()};
-    raw_mouse_pos = Vector2Subtract(raw_mouse_pos, (Vector2){data->game_rec.x, data->game_rec.y});
+    Vector2 raw_mouse_pos = Vector2Subtract(scene->mouse_pos, (Vector2){data->game_rec.x, data->game_rec.y});
 
-    if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+    if (action == ACTION_SPAWN_TILE && !pressed)
     {
         last_tile_idx = MAX_N_TILES;
     }
@@ -572,7 +570,7 @@ static void toggle_block_system(Scene_t* scene)
         if (tile_idx >= (tilemap.n_tiles - tilemap.width)) return;
         if (tile_idx == last_tile_idx) return;
 
-        if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+        if (action == ACTION_SPAWN_TILE && pressed)
         {
             enum EntitySpawnSelection sel = (enum EntitySpawnSelection)current_spawn_selection;
             TileType_t new_type = EMPTY_TILE;
@@ -674,7 +672,7 @@ static void toggle_block_system(Scene_t* scene)
                 p_crunner->state = BFS_RESET;
             }
         }
-        else if (IsMouseButtonDown(MOUSE_RIGHT_BUTTON))
+        else if (action == ACTION_REMOVE_TILE && pressed)
         {
             change_a_tile(&tilemap, tile_idx, EMPTY_TILE);
             tilemap.tiles[tile_idx].water_level = 0;
@@ -727,7 +725,7 @@ static void toggle_block_system(Scene_t* scene)
         && raw_mouse_pos.y < SELECTION_REGION_HEIGHT
     )
     {
-        if (IsMouseButtonReleased(MOUSE_LEFT_BUTTON))
+        if (action == ACTION_SPAWN_TILE && !pressed)
         {
             current_spawn_selection = ((int)raw_mouse_pos.x / SELECTION_TILE_SIZE);
         }
@@ -979,6 +977,10 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
                     }
                 }
             break;
+            case ACTION_SPAWN_TILE:
+            case ACTION_REMOVE_TILE:
+                toggle_block_system(scene, action, pressed);
+                update_entity_manager(&scene->ent_manager);
             default:
             break;
         }
@@ -1223,7 +1225,6 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &update_water_runner_system);
     sc_array_add(&scene->scene.systems, &player_respawn_system);
     sc_array_add(&scene->scene.systems, &level_end_detection_system);
-    sc_array_add(&scene->scene.systems, &toggle_block_system);
     sc_array_add(&scene->scene.systems, &render_editor_game_scene);
 
     // This avoid graphical glitch, not essential
@@ -1248,6 +1249,8 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_map_put_64(&scene->scene.action_map, KEY_B, ACTION_TOGGLE_GRID);
     sc_map_put_64(&scene->scene.action_map, KEY_V, ACTION_SET_SPAWNPOINT);
     sc_map_put_64(&scene->scene.action_map, KEY_U, ACTION_TOGGLE_TIMESLOW);
+    sc_map_put_64(&scene->scene.action_map, MOUSE_LEFT_BUTTON, ACTION_SPAWN_TILE);
+    sc_map_put_64(&scene->scene.action_map, MOUSE_RIGHT_BUTTON, ACTION_REMOVE_TILE);
 
 }
 

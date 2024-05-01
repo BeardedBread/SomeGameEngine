@@ -240,12 +240,18 @@ static Vector2 shift_bbox(Vector2 bbox, Vector2 new_bbox, AnchorPoint_t anchor)
 
 void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
 {
+    Vector2 half_size = {0,0};
+    CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+    if (p_bbox != NULL)
+    {
+        half_size = p_bbox->half_size;
+    }
     if (p_ent->m_tag == BOULDER_ENT_TAG)
     {
         ParticleEmitter_t emitter = {
             .spr = get_sprite(&scene->engine->assets, "p_rock"),
             .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
-            .position = p_ent->position,
+            .position = Vector2Add(p_ent->position, half_size),
             .n_particles = 5,
             .user_data = CONTAINER_OF(scene, LevelScene_t, scene),
             .update_func = &simple_particle_system_update,
@@ -259,7 +265,7 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
         ParticleEmitter_t emitter = {
             .spr = get_sprite(&scene->engine->assets, (p_container->material == WOODEN_CONTAINER) ? "p_wood" : "p_metal"),
             .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
-            .position = p_ent->position,
+            .position = Vector2Add(p_ent->position, half_size),
             .n_particles = 5,
             .user_data = CONTAINER_OF(scene, LevelScene_t, scene),
             .update_func = &simple_particle_system_update,
@@ -272,7 +278,7 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
         ParticleEmitter_t emitter = {
             .spr = get_sprite(&scene->engine->assets, "p_wood"),
             .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
-            .position = p_ent->position,
+            .position = Vector2Add(p_ent->position, half_size),
             .n_particles = 5,
             .user_data = CONTAINER_OF(scene, LevelScene_t, scene),
             .update_func = &simple_particle_system_update,
@@ -283,7 +289,7 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
         ParticleEmitter_t emitter2 = {
             .spr = get_sprite(&scene->engine->assets, "p_coin"),
             .config = get_emitter_conf(&scene->engine->assets, "pe_single"),
-            .position = p_ent->position,
+            .position = Vector2Add(p_ent->position, half_size),
             .n_particles = 1,
             .user_data = CONTAINER_OF(scene, LevelScene_t, scene),
             .update_func = &simple_particle_system_update,
@@ -298,7 +304,7 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
         ParticleEmitter_t emitter = {
             .spr = get_sprite(&scene->engine->assets, "p_arrow"),
             .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
-            .position = p_ent->position,
+            .position = Vector2Add(p_ent->position, half_size),
             .n_particles = 2,
             .user_data = CONTAINER_OF(scene, LevelScene_t, scene),
             .update_func = &simple_particle_system_update,
@@ -1486,7 +1492,7 @@ void state_transition_update_system(Scene_t* scene)
             ParticleEmitter_t emitter = {
                 .spr = get_sprite(&scene->engine->assets, "p_water"),
                 .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
-                .position = p_ent->position,
+                .position = Vector2Add(p_ent->position, p_bbox->half_size),
                 .n_particles = 5,
                 .user_data = (CONTAINER_OF(scene, LevelScene_t, scene)),
                 .update_func = &simple_particle_system_update,

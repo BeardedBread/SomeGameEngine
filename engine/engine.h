@@ -37,6 +37,7 @@ typedef enum SceneState {
     SCENE_ENDED,
 }SceneState_t;
 
+typedef void(*render_func_t)(Scene_t*);
 typedef void(*system_func_t)(Scene_t*);
 typedef void(*action_func_t)(Scene_t*, ActionType_t, bool);
 sc_array_def(system_func_t, systems);
@@ -44,7 +45,7 @@ sc_array_def(system_func_t, systems);
 struct Scene {
     struct sc_map_64 action_map; // key -> actions
     struct sc_array_systems systems;
-    system_func_t render_function;
+    render_func_t render_function;
     action_func_t action_function;
     EntityManager_t ent_manager;
     float delta_time;
@@ -72,7 +73,7 @@ extern void render_scene(Scene_t* scene);
 extern void do_action(Scene_t* scene, ActionType_t action, bool pressed);
 
 //void init_scene(Scene_t* scene, SceneType_t scene_type, system_func_t render_func, action_func_t action_func);
-void init_scene(Scene_t* scene, system_func_t render_func, action_func_t action_func);
+void init_scene(Scene_t* scene, render_func_t render_func, action_func_t action_func);
 void free_scene(Scene_t* scene);
 
 #endif // __ENGINE_H

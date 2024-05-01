@@ -20,6 +20,7 @@ static void level_scene_render_func(Scene_t* scene)
     draw_rec.height *= -1;
 
     static char buffer[512];
+    BeginDrawing();
         ClearBackground(LIGHTGRAY);
         DrawTextureRec(
             data->game_viewport.texture,
@@ -50,6 +51,7 @@ static void level_scene_render_func(Scene_t* scene)
 
         print_mempool_stats(buffer);
         DrawText(buffer, gui_x, 350, 12, BLACK);
+    EndDrawing();
 }
 
 static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)

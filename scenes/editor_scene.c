@@ -92,6 +92,7 @@ static void level_scene_render_func(Scene_t* scene)
     draw_rec.y = 0;
     draw_rec.height *= -1;
     static char buffer[512];
+    BeginDrawing();
         ClearBackground(LIGHTGRAY);
         DrawTextureRec(
             data->game_viewport.texture,
@@ -187,6 +188,7 @@ static void level_scene_render_func(Scene_t* scene)
         gui_y += 300;
         sprintf(buffer, "Chests: %u / %u", data->coins.current, data->coins.total);
         DrawText(buffer, gui_x, gui_y, 24, BLACK);
+    EndDrawing();
 }
 
 static void render_editor_game_scene(Scene_t* scene)

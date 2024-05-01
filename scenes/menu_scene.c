@@ -6,12 +6,14 @@
 static void menu_scene_render_func(Scene_t* scene)
 {
     MenuSceneData_t* data = &(CONTAINER_OF(scene, MenuScene_t, scene)->data);
-    ClearBackground(RAYWHITE);
-    DrawText("This is a game", 25, 220, 12, BLACK);
-    UI_button(data->buttons, "Start");
-    UI_button(data->buttons + 1, "Sandbox");
-    UI_button(data->buttons + 2, "Continue");
-    UI_button(data->buttons + 3, "Exit");
+    BeginDrawing();
+        ClearBackground(RAYWHITE);
+        DrawText("This is a game", 25, 220, 12, BLACK);
+        UI_button(data->buttons, "Start");
+        UI_button(data->buttons + 1, "Sandbox");
+        UI_button(data->buttons + 2, "Continue");
+        UI_button(data->buttons + 3, "Exit");
+    EndDrawing();
 }
 
 static void exec_component_function(Scene_t* scene, int sel)

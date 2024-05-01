@@ -530,24 +530,36 @@ LevelPack_t* get_level_pack(Assets_t* assets, const char* name)
 
 void draw_sprite(Sprite_t* spr, int frame_num, Vector2 pos, float rotation, bool flip_x)
 {
+    draw_sprite_pro(
+        spr, frame_num, pos, rotation, flip_x ? 1: 0,
+        (Vector2){1, 1}, WHITE
+    );
+}
+
+void draw_sprite_pro(Sprite_t* spr, int frame_num, Vector2 pos, float rotation, uint8_t flip, Vector2 scale, Color colour)
+{
+    if (frame_num >= spr->frame_count) frame_num = spr->frame_count - 1;
+    if (frame_num < 0) frame_num = 0;
     Rectangle rec = {
         spr->origin.x + spr->frame_size.x * frame_num,
         spr->origin.y,
-        spr->frame_size.x * (flip_x ? -1:1),
-        spr->frame_size.y
+        spr->frame_size.x * ((flip & 1) ? -1 : 1),
+        spr->frame_size.y * ((flip & 2) ? -1 : 1),
     };
-    //DrawTextureRec(*spr->texture, rec, pos, WHITE);
     Rectangle dest = {
-        .x = pos.x - spr->anchor.x,
-        .y = pos.y - spr->anchor.y,
-        .width = spr->frame_size.x,
-        .height = spr->frame_size.y
+        .x = pos.x,
+        .y = pos.y,
+        .width = spr->frame_size.x * scale.x,
+        .height = spr->frame_size.y * scale.y
     };
+    Vector2 anchor = spr->anchor;
+    anchor.x *= scale.x;
+    anchor.y *= scale.y;
     DrawTexturePro(
         *spr->texture,
         rec,
         dest,
-        spr->anchor,
-        rotation, WHITE
+        anchor,
+        rotation, colour
     );
 }

@@ -520,7 +520,7 @@ void player_movement_input_system(Scene_t* scene)
             // on first frame jumps
             // This is also why this is done here instead of in the 
             // state transition function
-            play_sfx(scene->engine, PLAYER_LAND_SFX);
+            play_sfx_pitched(scene->engine, PLAYER_LAND_SFX, 0.8f + rand() * 0.4f / (float)RAND_MAX);
         }
     }
 }

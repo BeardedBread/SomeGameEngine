@@ -63,6 +63,7 @@ void process_inputs(GameEngine_t* engine, Scene_t* scene);
 void change_scene(GameEngine_t* engine, unsigned int idx);
 bool load_sfx(GameEngine_t* engine, const char* snd_name, uint32_t tag_idx);
 void play_sfx(GameEngine_t* engine, unsigned int tag_idx);
+void play_sfx_pitched(GameEngine_t* engine, unsigned int tag_idx, float pitch);
 void update_sfx_list(GameEngine_t* engine);
 
 // Inline functions, for convenience

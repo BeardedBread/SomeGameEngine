@@ -98,24 +98,46 @@ bool load_sfx(GameEngine_t* engine, const char* snd_name, uint32_t tag_idx)
     return true;
 }
 
-void play_sfx(GameEngine_t* engine, unsigned int tag_idx)
+void play_sfx_pitched(GameEngine_t* engine, unsigned int tag_idx, float pitch)
 {
     if (tag_idx >= engine->sfx_list.n_sfx) return;
     SFX_t* sfx = engine->sfx_list.sfx + tag_idx;
-    if (sfx->plays == 0 && sfx->snd != NULL)
+    if (sfx->snd != NULL)
     {
-        PlaySound(*sfx->snd);
-        sfx->plays++;
-        engine->sfx_list.sfx_queue[engine->sfx_list.played_sfx++] = tag_idx;
+        SetSoundPitch(*sfx->snd, pitch);
+        //if (sfx->snd != NULL)
+        {
+            PlaySound(*sfx->snd);
+            sfx->plays++;
+        }
+        //SetSoundPitch(*sfx->snd, 0.0f);
+    }
+}
+
+void play_sfx(GameEngine_t* engine, unsigned int tag_idx)
+{
+    play_sfx_pitched(engine, tag_idx, 0.0f);
+}
+
+void stop_sfx(GameEngine_t* engine, unsigned int tag_idx)
+{
+    if (tag_idx >= engine->sfx_list.n_sfx) return;
+    SFX_t* sfx = engine->sfx_list.sfx + tag_idx;
+    if (sfx->snd != NULL && IsSoundPlaying(*sfx->snd))
+    {
+        StopSound(*sfx->snd);
+        //sfx->plays--;
     }
 }
 
 void update_sfx_list(GameEngine_t* engine)
 {
-    for (uint32_t i = 0; i< engine->sfx_list.played_sfx; ++i)
+    for (uint32_t i = 0; i< engine->sfx_list.n_sfx; ++i)
     {
-        uint32_t tag_idx = engine->sfx_list.sfx_queue[i];
-        engine->sfx_list.sfx[tag_idx].plays = 0;
+        if (!IsSoundPlaying(*engine->sfx_list.sfx->snd))
+        {
+            engine->sfx_list.sfx[i].plays = 0;
+        }
     }
     engine->sfx_list.played_sfx = 0;
 }

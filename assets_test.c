@@ -32,6 +32,7 @@ int main(void)
     Font* fnt = get_font(&assets, "testfont");
 
     int current_frame = 0;
+    int elapsed = 0;
     while(!WindowShouldClose())
     {
         if (IsKeyReleased(KEY_C))
@@ -49,12 +50,12 @@ int main(void)
         EndDrawing();
 
         // Update the animated Sprite
-        spr2->elapsed++;
-        if (spr2->elapsed == spr2->speed)
+        elapsed++;
+        if (elapsed == spr2->speed)
         {
             current_frame++;
             current_frame %= spr2->frame_count;
-            spr2->elapsed = 0;
+            elapsed = 0;
         }
     } 
     term_assets(&assets);

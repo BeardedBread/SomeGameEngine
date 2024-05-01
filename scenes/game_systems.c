@@ -2002,7 +2002,6 @@ void sprite_animation_system(Scene_t* scene)
         {
             next_idx = p_cspr->transition_func(p_ent);
         }
-        if (p_cspr->pause) return;
 
         bool reset = p_cspr->current_idx != next_idx;
         p_cspr->current_idx = next_idx;
@@ -2010,7 +2009,14 @@ void sprite_animation_system(Scene_t* scene)
         SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
         if (spr.sprite == NULL) continue;
 
-        if (reset) p_cspr->current_frame = 0;
+        if (reset)
+        {
+            p_cspr->fractional = 0;
+            p_cspr->elapsed = 0;
+            p_cspr->current_frame = 0;
+        }
+
+        if (spr.sprite->speed == 0) continue;
 
         // Animate it (handle frame count)
         p_cspr->fractional += scene->delta_time;
@@ -2018,12 +2024,15 @@ void sprite_animation_system(Scene_t* scene)
         if (p_cspr->fractional > ANIM_FRAME_RATE)
         {
             p_cspr->fractional -= ANIM_FRAME_RATE;
-            spr.sprite->elapsed++;
-            if (spr.sprite->elapsed == spr.sprite->speed)
+            p_cspr->elapsed++;
+            if (p_cspr->elapsed == spr.sprite->speed)
             {
-                p_cspr->current_frame++;
-                p_cspr->current_frame %= spr.sprite->frame_count;
-                spr.sprite->elapsed = 0;
+                p_cspr->elapsed = 0;
+                if (!p_cspr->pause)
+                {
+                    p_cspr->current_frame++;
+                    p_cspr->current_frame %= spr.sprite->frame_count;
+                }
             }
         }
     }

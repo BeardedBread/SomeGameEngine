@@ -21,9 +21,9 @@
 #define MOVE_ACCEL 1300
 
 #ifndef TILE16_SIZE
-#define PLAYER_WIDTH 30
+#define PLAYER_WIDTH 28
 #define PLAYER_HEIGHT 42
-#define PLAYER_C_WIDTH 30
+#define PLAYER_C_WIDTH 28
 #define PLAYER_C_HEIGHT 26
 #else
 #define PLAYER_WIDTH 14

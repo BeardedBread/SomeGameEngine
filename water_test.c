@@ -400,7 +400,7 @@ int main(void)
 
     LevelScene_t scene;
     scene.scene.engine = &engine;
-    init_scene(&scene.scene, &level_scene_render_func, &level_do_action);
+    init_scene(&scene.scene, &level_do_action);
     init_entity_tag_map(&scene.scene.ent_manager, PLAYER_ENT_TAG, 4);
     init_entity_tag_map(&scene.scene.ent_manager, DYNMEM_ENT_TAG, 16);
     init_level_scene_data(

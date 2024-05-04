@@ -145,8 +145,7 @@ void update_sfx_list(GameEngine_t* engine)
     engine->sfx_list.played_sfx = 0;
 }
 
-//void init_scene(Scene_t* scene, SceneType_t scene_type, system_func_t render_func, action_func_t action_func)
-void init_scene(Scene_t* scene, render_func_t render_func, action_func_t action_func)
+void init_scene(Scene_t* scene, action_func_t action_func)
 {
     sc_map_init_64(&scene->action_map, 32, 0);
     sc_array_init(&scene->systems);
@@ -154,7 +153,6 @@ void init_scene(Scene_t* scene, render_func_t render_func, action_func_t action_
     init_particle_system(&scene->part_sys);
 
     //scene->scene_type = scene_type;
-    scene->render_function = render_func;
     scene->layers.n_layers = 0;
     scene->bg_colour = WHITE;
 

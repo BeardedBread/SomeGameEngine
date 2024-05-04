@@ -6,6 +6,7 @@
 #include "mempool.h"
 #include "raylib.h"
 #include "raymath.h"
+#include "AABB.h"
 #include <stdio.h>
 
 static Tile_t all_tiles[MAX_N_TILES] = {0};
@@ -91,15 +92,17 @@ static void level_scene_render_func(Scene_t* scene)
     Entity_t* p_ent;
     static char buffer[512];
 
-    Vector2 draw_pos = {data->game_rec.x, data->game_rec.y + data->game_rec.height + SELECTION_GAP};
+    Rectangle selection_rec = scene->layers.render_layers[SELECTION_LAYER].render_area;
+    Rectangle game_rec = scene->layers.render_layers[GAME_LAYER].render_area;
+    Vector2 draw_pos = {game_rec.x, game_rec.y + game_rec.height + SELECTION_GAP};
     BeginTextureMode(scene->layers.render_layers[CONTROL_LAYER].layer_tex);
         ClearBackground(BLANK);
         DrawRectangleLines(
-            data->game_rec.x + current_spawn_selection * SELECTION_TILE_SIZE, draw_pos.y,
+            selection_rec.x + current_spawn_selection * SELECTION_TILE_SIZE, selection_rec.y,
             SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, GREEN
         );
 
-        draw_pos.x = data->game_rec.x + (MAX_SPAWN_TYPE + 1) * SELECTION_TILE_SIZE;
+        draw_pos.x = game_rec.x + (MAX_SPAWN_TYPE + 1) * SELECTION_TILE_SIZE;
         sprintf(buffer, "Selection: %s", get_spawn_selection_string(current_spawn_selection));
         DrawText(buffer, draw_pos.x, draw_pos.y, 20, BLACK);
         draw_pos.y += SELECTION_TILE_SIZE + 5;
@@ -110,7 +113,7 @@ static void level_scene_render_func(Scene_t* scene)
         DrawText(buffer, draw_pos.x, draw_pos.y, 20, BLACK);
 
         // For DEBUG
-        const int gui_x = data->game_rec.x + data->game_rec.width + 10;
+        const int gui_x = game_rec.x + game_rec.width + 10;
         int gui_y = 15;
 
         sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
@@ -143,7 +146,7 @@ static void level_scene_render_func(Scene_t* scene)
 #endif
             CAirTimer_t* p_air = get_component(p_ent, CAIRTIMER_T);
 
-            Vector2 air_pos = {data->game_rec.x + data->game_rec.width - 16, data->game_rec.y + data->game_rec.height - 16};
+            Vector2 air_pos = {game_rec.x + game_rec.width - 16, game_rec.y + game_rec.height - 16};
             for (uint8_t i = 0; i < p_air->curr_count; i++)
             {
                 DrawCircleV(air_pos, 16, BLUE);
@@ -176,14 +179,12 @@ static void render_editor_game_scene(Scene_t* scene)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     TileGrid_t tilemap = data->tilemap;
+    Rectangle game_rec = scene->layers.render_layers[GAME_LAYER].render_area;
 
     Entity_t* p_ent;
-    Vector2 min = GetScreenToWorld2D((Vector2){data->game_rec.x, data->game_rec.y}, data->camera.cam);
+    Vector2 min = GetScreenToWorld2D((Vector2){0, 0}, data->camera.cam);
     Vector2 max = GetScreenToWorld2D(
-        (Vector2){
-            data->game_rec.x + data->game_rec.width,
-            data->game_rec.y + data->game_rec.height
-        },
+        (Vector2){game_rec.width, game_rec.height},
         data->camera.cam
     );
     min = Vector2Scale(min, 1.0f/tilemap.tile_size);
@@ -536,18 +537,21 @@ static void toggle_block_system(Scene_t* scene, ActionType_t action, bool presse
     static unsigned int last_tile_idx = MAX_N_TILES;
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     TileGrid_t tilemap = data->tilemap;
-    Vector2 raw_mouse_pos = Vector2Subtract(scene->mouse_pos, (Vector2){data->game_rec.x, data->game_rec.y});
+
 
     if (action == ACTION_SPAWN_TILE && !pressed)
     {
         last_tile_idx = MAX_N_TILES;
     }
 
-    if (
-        raw_mouse_pos.x < data->game_rec.width
-        && raw_mouse_pos.y < data->game_rec.height
-    ) 
+    if (point_in_AABB(scene->mouse_pos, scene->layers.render_layers[GAME_LAYER].render_area))
     {
+        Vector2 raw_mouse_pos = Vector2Subtract(scene->mouse_pos,
+            (Vector2){
+                scene->layers.render_layers[GAME_LAYER].render_area.x,
+                scene->layers.render_layers[GAME_LAYER].render_area.y
+            }
+        );
         Vector2 mouse_pos = GetScreenToWorld2D(raw_mouse_pos, data->camera.cam);
         unsigned int tile_idx = get_tile_idx(mouse_pos.x, mouse_pos.y, &tilemap);
         if (tile_idx >= (tilemap.n_tiles - tilemap.width)) return;
@@ -702,12 +706,14 @@ static void toggle_block_system(Scene_t* scene, ActionType_t action, bool presse
         return;
     }
 
-    raw_mouse_pos = Vector2Subtract(raw_mouse_pos, (Vector2){0, data->game_rec.height});
-    if (
-        raw_mouse_pos.x < SELECTION_REGION_WIDTH
-        && raw_mouse_pos.y < SELECTION_REGION_HEIGHT
-    )
+    if (point_in_AABB(scene->mouse_pos, scene->layers.render_layers[SELECTION_LAYER].render_area))
     {
+        Vector2 raw_mouse_pos = Vector2Subtract(scene->mouse_pos,
+            (Vector2){
+                scene->layers.render_layers[SELECTION_LAYER].render_area.x,
+                scene->layers.render_layers[SELECTION_LAYER].render_area.y
+            }
+        );
         if (action == ACTION_SPAWN_TILE && !pressed)
         {
             current_spawn_selection = ((int)raw_mouse_pos.x / SELECTION_TILE_SIZE);

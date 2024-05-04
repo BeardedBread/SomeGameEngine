@@ -40,7 +40,7 @@ typedef struct LevelCamera {
 
 typedef struct LevelSceneData {
     TileGrid_t tilemap;
-    RenderTexture2D game_viewport;
+    // TODO: game_rec is actually obsolete since this is in the scene game layer
     Rectangle game_rec;
     LevelCamera_t camera;
     Sprite_t* tile_sprites[MAX_TILE_SPRITES];
@@ -60,7 +60,6 @@ void free_game_scene(LevelScene_t* scene);
 void init_sandbox_scene(LevelScene_t* scene);
 void free_sandbox_scene(LevelScene_t* scene);
 void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* tiles, Rectangle view_zone);
-//void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* tiles);
 void term_level_scene_data(LevelSceneData_t* data);
 void reload_level_tilemap(LevelScene_t* scene);
 void load_next_level_tilemap(LevelScene_t* scene);

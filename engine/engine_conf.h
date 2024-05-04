@@ -1,6 +1,7 @@
 #ifndef _ENGINE_CONF_H
 #define _ENGINE_CONF_H
 
+#define MAX_RENDER_LAYERS 4
 #define MAX_ENTITIES 2048
 #define MAX_TEXTURES 16
 #define MAX_SPRITES 64
@@ -16,7 +17,6 @@
 #define MAX_PARTICLES 64
 
 #define MAX_TILE_TYPES 16
-
 #define N_TAGS 10
 #define N_COMPONENTS 20
 #define MAX_COMP_POOL_SIZE MAX_ENTITIES

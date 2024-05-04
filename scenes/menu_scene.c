@@ -6,14 +6,14 @@
 static void menu_scene_render_func(Scene_t* scene)
 {
     MenuSceneData_t* data = &(CONTAINER_OF(scene, MenuScene_t, scene)->data);
-    BeginDrawing();
+    BeginTextureMode(scene->layers.render_layers[0].layer_tex);
         ClearBackground(RAYWHITE);
         DrawText("This is a game", 25, 220, 12, BLACK);
         UI_button(data->buttons, "Start");
         UI_button(data->buttons + 1, "Sandbox");
         UI_button(data->buttons + 2, "Continue");
         UI_button(data->buttons + 3, "Exit");
-    EndDrawing();
+    EndTextureMode();
 }
 
 static void exec_component_function(Scene_t* scene, int sel)
@@ -132,10 +132,10 @@ static void gui_loop(Scene_t* scene)
 
 void init_menu_scene(MenuScene_t* scene)
 {
-    //init_scene(&scene->scene, MENU_SCENE, &menu_scene_render_func, &menu_do_action);
     init_scene(&scene->scene, &menu_scene_render_func, &menu_do_action);
 
     sc_array_add(&scene->scene.systems, &gui_loop);
+    sc_array_add(&scene->scene.systems, &menu_scene_render_func);
     
     scene->data.buttons[0] = (UIComp_t) {
         .bbox = {25,255,125,30},
@@ -160,6 +160,7 @@ void init_menu_scene(MenuScene_t* scene)
     scene->data.max_comp = 4;
     scene->data.selected_comp = 0;
     scene->data.mode = MOUSE_MODE;
+    add_scene_layer(&scene->scene, 1280, 640, (Rectangle){0, 0, 1280, 640});
 
     sc_map_put_64(&scene->scene.action_map, KEY_UP, ACTION_UP);
     sc_map_put_64(&scene->scene.action_map, KEY_DOWN, ACTION_DOWN);

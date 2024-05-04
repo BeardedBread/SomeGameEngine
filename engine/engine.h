@@ -42,9 +42,22 @@ typedef void(*system_func_t)(Scene_t*);
 typedef void(*action_func_t)(Scene_t*, ActionType_t, bool);
 sc_array_def(system_func_t, systems);
 
+typedef struct RenderLayer {
+    RenderTexture2D layer_tex;
+    Rectangle render_area;
+}RenderLayer_t;
+
+typedef struct SceneRenderLayers {
+    RenderLayer_t render_layers[MAX_RENDER_LAYERS];
+    uint8_t n_layers;
+} SceneRenderLayers_t;
+
 struct Scene {
     struct sc_map_64 action_map; // key -> actions
     struct sc_array_systems systems;
+    SceneRenderLayers_t layers;
+    Color bg_colour;
+    // TODO: Render function is obsolete and should be treated like a system
     render_func_t render_function;
     action_func_t action_function;
     EntityManager_t ent_manager;
@@ -56,6 +69,7 @@ struct Scene {
     ParticleSystem_t part_sys;
     GameEngine_t *engine;
 };
+
 
 void init_engine(GameEngine_t* engine);
 void deinit_engine(GameEngine_t* engine);
@@ -74,6 +88,7 @@ extern void do_action(Scene_t* scene, ActionType_t action, bool pressed);
 
 //void init_scene(Scene_t* scene, SceneType_t scene_type, system_func_t render_func, action_func_t action_func);
 void init_scene(Scene_t* scene, render_func_t render_func, action_func_t action_func);
+bool add_scene_layer(Scene_t* scene, int width, int height, Rectangle render_area);
 void free_scene(Scene_t* scene);
 
 #endif // __ENGINE_H

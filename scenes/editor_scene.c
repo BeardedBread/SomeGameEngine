@@ -40,6 +40,9 @@ static bool crate_activation = false;
 #define SELECTION_REGION_WIDTH (SELECTION_TILE_SIZE * MAX_SPAWN_TYPE)
 #define SELECTION_REGION_HEIGHT SELECTION_TILE_SIZE
 
+#define GAME_LAYER 0
+#define SELECTION_LAYER 1
+#define CONTROL_LAYER 2
 static char* get_spawn_selection_string(enum EntitySpawnSelection sel)
 {
     switch(sel)
@@ -80,41 +83,19 @@ static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
 }
 
 // This means you might be able to have two editor scene without running into problems
-static RenderTexture2D selection_section;
 #define SELECTION_RENDER_HEIGHT  (SELECTION_REGION_HEIGHT * 3)
 static void level_scene_render_func(Scene_t* scene)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
 
     Entity_t* p_ent;
-    Rectangle draw_rec = data->game_rec;
-    draw_rec.x = 0;
-    draw_rec.y = 0;
-    draw_rec.height *= -1;
     static char buffer[512];
-    BeginDrawing();
-        ClearBackground(LIGHTGRAY);
-        DrawTextureRec(
-            data->game_viewport.texture,
-            draw_rec,
-            (Vector2){data->game_rec.x, data->game_rec.y},
-            WHITE
-        );
-        draw_rec.width = SELECTION_REGION_WIDTH;
-        draw_rec.height = -SELECTION_RENDER_HEIGHT;
 
-
-        Vector2 draw_pos = {data->game_rec.x, data->game_rec.y + data->game_rec.height + SELECTION_GAP};
-        DrawTextureRec(
-            selection_section.texture,
-            draw_rec,
-            draw_pos,
-            WHITE
-        );
-        
-        draw_pos.x = data->game_rec.x + current_spawn_selection * SELECTION_TILE_SIZE;
+    Vector2 draw_pos = {data->game_rec.x, data->game_rec.y + data->game_rec.height + SELECTION_GAP};
+    BeginTextureMode(scene->layers.render_layers[CONTROL_LAYER].layer_tex);
+        ClearBackground(BLANK);
         DrawRectangleLines(
-            draw_pos.x, draw_pos.y,
+            data->game_rec.x + current_spawn_selection * SELECTION_TILE_SIZE, draw_pos.y,
             SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, GREEN
         );
 
@@ -185,10 +166,10 @@ static void level_scene_render_func(Scene_t* scene)
         print_mempool_stats(buffer);
         DrawText(buffer, gui_x, gui_y, 12, BLACK);
 
-        gui_y += 300;
+        gui_y += 330;
         sprintf(buffer, "Chests: %u / %u", data->coins.current, data->coins.total);
         DrawText(buffer, gui_x, gui_y, 24, BLACK);
-    EndDrawing();
+    EndTextureMode();
 }
 
 static void render_editor_game_scene(Scene_t* scene)
@@ -212,7 +193,7 @@ static void render_editor_game_scene(Scene_t* scene)
     max.x = (int)fmin(tilemap.width, max.x + 1);
     max.y = (int)fmin(tilemap.height, max.y + 1);
 
-    BeginTextureMode(data->game_viewport);
+    BeginTextureMode(scene->layers.render_layers[GAME_LAYER].layer_tex);
         ClearBackground(WHITE);
         BeginMode2D(data->camera.cam);
         for (int tile_y = min.y; tile_y < max.y; tile_y++)
@@ -837,7 +818,7 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
                 if (!pressed) metal_toggle = !metal_toggle;
                 const Color crate_colour = metal_toggle ? GRAY : BROWN;
                 Vector2 draw_pos = {SPAWN_CRATE * SELECTION_TILE_SIZE , 0};
-                BeginTextureMode(selection_section);
+                BeginTextureMode(scene->layers.render_layers[SELECTION_LAYER].layer_tex);
                 for (uint8_t i = SPAWN_CRATE; i <= SPAWN_CRATE_BOMB; ++i)
                 {
                     DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, crate_colour);
@@ -1015,9 +996,22 @@ void init_sandbox_scene(LevelScene_t* scene)
         unsigned int tile_idx = (scene->data.tilemap.height - 1) * scene->data.tilemap.width + i;
         change_a_tile(&scene->data.tilemap, tile_idx, SOLID_TILE);
     }
-    selection_section = LoadRenderTexture(SELECTION_REGION_WIDTH, SELECTION_RENDER_HEIGHT);
 
-    BeginTextureMode(selection_section);
+    scene->scene.bg_colour = LIGHTGRAY;
+    add_scene_layer(
+        &scene->scene, scene->data.game_rec.width, scene->data.game_rec.height,
+        scene->data.game_rec
+    );
+    add_scene_layer(
+        &scene->scene, SELECTION_REGION_WIDTH, SELECTION_REGION_HEIGHT,
+        (Rectangle){
+            scene->data.game_rec.x, scene->data.game_rec.y + scene->data.game_rec.height + SELECTION_GAP,
+            SELECTION_REGION_WIDTH, SELECTION_REGION_HEIGHT
+        }
+    );
+    add_scene_layer(&scene->scene, 1280, 640, (Rectangle){0, 0, 1280, 640});
+
+    BeginTextureMode(scene->scene.layers.render_layers[SELECTION_LAYER].layer_tex);
         ClearBackground(LIGHTGRAY);
         Vector2 draw_pos = {0, 0};
         const Color crate_colour = metal_toggle ? GRAY : BROWN;
@@ -1228,6 +1222,7 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &player_respawn_system);
     sc_array_add(&scene->scene.systems, &level_end_detection_system);
     sc_array_add(&scene->scene.systems, &render_editor_game_scene);
+    sc_array_add(&scene->scene.systems, &level_scene_render_func);
 
     // This avoid graphical glitch, not essential
     //sc_array_add(&scene->scene.systems, &update_tilemap_system);
@@ -1260,5 +1255,4 @@ void free_sandbox_scene(LevelScene_t* scene)
 {
     free_scene(&scene->scene);
     term_level_scene_data(&scene->data);
-    UnloadRenderTexture(selection_section); // Unload render texture
 }

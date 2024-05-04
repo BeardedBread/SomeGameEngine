@@ -23,6 +23,7 @@ static GameEngine_t engine =
 };
 
 static bool water_toggle = false;
+#define GAME_LAYER 0
 
 static void level_scene_render_func(Scene_t* scene)
 {
@@ -31,7 +32,7 @@ static void level_scene_render_func(Scene_t* scene)
 
     Entity_t* p_ent;
 
-    BeginTextureMode(data->game_viewport);
+    BeginTextureMode(scene->layers.render_layers[GAME_LAYER].layer_tex);
         ClearBackground(WHITE);
         BeginMode2D(data->camera.cam);
         for (size_t i = 0; i < tilemap.n_tiles; ++i)
@@ -177,19 +178,7 @@ static void level_scene_render_func(Scene_t* scene)
         EndMode2D();
     EndTextureMode();
 
-    Rectangle draw_rec = data->game_rec;
-    draw_rec.x = 0;
-    draw_rec.y = 0;
-    draw_rec.height *= -1;
-    BeginDrawing();
-        ClearBackground( water_toggle? ColorAlpha(BLUE, 0.2) : LIGHTGRAY);
-        DrawTextureRec(
-            data->game_viewport.texture,
-            draw_rec,
-            (Vector2){data->game_rec.x, data->game_rec.y},
-            WHITE
-        );
-    EndDrawing();
+    scene->bg_colour = water_toggle ? ColorAlpha(BLUE, 0.2) : LIGHTGRAY;
 }
 
 static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
@@ -413,11 +402,17 @@ int main(void)
     LevelScene_t scene;
     scene.scene.engine = &engine;
     init_scene(&scene.scene, &level_scene_render_func, &level_do_action);
+    init_entity_tag_map(&scene.scene.ent_manager, PLAYER_ENT_TAG, 4);
+    init_entity_tag_map(&scene.scene.ent_manager, DYNMEM_ENT_TAG, 16);
     init_level_scene_data(
         &scene.data, MAX_N_TILES, all_tiles,
         (Rectangle){25, 25, VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE}
     );
     assert(scene.data.tilemap.n_tiles <= MAX_N_TILES);
+    add_scene_layer(
+        &scene.scene, scene.data.game_rec.width, scene.data.game_rec.height,
+        scene.data.game_rec
+    );
 
     for (size_t i = 0; i < scene.data.tilemap.width; ++i)
     {
@@ -441,6 +436,7 @@ int main(void)
     sc_array_add(&scene.scene.systems, &toggle_block_system);
     sc_array_add(&scene.scene.systems, &camera_update_system);
     sc_array_add(&scene.scene.systems, &player_dir_reset_system);
+    sc_array_add(&scene.scene.systems, &level_scene_render_func);
 
 
     sc_map_put_64(&scene.scene.action_map, KEY_R, ACTION_RESTART);

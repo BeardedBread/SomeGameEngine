@@ -10,24 +10,15 @@
 
 static Tile_t all_tiles[MAX_N_TILES] = {0};
 
+#define GAME_LAYER 0
+#define CONTROL_LAYER 1
 static void level_scene_render_func(Scene_t* scene)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
 
-    Rectangle draw_rec = data->game_rec;
-    draw_rec.x = 0;
-    draw_rec.y = 0;
-    draw_rec.height *= -1;
-
     static char buffer[512];
-    BeginDrawing();
-        ClearBackground(LIGHTGRAY);
-        DrawTextureRec(
-            data->game_viewport.texture,
-            draw_rec,
-            (Vector2){data->game_rec.x, data->game_rec.y},
-            WHITE
-        );
+    BeginTextureMode(scene->layers.render_layers[CONTROL_LAYER].layer_tex);
+        ClearBackground(BLANK);
 
         Entity_t* p_ent;
         sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
@@ -45,13 +36,13 @@ static void level_scene_render_func(Scene_t* scene)
         //sprintf(buffer, "Spawn Entity: %s", get_spawn_selection_string(current_spawn_selection));
         //DrawText(buffer, gui_x, 240, 12, BLACK);
         sprintf(buffer, "Number of Entities: %u", sc_map_size_64v(&scene->ent_manager.entities));
-        DrawText(buffer, gui_x, 270, 12, BLACK);
+        DrawText(buffer, gui_x, 70, 12, BLACK);
         sprintf(buffer, "FPS: %u", GetFPS());
-        DrawText(buffer, gui_x, 320, 12, BLACK);
+        DrawText(buffer, gui_x, 120, 12, BLACK);
 
         print_mempool_stats(buffer);
-        DrawText(buffer, gui_x, 350, 12, BLACK);
-    EndDrawing();
+        DrawText(buffer, gui_x, 150, 12, BLACK);
+    EndTextureMode();
 }
 
 static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
@@ -130,7 +121,7 @@ static void render_regular_game_scene(Scene_t* scene)
     max.x = (int)fmin(tilemap.width, max.x + 1);
     max.y = (int)fmin(tilemap.height, max.y + 1);
 
-    BeginTextureMode(data->game_viewport);
+    BeginTextureMode(scene->layers.render_layers[GAME_LAYER].layer_tex);
         ClearBackground(WHITE);
         BeginMode2D(data->camera.cam);
 
@@ -369,6 +360,14 @@ void init_game_scene(LevelScene_t* scene)
         (Rectangle){25, 25, 32*TILE_SIZE, 18*TILE_SIZE}
     );
 
+    // TODO: Remove the hardcoded window size
+    scene->scene.bg_colour = LIGHTGRAY;
+    add_scene_layer(
+        &scene->scene, scene->data.game_rec.width, scene->data.game_rec.height,
+        scene->data.game_rec
+    );
+    add_scene_layer(&scene->scene, 1280, 640, (Rectangle){0, 0, 1280, 640});
+
     create_player(&scene->scene.ent_manager);
     update_entity_manager(&scene->scene.ent_manager);
 
@@ -401,6 +400,7 @@ void init_game_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &player_respawn_system);
     sc_array_add(&scene->scene.systems, &update_water_runner_system);
     sc_array_add(&scene->scene.systems, &render_regular_game_scene);
+    sc_array_add(&scene->scene.systems, &level_scene_render_func);
     // This avoid graphical glitch, not essential
     //sc_array_add(&scene->scene.systems, &update_tilemap_system);
 

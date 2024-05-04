@@ -152,15 +152,32 @@ void init_scene(Scene_t* scene, render_func_t render_func, action_func_t action_
 
     //scene->scene_type = scene_type;
     scene->render_function = render_func;
+    scene->layers.n_layers = 0;
+    scene->bg_colour = WHITE;
+
     scene->action_function = action_func;
     scene->state = SCENE_ENDED;
     scene->time_scale = 1.0f;
+}
+
+bool add_scene_layer(Scene_t* scene, int width, int height, Rectangle render_area)
+{
+    if (scene->layers.n_layers >= MAX_RENDER_LAYERS) return false;
+
+    scene->layers.render_layers[scene->layers.n_layers].layer_tex = LoadRenderTexture(width, height);
+    scene->layers.render_layers[scene->layers.n_layers].render_area = render_area;
+    scene->layers.n_layers++;
+    return true;
 }
 
 void free_scene(Scene_t* scene)
 {
     sc_map_term_64(&scene->action_map);
     sc_array_term(&scene->systems);
+    for (uint8_t i = 0; i < scene->layers.n_layers; ++i)
+    {
+        UnloadRenderTexture(scene->layers.render_layers[i].layer_tex);
+    }
     free_entity_manager(&scene->ent_manager);
     deinit_particle_system(&scene->part_sys);
 }
@@ -178,10 +195,24 @@ inline void update_scene(Scene_t* scene, float delta_time)
 
 inline void render_scene(Scene_t* scene)
 {
-    if (scene->render_function != NULL)
+    BeginDrawing();
+    ClearBackground(scene->bg_colour);
+    for (uint8_t i = 0; i < scene->layers.n_layers; ++i)
     {
-        scene->render_function(scene);
+        RenderLayer_t* layer = scene->layers.render_layers + i;
+        Rectangle draw_rec = layer->render_area;
+        Vector2 draw_pos = {draw_rec.x, draw_rec.y};
+        draw_rec.x = 0;
+        draw_rec.y = 0;
+        draw_rec.height *= -1;
+        DrawTextureRec(
+            layer->layer_tex.texture,
+            draw_rec,
+            draw_pos,
+            WHITE
+        );
     }
+    EndDrawing();
 }
 
 inline void do_action(Scene_t* scene, ActionType_t action, bool pressed)

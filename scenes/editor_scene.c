@@ -101,6 +101,7 @@ static void level_scene_render_func(Scene_t* scene)
             selection_rec.x + current_spawn_selection * SELECTION_TILE_SIZE, selection_rec.y,
             SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, GREEN
         );
+        DrawText("R to reset the map, Q/E to cycle the selection,\nF to toggle metal crates. T to toggle crate spawn behaviour\nB to toggle grid, V to set spawn point", selection_rec.x, selection_rec.y + selection_rec.height + 2, 14, BLACK);
 
         draw_pos.x = game_rec.x + (MAX_SPAWN_TYPE + 1) * SELECTION_TILE_SIZE;
         sprintf(buffer, "Selection: %s", get_spawn_selection_string(current_spawn_selection));
@@ -1196,8 +1197,6 @@ void init_sandbox_scene(LevelScene_t* scene)
             draw_pos.x += SELECTION_TILE_SIZE;
         }
 
-        draw_pos.y += SELECTION_TILE_SIZE + 2;
-        DrawText("R to reset the map, Q/E to cycle the selection,\nF to toggle metal crates. T to toggle crate spawn behaviour\nB to toggle grid, V to set spawn point", 0, draw_pos.y, 14, BLACK);
 
 
     EndTextureMode();

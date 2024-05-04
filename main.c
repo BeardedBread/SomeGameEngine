@@ -25,8 +25,7 @@ int main(void)
 {
     // Initialization
     //--------------------------------------------------------------------------------------
-    init_engine(&engine);
-    InitWindow(screenWidth, screenHeight, "raylib");
+    init_engine(&engine, (Vector2){screenWidth, screenHeight});
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
 #ifndef NDEBUG
     load_from_infofile("res/assets.info.raw", &engine.assets);
@@ -114,5 +113,4 @@ int main(void)
     free_game_scene(&level_scene);
     free_menu_scene(&menu_scene);
     deinit_engine(&engine);
-    CloseWindow(); 
 }

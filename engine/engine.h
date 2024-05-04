@@ -24,6 +24,10 @@ typedef struct GameEngine {
     SFXList_t sfx_list;
     // Maintain own queue to handle key presses
     struct sc_queue_32 key_buffer;
+    // This is the original size of the window.
+    // This is in case of window scaling, where there needs to be
+    // an absolute reference
+    Vector2 intended_window_size;
 } GameEngine_t;
 
 //typedef enum SceneType {
@@ -71,7 +75,7 @@ struct Scene {
 };
 
 
-void init_engine(GameEngine_t* engine);
+void init_engine(GameEngine_t* engine, Vector2 starting_win_size);
 void deinit_engine(GameEngine_t* engine);
 void process_inputs(GameEngine_t* engine, Scene_t* scene);
 

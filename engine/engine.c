@@ -1,7 +1,7 @@
 #include "engine.h"
 #include "mempool.h"
 
-void init_engine(GameEngine_t* engine)
+void init_engine(GameEngine_t* engine, Vector2 starting_win_size)
 {
     InitAudioDevice();
     sc_queue_init(&engine->key_buffer);
@@ -9,6 +9,8 @@ void init_engine(GameEngine_t* engine)
     memset(engine->sfx_list.sfx, 0, engine->sfx_list.n_sfx * sizeof(SFX_t));
     init_memory_pools();
     init_assets(&engine->assets);
+    engine->intended_window_size = starting_win_size;
+    InitWindow(starting_win_size.x, starting_win_size.y, "raylib");
 }
 
 void deinit_engine(GameEngine_t* engine)
@@ -17,6 +19,7 @@ void deinit_engine(GameEngine_t* engine)
     free_memory_pools();
     sc_queue_term(&engine->key_buffer);
     CloseAudioDevice();
+    CloseWindow(); 
 }
 
 void process_inputs(GameEngine_t* engine, Scene_t* scene)

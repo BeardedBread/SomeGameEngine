@@ -1009,7 +1009,15 @@ void init_sandbox_scene(LevelScene_t* scene)
             SELECTION_REGION_WIDTH, SELECTION_REGION_HEIGHT
         }
     );
-    add_scene_layer(&scene->scene, 1280, 640, (Rectangle){0, 0, 1280, 640});
+    add_scene_layer(
+        &scene->scene, scene->scene.engine->intended_window_size.x,
+        scene->scene.engine->intended_window_size.y,
+        (Rectangle){
+            0, 0,
+            scene->scene.engine->intended_window_size.x,
+            scene->scene.engine->intended_window_size.y
+        }
+    );
 
     BeginTextureMode(scene->scene.layers.render_layers[SELECTION_LAYER].layer_tex);
         ClearBackground(LIGHTGRAY);

@@ -39,9 +39,8 @@ void update_loop(void)
 
 int main(void)
 {
-    InitWindow(1280, 640, "raylib");
+    init_engine(&engine, (Vector2){1280,640});
     SetTargetFPS(60);
-    init_engine(&engine);
 
 #ifndef NDEBUG
     load_from_infofile("res/assets.info.raw", &engine.assets);
@@ -100,6 +99,4 @@ int main(void)
     #endif
     free_sandbox_scene(&scene);
     deinit_engine(&engine);
-    CloseWindow();
-
 }

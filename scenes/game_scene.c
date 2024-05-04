@@ -360,18 +360,24 @@ void init_game_scene(LevelScene_t* scene)
         (Rectangle){25, 25, 32*TILE_SIZE, 18*TILE_SIZE}
     );
 
-    // TODO: Remove the hardcoded window size
     scene->scene.bg_colour = LIGHTGRAY;
     add_scene_layer(
         &scene->scene, scene->data.game_rec.width, scene->data.game_rec.height,
         scene->data.game_rec
     );
-    add_scene_layer(&scene->scene, 1280, 640, (Rectangle){0, 0, 1280, 640});
+    add_scene_layer(
+        &scene->scene, scene->scene.engine->intended_window_size.x,
+        scene->scene.engine->intended_window_size.y,
+        (Rectangle){
+            0, 0,
+            scene->scene.engine->intended_window_size.x,
+            scene->scene.engine->intended_window_size.y
+        }
+    );
 
     create_player(&scene->scene.ent_manager);
     update_entity_manager(&scene->scene.ent_manager);
 
-    // insert level scene systems
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &player_movement_input_system);
     sc_array_add(&scene->scene.systems, &player_bbox_update_system);

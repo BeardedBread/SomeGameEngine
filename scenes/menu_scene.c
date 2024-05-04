@@ -160,7 +160,15 @@ void init_menu_scene(MenuScene_t* scene)
     scene->data.max_comp = 4;
     scene->data.selected_comp = 0;
     scene->data.mode = MOUSE_MODE;
-    add_scene_layer(&scene->scene, 1280, 640, (Rectangle){0, 0, 1280, 640});
+    add_scene_layer(
+        &scene->scene, scene->scene.engine->intended_window_size.x,
+        scene->scene.engine->intended_window_size.y,
+        (Rectangle){
+            0, 0,
+            scene->scene.engine->intended_window_size.x,
+            scene->scene.engine->intended_window_size.y
+        }
+    );
 
     sc_map_put_64(&scene->scene.action_map, KEY_UP, ACTION_UP);
     sc_map_put_64(&scene->scene.action_map, KEY_DOWN, ACTION_DOWN);

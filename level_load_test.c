@@ -19,8 +19,7 @@ static GameEngine_t engine =
 
 int main(void)
 {
-    init_engine(&engine);
-    InitWindow(1280, 640, "raylib");
+    init_engine(&engine, (Vector2){1280,640});
     SetTargetFPS(60);
 
     load_from_infofile("res/test_assets.info", &engine.assets);
@@ -62,6 +61,5 @@ int main(void)
     }
     free_scene(&scene.scene);
     term_level_scene_data(&scene.data);
-    CloseWindow();
     deinit_engine(&engine);
 }

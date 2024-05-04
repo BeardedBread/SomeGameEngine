@@ -395,9 +395,8 @@ static void player_simple_movement_system(Scene_t* scene)
 
 int main(void)
 {
-    InitWindow(1280, 640, "raylib");
+    init_engine(&engine, (Vector2){1280,640});
     SetTargetFPS(60);
-    init_engine(&engine);
 
     LevelScene_t scene;
     scene.scene.engine = &engine;
@@ -470,5 +469,4 @@ int main(void)
     free_scene(&scene.scene);
     term_level_scene_data(&scene.data);
     deinit_engine(&engine);
-    CloseWindow();
 }

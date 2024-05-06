@@ -19,6 +19,7 @@ typedef struct SpriteInfo
     Vector2 frame_size;
     int speed;
     int frame_count;
+    int frame_per_row;
 }SpriteInfo_t;
 
 static bool parse_sprite_info(char* sprite_info_str, SpriteInfo_t* spr_info)
@@ -28,12 +29,12 @@ static bool parse_sprite_info(char* sprite_info_str, SpriteInfo_t* spr_info)
     spr_info->tex = tex_name;
     char* spr_data = tex_name + strlen(tex_name) + 1;
     int data_count = sscanf(
-        spr_data, "%f,%f,%f,%f,%d,%d",
+        spr_data, "%f,%f,%f,%f,%d,%d,%d",
         &spr_info->origin.x, &spr_info->origin.y,
         &spr_info->frame_size.x, &spr_info->frame_size.y,
-        &spr_info->frame_count, &spr_info->speed
+        &spr_info->frame_count, &spr_info->frame_per_row, &spr_info->speed
     );
-    return data_count == 6;
+    return data_count == 7;
 }
 
 static bool parse_emitter_info(char* emitter_info_str, EmitterConfig_t* conf)
@@ -80,6 +81,29 @@ static inline AssetInfoType_t get_asset_type(const char* str)
     if (strcmp(str, "LevelPack") == 0) return LEVELPACK_INFO;
 
     return INVALID_INFO;
+}
+
+static inline bool add_a_sprite(Assets_t* assets, const SpriteInfo_t* spr_info, char* name)
+{
+    Texture2D* tex = get_texture(assets, spr_info->tex);
+    if (tex == NULL)
+    {
+        printf("Unable to get texture info %s for sprite %s\n", spr_info->tex, name);
+        return false;
+    }
+    printf("Added Sprite %s from texture %s\n", name, spr_info->tex);
+    Sprite_t* spr = add_sprite(assets, name, tex);
+    spr->origin = spr_info->origin;
+    spr->frame_size = spr_info->frame_size;
+    spr->frame_count = spr_info->frame_count;
+    if (spr->frame_count == 0)
+    {
+        // Cannot be zero
+        spr->frame_count = 1;
+    }
+    spr->frame_per_row = spr_info->frame_count;
+    spr->speed = spr_info->speed;
+    return true;
 }
 
 bool load_from_rres(const char* file, Assets_t* assets)
@@ -169,19 +193,7 @@ bool load_from_rres(const char* file, Assets_t* assets)
                             printf("Unable to parse info for sprite at line %lu\n", line_num);
                             break;
                         }
-                        //printf("Compare %s,%s = %d\n", tmp2, spr_info.tex, strcmp(tmp2, spr_info.tex));
-                        Texture2D* tex = get_texture(assets, spr_info.tex);
-                        if (tex == NULL)
-                        {
-                            printf("Unable to get texture info %s for sprite %s\n", spr_info.tex, name);
-                            break;
-                        }
-                        printf("Added Sprite %s from texture %s\n", name, spr_info.tex);
-                        Sprite_t* spr = add_sprite(assets, name, tex);
-                        spr->origin = spr_info.origin;
-                        spr->frame_size = spr_info.frame_size;
-                        spr->frame_count = spr_info.frame_count;
-                        spr->speed = spr_info.speed;
+                        add_a_sprite(assets, &spr_info, name);
                     }
                     break;
                     case EMITTER_INFO:
@@ -286,18 +298,7 @@ bool load_from_infofile(const char* file, Assets_t* assets)
                         break;
                     }
                     //printf("Compare %s,%s = %d\n", tmp2, spr_info.tex, strcmp(tmp2, spr_info.tex));
-                    Texture2D* tex = get_texture(assets, spr_info.tex);
-                    if (tex == NULL)
-                    {
-                        printf("Unable to get texture info %s for sprite %s\n", spr_info.tex, name);
-                        break;
-                    }
-                    printf("Added Sprite %s from texture %s\n", name, spr_info.tex);
-                    Sprite_t* spr = add_sprite(assets, name, tex);
-                    spr->origin = spr_info.origin;
-                    spr->frame_size = spr_info.frame_size;
-                    spr->frame_count = spr_info.frame_count;
-                    spr->speed = spr_info.speed;
+                    add_a_sprite(assets, &spr_info, name);
                 }
                 break;
                 case EMITTER_INFO:

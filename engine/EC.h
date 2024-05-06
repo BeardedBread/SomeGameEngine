@@ -183,8 +183,9 @@ typedef struct _CWaterRunner {
 typedef struct Sprite {
     Texture2D* texture;
     Vector2 frame_size;
-    Vector2 origin;
-    Vector2 anchor;
+    Vector2 origin; // TL of the frame
+    Vector2 anchor; // Where transformation anchors on
+    uint8_t frame_per_row;
     int frame_count;
     int speed;
     char* name;

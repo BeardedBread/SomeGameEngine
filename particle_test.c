@@ -62,7 +62,8 @@ int main(void)
         .frame_size = (Vector2){tex.width, tex.height},
         .origin = (Vector2){0, 0},
         .anchor = (Vector2){tex.width / 2, tex.height / 2},
-        .frame_count = 0,
+        .frame_count = 1,
+        .frame_per_row = 1,
         .speed = 0,
         .name = "test_spr"
     };

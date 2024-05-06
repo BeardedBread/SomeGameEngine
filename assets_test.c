@@ -22,6 +22,7 @@ int main(void)
     add_sprite(&assets, "testspr2", tex);
     Sprite_t* spr2 = get_sprite(&assets, "testspr2");
     spr2->frame_count = 4;
+    spr2->frame_per_row = 4;
     spr2->origin = (Vector2){0, 0};
     spr2->frame_size = (Vector2){32, 32};
     spr2->speed = 15;

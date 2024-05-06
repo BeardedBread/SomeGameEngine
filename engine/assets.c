@@ -538,11 +538,16 @@ void draw_sprite(Sprite_t* spr, int frame_num, Vector2 pos, float rotation, bool
 
 void draw_sprite_pro(Sprite_t* spr, int frame_num, Vector2 pos, float rotation, uint8_t flip, Vector2 scale, Color colour)
 {
-    if (frame_num >= spr->frame_count) frame_num = spr->frame_count - 1;
-    if (frame_num < 0) frame_num = 0;
+    // Rollover behaviour
+    if (frame_num >= spr->frame_count) frame_num %= spr->frame_count;
+
+    if (frame_num < 0) frame_num += spr->frame_count;
+
+    int r = frame_num / spr->frame_per_row;
+    int c = frame_num % spr->frame_per_row;
     Rectangle rec = {
-        spr->origin.x + spr->frame_size.x * frame_num,
-        spr->origin.y,
+        spr->origin.x + spr->frame_size.x * c,
+        spr->origin.y + spr->frame_size.y * r,
         spr->frame_size.x * ((flip & 1) ? -1 : 1),
         spr->frame_size.y * ((flip & 2) ? -1 : 1),
     };

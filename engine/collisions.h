@@ -17,8 +17,11 @@ typedef enum TileRotation
     TILE_180ROT
 }TileRotation_t;
 
+// Some of the fields are game-dependent, may have to think about doing OOP
+// to separate out standard fields vs context-dependent fields
 typedef struct Tile {
     unsigned int tile_type;
+    uint8_t connectivity;
     SolidType_t solid;
     TileRotation_t rotation;
     uint8_t def;

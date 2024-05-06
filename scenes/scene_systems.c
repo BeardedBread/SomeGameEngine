@@ -223,6 +223,7 @@ void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_ty
     }
 
     tilemap->tiles[tile_idx].rotation = TILE_NOROTATE;
+
     if (new_type == SPIKES)
     {
         // Priority: Down, Up, Left, Right
@@ -271,5 +272,66 @@ void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_ty
         || tilemap->tiles[tile_idx].tile_type == SPIKES
     );
     tilemap->tiles[tile_idx].def = (tilemap->tiles[tile_idx].tile_type == SOLID_TILE) ? 5: 2;
+
+    tilemap->tiles[tile_idx].connectivity = 0;
+
+    const uint8_t LEFT_BIT = 0;
+    const uint8_t UP_BIT = 1;
+    const uint8_t RIGHT_BIT = 2;
+    const uint8_t DOWN_BIT = 3;
+    {
+        // Priority: Left, Up, Right, Down
+        if (tile_idx % tilemap->width != 0)
+        {
+            tilemap->tiles[tile_idx].connectivity |= (tilemap->tiles[tile_idx - 1].tile_type == SOLID_TILE) ? (1 << LEFT_BIT) : 0;
+            if (new_type == SOLID_TILE)
+            {
+                tilemap->tiles[tile_idx - 1].connectivity |= (1 << RIGHT_BIT);
+            }
+            else
+            {
+                tilemap->tiles[tile_idx - 1].connectivity &= ~(1 << RIGHT_BIT);
+            }
+        }
+
+        if (tile_idx - tilemap->width >= 0)
+        {
+            tilemap->tiles[tile_idx].connectivity |= (tilemap->tiles[tile_idx - tilemap->width].tile_type == SOLID_TILE) ? (1 << UP_BIT) : 0;
+            if (new_type == SOLID_TILE)
+            {
+                tilemap->tiles[tile_idx - tilemap->width].connectivity |= (1 << DOWN_BIT);
+            }
+            else
+            {
+                tilemap->tiles[tile_idx - tilemap->width].connectivity &= ~(1 << DOWN_BIT);
+            }
+        }
+
+        if (tile_idx + tilemap->width < tilemap->n_tiles)
+        {
+            tilemap->tiles[tile_idx].connectivity |= (tilemap->tiles[tile_idx + tilemap->width].tile_type == SOLID_TILE) ? (1 << DOWN_BIT) : 0;
+            if (new_type == SOLID_TILE)
+            {
+                tilemap->tiles[tile_idx + tilemap->width].connectivity |= (1 << UP_BIT);
+            }
+            else
+            {
+                tilemap->tiles[tile_idx + tilemap->width].connectivity &= ~(1 << UP_BIT);
+            }
+        }
+
+        if ((tile_idx + 1) % tilemap->width != 0)
+        {
+            tilemap->tiles[tile_idx].connectivity |= (tilemap->tiles[tile_idx + 1].tile_type == SOLID_TILE) ? (1 << RIGHT_BIT) : 0;
+            if (new_type == SOLID_TILE)
+            {
+                tilemap->tiles[tile_idx + 1].connectivity |= (1 << LEFT_BIT);
+            }
+            else
+            {
+                tilemap->tiles[tile_idx + 1].connectivity &= ~(1 << LEFT_BIT);
+            }
+        }
+    }
 
 }

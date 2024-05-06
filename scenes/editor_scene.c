@@ -479,6 +479,11 @@ static void render_editor_game_scene(Scene_t* scene)
                         // Draw water tile
                         DrawText(buffer, x, y, 10, BLACK);
                     }
+                    if (tilemap.tiles[i].solid == SOLID)
+                    {
+                        sprintf(buffer, "%u", tilemap.tiles[i].connectivity);
+                        DrawText(buffer, x + tilemap.tile_size / 2, y + tilemap.tile_size / 2, 12, WHITE);
+                    }
                 }
             }
 

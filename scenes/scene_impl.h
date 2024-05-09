@@ -44,6 +44,7 @@ typedef struct LevelSceneData {
     Rectangle game_rec;
     LevelCamera_t camera;
     Sprite_t* tile_sprites[MAX_TILE_SPRITES];
+    Sprite_t* solid_tile_sprites;
     LevelPack_t* level_pack;
     unsigned int current_level;
     CoinCounter_t coins;

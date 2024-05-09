@@ -44,6 +44,13 @@ static bool crate_activation = false;
 #define GAME_LAYER 0
 #define SELECTION_LAYER 1
 #define CONTROL_LAYER 2
+
+static const uint8_t CONNECTIVITY_TILE_MAPPING[16] = {
+    0,3,15,14,
+    1,2,12,13,
+    7,6,11,10,
+    4,5,8 ,9 ,
+};
 static char* get_spawn_selection_string(enum EntitySpawnSelection sel)
 {
     switch(sel)
@@ -481,8 +488,12 @@ static void render_editor_game_scene(Scene_t* scene)
                     }
                     if (tilemap.tiles[i].solid == SOLID)
                     {
-                        sprintf(buffer, "%u", tilemap.tiles[i].connectivity);
-                        DrawText(buffer, x + tilemap.tile_size / 2, y + tilemap.tile_size / 2, 12, WHITE);
+                        draw_sprite(
+                            data->solid_tile_sprites, CONNECTIVITY_TILE_MAPPING[tilemap.tiles[i].connectivity],
+                            (Vector2){x,y}, 0.0f, false
+                        );
+                        //sprintf(buffer, "%u", tilemap.tiles[i].connectivity);
+                        //DrawText(buffer, x + tilemap.tile_size / 2, y + tilemap.tile_size / 2, 12, WHITE);
                     }
                 }
             }
@@ -1002,6 +1013,7 @@ void init_sandbox_scene(LevelScene_t* scene)
     scene->data.tile_sprites[SPIKES + TILE_90CWROT] = get_sprite(&scene->scene.engine->assets, "l_spikes");
     scene->data.tile_sprites[SPIKES + TILE_90CCWROT] = get_sprite(&scene->scene.engine->assets, "r_spikes");
     scene->data.tile_sprites[SPIKES + TILE_180ROT] = get_sprite(&scene->scene.engine->assets, "u_spikes");
+    scene->data.solid_tile_sprites = get_sprite(&scene->scene.engine->assets, "stile0");
 
     for (size_t i = 0; i < scene->data.tilemap.width; ++i)
     {

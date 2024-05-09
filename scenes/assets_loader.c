@@ -101,7 +101,7 @@ static inline bool add_a_sprite(Assets_t* assets, const SpriteInfo_t* spr_info, 
         // Cannot be zero
         spr->frame_count = 1;
     }
-    spr->frame_per_row = spr_info->frame_count;
+    spr->frame_per_row = spr_info->frame_per_row;
     spr->speed = spr_info->speed;
     return true;
 }

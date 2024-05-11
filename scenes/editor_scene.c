@@ -51,6 +51,12 @@ static const uint8_t CONNECTIVITY_TILE_MAPPING[16] = {
     7,6,11,10,
     4,5,8 ,9 ,
 };
+
+#define N_SOLID_TILESETS 3
+static const char* SOLID_TILE_SELECTIONS[N_SOLID_TILESETS] = {
+    "stile0", "stile1", "stile2"
+};
+
 static char* get_spawn_selection_string(enum EntitySpawnSelection sel)
 {
     switch(sel)
@@ -228,7 +234,12 @@ static void render_editor_game_scene(Scene_t* scene)
                 }
                 else if (tilemap.tiles[i].tile_type == SOLID_TILE)
                 {
-                    DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
+                    draw_sprite(
+                        data->solid_tile_sprites, CONNECTIVITY_TILE_MAPPING[tilemap.tiles[i].connectivity],
+                        (Vector2){x,y}, 0.0f, false
+                    );
+                    //sprintf(buffer, "%u", tilemap.tiles[i].connectivity);
+                    //DrawText(buffer, x + tilemap.tile_size / 2, y + tilemap.tile_size / 2, 12, WHITE);
                 }
                 else if (tilemap.tiles[i].tile_type == ONEWAY_TILE)
                 {
@@ -485,15 +496,6 @@ static void render_editor_game_scene(Scene_t* scene)
                     {
                         // Draw water tile
                         DrawText(buffer, x, y, 10, BLACK);
-                    }
-                    if (tilemap.tiles[i].solid == SOLID)
-                    {
-                        draw_sprite(
-                            data->solid_tile_sprites, CONNECTIVITY_TILE_MAPPING[tilemap.tiles[i].connectivity],
-                            (Vector2){x,y}, 0.0f, false
-                        );
-                        //sprintf(buffer, "%u", tilemap.tiles[i].connectivity);
-                        //DrawText(buffer, x + tilemap.tile_size / 2, y + tilemap.tile_size / 2, 12, WHITE);
                     }
                 }
             }
@@ -989,6 +991,15 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
                 update_entity_manager(&scene->ent_manager);
             default:
             break;
+            case ACTION_SWITCH_TILESET:
+                if (!pressed)
+                {
+                    data->selected_solid_tilemap++;
+                    if (data->selected_solid_tilemap >= N_SOLID_TILESETS) data->selected_solid_tilemap = 0;
+
+                    data->solid_tile_sprites = get_sprite(&scene->engine->assets, SOLID_TILE_SELECTIONS[data->selected_solid_tilemap]);
+                }
+            break;
         }
     }
 }
@@ -1013,7 +1024,8 @@ void init_sandbox_scene(LevelScene_t* scene)
     scene->data.tile_sprites[SPIKES + TILE_90CWROT] = get_sprite(&scene->scene.engine->assets, "l_spikes");
     scene->data.tile_sprites[SPIKES + TILE_90CCWROT] = get_sprite(&scene->scene.engine->assets, "r_spikes");
     scene->data.tile_sprites[SPIKES + TILE_180ROT] = get_sprite(&scene->scene.engine->assets, "u_spikes");
-    scene->data.solid_tile_sprites = get_sprite(&scene->scene.engine->assets, "stile0");
+    scene->data.selected_solid_tilemap = 0;
+    scene->data.solid_tile_sprites = get_sprite(&scene->scene.engine->assets, SOLID_TILE_SELECTIONS[0]);
 
     for (size_t i = 0; i < scene->data.tilemap.width; ++i)
     {
@@ -1274,6 +1286,7 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_map_put_64(&scene->scene.action_map, KEY_L, ACTION_EXIT);
     sc_map_put_64(&scene->scene.action_map, KEY_R, ACTION_RESTART);
     sc_map_put_64(&scene->scene.action_map, KEY_B, ACTION_TOGGLE_GRID);
+    sc_map_put_64(&scene->scene.action_map, KEY_Z, ACTION_SWITCH_TILESET);
     sc_map_put_64(&scene->scene.action_map, KEY_V, ACTION_SET_SPAWNPOINT);
     sc_map_put_64(&scene->scene.action_map, KEY_U, ACTION_TOGGLE_TIMESLOW);
     sc_map_put_64(&scene->scene.action_map, MOUSE_LEFT_BUTTON, ACTION_SPAWN_TILE);

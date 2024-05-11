@@ -1,5 +1,6 @@
 #ifndef __ACTIONS_H
 #define __ACTIONS_H
+// TODO: These are game specific, so should move out of engine
 typedef enum ActionType
 {
     ACTION_UP=0,
@@ -21,5 +22,6 @@ typedef enum ActionType
     ACTION_TOGGLE_TIMESLOW,
     ACTION_SPAWN_TILE,
     ACTION_REMOVE_TILE,
+    ACTION_SWITCH_TILESET,
 }ActionType_t;
 #endif // __ACTIONS_H

@@ -118,8 +118,8 @@ static bool check_collision_and_move(
         {
             // One way collision is a bit special
             if (
-                p_ct->prev_position.y + p_bbox->size.y - 1 < other_pos->y
-                && ent->position.y + p_bbox->size.y - 1 >= other_pos->y
+                p_ct->prev_position.y + p_bbox->size.y < other_pos->y
+                && ent->position.y + p_bbox->size.y >= other_pos->y
             )
             {
                 offset.y = other_pos->y - (ent->position.y + p_bbox->size.y);

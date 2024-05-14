@@ -114,17 +114,6 @@ static bool check_collision_and_move(
                 offset.y = overlap.y;
             }
         }
-        else if (other_solid == ONE_WAY)
-        {
-            // One way collision is a bit special
-            if (
-                p_ct->prev_position.y + p_bbox->size.y < other_pos->y
-                && ent->position.y + p_bbox->size.y >= other_pos->y
-            )
-            {
-                offset.y = other_pos->y - (ent->position.y + p_bbox->size.y);
-            }
-        }
         ent->position = Vector2Add(ent->position, offset);
     }
     else if (overlap_mode == 2)
@@ -783,12 +772,21 @@ void tile_collision_system(Scene_t* scene)
                         (tile_idx / tilemap.width) * tilemap.tile_size
                         + tilemap.tiles[tile_idx].offset.y; // Precision loss is intentional
 
+                    
+                    SolidType_t solid = tilemap.tiles[tile_idx].solid;
+                    // One way collision is a bit special
+                    if (solid == ONE_WAY)
+                    {
+                        solid = (
+                            p_ctransform->prev_position.y + p_bbox->size.y <= other.y
+                            && p_ent->position.y + p_bbox->size.y > other.y
+                        ) ? SOLID : NOT_SOLID;
+                    }
                     check_collision_and_move(
                         &tilemap, p_ent,
                         &other, 
-                        //tilemap.tiles[tile_idx].size,
                         (Vector2){tilemap.tile_size, tilemap.tile_size},
-                        tilemap.tiles[tile_idx].solid
+                        solid
                     );
 
                 }
@@ -821,7 +819,6 @@ void tile_collision_system(Scene_t* scene)
                 }
             }
         }
-
     }
 }
 

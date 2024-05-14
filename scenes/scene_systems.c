@@ -294,7 +294,7 @@ void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_ty
             }
         }
 
-        if (tile_idx - tilemap->width >= 0)
+        if (tile_idx >= tilemap->width)
         {
             tilemap->tiles[tile_idx].connectivity |= (tilemap->tiles[tile_idx - tilemap->width].tile_type == SOLID_TILE) ? (1 << UP_BIT) : 0;
             if (new_type == SOLID_TILE)

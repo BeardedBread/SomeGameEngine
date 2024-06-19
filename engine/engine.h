@@ -16,6 +16,18 @@ typedef struct SFXList
     uint32_t played_sfx;
 } SFXList_t;
 
+typedef struct SceneNode {
+    Scene_t* scene;
+    Scene_t* next;
+} SceneNode_t;
+
+typedef struct SceneManager {
+    Scene_t **scenes; // Array of all possible scenes
+    unsigned int max_scenes;
+    SceneNode_t* active; // Scenes to update. This allows multiple scene updates
+    SceneNode_t* to_render; // Scenes to render. This allows duplicate rendering
+} SceneManger_t;
+
 typedef struct GameEngine {
     Scene_t **scenes;
     unsigned int max_scenes;
@@ -62,7 +74,7 @@ struct Scene {
     SceneRenderLayers_t layers;
     Color bg_colour;
     action_func_t action_function;
-    EntityManager_t ent_manager;
+    EntityManager_t ent_manager; // TODO: need move in data, Not all scene need this
     float delta_time;
     float time_scale;
     Vector2 mouse_pos;
@@ -70,6 +82,7 @@ struct Scene {
     SceneState_t state;
     ParticleSystem_t part_sys;
     GameEngine_t *engine;
+    int8_t depth_index;
 };
 
 

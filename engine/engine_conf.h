@@ -1,6 +1,7 @@
 #ifndef _ENGINE_CONF_H
 #define _ENGINE_CONF_H
 
+#define MAX_SCENES_TO_RENDER 16
 #define MAX_RENDER_LAYERS 4
 #define MAX_ENTITIES 2048
 #define MAX_TEXTURES 16

@@ -797,7 +797,7 @@ static void restart_editor_level(Scene_t* scene)
     }
 }
 
-static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
+static ActionResult level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     Entity_t* p_player;
@@ -1002,6 +1002,7 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             break;
         }
     }
+    return ACTION_PROPAGATE;
 }
 
 void init_sandbox_scene(LevelScene_t* scene)

@@ -21,17 +21,11 @@ typedef struct SceneNode {
     Scene_t* next;
 } SceneNode_t;
 
-typedef struct SceneManager {
-    Scene_t **scenes; // Array of all possible scenes
-    unsigned int max_scenes;
-    SceneNode_t* active; // Scenes to update. This allows multiple scene updates
-    SceneNode_t* to_render; // Scenes to render. This allows duplicate rendering
-} SceneManger_t;
-
 typedef struct GameEngine {
     Scene_t **scenes;
     unsigned int max_scenes;
     unsigned int curr_scene;
+    Scene_t* scenes_render_order[MAX_SCENES_TO_RENDER];
     Assets_t assets;
     SFXList_t sfx_list;
     // Maintain own queue to handle key presses
@@ -42,20 +36,22 @@ typedef struct GameEngine {
     Vector2 intended_window_size;
 } GameEngine_t;
 
-//typedef enum SceneType {
-//    LEVEL_SCENE = 0,
-//    MENU_SCENE,
-//}SceneType_t;
-
 typedef enum SceneState {
-    SCENE_PLAYING = 0,
-    SCENE_SUSPENDED,
+    SCENE_PLAYING = 0, // All Systems Active
+    SCENE_SUSPENDED, // 
     SCENE_ENDED,
 }SceneState_t;
 
-typedef void(*render_func_t)(Scene_t*);
+#define SCENE_ACTIVE_BIT (1 << 0) // Systems Active
+#define SCENE_RENDER_BIT (1 << 1) // Whether to render
+
+typedef enum ActionResult {
+    ACTION_PROPAGATE = 0,
+    ACTION_CONSUMED,
+} ActionResult;
+
 typedef void(*system_func_t)(Scene_t*);
-typedef void(*action_func_t)(Scene_t*, ActionType_t, bool);
+typedef ActionResult(*action_func_t)(Scene_t*, ActionType_t, bool);
 sc_array_def(system_func_t, systems);
 
 typedef struct RenderLayer {
@@ -69,20 +65,23 @@ typedef struct SceneRenderLayers {
 } SceneRenderLayers_t;
 
 struct Scene {
+    // Not all scene needs an entity manager
+    // but too late to change this
+    EntityManager_t ent_manager;
+    Scene_t* parent_scene;
     struct sc_map_64 action_map; // key -> actions
     struct sc_array_systems systems;
     SceneRenderLayers_t layers;
     Color bg_colour;
     action_func_t action_function;
-    EntityManager_t ent_manager; // TODO: need move in data, Not all scene need this
     float delta_time;
     float time_scale;
     Vector2 mouse_pos;
-    //SceneType_t scene_type;
     SceneState_t state;
     ParticleSystem_t part_sys;
     GameEngine_t *engine;
     int8_t depth_index;
+    SceneNode_t child_scene; // Intrusive Linked List for children scene
 };
 
 

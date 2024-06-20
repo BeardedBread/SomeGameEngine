@@ -34,4 +34,10 @@ typedef enum SFXTag {
     BUBBLE_SFX,
     COIN_SFX,
 } SFXTag_t;
+
+//typedef enum SceneType {
+//    LEVEL_SCENE = 0,
+//    MENU_SCENE,
+//}SceneType_t;
+
 #endif

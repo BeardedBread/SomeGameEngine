@@ -1,10 +1,14 @@
 #include "engine.h"
 #include "mempool.h"
 
+#include <math.h>
+
 void init_engine(GameEngine_t* engine, Vector2 starting_win_size)
 {
     InitAudioDevice();
     sc_queue_init(&engine->key_buffer);
+    sc_queue_init(&engine->scene_stack);
+    sc_heap_init(&engine->scenes_render_order, 0);
     engine->sfx_list.n_sfx = N_SFX;
     memset(engine->sfx_list.sfx, 0, engine->sfx_list.n_sfx * sizeof(SFX_t));
     init_memory_pools();
@@ -18,6 +22,8 @@ void deinit_engine(GameEngine_t* engine)
     term_assets(&engine->assets);
     free_memory_pools();
     sc_queue_term(&engine->key_buffer);
+    sc_queue_term(&engine->scene_stack);
+    sc_heap_term(&engine->scenes_render_order);
     CloseAudioDevice();
     CloseWindow(); 
 }
@@ -216,7 +222,203 @@ inline void render_scene(Scene_t* scene)
     EndDrawing();
 }
 
-inline void do_action(Scene_t* scene, ActionType_t action, bool pressed)
+inline ActionResult do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
-    scene->action_function(scene, action, pressed);
+    return scene->action_function(scene, action, pressed);
+}
+
+static void process_scene_key_input(GameEngine_t* engine, int button, bool pressed)
+{
+    if (engine->curr_scene == engine->max_scenes) return;
+    sc_queue_clear(&engine->scene_stack);
+    sc_queue_add_first(&engine->scene_stack, engine->scenes[engine->curr_scene]);
+    
+    while (!sc_queue_empty(&engine->scene_stack))
+    {
+        Scene_t* scene = sc_queue_del_first(&engine->scene_stack);
+        ActionType_t action = sc_map_get_64(&scene->action_map, button);
+
+        ActionResult res = ACTION_PROPAGATE;
+        if (sc_map_found(&scene->action_map))
+        {
+            res = do_action(scene, action, pressed);
+        }
+
+        if (scene->child_scene.next != NULL)
+        {
+            sc_queue_add_first(&engine->scene_stack, scene->child_scene.next);
+        }
+        if (scene->child_scene.scene != NULL && res != ACTION_CONSUMED)
+        {
+            sc_queue_add_first(&engine->scene_stack, scene->child_scene.scene);
+        }
+    }
+}
+
+static void process_scene_mouse_input(GameEngine_t* engine, Vector2 pos, int button)
+{
+    if (engine->curr_scene == engine->max_scenes) return;
+    sc_queue_clear(&engine->scene_stack);
+    sc_queue_add_first(&engine->scene_stack, engine->scenes[engine->curr_scene]);
+    
+    while (!sc_queue_empty(&engine->scene_stack))
+    {
+        Scene_t* scene = sc_queue_del_first(&engine->scene_stack);
+        scene->mouse_pos = pos;
+
+        ActionResult res = ACTION_PROPAGATE;
+        ActionType_t action = sc_map_get_64(&scene->action_map, button);
+        if (sc_map_found(&scene->action_map))
+        {
+            if (IsMouseButtonDown(button))
+            {
+                res = do_action(scene, action, true);
+            }
+            else if (IsMouseButtonReleased(button))
+            {
+                res = do_action(scene, action, false);
+            }
+        }
+
+        if (scene->child_scene.next != NULL)
+        {
+            sc_queue_add_first(&engine->scene_stack, scene->child_scene.next);
+        }
+        if (scene->child_scene.scene != NULL && res != ACTION_CONSUMED)
+        {
+            sc_queue_add_first(&engine->scene_stack, scene->child_scene.scene);
+        }
+    }
+}
+
+void process_active_scene_inputs(GameEngine_t* engine)
+{
+    if (engine->focused_scene == NULL) return;
+
+    process_inputs(engine, engine->focused_scene);
+}
+
+void update_curr_scene(GameEngine_t* engine)
+{
+    if (engine->curr_scene == engine->max_scenes) return;
+    const float DT = 1.0f/60.0f;
+    float frame_time = GetFrameTime();
+    float delta_time = fminf(frame_time, DT);
+
+    sc_queue_clear(&engine->scene_stack);
+    sc_heap_clear(&engine->scenes_render_order);
+
+    sc_queue_add_first(&engine->scene_stack, engine->scenes[engine->curr_scene]);
+    
+    while (!sc_queue_empty(&engine->scene_stack))
+    {
+        Scene_t* scene = sc_queue_del_first(&engine->scene_stack);
+
+        update_scene(scene, delta_time);
+
+        if (scene->child_scene.next != NULL)
+        {
+            sc_queue_add_first(&engine->scene_stack, scene->child_scene.next);
+        }
+        if (scene->child_scene.scene != NULL)
+        {
+            sc_queue_add_first(&engine->scene_stack, scene->child_scene.scene);
+        }
+        
+		sc_heap_add(&engine->scenes_render_order, scene->depth_index, scene);
+    }
+}
+
+void render_curr_scene(GameEngine_t* engine)
+{
+	struct sc_heap_data *elem;
+    BeginDrawing();
+    while ((elem = sc_heap_pop(&engine->scenes_render_order)) != NULL)
+    {
+        Scene_t* scene = elem->data;
+        for (uint8_t i = 0; i < scene->layers.n_layers; ++i)
+        {
+            RenderLayer_t* layer = scene->layers.render_layers + i;
+            Rectangle draw_rec = layer->render_area;
+            Vector2 draw_pos = {draw_rec.x, draw_rec.y};
+            draw_rec.x = 0;
+            draw_rec.y = 0;
+            draw_rec.height *= -1;
+            DrawTextureRec(
+                layer->layer_tex.texture,
+                draw_rec,
+                draw_pos,
+                WHITE
+            );
+        }
+	}
+    EndDrawing();
+}
+
+void add_child_scene(Scene_t* child, Scene_t* parent)
+{
+    if (parent == NULL) return;
+
+    if (parent->child_scene.scene == NULL)
+    {
+        parent->child_scene.scene = child;
+    }
+    else
+    {
+        Scene_t* curr = parent->child_scene.scene;
+
+        while (curr->child_scene.next != NULL)
+        {
+            curr = curr->child_scene.next;
+        }
+        curr->child_scene.next = child;
+    }
+
+    child->parent_scene = parent;
+}
+
+void remove_child_scene(Scene_t* child)
+{
+    if (child == NULL) return;
+
+    if (child->parent_scene == NULL) return;
+
+    Scene_t* parent = child->parent_scene;
+    if (parent->child_scene.scene == NULL) return;
+
+    Scene_t* prev = NULL;
+    Scene_t* curr = parent->child_scene.scene;
+
+    while (curr != NULL)
+    {
+        if (curr == child)
+        {
+            if (prev != NULL)
+            {
+                prev->child_scene.next = curr->child_scene.next;
+            }
+            else
+            {
+                parent->child_scene.scene = curr->child_scene.next;
+            }
+            break;
+        }
+
+        prev = curr;
+        curr = curr->child_scene.next;
+    }
+
+    child->parent_scene = NULL;
+}
+
+void change_active_scene(GameEngine_t* engine, unsigned int idx)
+{
+    engine->scenes[engine->curr_scene]->state = SCENE_ENDED;
+    engine->curr_scene = idx;
+    engine->scenes[engine->curr_scene]->state = SCENE_PLAYING;
+}
+
+void change_focused_scene(GameEngine_t* engine, unsigned int idx)
+{
+    engine->focused_scene = engine->scenes[idx];
 }

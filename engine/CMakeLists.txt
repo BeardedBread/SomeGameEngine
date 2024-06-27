@@ -27,6 +27,7 @@ target_link_libraries(lib_engine
     zstd
     raylib
     sc_queue
+    sc_heap
     sc_map
     sc_array
     m

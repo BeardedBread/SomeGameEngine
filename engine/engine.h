@@ -3,6 +3,7 @@
 #include "actions.h"
 #include "collisions.h"
 #include "sc/array/sc_array.h"
+#include "sc/heap/sc_heap.h"
 #include "assets.h"
 #include "particle_sys.h"
 
@@ -24,12 +25,14 @@ typedef struct SceneNode {
 typedef struct GameEngine {
     Scene_t **scenes;
     unsigned int max_scenes;
-    unsigned int curr_scene;
-    Scene_t* scenes_render_order[MAX_SCENES_TO_RENDER];
+    unsigned int curr_scene; // Current root scene
     Assets_t assets;
     SFXList_t sfx_list;
     // Maintain own queue to handle key presses
+    Scene_t* focused_scene; // The one scene to receive key inputs
     struct sc_queue_32 key_buffer;
+    struct sc_queue_ptr scene_stack;
+    struct sc_heap scenes_render_order;
     // This is the original size of the window.
     // This is in case of window scaling, where there needs to be
     // an absolute reference
@@ -89,7 +92,13 @@ void init_engine(GameEngine_t* engine, Vector2 starting_win_size);
 void deinit_engine(GameEngine_t* engine);
 void process_inputs(GameEngine_t* engine, Scene_t* scene);
 
+void process_active_scene_inputs(GameEngine_t* engine);
+void update_curr_scene(GameEngine_t* engine);
+void render_curr_scene(GameEngine_t* engine);
+
 void change_scene(GameEngine_t* engine, unsigned int idx);
+void change_active_scene(GameEngine_t* engine, unsigned int idx);
+void change_focused_scene(GameEngine_t* engine, unsigned int idx);
 bool load_sfx(GameEngine_t* engine, const char* snd_name, uint32_t tag_idx);
 void play_sfx(GameEngine_t* engine, unsigned int tag_idx);
 void play_sfx_pitched(GameEngine_t* engine, unsigned int tag_idx, float pitch);
@@ -98,10 +107,12 @@ void update_sfx_list(GameEngine_t* engine);
 // Inline functions, for convenience
 extern void update_scene(Scene_t* scene, float delta_time);
 extern void render_scene(Scene_t* scene);
-extern void do_action(Scene_t* scene, ActionType_t action, bool pressed);
+extern ActionResult do_action(Scene_t* scene, ActionType_t action, bool pressed);
 
 void init_scene(Scene_t* scene, action_func_t action_func);
 bool add_scene_layer(Scene_t* scene, int width, int height, Rectangle render_area);
 void free_scene(Scene_t* scene);
+void add_child_scene(Scene_t* child, Scene_t* parent); 
+void remove_child_scene(Scene_t* child); 
 
 #endif // __ENGINE_H

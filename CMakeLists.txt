@@ -155,6 +155,19 @@ target_link_libraries(particle_test
     ${GAME_LIBS}
 )
 
+add_executable(scene_man_test
+    scene_man_test.c
+)
+target_include_directories(scene_man_test
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+)
+target_compile_options(scene_man_test PRIVATE -fsanitize=address -gdwarf-4)
+target_link_options(scene_man_test PRIVATE -fsanitize=address -gdwarf-4)
+target_link_libraries(scene_man_test
+    ${GAME_LIBS}
+)
+
 if (BUILD_TESTING)
      find_package(cmocka 1.1.0 REQUIRED)
      add_subdirectory(tests)

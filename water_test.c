@@ -343,7 +343,7 @@ static void toggle_block_system(Scene_t* scene)
     }
 }
 
-static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
+static ActionResult level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
     CPlayerState_t* p_playerstate;
     sc_map_foreach_value(&scene->ent_manager.component_map[CPLAYERSTATE_T], p_playerstate)
@@ -377,6 +377,7 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
         default:
         break;
     }
+    return ACTION_PROPAGATE;
 }
 
 static void player_simple_movement_system(Scene_t* scene)

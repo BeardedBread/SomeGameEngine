@@ -39,14 +39,9 @@ typedef struct GameEngine {
     Vector2 intended_window_size;
 } GameEngine_t;
 
-typedef enum SceneState {
-    SCENE_PLAYING = 0, // All Systems Active
-    SCENE_SUSPENDED, // 
-    SCENE_ENDED,
-}SceneState_t;
-
 #define SCENE_ACTIVE_BIT (1 << 0) // Systems Active
 #define SCENE_RENDER_BIT (1 << 1) // Whether to render
+#define SCENE_COMPLETE_ACTIVE (SCENE_ACTIVE_BIT | SCENE_RENDER_BIT)
 
 typedef enum ActionResult {
     ACTION_PROPAGATE = 0,
@@ -80,7 +75,7 @@ struct Scene {
     float delta_time;
     float time_scale;
     Vector2 mouse_pos;
-    SceneState_t state;
+    uint8_t state;
     ParticleSystem_t part_sys;
     GameEngine_t *engine;
     int8_t depth_index;
@@ -112,7 +107,7 @@ extern ActionResult do_action(Scene_t* scene, ActionType_t action, bool pressed)
 void init_scene(Scene_t* scene, action_func_t action_func);
 bool add_scene_layer(Scene_t* scene, int width, int height, Rectangle render_area);
 void free_scene(Scene_t* scene);
-void add_child_scene(Scene_t* child, Scene_t* parent); 
-void remove_child_scene(Scene_t* child); 
+void add_child_scene(GameEngine_t* engine, unsigned int child_idx, unsigned int parent_idx);
+void remove_child_scene(GameEngine_t* engine, unsigned int idx);
 
 #endif // __ENGINE_H

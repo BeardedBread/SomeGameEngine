@@ -27,7 +27,7 @@ static void exec_component_function(Scene_t* scene, int sel)
             change_scene(scene->engine, 2);
         break;
         case 3:
-            scene->state = SCENE_ENDED;
+            scene->state = 0;
         break;
         default:
         break;

@@ -97,6 +97,8 @@ int main(void)
     init_engine(&engine, (Vector2){1280,640});
     SetTargetFPS(60);
 
+    // TODO: Add render function
+    // Add a way to switch focused scene
     static struct DummyScene dummy_scenes[6];
     for (uint8_t i = 0; i < 6; ++i)
     {
@@ -119,9 +121,9 @@ int main(void)
     }
 
     change_active_scene(&engine, 0);
-    add_child_scene(scenes[1], scenes[0]);
-    add_child_scene(scenes[2], scenes[0]);
-    add_child_scene(scenes[3], scenes[0]);
+    add_child_scene(&engine, 1, 0);
+    add_child_scene(&engine, 2, 0);
+    add_child_scene(&engine, 3, 0);
 
     float timer = 0;
     while(timer < 1.2f)
@@ -134,7 +136,7 @@ int main(void)
         if (WindowShouldClose()) break;
     }
 
-    remove_child_scene(scenes[2]);
+    remove_child_scene(&engine, 2);
     timer = 0;
     while(timer < 1.2f)
     {
@@ -146,7 +148,7 @@ int main(void)
         if (WindowShouldClose()) break;
     }
 
-    add_child_scene(scenes[4], scenes[0]);
+    add_child_scene(&engine, 4, 0);
     timer = 0;
     while(timer < 1.2f)
     {
@@ -158,7 +160,7 @@ int main(void)
         if (WindowShouldClose()) break;
     }
 
-    add_child_scene(scenes[2], scenes[1]);
+    add_child_scene(&engine, 2, 1);
     timer = 0;
     while(timer < 1.2f)
     {

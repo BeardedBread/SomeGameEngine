@@ -86,7 +86,7 @@ int main(void)
         // appear in the polling of raylib
         Scene_t* curr_scene = engine.scenes[engine.curr_scene];
 
-        if (curr_scene->state == SCENE_ENDED && engine.curr_scene == 0)
+        if (curr_scene->state == 0 && engine.curr_scene == 0)
         {
             break;
         }
@@ -103,7 +103,7 @@ int main(void)
         render_scene(curr_scene);
         update_sfx_list(&engine);
 
-        if (curr_scene->state != SCENE_PLAYING)
+        if (curr_scene->state != 0)
         {
             sc_queue_clear(&key_buffer);
         }

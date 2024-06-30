@@ -199,10 +199,19 @@ inline void update_scene(Scene_t* scene, float delta_time)
     update_particle_system(&scene->part_sys, scene->delta_time);
 }
 
-inline void render_scene(Scene_t* scene)
+static void _internal_render_scene(Scene_t* scene)
 {
-    BeginDrawing();
-    ClearBackground(scene->bg_colour);
+    if ((scene->state & SCENE_RENDER_BIT) == 0) return;
+
+    if (scene->parent_scene == NULL)
+    {
+        ClearBackground(scene->bg_colour);
+    }
+    else
+    {
+        ClearBackground((Color){255,255,255,0});
+    }
+
     for (uint8_t i = 0; i < scene->layers.n_layers; ++i)
     {
         RenderLayer_t* layer = scene->layers.render_layers + i;
@@ -218,6 +227,12 @@ inline void render_scene(Scene_t* scene)
             WHITE
         );
     }
+}
+
+inline void render_scene(Scene_t* scene)
+{
+    BeginDrawing();
+    _internal_render_scene(scene);
     EndDrawing();
 }
 
@@ -273,23 +288,8 @@ void render_curr_scene(GameEngine_t* engine)
     while ((elem = sc_heap_pop(&engine->scenes_render_order)) != NULL)
     {
         Scene_t* scene = elem->data;
-        if ((scene->state & SCENE_RENDER_BIT) == 0) continue;
 
-        for (uint8_t i = 0; i < scene->layers.n_layers; ++i)
-        {
-            RenderLayer_t* layer = scene->layers.render_layers + i;
-            Rectangle draw_rec = layer->render_area;
-            Vector2 draw_pos = {draw_rec.x, draw_rec.y};
-            draw_rec.x = 0;
-            draw_rec.y = 0;
-            draw_rec.height *= -1;
-            DrawTextureRec(
-                layer->layer_tex.texture,
-                draw_rec,
-                draw_pos,
-                WHITE
-            );
-        }
+        _internal_render_scene(scene);
 	}
     EndDrawing();
 }

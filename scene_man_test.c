@@ -27,11 +27,18 @@ struct DummyScene {
     Scene_t scene;
     unsigned int number;
     float elapsed;
+    Vector2 text_pos;
 };
 
 
 static void level_scene_render_func(Scene_t* scene)
 {
+    struct DummyScene* data = CONTAINER_OF(scene, struct DummyScene, scene);
+    char text[32];
+    sprintf(text, "Scene %u", data->number);
+    BeginTextureMode(scene->layers.render_layers[0].layer_tex);
+    DrawText(text, 32 * data->number, 32 * data->number, 12, BLACK);
+    EndTextureMode();
 }
 
 static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
@@ -109,7 +116,7 @@ int main(void)
         add_scene_layer(
             &dummy_scenes[i].scene, 1280, 640, (Rectangle){0,0,1280,640}
         );
-
+        dummy_scenes[i].scene.bg_colour = WHITE;
         sc_array_add(&dummy_scenes[i].scene.systems, &print_number_sys);
         sc_array_add(&dummy_scenes[i].scene.systems, &level_scene_render_func);
         //sc_map_put_64(&scene.scene.action_map, KEY_R, ACTION_RESTART);

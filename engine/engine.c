@@ -190,6 +190,8 @@ void free_scene(Scene_t* scene)
 
 inline void update_scene(Scene_t* scene, float delta_time)
 {
+    if ((scene->state & SCENE_ACTIVE_BIT) == 0) return;
+
     scene->delta_time = delta_time * scene->time_scale;
     system_func_t sys;
     sc_array_foreach(&scene->systems, sys)
@@ -263,8 +265,6 @@ void update_curr_scene(GameEngine_t* engine)
     while (!sc_queue_empty(&engine->scene_stack))
     {
         Scene_t* scene = sc_queue_del_first(&engine->scene_stack);
-
-        if ((scene->state & SCENE_ACTIVE_BIT) == 0) continue;
 
         update_scene(scene, delta_time);
 

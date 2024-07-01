@@ -43,13 +43,8 @@ typedef struct GameEngine {
 #define SCENE_RENDER_BIT (1 << 1) // Whether to render
 #define SCENE_COMPLETE_ACTIVE (SCENE_ACTIVE_BIT | SCENE_RENDER_BIT)
 
-typedef enum ActionResult {
-    ACTION_PROPAGATE = 0,
-    ACTION_CONSUMED,
-} ActionResult;
-
 typedef void(*system_func_t)(Scene_t*);
-typedef ActionResult(*action_func_t)(Scene_t*, ActionType_t, bool);
+typedef void(*action_func_t)(Scene_t*, ActionType_t, bool);
 sc_array_def(system_func_t, systems);
 
 typedef struct RenderLayer {
@@ -102,7 +97,7 @@ void update_sfx_list(GameEngine_t* engine);
 // Inline functions, for convenience
 extern void update_scene(Scene_t* scene, float delta_time);
 extern void render_scene(Scene_t* scene);
-extern ActionResult do_action(Scene_t* scene, ActionType_t action, bool pressed);
+extern void do_action(Scene_t* scene, ActionType_t action, bool pressed);
 
 void init_scene(Scene_t* scene, action_func_t action_func);
 bool add_scene_layer(Scene_t* scene, int width, int height, Rectangle render_area);

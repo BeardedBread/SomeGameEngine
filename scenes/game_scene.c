@@ -45,7 +45,7 @@ static void level_scene_render_func(Scene_t* scene)
     EndTextureMode();
 }
 
-static ActionResult level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
+static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
     CPlayerState_t* p_playerstate;
     sc_map_foreach_value(&scene->ent_manager.component_map[CPLAYERSTATE_T], p_playerstate)
@@ -96,7 +96,6 @@ static ActionResult level_do_action(Scene_t* scene, ActionType_t action, bool pr
             break;
         }
     }
-    return ACTION_PROPAGATE;
 }
 
 static void render_regular_game_scene(Scene_t* scene)

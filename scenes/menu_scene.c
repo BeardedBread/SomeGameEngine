@@ -34,7 +34,7 @@ static void exec_component_function(Scene_t* scene, int sel)
     }
 }
 
-static ActionResult menu_do_action(Scene_t* scene, ActionType_t action, bool pressed)
+static void menu_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
     MenuSceneData_t* data = &(CONTAINER_OF(scene, MenuScene_t, scene)->data);
     unsigned int new_selection = data->selected_comp;
@@ -83,7 +83,6 @@ static ActionResult menu_do_action(Scene_t* scene, ActionType_t action, bool pre
             exec_component_function(scene, data->selected_comp);
         }
     }
-    return ACTION_PROPAGATE;
 }
 
 static void gui_loop(Scene_t* scene)

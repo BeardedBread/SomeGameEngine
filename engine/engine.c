@@ -238,9 +238,9 @@ inline void render_scene(Scene_t* scene)
     EndDrawing();
 }
 
-inline ActionResult do_action(Scene_t* scene, ActionType_t action, bool pressed)
+inline void do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
-    return scene->action_function(scene, action, pressed);
+    scene->action_function(scene, action, pressed);
 }
 
 void process_active_scene_inputs(GameEngine_t* engine)

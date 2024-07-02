@@ -86,7 +86,18 @@ typedef struct MenuScene {
     MenuSceneData_t data;
 } MenuScene_t;
 
+typedef struct LevelSelectSceneData {
+    RenderTexture2D level_display;
+    float scroll;
+} LevelSelectSceneData_t;
+
+typedef struct LevelSelectScene {
+    Scene_t scene;
+    LevelSelectSceneData_t data;
+} LevelSelectScene_t;
 void init_menu_scene(MenuScene_t* scene);
 void free_menu_scene(MenuScene_t* scene);
+void init_level_select_scene(LevelSelectScene_t* scene);
+void free_level_select_scene(LevelSelectScene_t* scene);
 
 #endif // __SCENE_IMPL_H

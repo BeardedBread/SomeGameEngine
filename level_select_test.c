@@ -14,8 +14,8 @@ int main(void)
     InitWindow(1280, 640, "raylib");
     SetTargetFPS(60);
     init_memory_pools();
-    MenuScene_t scene;
-    init_menu_scene(&scene);
+    LevelSelectScene_t scene;
+    init_level_select_scene(&scene);
     scene.scene.bg_colour = RAYWHITE;
     while(true)
     {
@@ -54,12 +54,11 @@ int main(void)
         float frame_time = GetFrameTime();
         float delta_time = fminf(frame_time, DT);
         update_scene(&scene.scene, delta_time);
-        update_entity_manager(&scene.scene.ent_manager);
         // This is needed to advance time delta
         render_scene(&scene.scene);
         if (WindowShouldClose()) break;
     } 
-    free_menu_scene(&scene);
+    free_level_select_scene(&scene);
     sc_queue_term(&key_buffer);
     CloseWindow();
 }

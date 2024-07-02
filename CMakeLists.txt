@@ -167,6 +167,18 @@ target_link_options(scene_man_test PRIVATE -fsanitize=address -gdwarf-4)
 target_link_libraries(scene_man_test
     ${GAME_LIBS}
 )
+add_executable(level_select_test
+    level_select_test.c
+)
+target_include_directories(level_select_test
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+)
+target_compile_options(level_select_test PRIVATE -fsanitize=address -gdwarf-4)
+target_link_options(level_select_test PRIVATE -fsanitize=address -gdwarf-4)
+target_link_libraries(level_select_test
+    ${GAME_LIBS}
+)
 
 if (BUILD_TESTING)
      find_package(cmocka 1.1.0 REQUIRED)

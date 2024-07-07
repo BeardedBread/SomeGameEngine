@@ -10,7 +10,7 @@
 Scene_t *scenes[N_SCENES];
 static GameEngine_t engine = {
     .scenes = scenes,
-    .max_scenes = 3,
+    .max_scenes = 4,
     .curr_scene = 0,
     .assets = {0}
 };
@@ -74,9 +74,16 @@ int main(void)
     MenuScene_t menu_scene;
     menu_scene.scene.engine = &engine;
     init_menu_scene(&menu_scene);
+
+    LevelSelectScene_t level_sel_scene;
+    level_sel_scene.scene.engine = &engine;
+    level_sel_scene.data.level_pack = pack;
+    init_level_select_scene(&level_sel_scene);
+
     scenes[0] = &menu_scene.scene;
-    scenes[1] = &level_scene.scene;
-    scenes[2] = &sandbox_scene.scene;
+    scenes[1] = &level_sel_scene.scene;
+    scenes[2] = &level_scene.scene;
+    scenes[3] = &sandbox_scene.scene;
     change_scene(&engine, 0);
 
     const float DT = 1.0f/60.0f;

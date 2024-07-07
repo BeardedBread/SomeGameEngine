@@ -89,6 +89,7 @@ typedef struct MenuScene {
 typedef struct LevelSelectSceneData {
     RenderTexture2D level_display;
     float scroll;
+    LevelPack_t* level_pack;
 } LevelSelectSceneData_t;
 
 typedef struct LevelSelectScene {

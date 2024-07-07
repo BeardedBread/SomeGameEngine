@@ -57,13 +57,27 @@ void init_level_select_scene(LevelSelectScene_t* scene)
     scene->data.scroll = 400;
     scene->data.level_display = LoadRenderTexture(300, 800);
     const unsigned int n_elems = 800 / (12+3);
+    char buf[32];
     BeginTextureMode(scene->data.level_display);
         ClearBackground(GRAY);
-        for (unsigned int i = 0; i < n_elems; ++i)
+        if (scene->data.level_pack != NULL)
         {
-            char buf[32];
-            sprintf(buf, "Level %u", i); 
-            DrawText(buf, 0, (12+3) * i, 12, BLACK);
+            for (unsigned int i = 0; i < scene->data.level_pack->n_levels; ++i)
+            {
+                DrawText(scene->data.level_pack->levels[i].level_name, 0, (12+3) * i, 12, BLACK);
+            }
+            for (unsigned int i = scene->data.level_pack->n_levels; i < n_elems; ++i)
+            {
+                DrawText("---", 0, (12+3) * i, 12, BLACK);
+            }
+        }
+        else
+        {
+            for (unsigned int i = 0; i < n_elems; ++i)
+            {
+                sprintf(buf, "Level %u", i); 
+                DrawText(buf, 0, (12+3) * i, 12, BLACK);
+            }
         }
     EndTextureMode();
 

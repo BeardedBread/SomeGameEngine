@@ -80,11 +80,11 @@ int main(void)
     level_sel_scene.data.level_pack = pack;
     init_level_select_scene(&level_sel_scene);
 
-    scenes[0] = &menu_scene.scene;
-    scenes[1] = &level_sel_scene.scene;
-    scenes[2] = &level_scene.scene;
-    scenes[3] = &sandbox_scene.scene;
-    change_scene(&engine, 0);
+    scenes[MAIN_MENU_SCENE] = &menu_scene.scene;
+    scenes[LEVEL_SELECT_SCENE] = &level_sel_scene.scene;
+    scenes[GAME_SCENE] = &level_scene.scene;
+    scenes[SANDBOX_SCENE] = &sandbox_scene.scene;
+    change_scene(&engine, MAIN_MENU_SCENE);
 
     const float DT = 1.0f/60.0f;
     while (!WindowShouldClose())

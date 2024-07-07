@@ -35,9 +35,11 @@ typedef enum SFXTag {
     COIN_SFX,
 } SFXTag_t;
 
-//typedef enum SceneType {
-//    LEVEL_SCENE = 0,
-//    MENU_SCENE,
-//}SceneType_t;
+typedef enum SceneType {
+    MAIN_MENU_SCENE = 0,
+    LEVEL_SELECT_SCENE,
+    GAME_SCENE,
+    SANDBOX_SCENE,
+}SceneType_t;
 
 #endif

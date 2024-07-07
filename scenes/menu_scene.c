@@ -1,4 +1,5 @@
 #include "scene_impl.h"
+#include "assets_tag.h"
 #include "raymath.h"
 #include <stdio.h>
 
@@ -21,10 +22,10 @@ static void exec_component_function(Scene_t* scene, int sel)
     switch(sel)
     {
         case 0:
-            change_scene(scene->engine, 1);
+            change_scene(scene->engine, LEVEL_SELECT_SCENE);
         break;
         case 1:
-            change_scene(scene->engine, 2);
+            change_scene(scene->engine, SANDBOX_SCENE);
         break;
         case 3:
             scene->state = 0;

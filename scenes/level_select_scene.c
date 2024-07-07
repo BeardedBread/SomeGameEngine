@@ -1,4 +1,5 @@
 #include "scene_impl.h"
+#include "assets_tag.h"
 #include "raymath.h"
 #include <stdio.h>
 
@@ -40,6 +41,12 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
             {
                 data->scroll -= 3;
                 data->scroll = Clamp(data->scroll, 0, 400);
+            }
+        break;
+        case ACTION_EXIT:
+            if(scene->engine != NULL)
+            {
+                change_scene(scene->engine, MAIN_MENU_SCENE);
             }
         break;
         default:
@@ -84,6 +91,7 @@ void init_level_select_scene(LevelSelectScene_t* scene)
     sc_array_add(&scene->scene.systems, &level_select_render_func);
     sc_map_put_64(&scene->scene.action_map, KEY_UP, ACTION_UP);
     sc_map_put_64(&scene->scene.action_map, KEY_DOWN, ACTION_DOWN);
+    sc_map_put_64(&scene->scene.action_map, KEY_Q, ACTION_EXIT);
 }
 void free_level_select_scene(LevelSelectScene_t* scene)
 {

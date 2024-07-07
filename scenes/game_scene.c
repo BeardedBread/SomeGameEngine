@@ -89,7 +89,7 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             case ACTION_EXIT:
                 if(scene->engine != NULL)
                 {
-                    change_scene(scene->engine, 0);
+                    change_scene(scene->engine, MAIN_MENU_SCENE);
                 }
             break;
             default:

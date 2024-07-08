@@ -39,17 +39,26 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
             }
         break;
         case ACTION_EXIT:
-            if(scene->engine != NULL)
+            if (!pressed)
             {
-                change_scene(scene->engine, MAIN_MENU_SCENE);
+                if(scene->engine != NULL)
+                {
+                    change_scene(scene->engine, MAIN_MENU_SCENE);
+                }
             }
         break;
         case ACTION_CONFIRM:
-            if (data->level_pack != NULL && data->scroll_area.curr_selection < data->level_pack->n_levels)
+            if (!pressed)
             {
-                // TODO: Need to load the current level
-                change_scene(scene->engine, LEVEL_SELECT_SCENE);
+                if (data->level_pack != NULL && data->scroll_area.curr_selection < data->level_pack->n_levels)
+                {
+                    // TODO: Need to load the current level
+                    LevelScene_t* level_scene = (LevelScene_t*)change_scene(scene->engine, GAME_SCENE);
+                    level_scene->data.level_pack = data->level_pack;
+                    level_scene->data.current_level = data->scroll_area.curr_selection;
+                    reload_level_tilemap(level_scene);
 
+                }
             }
         break;
         default:
@@ -94,6 +103,7 @@ void init_level_select_scene(LevelSelectScene_t* scene)
     sc_map_put_64(&scene->scene.action_map, KEY_UP, ACTION_UP);
     sc_map_put_64(&scene->scene.action_map, KEY_DOWN, ACTION_DOWN);
     sc_map_put_64(&scene->scene.action_map, KEY_Q, ACTION_EXIT);
+    sc_map_put_64(&scene->scene.action_map, KEY_ENTER, ACTION_CONFIRM);
 }
 void free_level_select_scene(LevelSelectScene_t* scene)
 {

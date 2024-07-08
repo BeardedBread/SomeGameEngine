@@ -86,8 +86,8 @@ void process_active_scene_inputs(GameEngine_t* engine);
 void update_curr_scene(GameEngine_t* engine);
 void render_curr_scene(GameEngine_t* engine);
 
-void change_scene(GameEngine_t* engine, unsigned int idx);
-void change_active_scene(GameEngine_t* engine, unsigned int idx);
+Scene_t* change_scene(GameEngine_t* engine, unsigned int idx);
+Scene_t* change_active_scene(GameEngine_t* engine, unsigned int idx);
 void change_focused_scene(GameEngine_t* engine, unsigned int idx);
 bool load_sfx(GameEngine_t* engine, const char* snd_name, uint32_t tag_idx);
 void play_sfx(GameEngine_t* engine, unsigned int tag_idx);

@@ -89,10 +89,10 @@ void process_inputs(GameEngine_t* engine, Scene_t* scene)
     }
 }
 
-void change_scene(GameEngine_t* engine, unsigned int idx)
+Scene_t* change_scene(GameEngine_t* engine, unsigned int idx)
 {
     // Backwards compat
-    change_active_scene(engine, idx);
+    return change_active_scene(engine, idx);
 }
 
 bool load_sfx(GameEngine_t* engine, const char* snd_name, uint32_t tag_idx)
@@ -361,11 +361,13 @@ void remove_child_scene(GameEngine_t* engine, unsigned int idx)
     child->parent_scene = NULL;
 }
 
-void change_active_scene(GameEngine_t* engine, unsigned int idx)
+Scene_t* change_active_scene(GameEngine_t* engine, unsigned int idx)
 {
     engine->scenes[engine->curr_scene]->state = 0;
     engine->curr_scene = idx;
     engine->scenes[engine->curr_scene]->state = SCENE_COMPLETE_ACTIVE;
+    sc_queue_clear(&engine->key_buffer);
+    return engine->scenes[engine->curr_scene];
 }
 
 void change_focused_scene(GameEngine_t* engine, unsigned int idx)

@@ -68,7 +68,6 @@ int main(void)
     {
         level_scene.data.level_pack = pack;
         level_scene.data.current_level = 0;
-        load_level_tilemap(&level_scene, 0);
     }
 
     MenuScene_t menu_scene;

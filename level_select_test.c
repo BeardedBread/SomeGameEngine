@@ -1,5 +1,6 @@
 #include "mempool.h"
 #include "scene_impl.h"
+#include "gui.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <math.h>
@@ -14,6 +15,7 @@ int main(void)
     InitWindow(1280, 640, "raylib");
     SetTargetFPS(60);
     init_memory_pools();
+    init_UI();
     LevelSelectScene_t scene;
     init_level_select_scene(&scene);
     scene.scene.bg_colour = RAYWHITE;

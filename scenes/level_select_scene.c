@@ -1,16 +1,37 @@
 #include "scene_impl.h"
 #include "assets_tag.h"
+#include "gui.h"
 #include "raymath.h"
 #include <stdio.h>
 
+#define FONT_SIZE 30
+#define TEXT_PADDING 3
+#define TEXT_HEIGHT (FONT_SIZE+TEXT_PADDING)
+#define DISPLAY_AREA_HEIGHT 400
+#define SCROLL_TOTAL_HEIGHT 800
+#define HIDDEN_AREA_HEIGHT (SCROLL_TOTAL_HEIGHT - DISPLAY_AREA_HEIGHT)
 static void level_select_render_func(Scene_t* scene)
 {
     LevelSelectSceneData_t* data = &(CONTAINER_OF(scene, LevelSelectScene_t, scene)->data);
+    UIComp_t test_comp = {
+        .bbox = {data->level_display.texture.width + 50, 50, 25,
+            scene->layers.render_layers[0].render_area.height - 50
+        },
+        .state = STATE_NORMAL,
+        .alpha = 1.0f,
+    };
+
     BeginTextureMode(scene->layers.render_layers[0].layer_tex);
-        ClearBackground(RAYWHITE);
+        ClearBackground(BLANK);
+        UI_vert_slider(&test_comp,
+            NULL,
+            NULL,
+            &data->scroll,
+            0, HIDDEN_AREA_HEIGHT
+        );
         Rectangle draw_rec = (Rectangle){
             0, data->scroll,
-            scene->layers.render_layers[0].render_area.width,
+            data->level_display.texture.width,
             scene->layers.render_layers[0].render_area.height
         };
         Vector2 draw_pos = {50, 50};
@@ -58,12 +79,12 @@ void init_level_select_scene(LevelSelectScene_t* scene)
 {
     init_scene(&scene->scene, &level_select_do_action);
     add_scene_layer(
-        &scene->scene, 300, 400,
-        (Rectangle){0, 0, 300, 400}
+        &scene->scene, 400, DISPLAY_AREA_HEIGHT,
+        (Rectangle){0, 0, 400, DISPLAY_AREA_HEIGHT}
     );
-    scene->data.scroll = 400;
-    scene->data.level_display = LoadRenderTexture(300, 800);
-    const unsigned int n_elems = 800 / (12+3);
+    scene->data.level_display = LoadRenderTexture(200, SCROLL_TOTAL_HEIGHT);
+    scene->data.scroll = scene->data.level_display.texture.height - DISPLAY_AREA_HEIGHT;
+    const unsigned int n_elems = SCROLL_TOTAL_HEIGHT / TEXT_HEIGHT;
     char buf[32];
     BeginTextureMode(scene->data.level_display);
         ClearBackground(GRAY);
@@ -71,11 +92,11 @@ void init_level_select_scene(LevelSelectScene_t* scene)
         {
             for (unsigned int i = 0; i < scene->data.level_pack->n_levels; ++i)
             {
-                DrawText(scene->data.level_pack->levels[i].level_name, 0, (12+3) * i, 12, BLACK);
+                DrawText(scene->data.level_pack->levels[i].level_name, 0, TEXT_HEIGHT * i, FONT_SIZE, BLACK);
             }
             for (unsigned int i = scene->data.level_pack->n_levels; i < n_elems; ++i)
             {
-                DrawText("---", 0, (12+3) * i, 12, BLACK);
+                DrawText("---", 0, TEXT_HEIGHT * i, FONT_SIZE, BLACK);
             }
         }
         else
@@ -83,7 +104,7 @@ void init_level_select_scene(LevelSelectScene_t* scene)
             for (unsigned int i = 0; i < n_elems; ++i)
             {
                 sprintf(buf, "Level %u", i); 
-                DrawText(buf, 0, (12+3) * i, 12, BLACK);
+                DrawText(buf, 0, TEXT_HEIGHT * i, FONT_SIZE, BLACK);
             }
         }
     EndTextureMode();

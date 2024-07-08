@@ -9,6 +9,11 @@
 static unsigned int guiStyle[RAYGUI_MAX_CONTROLS*(RAYGUI_MAX_PROPS_BASE + RAYGUI_MAX_PROPS_EXTENDED)] = { 0 };
 static bool guiStyleLoaded = false;         // Style loaded flag for lazy style initialization
 static Font guiFont = { 0 };                // Gui current font (WARNING: highly coupled to raylib)
+                                            //
+// Check if two rectangles are equal, used to validate a slider bounds as an id
+#ifndef CHECK_BOUNDS_ID
+    #define CHECK_BOUNDS_ID(src, dst) ((src.x == dst.x) && (src.y == dst.y) && (src.width == dst.width) && (src.height == dst.height))
+#endif
 
 typedef enum { BORDER = 0, BASE, TEXT, OTHER } GuiPropertyElement;
 
@@ -368,6 +373,257 @@ void UI_button(const UIComp_t* comp, const char* text)
     GuiDrawText(text, GetTextBounds(BUTTON, comp->bbox), GuiGetStyle(BUTTON, TEXT_ALIGNMENT), Fade(GetColor(GuiGetStyle(BUTTON, TEXT + (comp->state*3))), comp->alpha));
     
 }
+
+
+// Slider control with pro parameters
+// NOTE: Other GuiSlider*() controls use this one
+int GuiSliderPro(const UIComp_t* comp,  const char *textLeft, const char *textRight, float *value, float minValue, float maxValue, int sliderWidth)
+{
+    Rectangle bounds = comp->bbox;
+    int result = 0;
+    GuiState state = comp->state;
+
+    float temp = (maxValue - minValue)/2.0f;
+    if (value == NULL) value = &temp;
+
+    int sliderValue = (int)(((*value - minValue)/(maxValue - minValue))*(bounds.width - 2*GuiGetStyle(SLIDER, BORDER_WIDTH)));
+
+    Rectangle slider = { bounds.x, bounds.y + GuiGetStyle(SLIDER, BORDER_WIDTH) + GuiGetStyle(SLIDER, SLIDER_PADDING),
+                         0, bounds.height - 2*GuiGetStyle(SLIDER, BORDER_WIDTH) - 2*GuiGetStyle(SLIDER, SLIDER_PADDING) };
+
+    if (sliderWidth > 0)        // Slider
+    {
+        slider.x += (sliderValue - (sliderWidth >> 1));
+        slider.width = (float)sliderWidth;
+    }
+    else if (sliderWidth == 0)  // SliderBar
+    {
+        slider.x += GuiGetStyle(SLIDER, BORDER_WIDTH);
+        slider.width = (float)sliderValue;
+    }
+
+    // Update control
+    //--------------------------------------------------------------------
+    //if ((state != STATE_DISABLED) && !guiLocked)
+    if (state != STATE_DISABLED)
+    {
+        Vector2 mousePoint = GetMousePosition();
+
+        if (comp->pressed) // Keep dragging outside of bounds
+        {
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+            {
+                //if (CHECK_BOUNDS_ID(bounds, guiSliderActive))
+                {
+                    state = STATE_PRESSED;
+
+                    // Get equivalent value and slider position from mousePosition.x
+                    *value = ((maxValue - minValue)*(mousePoint.x - (float)(bounds.x + sliderWidth/2)))/(float)(bounds.width - sliderWidth) + minValue;
+                }
+            }
+            //else
+            //{
+            //    guiSliderDragging = false;
+            //    guiSliderActive = RAYGUI_CLITERAL(Rectangle){ 0, 0, 0, 0 };
+            //}
+        }
+        else if (CheckCollisionPointRec(mousePoint, bounds))
+        {
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+            {
+                state = STATE_PRESSED;
+                //guiSliderDragging = true;
+                //guiSliderActive = bounds; // Store bounds as an identifier when dragging starts
+
+                if (!CheckCollisionPointRec(mousePoint, slider))
+                {
+                    // Get equivalent value and slider position from mousePosition.x
+                    *value = ((maxValue - minValue)*(mousePoint.x - (float)(bounds.x + (sliderWidth >> 1) )))/(float)(bounds.width - sliderWidth) + minValue;
+
+                    if (sliderWidth > 0) slider.x = mousePoint.x - slider.width/2;      // Slider
+                    else if (sliderWidth == 0) slider.width = (float)sliderValue;       // SliderBar
+                }
+            }
+            else state = STATE_FOCUSED;
+        }
+
+        if (*value > maxValue) *value = maxValue;
+        else if (*value < minValue) *value = minValue;
+    }
+
+    // Bar limits check
+    if (sliderWidth > 0)        // Slider
+    {
+        if (slider.x <= (bounds.x + GuiGetStyle(SLIDER, BORDER_WIDTH))) slider.x = bounds.x + GuiGetStyle(SLIDER, BORDER_WIDTH);
+        else if ((slider.x + slider.width) >= (bounds.x + bounds.width)) slider.x = bounds.x + bounds.width - slider.width - GuiGetStyle(SLIDER, BORDER_WIDTH);
+    }
+    else if (sliderWidth == 0)  // SliderBar
+    {
+        if (slider.width > bounds.width) slider.width = bounds.width - 2*GuiGetStyle(SLIDER, BORDER_WIDTH);
+    }
+    //--------------------------------------------------------------------
+
+    // Draw control
+    //--------------------------------------------------------------------
+    GuiDrawRectangle(bounds, GuiGetStyle(SLIDER, BORDER_WIDTH), GetColor(GuiGetStyle(SLIDER, BORDER + (state*3))), GetColor(GuiGetStyle(SLIDER, (state != STATE_DISABLED)?  BASE_COLOR_NORMAL : BASE_COLOR_DISABLED)));
+
+    // Draw slider internal bar (depends on state)
+    if (state == STATE_NORMAL) GuiDrawRectangle(slider, 0, BLANK, GetColor(GuiGetStyle(SLIDER, BASE_COLOR_PRESSED)));
+    else if (state == STATE_FOCUSED) GuiDrawRectangle(slider, 0, BLANK, GetColor(GuiGetStyle(SLIDER, TEXT_COLOR_FOCUSED)));
+    else if (state == STATE_PRESSED) GuiDrawRectangle(slider, 0, BLANK, GetColor(GuiGetStyle(SLIDER, TEXT_COLOR_PRESSED)));
+
+    // Draw left/right text if provided
+    if (textLeft != NULL)
+    {
+        Rectangle textBounds = { 0 };
+        textBounds.width = (float)GetTextWidth(textLeft);
+        textBounds.height = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
+        textBounds.x = bounds.x - textBounds.width - GuiGetStyle(SLIDER, TEXT_PADDING);
+        textBounds.y = bounds.y + bounds.height/2 - (GuiGetStyle(DEFAULT, TEXT_SIZE) >> 1);
+
+        GuiDrawText(textLeft, textBounds, TEXT_ALIGN_RIGHT, GetColor(GuiGetStyle(SLIDER, TEXT + (state*3))));
+    }
+
+    if (textRight != NULL)
+    {
+        Rectangle textBounds = { 0 };
+        textBounds.width = (float)GetTextWidth(textRight);
+        textBounds.height = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
+        textBounds.x = bounds.x + bounds.width + GuiGetStyle(SLIDER, TEXT_PADDING);
+        textBounds.y = bounds.y + bounds.height/2 - (GuiGetStyle(DEFAULT, TEXT_SIZE) >> 1);
+
+        GuiDrawText(textRight, textBounds, TEXT_ALIGN_LEFT, GetColor(GuiGetStyle(SLIDER, TEXT + (state*3))));
+    }
+    //--------------------------------------------------------------------
+
+    return result;
+}
+//------------------------------------------------------------------------------------
+// Controls Functions Definitions (local)
+//------------------------------------------------------------------------------------
+float GuiVerticalSliderPro(const UIComp_t* comp, const char *textTop, const char *textBottom, float* in_value, float minValue, float maxValue, int sliderHeight)
+{
+    float value = *in_value;
+    GuiState state = comp->state;
+    Rectangle bounds = comp->bbox;
+
+    int sliderValue = (int)(((value - minValue)/(maxValue - minValue)) * (bounds.height - 2 * GuiGetStyle(SLIDER, BORDER_WIDTH)));
+
+    Rectangle slider = {
+        bounds.x + GuiGetStyle(SLIDER, BORDER_WIDTH) + GuiGetStyle(SLIDER, SLIDER_PADDING),
+        bounds.y + bounds.height - sliderValue,
+        bounds.width - 2*GuiGetStyle(SLIDER, BORDER_WIDTH) - 2*GuiGetStyle(SLIDER, SLIDER_PADDING),
+        0.0f,
+    };
+
+    if (sliderHeight > 0)        // Slider
+    {
+        slider.y -= sliderHeight >> 1;
+        slider.height = (float)sliderHeight;
+    }
+    else if (sliderHeight == 0)  // SliderBar
+    {
+        slider.y -= GuiGetStyle(SLIDER, BORDER_WIDTH);
+        slider.height = (float)sliderValue;
+    }
+    // Update control
+    //--------------------------------------------------------------------
+    //if ((state != STATE_DISABLED) && !guiLocked)
+    if (state != STATE_DISABLED)
+    {
+        Vector2 mousePoint = GetMousePosition();
+
+        if (CheckCollisionPointRec(mousePoint, bounds))
+        {
+            if (IsMouseButtonDown(MOUSE_LEFT_BUTTON))
+            {
+                state = STATE_PRESSED;
+
+                // Get equivalent value and slider position from mousePoint.x
+                float normalizedValue = (bounds.y + bounds.height - mousePoint.y - (float)(sliderHeight >> 1)) / (bounds.height - (float)sliderHeight);
+                value = (maxValue - minValue) * normalizedValue + minValue;
+
+                if (sliderHeight > 0) slider.y = mousePoint.y - slider.height / 2;  // Slider
+                else if (sliderHeight == 0)                                          // SliderBar
+                {
+                    slider.y = mousePoint.y;
+                    slider.height = bounds.y + bounds.height - slider.y - GuiGetStyle(SLIDER, BORDER_WIDTH);
+                }
+            }
+            else state = STATE_FOCUSED;
+        }
+
+        if (value > maxValue) value = maxValue;
+        else if (value < minValue) value = minValue;
+    }
+
+
+    // Bar limits check
+    if (sliderHeight > 0)        // Slider
+    {
+        if (slider.y < (bounds.y + GuiGetStyle(SLIDER, BORDER_WIDTH))) slider.y = bounds.y + GuiGetStyle(SLIDER, BORDER_WIDTH);
+        else if ((slider.y + slider.height) >= (bounds.y + bounds.height)) slider.y = bounds.y + bounds.height - slider.height - GuiGetStyle(SLIDER, BORDER_WIDTH);
+    }
+    else if (sliderHeight == 0)  // SliderBar
+    {
+        if (slider.y < (bounds.y + GuiGetStyle(SLIDER, BORDER_WIDTH)))
+        {
+            slider.y = bounds.y + GuiGetStyle(SLIDER, BORDER_WIDTH);
+            slider.height = bounds.height - 2*GuiGetStyle(SLIDER, BORDER_WIDTH);
+        }
+    }
+
+    //--------------------------------------------------------------------
+    // Draw control
+    //--------------------------------------------------------------------
+    GuiDrawRectangle(bounds, GuiGetStyle(SLIDER, BORDER_WIDTH), Fade(GetColor(GuiGetStyle(SLIDER, BORDER + (state*3))), comp->alpha), Fade(GetColor(GuiGetStyle(SLIDER, (state != STATE_DISABLED)?  BASE_COLOR_NORMAL : BASE_COLOR_DISABLED)), comp->alpha));
+
+    // Draw slider internal bar (depends on state)
+    if ((state == STATE_NORMAL) || (state == STATE_PRESSED)) GuiDrawRectangle(slider, 0, BLANK, Fade(GetColor(GuiGetStyle(SLIDER, BASE_COLOR_PRESSED)), comp->alpha));
+    else if (state == STATE_FOCUSED) GuiDrawRectangle(slider, 0, BLANK, Fade(GetColor(GuiGetStyle(SLIDER, TEXT_COLOR_FOCUSED)), comp->alpha));
+
+    // Draw top/bottom text if provided
+    if (textTop != NULL)
+    {
+        Rectangle textBounds = { 0 };
+        textBounds.width = (float)GetTextWidth(textTop);
+        textBounds.height = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
+        textBounds.x = bounds.x + bounds.width/2 - textBounds.width/2;
+        textBounds.y = bounds.y - textBounds.height - GuiGetStyle(SLIDER, TEXT_PADDING);
+
+        GuiDrawText(textTop, textBounds, TEXT_ALIGN_RIGHT, Fade(GetColor(GuiGetStyle(SLIDER, TEXT + (state*3))), comp->alpha));
+    }
+
+    if (textBottom != NULL)
+    {
+        Rectangle textBounds = { 0 };
+        textBounds.width = (float)GetTextWidth(textBottom);
+        textBounds.height = (float)GuiGetStyle(DEFAULT, TEXT_SIZE);
+        textBounds.x = bounds.x + bounds.width/2 - textBounds.width/2;
+        textBounds.y = bounds.y + bounds.height + GuiGetStyle(SLIDER, TEXT_PADDING);
+
+        GuiDrawText(textBottom, textBounds, TEXT_ALIGN_LEFT, Fade(GetColor(GuiGetStyle(SLIDER, TEXT + (state*3))), comp->alpha));
+    }
+    //--------------------------------------------------------------------
+
+    *in_value = value;
+    return value;
+}
+
+float UI_vert_slider(const UIComp_t* comp, const char *textTop, const char *textBottom, float* value, float minValue, float maxValue)
+{
+    return GuiVerticalSliderPro(comp, textTop, textBottom, value, minValue, maxValue, GuiGetStyle(SLIDER, SLIDER_WIDTH));
+}
+
+
+
+// Slider control extended, returns selected value and has text
+float UI_slider(const UIComp_t* comp, const char *textLeft, const char *textRight, float *value, float minValue, float maxValue)
+{
+    return GuiSliderPro(comp, textLeft, textRight, value, minValue, maxValue, GuiGetStyle(SLIDER, SLIDER_WIDTH));
+}
+
+
 
 void init_UI(void)
 {

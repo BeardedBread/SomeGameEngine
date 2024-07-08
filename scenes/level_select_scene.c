@@ -13,35 +13,9 @@
 static void level_select_render_func(Scene_t* scene)
 {
     LevelSelectSceneData_t* data = &(CONTAINER_OF(scene, LevelSelectScene_t, scene)->data);
-    UIComp_t test_comp = {
-        .bbox = {data->level_display.texture.width + 50, 50, 25,
-            scene->layers.render_layers[0].render_area.height - 50
-        },
-        .state = STATE_NORMAL,
-        .alpha = 1.0f,
-    };
-
     BeginTextureMode(scene->layers.render_layers[0].layer_tex);
         ClearBackground(BLANK);
-        UI_vert_slider(&test_comp,
-            NULL,
-            NULL,
-            &data->scroll,
-            0, HIDDEN_AREA_HEIGHT
-        );
-        Rectangle draw_rec = (Rectangle){
-            0, data->scroll,
-            data->level_display.texture.width,
-            scene->layers.render_layers[0].render_area.height
-        };
-        Vector2 draw_pos = {50, 50};
-        draw_rec.height *= -1;
-        DrawTextureRec(
-            data->level_display.texture,
-            draw_rec,
-            draw_pos,
-            WHITE
-        );
+        vert_scrollarea_render(&data->scroll_area);
     EndTextureMode();
 }
 
@@ -53,21 +27,29 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
         case ACTION_UP:
             if (pressed)
             {
-                data->scroll += 3;
-                data->scroll = Clamp(data->scroll, 0, 400);
+                data->scroll_area.scroll_pos += 3;
+                data->scroll_area.scroll_pos = Clamp(data->scroll_area.scroll_pos,data->scroll_area.scroll_bounds.x, data->scroll_area.scroll_bounds.y);
             }
         break;
         case ACTION_DOWN:
             if (pressed)
             {
-                data->scroll -= 3;
-                data->scroll = Clamp(data->scroll, 0, 400);
+                data->scroll_area.scroll_pos -= 3;
+                data->scroll_area.scroll_pos = Clamp(data->scroll_area.scroll_pos,data->scroll_area.scroll_bounds.x, data->scroll_area.scroll_bounds.y);
             }
         break;
         case ACTION_EXIT:
             if(scene->engine != NULL)
             {
                 change_scene(scene->engine, MAIN_MENU_SCENE);
+            }
+        break;
+        case ACTION_CONFIRM:
+            if (data->level_pack != NULL && data->scroll_area.curr_selection < data->level_pack->n_levels)
+            {
+                // TODO: Need to load the current level
+                change_scene(scene->engine, LEVEL_SELECT_SCENE);
+
             }
         break;
         default:
@@ -82,32 +64,31 @@ void init_level_select_scene(LevelSelectScene_t* scene)
         &scene->scene, 400, DISPLAY_AREA_HEIGHT,
         (Rectangle){0, 0, 400, DISPLAY_AREA_HEIGHT}
     );
-    scene->data.level_display = LoadRenderTexture(200, SCROLL_TOTAL_HEIGHT);
-    scene->data.scroll = scene->data.level_display.texture.height - DISPLAY_AREA_HEIGHT;
-    const unsigned int n_elems = SCROLL_TOTAL_HEIGHT / TEXT_HEIGHT;
+    vert_scrollarea_init(&scene->data.scroll_area, (Rectangle){50, 50, 150, DISPLAY_AREA_HEIGHT - 50}, (Vector2){150, SCROLL_TOTAL_HEIGHT});
+    vert_scrollarea_set_item_dims(&scene->data.scroll_area, FONT_SIZE, TEXT_PADDING);
     char buf[32];
-    BeginTextureMode(scene->data.level_display);
-        ClearBackground(GRAY);
+    ScrollAreaRenderBegin(&scene->data.scroll_area);
+        ClearBackground(BLANK);
         if (scene->data.level_pack != NULL)
         {
             for (unsigned int i = 0; i < scene->data.level_pack->n_levels; ++i)
             {
-                DrawText(scene->data.level_pack->levels[i].level_name, 0, TEXT_HEIGHT * i, FONT_SIZE, BLACK);
+                vert_scrollarea_insert_item(&scene->data.scroll_area, scene->data.level_pack->levels[i].level_name, i);
             }
-            for (unsigned int i = scene->data.level_pack->n_levels; i < n_elems; ++i)
+            for (unsigned int i = scene->data.level_pack->n_levels; i < scene->data.scroll_area.n_items; ++i)
             {
-                DrawText("---", 0, TEXT_HEIGHT * i, FONT_SIZE, BLACK);
+                vert_scrollarea_insert_item(&scene->data.scroll_area, "---", i);
             }
         }
         else
         {
-            for (unsigned int i = 0; i < n_elems; ++i)
+            for (unsigned int i = 0; i < scene->data.scroll_area.n_items; ++i)
             {
                 sprintf(buf, "Level %u", i); 
-                DrawText(buf, 0, TEXT_HEIGHT * i, FONT_SIZE, BLACK);
+                vert_scrollarea_insert_item(&scene->data.scroll_area, buf, i);
             }
         }
-    EndTextureMode();
+    ScrollAreaRenderEnd();
 
     sc_array_add(&scene->scene.systems, &level_select_render_func);
     sc_map_put_64(&scene->scene.action_map, KEY_UP, ACTION_UP);
@@ -116,5 +97,7 @@ void init_level_select_scene(LevelSelectScene_t* scene)
 }
 void free_level_select_scene(LevelSelectScene_t* scene)
 {
+
+    vert_scrollarea_free(&scene->data.scroll_area);
     free_scene(&scene->scene);
 }

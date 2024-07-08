@@ -623,6 +623,82 @@ float UI_slider(const UIComp_t* comp, const char *textLeft, const char *textRigh
     return GuiSliderPro(comp, textLeft, textRight, value, minValue, maxValue, GuiGetStyle(SLIDER, SLIDER_WIDTH));
 }
 
+void vert_scrollarea_init(VertScrollArea_t* scroll_area, Rectangle display_area, Vector2 canvas_dims)
+{
+    scroll_area->canvas = LoadRenderTexture(canvas_dims.x, canvas_dims.y);
+    scroll_area->scroll_pos = canvas_dims.y - display_area.height;
+    scroll_area->scroll_bounds = (Vector2){
+        0, scroll_area->scroll_pos
+    };
+
+    vert_scrollarea_set_item_dims(scroll_area, 12, 3);
+    scroll_area->curr_selection = 0;
+
+    scroll_area->display_area = display_area;
+    scroll_area->scroll_bar.alpha = 1;
+    scroll_area->scroll_bar.bbox = (Rectangle){
+        display_area.width + display_area.x, display_area.y,
+        0.1f * display_area.width, display_area.height,
+    };
+    scroll_area->scroll_bar.state = STATE_NORMAL;
+
+    scroll_area->comp.alpha = 1;
+    scroll_area->comp.bbox = display_area;
+    scroll_area->comp.bbox.width *= 1.1f;
+    scroll_area->scroll_bar.state = STATE_NORMAL;
+        
+}
+
+void vert_scrollarea_set_item_dims(VertScrollArea_t* scroll_area, unsigned int item_height, unsigned int item_padding)
+{
+    scroll_area->item_height = item_height;
+    scroll_area->item_padding = item_padding;
+    scroll_area->n_items = (scroll_area->canvas.texture.height - scroll_area->item_padding) / (scroll_area->item_height + scroll_area->item_padding);
+}
+
+void vert_scrollarea_insert_item(VertScrollArea_t* scroll_area, char* str, unsigned int item_idx)
+{
+    if (item_idx >= scroll_area->n_items) return;
+
+    DrawText(str, 0, scroll_area->item_padding + (scroll_area->item_height + scroll_area->item_padding) * item_idx, scroll_area->item_height, BLACK);
+}
+
+void vert_scrollarea_render(VertScrollArea_t* scroll_area)
+{
+    BeginScissorMode(scroll_area->comp.bbox.x, scroll_area->comp.bbox.y, scroll_area->comp.bbox.width, scroll_area->comp.bbox.height);
+    UI_vert_slider(&scroll_area->scroll_bar,
+        NULL,
+        NULL,
+        &scroll_area->scroll_pos,
+        scroll_area->scroll_bounds.x,
+        scroll_area->scroll_bounds.y
+    );
+    Rectangle draw_rec = (Rectangle){
+        0, scroll_area->scroll_pos,
+        scroll_area->display_area.width,
+        scroll_area->display_area.height
+    };
+    float selection_y = scroll_area->curr_selection * (scroll_area->item_height + scroll_area->item_padding)  + scroll_area->item_padding;
+    DrawRectangle(
+        scroll_area->display_area.x, scroll_area->display_area.y + selection_y - (scroll_area->scroll_bounds.y - scroll_area->scroll_pos),
+        scroll_area->canvas.texture.width, scroll_area->item_height,
+        Fade(BLUE, 0.7)
+    );
+    Vector2 draw_pos = {scroll_area->display_area.x, scroll_area->display_area.y};
+    draw_rec.height *= -1;
+    DrawTextureRec(
+        scroll_area->canvas.texture,
+        draw_rec,
+        draw_pos,
+        WHITE
+    );
+    EndScissorMode();
+}
+
+void vert_scrollarea_free(VertScrollArea_t* scroll_area)
+{
+    UnloadRenderTexture(scroll_area->canvas);
+}
 
 
 void init_UI(void)

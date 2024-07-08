@@ -32,6 +32,8 @@ void init_UI(void);
 void vert_scrollarea_init(VertScrollArea_t* scroll_area, Rectangle display_area, Vector2 canvas_dims);
 void vert_scrollarea_set_item_dims(VertScrollArea_t* scroll_area, unsigned int item_height, unsigned int item_padding);
 void vert_scrollarea_insert_item(VertScrollArea_t* scroll_area, char* str, unsigned int item_idx);
+unsigned int vert_scrollarea_set_pos(VertScrollArea_t* scroll_area, Vector2 pos);
+void vert_scrollarea_refocus(VertScrollArea_t* scroll_area);
 void vert_scrollarea_render(VertScrollArea_t* scroll_area);
 void vert_scrollarea_free(VertScrollArea_t* scroll_area);
 

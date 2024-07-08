@@ -22,6 +22,8 @@ int main(void)
     while(true)
     {
 
+        Vector2 raw_mouse_pos = GetMousePosition();
+        scene.scene.mouse_pos = raw_mouse_pos;
         // This entire key processing relies on the assumption that a pressed key will
         // appear in the polling of raylib
 
@@ -51,6 +53,18 @@ int main(void)
             if (!sc_map_found(&scene.scene.action_map)) continue;
             do_action(&scene.scene, action, true);
             sc_queue_add_last(&key_buffer, button);
+        }
+        ActionType_t action = sc_map_get_64(&scene.scene.action_map, MOUSE_BUTTON_LEFT);
+        if (sc_map_found(&scene.scene.action_map))
+        {
+            if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+            {
+                do_action(&scene.scene, action, true);
+            }
+            else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+            {
+                do_action(&scene.scene, action, false);
+            }
         }
 
         float frame_time = GetFrameTime();

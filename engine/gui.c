@@ -663,6 +663,37 @@ void vert_scrollarea_insert_item(VertScrollArea_t* scroll_area, char* str, unsig
     DrawText(str, 0, scroll_area->item_padding + (scroll_area->item_height + scroll_area->item_padding) * item_idx, scroll_area->item_height, BLACK);
 }
 
+unsigned int vert_scrollarea_set_pos(VertScrollArea_t* scroll_area, Vector2 pos)
+{
+    float x = pos.x - scroll_area->display_area.x;
+    float y = pos.y - scroll_area->display_area.y;
+
+    if (x >= scroll_area->display_area.width || x < 0) return scroll_area->n_items;
+    if (y >= scroll_area->display_area.height || y < 0) return scroll_area->n_items;
+
+
+    scroll_area->curr_selection = (y - scroll_area->item_padding + (scroll_area->scroll_bounds.y - scroll_area->scroll_pos)) / (scroll_area->item_height + scroll_area->item_padding);
+
+    return scroll_area->curr_selection;
+}
+
+void vert_scrollarea_refocus(VertScrollArea_t* scroll_area)
+{
+    float selection_y = scroll_area->curr_selection * (scroll_area->item_height + scroll_area->item_padding)  + scroll_area->item_padding - (scroll_area->scroll_bounds.y - scroll_area->scroll_pos);
+
+    // Auto adjust scroll based on selection
+    if (selection_y < 0)
+    {
+        scroll_area->scroll_pos -= selection_y;
+    }
+    else if (selection_y + scroll_area->item_height + scroll_area->item_padding > scroll_area->display_area.height)
+    {
+        scroll_area->scroll_pos -= selection_y + scroll_area->item_height + scroll_area->item_padding - scroll_area->display_area.height;
+    }
+
+}
+
+
 void vert_scrollarea_render(VertScrollArea_t* scroll_area)
 {
     BeginScissorMode(scroll_area->comp.bbox.x, scroll_area->comp.bbox.y, scroll_area->comp.bbox.width, scroll_area->comp.bbox.height);
@@ -686,16 +717,6 @@ void vert_scrollarea_render(VertScrollArea_t* scroll_area)
         scroll_area->canvas.texture.width, scroll_area->item_height,
         Fade(BLUE, 0.7)
     );
-
-    // Auto adjust scroll based on selection
-    if (selection_y < 0)
-    {
-        scroll_area->scroll_pos -= selection_y;
-    }
-    else if (selection_y + scroll_area->item_height + scroll_area->item_padding > scroll_area->display_area.height)
-    {
-        scroll_area->scroll_pos -= selection_y + scroll_area->item_height + scroll_area->item_padding - scroll_area->display_area.height;
-    }
 
     Vector2 draw_pos = {scroll_area->display_area.x, scroll_area->display_area.y};
     draw_rec.height *= -1;

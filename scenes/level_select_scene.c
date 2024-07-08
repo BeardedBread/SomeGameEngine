@@ -24,6 +24,7 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
                 if (data->scroll_area.curr_selection > 0)
                 {
                     data->scroll_area.curr_selection--;
+                    vert_scrollarea_refocus(&data->scroll_area);
                 }
             }
         break;
@@ -33,6 +34,7 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
                 if (data->scroll_area.curr_selection < data->scroll_area.n_items - 1)
                 {
                     data->scroll_area.curr_selection++;
+                    vert_scrollarea_refocus(&data->scroll_area);
                 }
             }
         break;
@@ -42,6 +44,29 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
                 if(scene->engine != NULL)
                 {
                     change_scene(scene->engine, MAIN_MENU_SCENE);
+                }
+            }
+        break;
+        case ACTION_NEXT_SPAWN:
+            if (!pressed)
+            {
+                unsigned int prev_sel = data->scroll_area.curr_selection;
+                if (vert_scrollarea_set_pos(&data->scroll_area, scene->mouse_pos) != data->scroll_area.n_items)
+                {
+                    vert_scrollarea_refocus(&data->scroll_area);
+                }
+                
+                if (prev_sel == data->scroll_area.curr_selection)
+                {
+                    if (data->level_pack != NULL && data->scroll_area.curr_selection < data->level_pack->n_levels)
+                    {
+                        // TODO: Need to load the current level
+                        LevelScene_t* level_scene = (LevelScene_t*)change_scene(scene->engine, GAME_SCENE);
+                        level_scene->data.level_pack = data->level_pack;
+                        level_scene->data.current_level = data->scroll_area.curr_selection;
+                        reload_level_tilemap(level_scene);
+
+                    }
                 }
             }
         break;
@@ -107,6 +132,7 @@ void init_level_select_scene(LevelSelectScene_t* scene)
     sc_map_put_64(&scene->scene.action_map, KEY_DOWN, ACTION_DOWN);
     sc_map_put_64(&scene->scene.action_map, KEY_Q, ACTION_EXIT);
     sc_map_put_64(&scene->scene.action_map, KEY_ENTER, ACTION_CONFIRM);
+    sc_map_put_64(&scene->scene.action_map, MOUSE_LEFT_BUTTON, ACTION_NEXT_SPAWN); // Abuse an unused action
 }
 void free_level_select_scene(LevelSelectScene_t* scene)
 {

@@ -678,12 +678,25 @@ void vert_scrollarea_render(VertScrollArea_t* scroll_area)
         scroll_area->display_area.width,
         scroll_area->display_area.height
     };
-    float selection_y = scroll_area->curr_selection * (scroll_area->item_height + scroll_area->item_padding)  + scroll_area->item_padding;
+    float selection_y = scroll_area->curr_selection * (scroll_area->item_height + scroll_area->item_padding)  + scroll_area->item_padding - (scroll_area->scroll_bounds.y - scroll_area->scroll_pos);
+
     DrawRectangle(
-        scroll_area->display_area.x, scroll_area->display_area.y + selection_y - (scroll_area->scroll_bounds.y - scroll_area->scroll_pos),
+        scroll_area->display_area.x,
+        scroll_area->display_area.y + selection_y,
         scroll_area->canvas.texture.width, scroll_area->item_height,
         Fade(BLUE, 0.7)
     );
+
+    // Auto adjust scroll based on selection
+    if (selection_y < 0)
+    {
+        scroll_area->scroll_pos -= selection_y;
+    }
+    else if (selection_y + scroll_area->item_height + scroll_area->item_padding > scroll_area->display_area.height)
+    {
+        scroll_area->scroll_pos -= selection_y + scroll_area->item_height + scroll_area->item_padding - scroll_area->display_area.height;
+    }
+
     Vector2 draw_pos = {scroll_area->display_area.x, scroll_area->display_area.y};
     draw_rec.height *= -1;
     DrawTextureRec(

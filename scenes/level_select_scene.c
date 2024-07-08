@@ -4,12 +4,6 @@
 #include "raymath.h"
 #include <stdio.h>
 
-#define FONT_SIZE 30
-#define TEXT_PADDING 3
-#define TEXT_HEIGHT (FONT_SIZE+TEXT_PADDING)
-#define DISPLAY_AREA_HEIGHT 400
-#define SCROLL_TOTAL_HEIGHT 800
-#define HIDDEN_AREA_HEIGHT (SCROLL_TOTAL_HEIGHT - DISPLAY_AREA_HEIGHT)
 static void level_select_render_func(Scene_t* scene)
 {
     LevelSelectSceneData_t* data = &(CONTAINER_OF(scene, LevelSelectScene_t, scene)->data);
@@ -25,17 +19,21 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
     switch(action)
     {
         case ACTION_UP:
-            if (pressed)
+            if (!pressed)
             {
-                data->scroll_area.scroll_pos += 3;
-                data->scroll_area.scroll_pos = Clamp(data->scroll_area.scroll_pos,data->scroll_area.scroll_bounds.x, data->scroll_area.scroll_bounds.y);
+                if (data->scroll_area.curr_selection > 0)
+                {
+                    data->scroll_area.curr_selection--;
+                }
             }
         break;
         case ACTION_DOWN:
-            if (pressed)
+            if (!pressed)
             {
-                data->scroll_area.scroll_pos -= 3;
-                data->scroll_area.scroll_pos = Clamp(data->scroll_area.scroll_pos,data->scroll_area.scroll_bounds.x, data->scroll_area.scroll_bounds.y);
+                if (data->scroll_area.curr_selection < data->scroll_area.n_items - 1)
+                {
+                    data->scroll_area.curr_selection++;
+                }
             }
         break;
         case ACTION_EXIT:
@@ -66,6 +64,10 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
     }
 }
 
+#define FONT_SIZE 30
+#define TEXT_PADDING 3
+#define DISPLAY_AREA_HEIGHT 400
+#define SCROLL_TOTAL_HEIGHT 800
 void init_level_select_scene(LevelSelectScene_t* scene)
 {
     init_scene(&scene->scene, &level_select_do_action);
@@ -80,6 +82,7 @@ void init_level_select_scene(LevelSelectScene_t* scene)
         ClearBackground(BLANK);
         if (scene->data.level_pack != NULL)
         {
+            scene->data.scroll_area.n_items = scene->data.level_pack->n_levels;
             for (unsigned int i = 0; i < scene->data.level_pack->n_levels; ++i)
             {
                 vert_scrollarea_insert_item(&scene->data.scroll_area, scene->data.level_pack->levels[i].level_name, i);

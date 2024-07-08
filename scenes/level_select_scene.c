@@ -9,6 +9,7 @@ static void level_select_render_func(Scene_t* scene)
     LevelSelectSceneData_t* data = &(CONTAINER_OF(scene, LevelSelectScene_t, scene)->data);
     BeginTextureMode(scene->layers.render_layers[0].layer_tex);
         ClearBackground(BLANK);
+        DrawText("Level Select", 10, 10, 40, BLACK);
         vert_scrollarea_render(&data->scroll_area);
     EndTextureMode();
 }
@@ -54,18 +55,18 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
                 if (vert_scrollarea_set_pos(&data->scroll_area, scene->mouse_pos) != data->scroll_area.n_items)
                 {
                     vert_scrollarea_refocus(&data->scroll_area);
-                }
                 
-                if (prev_sel == data->scroll_area.curr_selection)
-                {
-                    if (data->level_pack != NULL && data->scroll_area.curr_selection < data->level_pack->n_levels)
+                    if (prev_sel == data->scroll_area.curr_selection)
                     {
-                        // TODO: Need to load the current level
-                        LevelScene_t* level_scene = (LevelScene_t*)change_scene(scene->engine, GAME_SCENE);
-                        level_scene->data.level_pack = data->level_pack;
-                        level_scene->data.current_level = data->scroll_area.curr_selection;
-                        reload_level_tilemap(level_scene);
+                        if (data->level_pack != NULL && data->scroll_area.curr_selection < data->level_pack->n_levels)
+                        {
+                            // TODO: Need to load the current level
+                            LevelScene_t* level_scene = (LevelScene_t*)change_scene(scene->engine, GAME_SCENE);
+                            level_scene->data.level_pack = data->level_pack;
+                            level_scene->data.current_level = data->scroll_area.curr_selection;
+                            reload_level_tilemap(level_scene);
 
+                        }
                     }
                 }
             }
@@ -97,10 +98,10 @@ void init_level_select_scene(LevelSelectScene_t* scene)
 {
     init_scene(&scene->scene, &level_select_do_action);
     add_scene_layer(
-        &scene->scene, 400, DISPLAY_AREA_HEIGHT,
-        (Rectangle){0, 0, 400, DISPLAY_AREA_HEIGHT}
+        &scene->scene, 400, 800,
+        (Rectangle){0, 0, 400, 800}
     );
-    vert_scrollarea_init(&scene->data.scroll_area, (Rectangle){50, 50, 150, DISPLAY_AREA_HEIGHT - 50}, (Vector2){150, SCROLL_TOTAL_HEIGHT});
+    vert_scrollarea_init(&scene->data.scroll_area, (Rectangle){50, 100, 150, DISPLAY_AREA_HEIGHT - 100}, (Vector2){150, SCROLL_TOTAL_HEIGHT});
     vert_scrollarea_set_item_dims(&scene->data.scroll_area, FONT_SIZE, TEXT_PADDING);
     char buf[32];
     ScrollAreaRenderBegin(&scene->data.scroll_area);

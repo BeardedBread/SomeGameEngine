@@ -4,7 +4,7 @@
 #include <string.h>
 #include "raymath.h"
 
-#define N_PLAYER_SPRITES 9
+#define N_PLAYER_SPRITES 11
 enum PlayerSpriteEnum
 {
     SPR_PLAYER_STAND = 0,
@@ -15,6 +15,8 @@ enum PlayerSpriteEnum
     SPR_PLAYER_CROUCH,
     SPR_PLAYER_CRMOVE,
     SPR_PLAYER_SWIM,
+    SPR_PLAYER_USWIM,
+    SPR_PLAYER_DSWIM,
     SPR_PLAYER_DEAD,
 };
 
@@ -50,6 +52,10 @@ static unsigned int player_sprite_transition_func(Entity_t* ent)
     }
     else if (p_move->water_state & 1)
     {
+        if (p_ctrans->velocity.y > 50) return SPR_PLAYER_DSWIM;
+
+        if (p_ctrans->velocity.y < -50) return SPR_PLAYER_USWIM;
+
         return SPR_PLAYER_SWIM;
     }
     return (p_ctrans->velocity.y < 0) ? SPR_PLAYER_JUMP : SPR_PLAYER_FALL;

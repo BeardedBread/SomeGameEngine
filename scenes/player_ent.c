@@ -172,8 +172,13 @@ static bool init_player_file(FILE* in_file, Assets_t* assets)
             return false;
         }
         Sprite_t* spr = get_sprite(assets, name);
+        spr->anchor = Vector2Scale(spr->frame_size, 0.5f);
         player_sprite_map[i].sprite = spr;
-        player_sprite_map[i].offset = offset;
+        //player_sprite_map[i].offset = offset;
+        player_sprite_map[i].offset = (Vector2){0};
+        player_sprite_map[i].src_anchor = spr->frame_size;
+        player_sprite_map[i].src_anchor.x /= 2.0f;
+        player_sprite_map[i].dest_anchor = AP_BOT_CENTER;
         i++;
     }
     already_init = true;

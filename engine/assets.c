@@ -1,6 +1,7 @@
 #include "assets.h"
 #include "assert.h"
 #include "engine_conf.h"
+#include "raymath.h"
 
 #define RRES_RAYLIB_IMPLEMENTATION
 #include "rres.h"
@@ -551,15 +552,20 @@ void draw_sprite_pro(Sprite_t* spr, int frame_num, Vector2 pos, float rotation, 
         spr->frame_size.x * ((flip & 1) ? -1 : 1),
         spr->frame_size.y * ((flip & 2) ? -1 : 1),
     };
-    Rectangle dest = {
-        .x = pos.x,
-        .y = pos.y,
-        .width = spr->frame_size.x * scale.x,
-        .height = spr->frame_size.y * scale.y
-    };
+
+    // The anchor here is only for rotation and scaling.
+    // Translational anchor is expected to be accounted for
+    // So need to offset render position with anchor position
     Vector2 anchor = spr->anchor;
     anchor.x *= scale.x;
     anchor.y *= scale.y;
+
+    Rectangle dest = {
+        .x = pos.x + anchor.x,
+        .y = pos.y + anchor.y,
+        .width = spr->frame_size.x * scale.x,
+        .height = spr->frame_size.y * scale.y
+    };
     DrawTexturePro(
         *spr->texture,
         rec,
@@ -568,3 +574,54 @@ void draw_sprite_pro(Sprite_t* spr, int frame_num, Vector2 pos, float rotation, 
         rotation, colour
     );
 }
+
+Vector2 shift_bbox(Vector2 bbox, Vector2 new_bbox, AnchorPoint_t anchor)
+{
+    Vector2 p1 = get_anchor_offset(bbox, anchor);
+    Vector2 p2 = get_anchor_offset(new_bbox, anchor);
+
+    return Vector2Subtract(p1, p2);
+}
+
+Vector2 get_anchor_offset(Vector2 bbox, AnchorPoint_t anchor)
+{
+    Vector2 offset = {0};
+    switch (anchor)
+    {
+        case AP_TOP_LEFT:
+        break;
+        case AP_TOP_CENTER:
+            offset.x = bbox.x / 2;
+        break;
+        case AP_TOP_RIGHT:
+            offset.x = bbox.x;
+        break;
+        case AP_MID_LEFT:
+            offset.x = 0;
+            offset.y = bbox.y / 2;
+        break;
+        case AP_MID_CENTER:
+            offset.x = bbox.x / 2;
+            offset.y = bbox.y / 2;
+        break;
+        case AP_MID_RIGHT:
+            offset.x = bbox.x;
+            offset.y = bbox.y / 2;
+        break;
+        case AP_BOT_LEFT:
+            offset.x = 0;
+            offset.y = bbox.y;
+        break;
+        case AP_BOT_CENTER:
+            offset.x = bbox.x / 2;
+            offset.y = bbox.y;
+        break;
+        case AP_BOT_RIGHT:
+            offset.x = bbox.x;
+            offset.y = bbox.y;
+        break;
+    }
+    return offset;
+}
+
+

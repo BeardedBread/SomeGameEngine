@@ -220,6 +220,7 @@ static void render_editor_game_scene(Scene_t* scene)
                 int y = tile_y * TILE_SIZE;
 
 
+
                 //if (!tilemap.tiles[i].moveable)
                 //{
                 //    // Draw water tile
@@ -432,7 +433,17 @@ static void render_editor_game_scene(Scene_t* scene)
                 const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
                 if (spr.sprite != NULL)
                 {
-                    Vector2 pos = Vector2Add(p_ent->position, spr.offset);
+                    Vector2 pos = p_ent->position;
+                    if (p_bbox != NULL)
+                    {
+                        pos = Vector2Add(
+                            pos,
+                            get_anchor_offset(p_bbox->size, spr.dest_anchor)
+                        );
+                        pos = Vector2Subtract(pos, spr.src_anchor);
+                    }
+
+                    pos = Vector2Add(pos, spr.offset);
                     draw_sprite(spr.sprite, p_cspr->current_frame, pos, 0.0f, p_cspr->flip_x);
                 }
             }

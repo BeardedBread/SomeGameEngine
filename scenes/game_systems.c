@@ -12,17 +12,6 @@ bool check_in_water(const ParticleEmitter_t* emitter, float delta_time);
 
 static const Vector2 GRAVITY = {0, GRAV_ACCEL};
 static const Vector2 UPTHRUST = {0, -GRAV_ACCEL * 1.1};
-typedef enum AnchorPoint {
-    AP_TOP_LEFT,
-    AP_TOP_CENTER,
-    AP_TOP_RIGHT,
-    AP_MID_LEFT,
-    AP_MID_CENTER,
-    AP_MID_RIGHT,
-    AP_BOT_LEFT,
-    AP_BOT_CENTER,
-    AP_BOT_RIGHT,
-} AnchorPoint_t;
 
 static inline unsigned int get_tile_idx(int x, int y, TileGrid_t gridmap)
 {
@@ -158,73 +147,6 @@ static bool check_collision_and_move(
     }
 collision_end:
     return overlap_mode > 0;
-}
-
-static Vector2 shift_bbox(Vector2 bbox, Vector2 new_bbox, AnchorPoint_t anchor)
-{
-    Vector2 p1;
-    Vector2 p2;
-
-    Vector2 offset = {0};
-    switch (anchor)
-    {
-        case AP_TOP_LEFT:
-            // When resizing bbox, it is implicitly assumed that to be already in topleft
-            // due to the coordindate system (+ve towards right and downwards)
-            // So do nothing
-        return offset;
-        case AP_TOP_CENTER:
-            p1.x = bbox.x / 2;
-            p1.y = 0;
-            p2.x = new_bbox.x / 2;
-            p2.y = 0;
-        break;
-        case AP_TOP_RIGHT:
-            p1.x = bbox.x;
-            p1.y = 0;
-            p2.x = new_bbox.x;
-            p2.y = 0;
-        break;
-        case AP_MID_LEFT:
-            p1.x = 0;
-            p1.y = bbox.y / 2;
-            p2.x = 0;
-            p2.y = new_bbox.y / 2;
-        break;
-        case AP_MID_CENTER:
-            p1.x = bbox.x / 2;
-            p1.y = bbox.y / 2;
-            p2.x = new_bbox.x / 2;
-            p2.y = new_bbox.y / 2;
-        break;
-        case AP_MID_RIGHT:
-            p1.x = bbox.x;
-            p1.y = bbox.y / 2;
-            p2.x = new_bbox.x;
-            p2.y = new_bbox.y / 2;
-        break;
-        case AP_BOT_LEFT:
-            p1.x = 0;
-            p1.y = bbox.y;
-            p2.x = 0;
-            p2.y = new_bbox.y;
-        break;
-        case AP_BOT_CENTER:
-            p1.x = bbox.x / 2;
-            p1.y = bbox.y;
-            p2.x = new_bbox.x / 2;
-            p2.y = new_bbox.y;
-        break;
-        case AP_BOT_RIGHT:
-            p1.x = bbox.x;
-            p1.y = bbox.y;
-            p2.x = new_bbox.x;
-            p2.y = new_bbox.y;
-        break;
-    }
-    offset.x = p1.x - p2.x;
-    offset.y = p1.y - p2.y;
-    return offset;
 }
 
 void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)

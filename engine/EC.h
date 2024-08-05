@@ -192,10 +192,25 @@ typedef struct Sprite {
 } Sprite_t;
 
 typedef unsigned int (*sprite_transition_func_t)(Entity_t *ent); // Transition requires knowledge of the entity
+
+typedef enum AnchorPoint {
+    AP_TOP_LEFT,
+    AP_TOP_CENTER,
+    AP_TOP_RIGHT,
+    AP_MID_LEFT,
+    AP_MID_CENTER,
+    AP_MID_RIGHT,
+    AP_BOT_LEFT,
+    AP_BOT_CENTER,
+    AP_BOT_RIGHT,
+} AnchorPoint_t;
+
 typedef struct _SpriteRenderInfo
 {
     Sprite_t* sprite;
     Vector2 offset;
+    Vector2 src_anchor;
+    AnchorPoint_t dest_anchor;
 } SpriteRenderInfo_t;
 
 typedef struct _CSprite_t {

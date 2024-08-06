@@ -136,6 +136,30 @@ Entity_t* create_dead_player(EntityManager_t* ent_manager)
     return p_ent;
 }
 
+static AnchorPoint_t parse_anchor_symbol(const char symbol[2])
+{
+    if (symbol[0] == 't')
+    {
+        if (symbol[1] == 'l') return AP_TOP_LEFT;
+        if (symbol[1] == 'c') return AP_TOP_CENTER;
+        if (symbol[1] == 'r') return AP_TOP_RIGHT;
+    }
+    else if (symbol[0] == 'm')
+    {
+        if (symbol[1] == 'l') return AP_MID_LEFT;
+        if (symbol[1] == 'c') return AP_MID_CENTER;
+        if (symbol[1] == 'r') return AP_MID_RIGHT;
+    }
+    else if (symbol[0] == 'b')
+    {
+        if (symbol[1] == 'l') return AP_BOT_LEFT;
+        if (symbol[1] == 'c') return AP_BOT_CENTER;
+        if (symbol[1] == 'r') return AP_BOT_RIGHT;
+    }
+
+    return AP_TOP_LEFT;
+}
+
 static bool init_player_file(FILE* in_file, Assets_t* assets)
 {
     static bool already_init = false;
@@ -162,11 +186,13 @@ static bool init_player_file(FILE* in_file, Assets_t* assets)
         while(*info_str == ' ' || *info_str == '\t') info_str++;
 
         Vector2 offset;
+        char src_ap_symbol[3];
+        char dest_ap_symbol[3];
         int data_count = sscanf(
-            info_str, "%f,%f",
-            &offset.x, &offset.y
+            info_str, "%f,%f,%2s,%2s",
+            &offset.x, &offset.y, src_ap_symbol, dest_ap_symbol
         );
-        if (data_count !=2)
+        if (data_count != 4)
         {
             printf("Unable to parse info for player at line %lu\n", line_num);
             return false;
@@ -174,10 +200,9 @@ static bool init_player_file(FILE* in_file, Assets_t* assets)
         Sprite_t* spr = get_sprite(assets, name);
         spr->anchor = Vector2Scale(spr->frame_size, 0.5f);
         player_sprite_map[i].sprite = spr;
-        //player_sprite_map[i].offset = offset;
-        player_sprite_map[i].offset = (Vector2){0};
-        player_sprite_map[i].src_anchor = get_anchor_offset(spr->frame_size, AP_BOT_CENTER, false);
-        player_sprite_map[i].dest_anchor = AP_BOT_CENTER;
+        player_sprite_map[i].offset = offset;
+        player_sprite_map[i].src_anchor = parse_anchor_symbol(src_ap_symbol);
+        player_sprite_map[i].dest_anchor = parse_anchor_symbol(dest_ap_symbol);
         i++;
     }
     already_init = true;

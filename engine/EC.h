@@ -209,7 +209,7 @@ typedef struct _SpriteRenderInfo
 {
     Sprite_t* sprite;
     Vector2 offset;
-    Vector2 src_anchor;
+    AnchorPoint_t src_anchor;
     AnchorPoint_t dest_anchor;
 } SpriteRenderInfo_t;
 

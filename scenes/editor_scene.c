@@ -440,7 +440,10 @@ static void render_editor_game_scene(Scene_t* scene)
                             pos,
                             get_anchor_offset(p_bbox->size, spr.dest_anchor, p_cspr->flip_x)
                         );
-                        pos = Vector2Subtract(pos, spr.src_anchor);
+                        pos = Vector2Subtract(
+                            pos,
+                            get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->flip_x)
+                        );
                     }
 
                     Vector2 offset = spr.offset;

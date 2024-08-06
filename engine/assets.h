@@ -83,7 +83,7 @@ LevelPack_t* get_level_pack(Assets_t* assets, const char* name);
 
 void draw_sprite(Sprite_t* spr, int frame_num, Vector2 pos, float rotation, bool flip_x);
 void draw_sprite_pro(Sprite_t* spr, int frame_num, Vector2 pos, float rotation, uint8_t flip, Vector2 scale, Color colour);
-Vector2 get_anchor_offset(Vector2 bbox, AnchorPoint_t anchor);
+Vector2 get_anchor_offset(Vector2 bbox, AnchorPoint_t anchor, bool flip_x);
 Vector2 shift_bbox(Vector2 bbox, Vector2 new_bbox, AnchorPoint_t anchor);
 
 typedef struct SFX

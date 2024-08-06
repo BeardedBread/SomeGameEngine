@@ -176,8 +176,7 @@ static bool init_player_file(FILE* in_file, Assets_t* assets)
         player_sprite_map[i].sprite = spr;
         //player_sprite_map[i].offset = offset;
         player_sprite_map[i].offset = (Vector2){0};
-        player_sprite_map[i].src_anchor = spr->frame_size;
-        player_sprite_map[i].src_anchor.x /= 2.0f;
+        player_sprite_map[i].src_anchor = get_anchor_offset(spr->frame_size, AP_BOT_CENTER, false);
         player_sprite_map[i].dest_anchor = AP_BOT_CENTER;
         i++;
     }

@@ -575,15 +575,8 @@ void draw_sprite_pro(Sprite_t* spr, int frame_num, Vector2 pos, float rotation, 
     );
 }
 
-Vector2 shift_bbox(Vector2 bbox, Vector2 new_bbox, AnchorPoint_t anchor)
-{
-    Vector2 p1 = get_anchor_offset(bbox, anchor);
-    Vector2 p2 = get_anchor_offset(new_bbox, anchor);
 
-    return Vector2Subtract(p1, p2);
-}
-
-Vector2 get_anchor_offset(Vector2 bbox, AnchorPoint_t anchor)
+static Vector2 internal_get_anchor_offset(Vector2 bbox, AnchorPoint_t anchor)
 {
     Vector2 offset = {0};
     switch (anchor)
@@ -624,4 +617,30 @@ Vector2 get_anchor_offset(Vector2 bbox, AnchorPoint_t anchor)
     return offset;
 }
 
+Vector2 shift_bbox(Vector2 bbox, Vector2 new_bbox, AnchorPoint_t anchor)
+{
+    Vector2 p1 = internal_get_anchor_offset(bbox, anchor);
+    Vector2 p2 = internal_get_anchor_offset(new_bbox, anchor);
 
+    return Vector2Subtract(p1, p2);
+}
+
+Vector2 get_anchor_offset(Vector2 bbox, AnchorPoint_t anchor, bool flip_x)
+{
+    if (flip_x)
+    {
+        switch(anchor)
+        {
+            case AP_TOP_LEFT: anchor = AP_TOP_RIGHT; break;
+            case AP_TOP_RIGHT: anchor = AP_TOP_LEFT; break;
+            case AP_MID_LEFT: anchor = AP_MID_RIGHT; break;
+            case AP_MID_RIGHT: anchor = AP_MID_LEFT; break;
+            case AP_BOT_LEFT: anchor = AP_BOT_RIGHT; break;
+            case AP_BOT_RIGHT: anchor = AP_BOT_LEFT; break;
+            default:
+            break;
+        }
+    }
+
+    return internal_get_anchor_offset(bbox, anchor);
+}

@@ -438,12 +438,15 @@ static void render_editor_game_scene(Scene_t* scene)
                     {
                         pos = Vector2Add(
                             pos,
-                            get_anchor_offset(p_bbox->size, spr.dest_anchor)
+                            get_anchor_offset(p_bbox->size, spr.dest_anchor, p_cspr->flip_x)
                         );
                         pos = Vector2Subtract(pos, spr.src_anchor);
                     }
 
-                    pos = Vector2Add(pos, spr.offset);
+                    Vector2 offset = spr.offset;
+                    if (p_cspr->flip_x) offset.x *= -1;
+
+                    pos = Vector2Add(pos, offset);
                     draw_sprite(spr.sprite, p_cspr->current_frame, pos, 0.0f, p_cspr->flip_x);
                 }
             }

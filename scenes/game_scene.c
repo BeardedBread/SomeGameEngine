@@ -214,7 +214,23 @@ static void render_regular_game_scene(Scene_t* scene)
                 const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
                 if (spr.sprite != NULL)
                 {
-                    Vector2 pos = Vector2Add(p_ent->position, spr.offset);
+                    Vector2 pos = p_ent->position;
+                    if (p_bbox != NULL)
+                    {
+                        pos = Vector2Add(
+                            pos,
+                            get_anchor_offset(p_bbox->size, spr.dest_anchor, p_cspr->flip_x)
+                        );
+                        pos = Vector2Subtract(
+                            pos,
+                            get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->flip_x)
+                        );
+                    }
+
+                    Vector2 offset = spr.offset;
+                    if (p_cspr->flip_x) offset.x *= -1;
+
+                    pos = Vector2Add(pos, offset);
                     draw_sprite(spr.sprite, p_cspr->current_frame, pos, 0.0f, p_cspr->flip_x);
                 }
                 continue;

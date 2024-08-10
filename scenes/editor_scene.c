@@ -160,10 +160,12 @@ static void level_scene_render_func(Scene_t* scene)
 #endif
             CAirTimer_t* p_air = get_component(p_ent, CAIRTIMER_T);
 
-            Vector2 air_pos = {game_rec.x + game_rec.width - 16, game_rec.y + game_rec.height - 16};
+            Sprite_t* spr = get_sprite(&scene->engine->assets, "p_bigbubble");
+            Vector2 air_pos = {game_rec.x + game_rec.width - 32, game_rec.y + game_rec.height - 32};
             for (uint8_t i = 0; i < p_air->curr_count; i++)
             {
-                DrawCircleV(air_pos, 16, BLUE);
+                draw_sprite(spr, 0, air_pos, 0, false);
+                //DrawCircleV(air_pos, 16, BLUE);
                 air_pos.x -= 32;
             }
         }
@@ -208,9 +210,190 @@ static void render_editor_game_scene(Scene_t* scene)
     max.x = (int)fmin(tilemap.width, max.x + 1);
     max.y = (int)fmin(tilemap.height, max.y + 1);
 
+    Texture2D* bg = get_texture(&scene->engine->assets, "bg_tex");
     BeginTextureMode(scene->layers.render_layers[GAME_LAYER].layer_tex);
         ClearBackground(WHITE);
         BeginMode2D(data->camera.cam);
+        float rect_x = data->camera.target_pos.x;
+        DrawTexturePro(*bg,
+            //(Rectangle){0,0,64,64},
+            (Rectangle){0,0,(tilemap.width+1)*tilemap.tile_size*2, (tilemap.height+1)*tilemap.tile_size*2},
+            (Rectangle){-rect_x / 4,0,(tilemap.width+1)*tilemap.tile_size*2, (tilemap.height+1)*tilemap.tile_size*2},
+            //(Rectangle){0,0,game_rec.width, game_rec.height},
+            (Vector2){0,0}, 0.0f, WHITE
+        );
+        
+
+        char buffer[64] = {0};
+        sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
+        {
+            CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+
+            // Draw the spawn point
+            if (p_ent->m_tag == PLAYER_ENT_TAG)
+            {
+                DrawCircleV(p_ent->spawn_pos, 6, PURPLE);
+            }
+            
+            // Entity culling
+            Vector2 box_size = {0};
+            if (p_bbox != NULL) box_size = p_bbox->size;
+            if (
+                p_ent->position.x + box_size.x < min.x * tilemap.tile_size
+                || p_ent->position.x > max.x * tilemap.tile_size
+                || p_ent->position.y + box_size.y < min.y * tilemap.tile_size
+                || p_ent->position.y > max.y * tilemap.tile_size
+            ) continue;
+
+            if (data->show_grid)
+            {
+                Color colour;
+                switch(p_ent->m_tag)
+                {
+                    case PLAYER_ENT_TAG:
+                        colour = RED;
+                    break;
+                    case CRATES_ENT_TAG:
+                    {
+                        CContainer_t* p_container = get_component(p_ent, CCONTAINER_T);
+                        colour = p_container->material == WOODEN_CONTAINER ? BROWN : GRAY;
+                    }
+                    break;
+                    case BOULDER_ENT_TAG:
+                        colour = GRAY;
+                    break;
+                    case CHEST_ENT_TAG:
+                        colour = YELLOW;
+                    break;
+                    default:
+                        colour = BLACK;
+                    break;
+                }
+
+                if (p_bbox != NULL)
+                {
+                    if (p_ent->m_tag == BOULDER_ENT_TAG)
+                    {
+                        DrawCircleV(Vector2Add(p_ent->position, p_bbox->half_size), p_bbox->half_size.x, colour);
+                    }
+                    else
+                    {
+                        DrawRectangle(p_ent->position.x, p_ent->position.y, p_bbox->size.x, p_bbox->size.y, colour);
+                    }
+
+                    if (p_ent->m_tag == CRATES_ENT_TAG)
+                    {
+                        CContainer_t* p_container = get_component(p_ent, CCONTAINER_T);
+                        if (p_container != NULL)
+                        {
+                            switch (p_container->item)
+                            {
+                                case CONTAINER_LEFT_ARROW:
+                                    DrawLine(
+                                        p_ent->position.x,
+                                        p_ent->position.y + p_bbox->half_size.y,
+                                        p_ent->position.x + p_bbox->half_size.x,
+                                        p_ent->position.y + p_bbox->half_size.y,
+                                        BLACK
+                                    );
+                                break;
+                                case CONTAINER_RIGHT_ARROW:
+                                    DrawLine(
+                                        p_ent->position.x + p_bbox->half_size.x,
+                                        p_ent->position.y + p_bbox->half_size.y,
+                                        p_ent->position.x + p_bbox->size.x,
+                                        p_ent->position.y + p_bbox->half_size.y,
+                                        BLACK
+                                    );
+                                break;
+                                case CONTAINER_UP_ARROW:
+                                    DrawLine(
+                                        p_ent->position.x + p_bbox->half_size.x,
+                                        p_ent->position.y,
+                                        p_ent->position.x + p_bbox->half_size.x,
+                                        p_ent->position.y + p_bbox->half_size.y,
+                                        BLACK
+                                    );
+                                break;
+                                case CONTAINER_DOWN_ARROW:
+                                    DrawLine(
+                                        p_ent->position.x + p_bbox->half_size.x,
+                                        p_ent->position.y + p_bbox->half_size.y,
+                                        p_ent->position.x + p_bbox->half_size.x,
+                                        p_ent->position.y + p_bbox->size.y,
+                                        BLACK
+                                    );
+                                break;
+                                case CONTAINER_BOMB:
+                                    DrawCircleV(Vector2Add(p_ent->position, p_bbox->half_size), p_bbox->half_size.x, BLACK);
+                                break;
+                                default:
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                CHurtbox_t* p_hurtbox = get_component(p_ent, CHURTBOX_T);
+                CHitBoxes_t* p_hitbox = get_component(p_ent, CHITBOXES_T);
+                if (p_hitbox != NULL)
+                {
+                    for (uint8_t i = 0;i < p_hitbox->n_boxes; ++i)
+                    {
+                        Rectangle rec = {
+                            .x = p_ent->position.x + p_hitbox->boxes[i].x,
+                            .y = p_ent->position.y + p_hitbox->boxes[i].y,
+                            .width = p_hitbox->boxes[i].width,
+                            .height = p_hitbox->boxes[i].height,
+                        };
+                        DrawRectangleLinesEx(rec, 1.5, ORANGE);
+                    }
+                }
+                if (p_hurtbox != NULL)
+                {
+                    Rectangle rec = {
+                        .x = p_ent->position.x + p_hurtbox->offset.x,
+                        .y = p_ent->position.y + p_hurtbox->offset.y,
+                        .width = p_hurtbox->size.x,
+                        .height = p_hurtbox->size.y,
+                    };
+                    DrawRectangleLinesEx(rec, 1.5, PURPLE);
+                }
+            }
+
+            CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
+            if (p_cspr != NULL)
+            {
+                const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
+                if (spr.sprite != NULL)
+                {
+                    Vector2 pos = p_ent->position;
+                    if (p_bbox != NULL)
+                    {
+                        pos = Vector2Add(
+                            pos,
+                            get_anchor_offset(p_bbox->size, spr.dest_anchor, p_cspr->flip_x)
+                        );
+                        pos = Vector2Subtract(
+                            pos,
+                            get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->flip_x)
+                        );
+                    }
+
+                    Vector2 offset = spr.offset;
+                    if (p_cspr->flip_x) offset.x *= -1;
+
+                    pos = Vector2Add(pos, offset);
+                    draw_sprite(spr.sprite, p_cspr->current_frame, pos, 0.0f, p_cspr->flip_x);
+                }
+            }
+        }
+
+        sc_map_foreach_value(&scene->ent_manager.entities_map[LEVEL_END_TAG], p_ent)
+        {
+            DrawCircleV(p_ent->position, tilemap.tile_size >> 1, (data->coins.current < data->coins.total)? RED : GREEN);
+        }
+
         for (int tile_y = min.y; tile_y < max.y; tile_y++)
         {
             for (int tile_x = min.x; tile_x < max.x; tile_x++)
@@ -294,172 +477,6 @@ static void render_editor_game_scene(Scene_t* scene)
             }
         }
 
-        char buffer[64] = {0};
-        sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
-        {
-            CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
-
-            // Draw the spawn point
-            if (p_ent->m_tag == PLAYER_ENT_TAG)
-            {
-                DrawCircleV(p_ent->spawn_pos, 6, PURPLE);
-            }
-            
-            // Entity culling
-            Vector2 box_size = {0};
-            if (p_bbox != NULL) box_size = p_bbox->size;
-            if (
-                p_ent->position.x + box_size.x < min.x * tilemap.tile_size
-                || p_ent->position.x > max.x * tilemap.tile_size
-                || p_ent->position.y + box_size.y < min.y * tilemap.tile_size
-                || p_ent->position.y > max.y * tilemap.tile_size
-            ) continue;
-
-            Color colour;
-            switch(p_ent->m_tag)
-            {
-                case PLAYER_ENT_TAG:
-                    colour = RED;
-                break;
-                case CRATES_ENT_TAG:
-                {
-                    CContainer_t* p_container = get_component(p_ent, CCONTAINER_T);
-                    colour = p_container->material == WOODEN_CONTAINER ? BROWN : GRAY;
-                }
-                break;
-                case BOULDER_ENT_TAG:
-                    colour = GRAY;
-                break;
-                case CHEST_ENT_TAG:
-                    colour = YELLOW;
-                break;
-                default:
-                    colour = BLACK;
-                break;
-            }
-
-            if (p_bbox != NULL)
-            {
-                if (p_ent->m_tag == BOULDER_ENT_TAG)
-                {
-                    DrawCircleV(Vector2Add(p_ent->position, p_bbox->half_size), p_bbox->half_size.x, colour);
-                }
-                else
-                {
-                    DrawRectangle(p_ent->position.x, p_ent->position.y, p_bbox->size.x, p_bbox->size.y, colour);
-                }
-
-                if (p_ent->m_tag == CRATES_ENT_TAG)
-                {
-                    CContainer_t* p_container = get_component(p_ent, CCONTAINER_T);
-                    if (p_container != NULL)
-                    {
-                        switch (p_container->item)
-                        {
-                            case CONTAINER_LEFT_ARROW:
-                                DrawLine(
-                                    p_ent->position.x,
-                                    p_ent->position.y + p_bbox->half_size.y,
-                                    p_ent->position.x + p_bbox->half_size.x,
-                                    p_ent->position.y + p_bbox->half_size.y,
-                                    BLACK
-                                );
-                            break;
-                            case CONTAINER_RIGHT_ARROW:
-                                DrawLine(
-                                    p_ent->position.x + p_bbox->half_size.x,
-                                    p_ent->position.y + p_bbox->half_size.y,
-                                    p_ent->position.x + p_bbox->size.x,
-                                    p_ent->position.y + p_bbox->half_size.y,
-                                    BLACK
-                                );
-                            break;
-                            case CONTAINER_UP_ARROW:
-                                DrawLine(
-                                    p_ent->position.x + p_bbox->half_size.x,
-                                    p_ent->position.y,
-                                    p_ent->position.x + p_bbox->half_size.x,
-                                    p_ent->position.y + p_bbox->half_size.y,
-                                    BLACK
-                                );
-                            break;
-                            case CONTAINER_DOWN_ARROW:
-                                DrawLine(
-                                    p_ent->position.x + p_bbox->half_size.x,
-                                    p_ent->position.y + p_bbox->half_size.y,
-                                    p_ent->position.x + p_bbox->half_size.x,
-                                    p_ent->position.y + p_bbox->size.y,
-                                    BLACK
-                                );
-                            break;
-                            case CONTAINER_BOMB:
-                                DrawCircleV(Vector2Add(p_ent->position, p_bbox->half_size), p_bbox->half_size.x, BLACK);
-                            break;
-                            default:
-                            break;
-                        }
-                    }
-                }
-            }
-
-            CHurtbox_t* p_hurtbox = get_component(p_ent, CHURTBOX_T);
-            CHitBoxes_t* p_hitbox = get_component(p_ent, CHITBOXES_T);
-            if (p_hitbox != NULL)
-            {
-                for (uint8_t i = 0;i < p_hitbox->n_boxes; ++i)
-                {
-                    Rectangle rec = {
-                        .x = p_ent->position.x + p_hitbox->boxes[i].x,
-                        .y = p_ent->position.y + p_hitbox->boxes[i].y,
-                        .width = p_hitbox->boxes[i].width,
-                        .height = p_hitbox->boxes[i].height,
-                    };
-                    DrawRectangleLinesEx(rec, 1.5, ORANGE);
-                }
-            }
-            if (p_hurtbox != NULL)
-            {
-                Rectangle rec = {
-                    .x = p_ent->position.x + p_hurtbox->offset.x,
-                    .y = p_ent->position.y + p_hurtbox->offset.y,
-                    .width = p_hurtbox->size.x,
-                    .height = p_hurtbox->size.y,
-                };
-                DrawRectangleLinesEx(rec, 1.5, PURPLE);
-            }
-            CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
-            if (p_cspr != NULL)
-            {
-                const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
-                if (spr.sprite != NULL)
-                {
-                    Vector2 pos = p_ent->position;
-                    if (p_bbox != NULL)
-                    {
-                        pos = Vector2Add(
-                            pos,
-                            get_anchor_offset(p_bbox->size, spr.dest_anchor, p_cspr->flip_x)
-                        );
-                        pos = Vector2Subtract(
-                            pos,
-                            get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->flip_x)
-                        );
-                    }
-
-                    Vector2 offset = spr.offset;
-                    if (p_cspr->flip_x) offset.x *= -1;
-
-                    pos = Vector2Add(pos, offset);
-                    draw_sprite(spr.sprite, p_cspr->current_frame, pos, 0.0f, p_cspr->flip_x);
-                }
-            }
-        }
-
-        sc_map_foreach_value(&scene->ent_manager.entities_map[LEVEL_END_TAG], p_ent)
-        {
-            DrawCircleV(p_ent->position, tilemap.tile_size >> 1, (data->coins.current < data->coins.total)? RED : GREEN);
-        }
-
         draw_particle_system(&scene->part_sys);
 
         // Draw water tile
@@ -505,15 +522,15 @@ static void render_editor_game_scene(Scene_t* scene)
 
                     sprintf(buffer, "%u", sc_map_size_64v(&tilemap.tiles[i].entities_set));
 
-                    if (tilemap.tiles[i].solid > 0)
+                    //if (tilemap.tiles[i].solid > 0)
                     {
                         DrawText(buffer, x, y, 10, WHITE);
                     }
-                    else
-                    {
-                        // Draw water tile
-                        DrawText(buffer, x, y, 10, BLACK);
-                    }
+                    //else
+                    //{
+                    //    // Draw water tile
+                    //    DrawText(buffer, x, y, 10, BLACK);
+                    //}
                 }
             }
 
@@ -521,12 +538,12 @@ static void render_editor_game_scene(Scene_t* scene)
             for (size_t i = min.x; i < max.x; ++i)
             {
                 int x = (i+1)*TILE_SIZE;
-                DrawLine(x, 0, x, tilemap.height * TILE_SIZE, BLACK);
+                DrawLine(x, 0, x, tilemap.height * TILE_SIZE, WHITE);
             }
             for (size_t i = min.y; i < max.y;++i)
             {
                 int y = (i+1)*TILE_SIZE;
-                DrawLine(0, y, tilemap.width * TILE_SIZE, y, BLACK);
+                DrawLine(0, y, tilemap.width * TILE_SIZE, y, WHITE);
             }
         }
         EndMode2D();
@@ -1043,6 +1060,8 @@ void init_sandbox_scene(LevelScene_t* scene)
     scene->data.tile_sprites[SPIKES + TILE_180ROT] = get_sprite(&scene->scene.engine->assets, "u_spikes");
     scene->data.selected_solid_tilemap = 0;
     scene->data.solid_tile_sprites = get_sprite(&scene->scene.engine->assets, SOLID_TILE_SELECTIONS[0]);
+    Texture2D* tex = get_texture(&scene->scene.engine->assets, "bg_tex");
+    SetTextureWrap(*tex, TEXTURE_WRAP_REPEAT);
 
     for (size_t i = 0; i < scene->data.tilemap.width; ++i)
     {

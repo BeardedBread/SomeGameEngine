@@ -213,16 +213,15 @@ static void render_editor_game_scene(Scene_t* scene)
     Texture2D* bg = get_texture(&scene->engine->assets, "bg_tex");
     BeginTextureMode(scene->layers.render_layers[GAME_LAYER].layer_tex);
         ClearBackground(WHITE);
-        BeginMode2D(data->camera.cam);
-        float rect_x = data->camera.target_pos.x;
         DrawTexturePro(*bg,
             //(Rectangle){0,0,64,64},
+            (Rectangle){min.x,0,(tilemap.width+1)*tilemap.tile_size*2, (tilemap.height+1)*tilemap.tile_size*2},
             (Rectangle){0,0,(tilemap.width+1)*tilemap.tile_size*2, (tilemap.height+1)*tilemap.tile_size*2},
-            (Rectangle){-rect_x / 4,0,(tilemap.width+1)*tilemap.tile_size*2, (tilemap.height+1)*tilemap.tile_size*2},
             //(Rectangle){0,0,game_rec.width, game_rec.height},
             (Vector2){0,0}, 0.0f, WHITE
         );
         
+        BeginMode2D(data->camera.cam);
 
         char buffer[64] = {0};
         sc_map_foreach_value(&scene->ent_manager.entities, p_ent)

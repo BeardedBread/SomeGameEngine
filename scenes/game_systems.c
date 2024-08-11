@@ -1847,6 +1847,14 @@ void airtimer_update_system(Scene_t* scene)
         {
             p_air->curr_count = p_air->max_count;
             p_air->curr_ftimer = p_air->max_ftimer * 2; // Lengthen the first
+            CEmitter_t* p_emitter = get_component(p_ent, CEMITTER_T);
+            if (p_emitter != NULL)
+            {
+                if (is_emitter_handle_alive(&scene->part_sys, p_emitter->handle))
+                {
+                    unload_emitter_handle(&scene->part_sys, p_emitter->handle);
+                }
+            }
         }
         else
         {

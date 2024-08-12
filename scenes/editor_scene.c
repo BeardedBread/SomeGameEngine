@@ -1048,7 +1048,7 @@ void init_sandbox_scene(LevelScene_t* scene)
     scene->data.tilemap.tiles = all_tiles;
     init_level_scene_data(
         &scene->data, MAX_N_TILES, all_tiles,
-        (Rectangle){25, 25, VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE}
+        (Rectangle){25, 25, VIEWABLE_EDITOR_MAP_WIDTH*TILE_SIZE, VIEWABLE_EDITOR_MAP_HEIGHT*TILE_SIZE}
     );
     scene->data.show_grid = true;
     scene->data.tile_sprites[ONEWAY_TILE] = get_sprite(&scene->scene.engine->assets, "tl_owp");

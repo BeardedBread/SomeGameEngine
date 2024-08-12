@@ -9,6 +9,12 @@
 #include <stdio.h>
 
 static Tile_t all_tiles[MAX_N_TILES] = {0};
+static const uint8_t CONNECTIVITY_TILE_MAPPING[16] = {
+    0,3,15,14,
+    1,2,12,13,
+    7,6,11,10,
+    4,5,8 ,9 ,
+};
 
 #define GAME_LAYER 0
 #define CONTROL_LAYER 1
@@ -24,10 +30,13 @@ static void level_scene_render_func(Scene_t* scene)
         sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
         {
             CAirTimer_t* p_air = get_component(p_ent, CAIRTIMER_T);
-            Vector2 air_pos = {data->game_rec.x + data->game_rec.width - 16, data->game_rec.y + data->game_rec.height - 16};
+
+            Sprite_t* spr = get_sprite(&scene->engine->assets, "p_bigbubble");
+            Vector2 air_pos = {data->game_rec.x + data->game_rec.width - 32, data->game_rec.y + data->game_rec.height - 32};
             for (uint8_t i = 0; i < p_air->curr_count; i++)
             {
-                DrawCircleV(air_pos, 16, BLUE);
+                draw_sprite(spr, 0, air_pos, 0, false);
+                //DrawCircleV(air_pos, 16, BLUE);
                 air_pos.x -= 32;
             }
         }
@@ -106,11 +115,11 @@ static void render_regular_game_scene(Scene_t* scene)
     TileGrid_t tilemap = data->tilemap;
 
     Entity_t* p_ent;
-    Vector2 min = GetScreenToWorld2D((Vector2){data->game_rec.x, data->game_rec.y}, data->camera.cam);
+    Vector2 min = GetScreenToWorld2D((Vector2){0, 0}, data->camera.cam);
     Vector2 max = GetScreenToWorld2D(
         (Vector2){
-            data->game_rec.x + data->game_rec.width,
-            data->game_rec.y + data->game_rec.height
+            data->game_rec.width,
+            data->game_rec.height
         },
         data->camera.cam
     );
@@ -121,8 +130,17 @@ static void render_regular_game_scene(Scene_t* scene)
     max.x = (int)fmin(tilemap.width, max.x + 1);
     max.y = (int)fmin(tilemap.height, max.y + 1);
 
+    Texture2D* bg = get_texture(&scene->engine->assets, "bg_tex");
     BeginTextureMode(scene->layers.render_layers[GAME_LAYER].layer_tex);
         ClearBackground(WHITE);
+        DrawTexturePro(*bg,
+            //(Rectangle){0,0,64,64},
+            (Rectangle){min.x,0, data->game_rec.width, data->game_rec.height},
+            (Rectangle){0,0, data->game_rec.width, data->game_rec.height},
+            //(Rectangle){0,0,game_rec.width, game_rec.height},
+            (Vector2){0,0}, 0.0f, WHITE
+        );
+
         BeginMode2D(data->camera.cam);
 
         for (int tile_y = min.y; tile_y < max.y; tile_y++)
@@ -133,61 +151,15 @@ static void render_regular_game_scene(Scene_t* scene)
                 int x = tile_x * TILE_SIZE;
                 int y = tile_y * TILE_SIZE;
 
-                if (data->tile_sprites[tilemap.tiles[i].tile_type] != NULL)
+                if (tilemap.tiles[i].tile_type == LADDER)
                 {
-                    draw_sprite(data->tile_sprites[tilemap.tiles[i].tile_type], 0, (Vector2){x,y}, 0.0f, false);
-                }
-                else if (tilemap.tiles[i].tile_type == SOLID_TILE)
-                {
-                    DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
-                }
-                else if (tilemap.tiles[i].tile_type == ONEWAY_TILE)
-                {
-                    DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, MAROON);
-                }
-                else if (tilemap.tiles[i].tile_type == LADDER)
-                {
-                    DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, ORANGE);
-                }
-                else if (tilemap.tiles[i].tile_type == SPIKES)
-                {
-                    DrawRectangle(
-                        x + tilemap.tiles[i].offset.x, y + tilemap.tiles[i].offset.y,
-                        tilemap.tiles[i].size.x, tilemap.tiles[i].size.y, RED
-                    );
-                }
-                if (tilemap.tiles[i].wet)
-                {
-#define SURFACE_THICKNESS 4
-                    int up = i - tilemap.width;
-                    unsigned int bot = i + tilemap.width;
-                    int right = i + 1;
-                    int left = i - 1;
-                    int bot_line = y + TILE_SIZE - tilemap.tiles[i].water_level * WATER_BBOX_STEP - SURFACE_THICKNESS / 2;
-                    if (up >= 0 && tilemap.tiles[up].wet)
+                    if (data->tile_sprites[tilemap.tiles[i].tile_type] != NULL)
                     {
-                        DrawLineEx((Vector2){x + TILE_SIZE / 2, y}, (Vector2){x + TILE_SIZE / 2, y + TILE_SIZE - tilemap.tiles[i].water_level * WATER_BBOX_STEP}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
+                        draw_sprite(data->tile_sprites[tilemap.tiles[i].tile_type], 0, (Vector2){x,y}, 0.0f, false);
                     }
-
-
-                    if (
-                        bot <= tilemap.n_tiles
-                        && tilemap.tiles[i].water_level == 0
-                        )
+                    else
                     {
-                        if (i % tilemap.width != 0 && tilemap.tiles[left].wet && (tilemap.tiles[bot].solid == SOLID || tilemap.tiles[bot-1].solid == SOLID))
-                        {
-                            DrawLineEx((Vector2){x, bot_line}, (Vector2){x + TILE_SIZE / 2, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
-                        }
-                        if (right % tilemap.width != 0 && tilemap.tiles[right].wet && (tilemap.tiles[bot].solid == SOLID || tilemap.tiles[bot+1].solid == SOLID))
-                        {
-                            DrawLineEx((Vector2){x + TILE_SIZE / 2, bot_line}, (Vector2){x + TILE_SIZE, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
-                        }
-                    }
-
-                    if (tilemap.tiles[i].max_water_level < MAX_WATER_LEVEL)
-                    {
-                        DrawRectangleLinesEx((Rectangle){x, y, TILE_SIZE, TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
+                        DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, ORANGE);
                     }
                 }
             }
@@ -319,6 +291,78 @@ static void render_regular_game_scene(Scene_t* scene)
             }
         }
 
+        for (int tile_y = min.y; tile_y < max.y; tile_y++)
+        {
+            for (int tile_x = min.x; tile_x < max.x; tile_x++)
+            {
+                int i = tile_x + tile_y * tilemap.width;
+                int x = tile_x * TILE_SIZE;
+                int y = tile_y * TILE_SIZE;
+
+                if (tilemap.tiles[i].tile_type != LADDER)
+                {
+                    if (data->tile_sprites[tilemap.tiles[i].tile_type] != NULL)
+                    {
+                        draw_sprite(data->tile_sprites[tilemap.tiles[i].tile_type], 0, (Vector2){x,y}, 0.0f, false);
+                    }
+                    else if (tilemap.tiles[i].tile_type == SOLID_TILE)
+                    {
+                        DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
+                        draw_sprite(
+                            data->solid_tile_sprites,
+                            CONNECTIVITY_TILE_MAPPING[tilemap.tiles[i].connectivity],
+                            (Vector2){x,y}, 0.0f, false
+                        );
+                    }
+                    else if (tilemap.tiles[i].tile_type == ONEWAY_TILE)
+                    {
+                        DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, MAROON);
+                    }
+                    else if (tilemap.tiles[i].tile_type == SPIKES)
+                    {
+                        DrawRectangle(
+                            x + tilemap.tiles[i].offset.x, y + tilemap.tiles[i].offset.y,
+                            tilemap.tiles[i].size.x, tilemap.tiles[i].size.y, RED
+                        );
+                    }
+                }
+                if (tilemap.tiles[i].wet)
+                {
+#define SURFACE_THICKNESS 4
+                    int up = i - tilemap.width;
+                    unsigned int bot = i + tilemap.width;
+                    int right = i + 1;
+                    int left = i - 1;
+                    int bot_line = y + TILE_SIZE - tilemap.tiles[i].water_level * WATER_BBOX_STEP - SURFACE_THICKNESS / 2;
+                    if (up >= 0 && tilemap.tiles[up].wet)
+                    {
+                        DrawLineEx((Vector2){x + TILE_SIZE / 2, y}, (Vector2){x + TILE_SIZE / 2, y + TILE_SIZE - tilemap.tiles[i].water_level * WATER_BBOX_STEP}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
+                    }
+
+
+                    if (
+                        bot <= tilemap.n_tiles
+                        && tilemap.tiles[i].water_level == 0
+                        )
+                    {
+                        if (i % tilemap.width != 0 && tilemap.tiles[left].wet && (tilemap.tiles[bot].solid == SOLID || tilemap.tiles[bot-1].solid == SOLID))
+                        {
+                            DrawLineEx((Vector2){x, bot_line}, (Vector2){x + TILE_SIZE / 2, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
+                        }
+                        if (right % tilemap.width != 0 && tilemap.tiles[right].wet && (tilemap.tiles[bot].solid == SOLID || tilemap.tiles[bot+1].solid == SOLID))
+                        {
+                            DrawLineEx((Vector2){x + TILE_SIZE / 2, bot_line}, (Vector2){x + TILE_SIZE, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
+                        }
+                    }
+
+                    if (tilemap.tiles[i].max_water_level < MAX_WATER_LEVEL)
+                    {
+                        DrawRectangleLinesEx((Rectangle){x, y, TILE_SIZE, TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
+                    }
+                }
+            }
+        }
+
 
         sc_map_foreach_value(&scene->ent_manager.entities_map[DYNMEM_ENT_TAG], p_ent)
         {
@@ -351,13 +395,13 @@ static void render_regular_game_scene(Scene_t* scene)
             }
         }
 
-        // Draw Border
-        DrawLine(0, 0, 0, tilemap.height * tilemap.tile_size, BLACK);
-        DrawLine(0, 0, tilemap.width * TILE_SIZE, 0, BLACK);
-        int val = (tilemap.width) * tilemap.tile_size;
-        DrawLine(val, 0, val, tilemap.height * tilemap.tile_size, BLACK);
-        val = (tilemap.height) * tilemap.tile_size;
-        DrawLine(0, val, tilemap.width * TILE_SIZE, val, BLACK);
+        //// Draw Border (remove later)
+        //DrawLine(0, 0, 0, tilemap.height * tilemap.tile_size, BLACK);
+        //DrawLine(0, 0, tilemap.width * TILE_SIZE, 0, BLACK);
+        //int val = (tilemap.width) * tilemap.tile_size;
+        //DrawLine(val, 0, val, tilemap.height * tilemap.tile_size, BLACK);
+        //val = (tilemap.height) * tilemap.tile_size;
+        //DrawLine(0, val, tilemap.width * TILE_SIZE, val, BLACK);
         EndMode2D();
     EndTextureMode();
 }
@@ -373,7 +417,11 @@ void init_game_scene(LevelScene_t* scene)
     scene->data.tilemap.tiles = all_tiles;
     init_level_scene_data(
         &scene->data, MAX_N_TILES, all_tiles,
-        (Rectangle){25, 25, 32*TILE_SIZE, 18*TILE_SIZE}
+        (Rectangle){
+            (scene->scene.engine->intended_window_size.x- VIEWABLE_MAP_WIDTH*TILE_SIZE) / 2.0f,
+            (scene->scene.engine->intended_window_size.y- VIEWABLE_MAP_HEIGHT*TILE_SIZE) / 2.0f,
+            VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE
+        }
     );
 
     scene->scene.bg_colour = LIGHTGRAY;
@@ -393,6 +441,11 @@ void init_game_scene(LevelScene_t* scene)
 
     create_player(&scene->scene.ent_manager);
     update_entity_manager(&scene->scene.ent_manager);
+
+    // Set up textures
+    Texture2D* tex = get_texture(&scene->scene.engine->assets, "bg_tex");
+    SetTextureWrap(*tex, TEXTURE_WRAP_REPEAT);
+    scene->data.solid_tile_sprites = get_sprite(&scene->scene.engine->assets, "stile0");
 
     sc_array_add(&scene->scene.systems, &update_tilemap_system);
     sc_array_add(&scene->scene.systems, &player_movement_input_system);

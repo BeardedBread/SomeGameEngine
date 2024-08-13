@@ -301,9 +301,10 @@ static void render_regular_game_scene(Scene_t* scene)
 
                 if (tilemap.tiles[i].tile_type != LADDER)
                 {
-                    if (data->tile_sprites[tilemap.tiles[i].tile_type] != NULL)
+                    uint8_t tile_sprite_idx = tilemap.tiles[i].tile_type + tilemap.tiles[i].rotation;
+                    if (data->tile_sprites[tile_sprite_idx] != NULL)
                     {
-                        draw_sprite(data->tile_sprites[tilemap.tiles[i].tile_type], 0, (Vector2){x,y}, 0.0f, false);
+                        draw_sprite(data->tile_sprites[tile_sprite_idx], 0, (Vector2){x,y}, 0.0f, false);
                     }
                     else if (tilemap.tiles[i].tile_type == SOLID_TILE)
                     {
@@ -443,8 +444,6 @@ void init_game_scene(LevelScene_t* scene)
     update_entity_manager(&scene->scene.ent_manager);
 
     // Set up textures
-    Texture2D* tex = get_texture(&scene->scene.engine->assets, "bg_tex");
-    SetTextureWrap(*tex, TEXTURE_WRAP_REPEAT);
     scene->data.solid_tile_sprites = get_sprite(&scene->scene.engine->assets, "stile0");
 
     sc_array_add(&scene->scene.systems, &update_tilemap_system);

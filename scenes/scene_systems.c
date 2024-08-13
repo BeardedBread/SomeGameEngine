@@ -75,10 +75,10 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
         
         if (lvl_map.tiles[i].tile_type == 1)
         {
-                change_a_tile(&scene->data.tilemap, i, SOLID_TILE);
+            change_a_tile(&scene->data.tilemap, i, SOLID_TILE);
         }
 
-                scene->data.tilemap.tiles[i].water_level = lvl_map.tiles[i].water;
+        scene->data.tilemap.tiles[i].water_level = lvl_map.tiles[i].water;
     }
     // Two pass
     for (size_t i = 0; i < scene->data.tilemap.n_tiles;i++)
@@ -137,6 +137,15 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
                     ent->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
                     ent->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
                     ent->spawn_pos = ent->position;
+                }
+                break;
+                case 23:
+                {
+                    Entity_t* ent = create_chest(&scene->scene.ent_manager);
+                    ent->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+                    ent->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+                    CTransform_t* p_ctransform = get_component(ent, CTRANSFORM_COMP_T);
+                    p_ctransform->active = true;
                 }
                 break;
                 default:

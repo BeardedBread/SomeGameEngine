@@ -63,7 +63,10 @@ int main(void)
     level_scene.data.tile_sprites[SPIKES + TILE_90CWROT] = get_sprite(&engine.assets, "l_spikes");
     level_scene.data.tile_sprites[SPIKES + TILE_90CCWROT] = get_sprite(&engine.assets, "r_spikes");
     level_scene.data.tile_sprites[SPIKES + TILE_180ROT] = get_sprite(&engine.assets, "u_spikes");
-    LevelPack_t* pack = get_level_pack(&engine.assets, "TestLevels");
+    Texture2D* tex = get_texture(&engine.assets, "bg_tex");
+    SetTextureWrap(*tex, TEXTURE_WRAP_REPEAT);
+
+    LevelPack_t* pack = get_level_pack(&engine.assets, "DefLevels");
     if (pack != NULL)
     {
         level_scene.data.level_pack = pack;

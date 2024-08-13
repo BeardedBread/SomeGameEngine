@@ -3,17 +3,26 @@
 #include "raymath.h"
 #include <stdio.h>
 
+#define START_X 300
 
 static void menu_scene_render_func(Scene_t* scene)
 {
     MenuSceneData_t* data = &(CONTAINER_OF(scene, MenuScene_t, scene)->data);
+
+    Texture2D* bg = get_texture(&scene->engine->assets, "title_tex");
     BeginTextureMode(scene->layers.render_layers[0].layer_tex);
         ClearBackground(RAYWHITE);
-        DrawText("This is a game", 25, 220, 12, BLACK);
+        DrawText("Bunny's Spelunking Adventure", START_X, 100, 32, BLACK);
         UI_button(data->buttons, "Start");
         UI_button(data->buttons + 1, "Sandbox");
         UI_button(data->buttons + 2, "Continue");
         UI_button(data->buttons + 3, "Exit");
+
+        DrawTexturePro(*bg,
+            (Rectangle){0, 0, bg->width, bg->height},
+            (Rectangle){START_X + 200, 120, bg->width, bg->height},
+            (Vector2){0,0}, 0.0f, WHITE
+        );
     EndTextureMode();
 }
 
@@ -139,22 +148,22 @@ void init_menu_scene(MenuScene_t* scene)
     sc_array_add(&scene->scene.systems, &menu_scene_render_func);
     
     scene->data.buttons[0] = (UIComp_t) {
-        .bbox = {25,255,125,30},
+        .bbox = {START_X,255,125,30},
         .state = STATE_NORMAL,
         .alpha = 1.0
     };
     scene->data.buttons[1] = (UIComp_t) {
-        .bbox = {25,300,125,30},
+        .bbox = {START_X,300,125,30},
         .state = STATE_NORMAL,
         .alpha = 1.0
     };
     scene->data.buttons[2] = (UIComp_t) {
-        .bbox = {25,345,125,30},
+        .bbox = {START_X,345,125,30},
         .state = STATE_NORMAL,
         .alpha = 1.0
     };
     scene->data.buttons[3] = (UIComp_t) {
-        .bbox = {25,390,125,30},
+        .bbox = {START_X,390,125,30},
         .state = STATE_NORMAL,
         .alpha = 1.0
     };

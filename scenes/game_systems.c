@@ -11,7 +11,7 @@ void floating_particle_system_update(Particle_t* part, void* user_data, float de
 bool check_in_water(const ParticleEmitter_t* emitter, float delta_time);
 
 static const Vector2 GRAVITY = {0, GRAV_ACCEL};
-static const Vector2 UPTHRUST = {0, -GRAV_ACCEL * 1.1};
+static const Vector2 UPTHRUST = {0, -GRAV_ACCEL * 1.15};
 
 static inline unsigned int get_tile_idx(int x, int y, TileGrid_t gridmap)
 {

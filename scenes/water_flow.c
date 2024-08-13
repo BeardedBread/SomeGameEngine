@@ -293,7 +293,6 @@ void update_water_runner_system(Scene_t* scene)
                 p_crunner->fractional += scene->delta_time;
                 if (p_crunner->fractional < FILL_RATE) break;
 
-                p_crunner->fractional -= FILL_RATE;
                 // Unsigned usage here is okay
                 unsigned int start_tile =
                     (p_crunner->current_tile / p_crunner->bfs_tilemap.width) * p_crunner->bfs_tilemap.width;
@@ -308,6 +307,7 @@ void update_water_runner_system(Scene_t* scene)
                         if (curr_tile->water_level < curr_tile->max_water_level)
                         {
                             curr_tile->water_level++;
+                            p_crunner->fractional -= FILL_RATE;
                         }
                         if (curr_tile->water_level < curr_tile->max_water_level)
                         {

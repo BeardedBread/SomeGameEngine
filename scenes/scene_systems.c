@@ -79,6 +79,7 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
         }
 
         scene->data.tilemap.tiles[i].water_level = lvl_map.tiles[i].water;
+        scene->data.tilemap.tiles[i].wet =  scene->data.tilemap.tiles[i].water_level > 0;
     }
     // Two pass
     for (size_t i = 0; i < scene->data.tilemap.n_tiles;i++)

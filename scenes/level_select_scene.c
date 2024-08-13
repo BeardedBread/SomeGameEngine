@@ -90,6 +90,8 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
     }
 }
 
+#define START_X 300
+#define START_Y 100
 #define FONT_SIZE 30
 #define TEXT_PADDING 3
 #define DISPLAY_AREA_HEIGHT 400
@@ -99,7 +101,7 @@ void init_level_select_scene(LevelSelectScene_t* scene)
     init_scene(&scene->scene, &level_select_do_action);
     add_scene_layer(
         &scene->scene, 400, 800,
-        (Rectangle){0, 0, 400, 800}
+        (Rectangle){START_X, START_Y, 400, 800}
     );
     vert_scrollarea_init(&scene->data.scroll_area, (Rectangle){50, 100, 150, DISPLAY_AREA_HEIGHT - 100}, (Vector2){150, SCROLL_TOTAL_HEIGHT});
     vert_scrollarea_set_item_dims(&scene->data.scroll_area, FONT_SIZE, TEXT_PADDING);

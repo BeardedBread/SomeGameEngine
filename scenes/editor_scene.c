@@ -1296,6 +1296,7 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &camera_update_system);
     sc_array_add(&scene->scene.systems, &player_dir_reset_system);
     sc_array_add(&scene->scene.systems, &update_water_runner_system);
+    sc_array_add(&scene->scene.systems, &check_player_dead_system);
     sc_array_add(&scene->scene.systems, &player_respawn_system);
     sc_array_add(&scene->scene.systems, &level_end_detection_system);
     sc_array_add(&scene->scene.systems, &render_editor_game_scene);

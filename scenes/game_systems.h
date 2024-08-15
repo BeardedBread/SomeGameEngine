@@ -23,6 +23,7 @@ void camera_update_system(Scene_t* scene);
 void container_destroy_system(Scene_t* scene);
 void player_dir_reset_system(Scene_t* scene);
 void player_respawn_system(Scene_t* scene);
+void check_player_dead_system(Scene_t* scene);
 void lifetimer_update_system(Scene_t* scene);
 void airtimer_update_system(Scene_t* scene);
 void spike_collision_system(Scene_t* scene);

@@ -9,7 +9,7 @@ static void menu_scene_render_func(Scene_t* scene)
 {
     MenuSceneData_t* data = &(CONTAINER_OF(scene, MenuScene_t, scene)->data);
 
-    Texture2D* bg = get_texture(&scene->engine->assets, "title_tex");
+    Sprite_t* spr = get_sprite(&scene->engine->assets, "title_spr");
     BeginTextureMode(scene->layers.render_layers[0].layer_tex);
         ClearBackground(RAYWHITE);
         DrawText("Bunny's Spelunking Adventure", START_X, 100, 32, BLACK);
@@ -18,11 +18,7 @@ static void menu_scene_render_func(Scene_t* scene)
         UI_button(data->buttons + 2, "Continue");
         UI_button(data->buttons + 3, "Exit");
 
-        DrawTexturePro(*bg,
-            (Rectangle){0, 0, bg->width, bg->height},
-            (Rectangle){START_X + 200, 120, bg->width, bg->height},
-            (Vector2){0,0}, 0.0f, WHITE
-        );
+        draw_sprite(spr, 0, (Vector2){START_X + 200, 120}, 0, false);
     EndTextureMode();
 }
 

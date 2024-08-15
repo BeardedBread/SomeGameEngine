@@ -37,6 +37,7 @@ ENUMIDS_TILETYPE_MAPPING = {
     'Boulder': 20,
     'Runner': 21,
     'Player': 22,
+    'Chest': 23,
 }
 
 #ENTID_MAPPING = {
@@ -99,8 +100,13 @@ with open(converted_filename, 'wb+') as out_file:
         n_tiles = width * height
         tiles_info = [[0,0,0] for _ in range(n_tiles)]
         # Loop through gridTiles, get "d" as the index to fill the info
-        for tile in level_layout["gridTiles"]:
-            tiles_info[tile["d"][0]][0] = ids_tiletype_map[tile["t"]]
+        for i, tile in enumerate(level_layout["gridTiles"]):
+            try:
+                tiles_info[tile["d"][0]][0] = ids_tiletype_map[tile["t"]]
+            except Exception as e:
+                print("Error on tile", i, i % width, i // height)
+                print(e)
+                tiles_info[tile["d"][0]][0] = 0
 
         for i, water_level in enumerate(water_layout["intGridCsv"]):
             tiles_info[i][2] = water_level
@@ -115,8 +121,8 @@ with open(converted_filename, 'wb+') as out_file:
             out_file.write(struct.pack("<3Bx", *tile))
 
 
-        for y in range(height):
-            for x in range(width):
-                print(tiles_info[y*width + x], end=" ")
-            print()
+        #for y in range(height):
+        #    for x in range(width):
+        #        print(tiles_info[y*width + x], end=" ")
+        #    print()
 

@@ -64,13 +64,19 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
     scene->data.tilemap.n_tiles = n_tiles;
 
     clear_entity_manager(&scene->scene.ent_manager);
+
     for (size_t i = 0; i < scene->data.tilemap.n_tiles;i++)
     {
-        scene->data.tilemap.tiles[i].max_water_level = 4;
+
         scene->data.tilemap.tiles[i].solid = NOT_SOLID;
         scene->data.tilemap.tiles[i].tile_type = EMPTY_TILE;
+        scene->data.tilemap.tiles[i].rotation = TILE_NOROTATE;
+        scene->data.tilemap.tiles[i].connectivity = 0;
         scene->data.tilemap.tiles[i].moveable = true;
+        scene->data.tilemap.tiles[i].offset = (Vector2){0, 0};
         scene->data.tilemap.tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
+        scene->data.tilemap.tiles[i].def = 0;
+
         sc_map_clear_64v(&scene->data.tilemap.tiles[i].entities_set);
         
         if (lvl_map.tiles[i].tile_type == 1)
@@ -78,6 +84,7 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
             change_a_tile(&scene->data.tilemap, i, SOLID_TILE);
         }
 
+        scene->data.tilemap.tiles[i].max_water_level = 4;
         scene->data.tilemap.tiles[i].water_level = lvl_map.tiles[i].water;
         scene->data.tilemap.tiles[i].wet =  scene->data.tilemap.tiles[i].water_level > 0;
     }

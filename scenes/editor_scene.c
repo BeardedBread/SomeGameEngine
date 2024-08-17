@@ -41,9 +41,9 @@ static bool crate_activation = false;
 #define SELECTION_REGION_WIDTH (SELECTION_TILE_SIZE * MAX_SPAWN_TYPE)
 #define SELECTION_REGION_HEIGHT SELECTION_TILE_SIZE
 
-#define GAME_LAYER 0
-#define SELECTION_LAYER 1
-#define CONTROL_LAYER 2
+#define GAME_LAYER 2
+#define SELECTION_LAYER 0
+#define CONTROL_LAYER 1
 
 static const uint8_t CONNECTIVITY_TILE_MAPPING[16] = {
     0,3,15,14,
@@ -110,6 +110,11 @@ static void level_scene_render_func(Scene_t* scene)
     Vector2 draw_pos = {game_rec.x, game_rec.y + game_rec.height + SELECTION_GAP};
     BeginTextureMode(scene->layers.render_layers[CONTROL_LAYER].layer_tex);
         ClearBackground(BLANK);
+        if (data->camera.mode == CAMERA_RANGED_MOVEMENT)
+        {
+            DrawRectangle(game_rec.x - 3, game_rec.y - 3, game_rec.width + 6, game_rec.height + 6, RED);
+        }
+
         DrawRectangleLines(
             selection_rec.x + current_spawn_selection * SELECTION_TILE_SIZE, selection_rec.y,
             SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, GREEN
@@ -119,11 +124,14 @@ static void level_scene_render_func(Scene_t* scene)
         draw_pos.x = game_rec.x + (MAX_SPAWN_TYPE + 1) * SELECTION_TILE_SIZE;
         sprintf(buffer, "Selection: %s", get_spawn_selection_string(current_spawn_selection));
         DrawText(buffer, draw_pos.x, draw_pos.y, 20, BLACK);
-        draw_pos.y += SELECTION_TILE_SIZE + 5;
+        draw_pos.y += 20 + 5;
         sprintf(buffer, "Crate %s on spawn", crate_activation? "active" : "inactive");
         DrawText(buffer, draw_pos.x, draw_pos.y, 20, BLACK);
-        draw_pos.y += SELECTION_TILE_SIZE + 5;
+        draw_pos.y += 20 + 5;
         sprintf(buffer, "Time scale: %.2f", scene->time_scale);
+        DrawText(buffer, draw_pos.x, draw_pos.y, 20, BLACK);
+        draw_pos.y += 20 + 5;
+        sprintf(buffer, "Camera mode: %s", data->camera.mode == CAMERA_FOLLOW_PLAYER ? "FOLLOW" : "FREE");
         DrawText(buffer, draw_pos.x, draw_pos.y, 20, BLACK);
 
         // For DEBUG
@@ -222,6 +230,28 @@ static void render_editor_game_scene(Scene_t* scene)
         );
         
         BeginMode2D(data->camera.cam);
+        for (int tile_y = min.y; tile_y < max.y; tile_y++)
+        {
+            for (int tile_x = min.x; tile_x < max.x; tile_x++)
+            {
+                int i = tile_x + tile_y * tilemap.width;
+                int x = tile_x * TILE_SIZE;
+                int y = tile_y * TILE_SIZE;
+
+                if (tilemap.tiles[i].tile_type == LADDER)
+                {
+                    if (data->tile_sprites[tilemap.tiles[i].tile_type] != NULL)
+                    {
+                        draw_sprite(data->tile_sprites[tilemap.tiles[i].tile_type], 0, (Vector2){x,y}, 0.0f, false);
+                    }
+                    else
+                    {
+                        DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, ORANGE);
+                    }
+                }
+            }
+        }
+
 
         char buffer[64] = {0};
         sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
@@ -402,43 +432,36 @@ static void render_editor_game_scene(Scene_t* scene)
                 int y = tile_y * TILE_SIZE;
 
 
+                if (tilemap.tiles[i].tile_type != LADDER)
+                {
+                
+                    uint8_t tile_sprite_idx = tilemap.tiles[i].tile_type + tilemap.tiles[i].rotation;
+                    if (data->tile_sprites[tile_sprite_idx] != NULL)
+                    {
+                        draw_sprite(data->tile_sprites[tile_sprite_idx], 0, (Vector2){x,y}, 0.0f, false);
+                    }
+                    else if (tilemap.tiles[i].tile_type == SOLID_TILE)
+                    {
+                        draw_sprite(
+                            data->solid_tile_sprites, CONNECTIVITY_TILE_MAPPING[tilemap.tiles[i].connectivity],
+                            (Vector2){x,y}, 0.0f, false
+                        );
+                        //sprintf(buffer, "%u", tilemap.tiles[i].connectivity);
+                        //DrawText(buffer, x + tilemap.tile_size / 2, y + tilemap.tile_size / 2, 12, WHITE);
+                    }
+                    else if (tilemap.tiles[i].tile_type == ONEWAY_TILE)
+                    {
+                        DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, MAROON);
+                    }
+                    else if (tilemap.tiles[i].tile_type == SPIKES)
+                    {
+                        DrawRectangle(
+                            x + tilemap.tiles[i].offset.x, y + tilemap.tiles[i].offset.y,
+                            tilemap.tiles[i].size.x, tilemap.tiles[i].size.y, RED
+                        );
+                    }
+                }
 
-                //if (!tilemap.tiles[i].moveable)
-                //{
-                //    // Draw water tile
-                //    Color water_colour = ColorAlpha(RED, 0.2);
-                //    DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, water_colour);
-                //}
-
-                uint8_t tile_sprite_idx = tilemap.tiles[i].tile_type + tilemap.tiles[i].rotation;
-                if (data->tile_sprites[tile_sprite_idx] != NULL)
-                {
-                    draw_sprite(data->tile_sprites[tile_sprite_idx], 0, (Vector2){x,y}, 0.0f, false);
-                }
-                else if (tilemap.tiles[i].tile_type == SOLID_TILE)
-                {
-                    draw_sprite(
-                        data->solid_tile_sprites, CONNECTIVITY_TILE_MAPPING[tilemap.tiles[i].connectivity],
-                        (Vector2){x,y}, 0.0f, false
-                    );
-                    //sprintf(buffer, "%u", tilemap.tiles[i].connectivity);
-                    //DrawText(buffer, x + tilemap.tile_size / 2, y + tilemap.tile_size / 2, 12, WHITE);
-                }
-                else if (tilemap.tiles[i].tile_type == ONEWAY_TILE)
-                {
-                    DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, MAROON);
-                }
-                else if (tilemap.tiles[i].tile_type == LADDER)
-                {
-                    DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, ORANGE);
-                }
-                else if (tilemap.tiles[i].tile_type == SPIKES)
-                {
-                    DrawRectangle(
-                        x + tilemap.tiles[i].offset.x, y + tilemap.tiles[i].offset.y,
-                        tilemap.tiles[i].size.x, tilemap.tiles[i].size.y, RED
-                    );
-                }
                 if (tilemap.tiles[i].wet)
                 {
 #define     SURFACE_THICKNESS 4
@@ -842,207 +865,238 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
         {
             case ACTION_UP:
                 p_playerstate->player_dir.y = (pressed)? -1 : 0;
-                if (data->camera.mode == CAMERA_RANGED_MOVEMENT) data->camera.cam.target.y -= 20;
             break;
             case ACTION_DOWN:
                 p_playerstate->player_dir.y = (pressed)? 1 : 0;
-                if (data->camera.mode == CAMERA_RANGED_MOVEMENT) data->camera.cam.target.y += 20;
             break;
             case ACTION_LEFT:
                 p_playerstate->player_dir.x = (pressed)? -1 : 0;
-                if (data->camera.mode == CAMERA_RANGED_MOVEMENT) data->camera.cam.target.x -= 20;
             break;
             case ACTION_RIGHT:
                 p_playerstate->player_dir.x = (pressed)? 1 : 0;
-                if (data->camera.mode == CAMERA_RANGED_MOVEMENT) data->camera.cam.target.x += 20;
             break;
             case ACTION_JUMP:
                 p_playerstate->jump_pressed = pressed;
             break;
-            case ACTION_NEXT_SPAWN:
-                if (!pressed)
-                {
-                    current_spawn_selection++;
-                    current_spawn_selection %= MAX_SPAWN_TYPE;
-                }
-            break;
-            case ACTION_PREV_SPAWN:
-                if (!pressed)
-                {
-                    if (current_spawn_selection == 0)
-                    {
-                        current_spawn_selection = MAX_SPAWN_TYPE;
-                    }
-                    current_spawn_selection--;
-                }
-            break;
-            case ACTION_METAL_TOGGLE:
-                if (!pressed) metal_toggle = !metal_toggle;
-                const Color crate_colour = metal_toggle ? GRAY : BROWN;
-                Vector2 draw_pos = {SPAWN_CRATE * SELECTION_TILE_SIZE , 0};
-                BeginTextureMode(scene->layers.render_layers[SELECTION_LAYER].layer_tex);
-                for (uint8_t i = SPAWN_CRATE; i <= SPAWN_CRATE_BOMB; ++i)
-                {
-                    DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, crate_colour);
-                    Sprite_t* spr;
-                    Vector2 half_size = {SELECTION_TILE_HALFSIZE, SELECTION_TILE_HALFSIZE};
-                    switch (i)
-                    {
-                        case SPAWN_CRATE:
-                            spr = get_sprite(&scene->engine->assets, metal_toggle? "m_crate":"w_crate");
-                            if (spr != NULL)
-                            {
-                                draw_sprite(spr, 0, draw_pos, 0.0, false);
-                            }
-                        break;
-                        case SPAWN_CRATE_ARROW_L:
-                            spr = get_sprite(&scene->engine->assets, metal_toggle? "m_la_crate":"w_la_crate");
-                            if (spr == NULL)
-                            {
-                                DrawLine(
-                                    draw_pos.x,
-                                    draw_pos.y + half_size.y,
-                                    draw_pos.x + half_size.x,
-                                    draw_pos.y + half_size.y,
-                                    BLACK
-                                );
-                            }
-                            else
-                            {
-                                draw_sprite(spr, 0, draw_pos, 0.0, false);
-                            }
-                        break;
-                        case SPAWN_CRATE_ARROW_R:
-                        {
-                            Sprite_t* spr = get_sprite(&scene->engine->assets, metal_toggle? "m_ra_crate":"w_ra_crate");
-                            if (spr == NULL)
-                            {
-                                DrawLine(
-                                    draw_pos.x + half_size.x,
-                                    draw_pos.y + half_size.y,
-                                    draw_pos.x + half_size.x * 2,
-                                    draw_pos.y + half_size.y,
-                                    BLACK
-                                );
-                            }
-                            else
-                            {
-                                draw_sprite(spr, 0, draw_pos, 0.0, false);
-                            }
-                        }
-                        break;
-                        case SPAWN_CRATE_ARROW_U:
-                        {
-                            Sprite_t* spr = get_sprite(&scene->engine->assets, metal_toggle? "m_ua_crate":"w_ua_crate");
-                            if (spr == NULL)
-                            {
-                                DrawLine(
-                                    draw_pos.x + half_size.x,
-                                    draw_pos.y,
-                                    draw_pos.x + half_size.x,
-                                    draw_pos.y + half_size.y,
-                                    BLACK
-                                );
-                            }
-                            else
-                            {
-                                draw_sprite(spr, 0, draw_pos, 0.0, false);
-                            }
-                        }
-                        break;
-                        case SPAWN_CRATE_ARROW_D:
-                        {
-                            Sprite_t* spr = get_sprite(&scene->engine->assets, metal_toggle? "m_da_crate":"w_da_crate");
-                            if (spr == NULL)
-                            {
-                                DrawLine(
-                                    draw_pos.x + half_size.x,
-                                    draw_pos.y + half_size.y,
-                                    draw_pos.x + half_size.x,
-                                    draw_pos.y + half_size.y * 2,
-                                    BLACK
-                                );
-                            }
-                            else
-                            {
-                                draw_sprite(spr, 0, draw_pos, 0.0, false);
-                            }
-                        }
-                        break;
-                        case SPAWN_CRATE_BOMB:
-                        {
-                            Sprite_t* spr = get_sprite(&scene->engine->assets, metal_toggle? "m_b_crate":"w_b_crate");
-                            if (spr == NULL)
-                            {
-                                DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, BLACK);
-                            }
-                            else
-                            {
-                                draw_sprite(spr, 0, draw_pos, 0.0, false);
-                            }
-                        }
-                        break;
-                    }
-                    draw_pos.x += SELECTION_TILE_SIZE;
-                }
-                EndTextureMode();
-            break;
-            case ACTION_CRATE_ACTIVATION:
-                if (!pressed) crate_activation = !crate_activation;
-            break;
-            case ACTION_EXIT:
-                if(scene->engine != NULL)
-                {
-                    change_scene(scene->engine, 0);
-                }
-            break;
-            case ACTION_NEXTLEVEL:
-            case ACTION_RESTART:
-                restart_editor_level(scene);
-            break;
-            case ACTION_TOGGLE_GRID:
-                if (!pressed)
-                {
-                    data->show_grid = !data->show_grid;
-                }
-            break;
-            case ACTION_SET_SPAWNPOINT:
-                p_player->spawn_pos = p_player->position;
-            break;
-            case ACTION_TOGGLE_TIMESLOW:
-                if (!pressed)
-                {
-                    if (scene->time_scale < 1.0f)
-                    {
-                        scene->time_scale = 1.0f;
-                    }
-                    else
-                    {
-                        scene->time_scale = 0.25f;
-                    }
-                }
-            break;
-            case ACTION_SPAWN_TILE:
-            case ACTION_REMOVE_TILE:
-                toggle_block_system(scene, action, pressed);
-                update_entity_manager(&scene->ent_manager);
-            break;
-            case ACTION_SWITCH_TILESET:
-                if (!pressed)
-                {
-                    data->selected_solid_tilemap++;
-                    if (data->selected_solid_tilemap >= N_SOLID_TILESETS) data->selected_solid_tilemap = 0;
-
-                    data->solid_tile_sprites = get_sprite(&scene->engine->assets, SOLID_TILE_SELECTIONS[data->selected_solid_tilemap]);
-                }
-            break;
             case ACTION_LOOKAHEAD:
-                p_playerstate->locked = pressed;
-                data->camera.mode = pressed ? CAMERA_RANGED_MOVEMENT : CAMERA_FOLLOW_PLAYER;
+                if (!pressed)
+                {
+                    p_playerstate->locked = !p_playerstate->locked;
+                }
             break;
             default:
             break;
         }
+    }
+
+    if (data->camera.mode == CAMERA_RANGED_MOVEMENT)
+    {
+        switch(action)
+        {
+            case ACTION_UP:
+                if (data->camera.mode == CAMERA_RANGED_MOVEMENT) data->camera.cam.target.y -= 20;
+            break;
+            case ACTION_DOWN:
+                if (data->camera.mode == CAMERA_RANGED_MOVEMENT) data->camera.cam.target.y += 20;
+            break;
+            case ACTION_LEFT:
+                if (data->camera.mode == CAMERA_RANGED_MOVEMENT) data->camera.cam.target.x -= 20;
+            break;
+            case ACTION_RIGHT:
+                if (data->camera.mode == CAMERA_RANGED_MOVEMENT) data->camera.cam.target.x += 20;
+            break;
+            default:
+            break;
+        }
+    }
+
+    switch(action)
+    {
+        case ACTION_NEXT_SPAWN:
+            if (!pressed)
+            {
+                current_spawn_selection++;
+                current_spawn_selection %= MAX_SPAWN_TYPE;
+            }
+        break;
+        case ACTION_PREV_SPAWN:
+            if (!pressed)
+            {
+                if (current_spawn_selection == 0)
+                {
+                    current_spawn_selection = MAX_SPAWN_TYPE;
+                }
+                current_spawn_selection--;
+            }
+        break;
+        case ACTION_METAL_TOGGLE:
+            if (!pressed) metal_toggle = !metal_toggle;
+            const Color crate_colour = metal_toggle ? GRAY : BROWN;
+            Vector2 draw_pos = {SPAWN_CRATE * SELECTION_TILE_SIZE , 0};
+            BeginTextureMode(scene->layers.render_layers[SELECTION_LAYER].layer_tex);
+            for (uint8_t i = SPAWN_CRATE; i <= SPAWN_CRATE_BOMB; ++i)
+            {
+                DrawRectangle(draw_pos.x, draw_pos.y, SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, crate_colour);
+                Sprite_t* spr;
+                Vector2 half_size = {SELECTION_TILE_HALFSIZE, SELECTION_TILE_HALFSIZE};
+                switch (i)
+                {
+                    case SPAWN_CRATE:
+                        spr = get_sprite(&scene->engine->assets, metal_toggle? "m_crate":"w_crate");
+                        if (spr != NULL)
+                        {
+                            draw_sprite(spr, 0, draw_pos, 0.0, false);
+                        }
+                    break;
+                    case SPAWN_CRATE_ARROW_L:
+                        spr = get_sprite(&scene->engine->assets, metal_toggle? "m_la_crate":"w_la_crate");
+                        if (spr == NULL)
+                        {
+                            DrawLine(
+                                draw_pos.x,
+                                draw_pos.y + half_size.y,
+                                draw_pos.x + half_size.x,
+                                draw_pos.y + half_size.y,
+                                BLACK
+                            );
+                        }
+                        else
+                        {
+                            draw_sprite(spr, 0, draw_pos, 0.0, false);
+                        }
+                    break;
+                    case SPAWN_CRATE_ARROW_R:
+                    {
+                        Sprite_t* spr = get_sprite(&scene->engine->assets, metal_toggle? "m_ra_crate":"w_ra_crate");
+                        if (spr == NULL)
+                        {
+                            DrawLine(
+                                draw_pos.x + half_size.x,
+                                draw_pos.y + half_size.y,
+                                draw_pos.x + half_size.x * 2,
+                                draw_pos.y + half_size.y,
+                                BLACK
+                            );
+                        }
+                        else
+                        {
+                            draw_sprite(spr, 0, draw_pos, 0.0, false);
+                        }
+                    }
+                    break;
+                    case SPAWN_CRATE_ARROW_U:
+                    {
+                        Sprite_t* spr = get_sprite(&scene->engine->assets, metal_toggle? "m_ua_crate":"w_ua_crate");
+                        if (spr == NULL)
+                        {
+                            DrawLine(
+                                draw_pos.x + half_size.x,
+                                draw_pos.y,
+                                draw_pos.x + half_size.x,
+                                draw_pos.y + half_size.y,
+                                BLACK
+                            );
+                        }
+                        else
+                        {
+                            draw_sprite(spr, 0, draw_pos, 0.0, false);
+                        }
+                    }
+                    break;
+                    case SPAWN_CRATE_ARROW_D:
+                    {
+                        Sprite_t* spr = get_sprite(&scene->engine->assets, metal_toggle? "m_da_crate":"w_da_crate");
+                        if (spr == NULL)
+                        {
+                            DrawLine(
+                                draw_pos.x + half_size.x,
+                                draw_pos.y + half_size.y,
+                                draw_pos.x + half_size.x,
+                                draw_pos.y + half_size.y * 2,
+                                BLACK
+                            );
+                        }
+                        else
+                        {
+                            draw_sprite(spr, 0, draw_pos, 0.0, false);
+                        }
+                    }
+                    break;
+                    case SPAWN_CRATE_BOMB:
+                    {
+                        Sprite_t* spr = get_sprite(&scene->engine->assets, metal_toggle? "m_b_crate":"w_b_crate");
+                        if (spr == NULL)
+                        {
+                            DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, BLACK);
+                        }
+                        else
+                        {
+                            draw_sprite(spr, 0, draw_pos, 0.0, false);
+                        }
+                    }
+                    break;
+                }
+                draw_pos.x += SELECTION_TILE_SIZE;
+            }
+            EndTextureMode();
+        break;
+        case ACTION_CRATE_ACTIVATION:
+            if (!pressed) crate_activation = !crate_activation;
+        break;
+        case ACTION_EXIT:
+            if(scene->engine != NULL)
+            {
+                change_scene(scene->engine, 0);
+            }
+        break;
+        case ACTION_NEXTLEVEL:
+        case ACTION_RESTART:
+            restart_editor_level(scene);
+        break;
+        case ACTION_TOGGLE_GRID:
+            if (!pressed)
+            {
+                data->show_grid = !data->show_grid;
+            }
+        break;
+        case ACTION_SET_SPAWNPOINT:
+            p_player->spawn_pos = p_player->position;
+        break;
+        case ACTION_TOGGLE_TIMESLOW:
+            if (!pressed)
+            {
+                if (scene->time_scale < 1.0f)
+                {
+                    scene->time_scale = 1.0f;
+                }
+                else
+                {
+                    scene->time_scale = 0.25f;
+                }
+            }
+        break;
+        case ACTION_SPAWN_TILE:
+        case ACTION_REMOVE_TILE:
+            toggle_block_system(scene, action, pressed);
+            update_entity_manager(&scene->ent_manager);
+        break;
+        case ACTION_SWITCH_TILESET:
+            if (!pressed)
+            {
+                data->selected_solid_tilemap++;
+                if (data->selected_solid_tilemap >= N_SOLID_TILESETS) data->selected_solid_tilemap = 0;
+
+                data->solid_tile_sprites = get_sprite(&scene->engine->assets, SOLID_TILE_SELECTIONS[data->selected_solid_tilemap]);
+            }
+        break;
+        case ACTION_LOOKAHEAD:
+            if (!pressed)
+            {
+                data->camera.mode = (data->camera.mode == CAMERA_FOLLOW_PLAYER) ? CAMERA_RANGED_MOVEMENT : CAMERA_FOLLOW_PLAYER;
+            }
+        break;
+        default:
+        break;
     }
 }
 
@@ -1079,10 +1133,6 @@ void init_sandbox_scene(LevelScene_t* scene)
 
     scene->scene.bg_colour = LIGHTGRAY;
     add_scene_layer(
-        &scene->scene, scene->data.game_rec.width, scene->data.game_rec.height,
-        scene->data.game_rec
-    );
-    add_scene_layer(
         &scene->scene, SELECTION_REGION_WIDTH, SELECTION_REGION_HEIGHT,
         (Rectangle){
             scene->data.game_rec.x, scene->data.game_rec.y + scene->data.game_rec.height + SELECTION_GAP,
@@ -1097,6 +1147,10 @@ void init_sandbox_scene(LevelScene_t* scene)
             scene->scene.engine->intended_window_size.x,
             scene->scene.engine->intended_window_size.y
         }
+    );
+    add_scene_layer(
+        &scene->scene, scene->data.game_rec.width, scene->data.game_rec.height,
+        scene->data.game_rec
     );
 
     BeginTextureMode(scene->scene.layers.render_layers[SELECTION_LAYER].layer_tex);

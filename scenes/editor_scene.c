@@ -1039,6 +1039,7 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             case ACTION_LOOKAHEAD:
                 p_playerstate->locked = pressed;
                 data->camera.mode = pressed ? CAMERA_RANGED_MOVEMENT : CAMERA_FOLLOW_PLAYER;
+            break;
             default:
             break;
         }

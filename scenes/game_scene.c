@@ -56,6 +56,7 @@ static void level_scene_render_func(Scene_t* scene)
 
 static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 {
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     CPlayerState_t* p_playerstate;
     sc_map_foreach_value(&scene->ent_manager.component_map[CPLAYERSTATE_T], p_playerstate)
     {
@@ -63,18 +64,26 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
         {
             case ACTION_UP:
                 p_playerstate->player_dir.y = (pressed)? -1 : 0;
+                if (data->camera.mode == CAMERA_RANGED_MOVEMENT) data->camera.cam.target.y -= 20;
             break;
             case ACTION_DOWN:
                 p_playerstate->player_dir.y = (pressed)? 1 : 0;
+                if (data->camera.mode == CAMERA_RANGED_MOVEMENT) data->camera.cam.target.y += 20;
             break;
             case ACTION_LEFT:
                 p_playerstate->player_dir.x = (pressed)? -1 : 0;
+                if (data->camera.mode == CAMERA_RANGED_MOVEMENT) data->camera.cam.target.x -= 20;
             break;
             case ACTION_RIGHT:
                 p_playerstate->player_dir.x = (pressed)? 1 : 0;
+                if (data->camera.mode == CAMERA_RANGED_MOVEMENT) data->camera.cam.target.x += 20;
             break;
             case ACTION_JUMP:
                 p_playerstate->jump_pressed = pressed;
+            break;
+            case ACTION_LOOKAHEAD:
+                p_playerstate->locked = pressed;
+                data->camera.mode = pressed ? CAMERA_RANGED_MOVEMENT : CAMERA_FOLLOW_PLAYER;
             break;
             default:
             break;
@@ -488,6 +497,7 @@ void init_game_scene(LevelScene_t* scene)
     sc_map_put_64(&scene->scene.action_map, KEY_R, ACTION_RESTART);
     sc_map_put_64(&scene->scene.action_map, KEY_RIGHT_BRACKET, ACTION_NEXTLEVEL);
     sc_map_put_64(&scene->scene.action_map, KEY_LEFT_BRACKET, ACTION_PREVLEVEL);
+    sc_map_put_64(&scene->scene.action_map, KEY_Z, ACTION_LOOKAHEAD);
 
 }
 

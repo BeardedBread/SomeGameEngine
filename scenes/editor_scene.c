@@ -166,16 +166,6 @@ static void level_scene_render_func(Scene_t* scene)
             gui_y += 30;
 
 #endif
-            CAirTimer_t* p_air = get_component(p_ent, CAIRTIMER_T);
-
-            Sprite_t* spr = get_sprite(&scene->engine->assets, "p_bigbubble");
-            Vector2 air_pos = {game_rec.x + game_rec.width - 32, game_rec.y + game_rec.height - 32};
-            for (uint8_t i = 0; i < p_air->curr_count; i++)
-            {
-                draw_sprite(spr, 0, air_pos, 0, false);
-                //DrawCircleV(air_pos, 16, BLUE);
-                air_pos.x -= 32;
-            }
         }
         //sprintf(buffer, "Spawn Entity: %s", get_spawn_selection_string(current_spawn_selection));
         //DrawText(buffer, gui_x, 240, 12, BLACK);
@@ -569,6 +559,19 @@ static void render_editor_game_scene(Scene_t* scene)
             }
         }
         EndMode2D();
+        sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
+        {
+            CAirTimer_t* p_air = get_component(p_ent, CAIRTIMER_T);
+
+            Sprite_t* spr = get_sprite(&scene->engine->assets, "p_bigbubble");
+            Vector2 air_pos = {data->game_rec.width - 32, data->game_rec.height - 32};
+            for (uint8_t i = 0; i < p_air->curr_count; i++)
+            {
+                draw_sprite(spr, 0, air_pos, 0, false);
+                //DrawCircleV(air_pos, 16, BLUE);
+                air_pos.x -= 32;
+            }
+        }
     EndTextureMode();
 }
 

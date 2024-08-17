@@ -12,6 +12,7 @@ void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* t
     data->camera.mass = 0.2f;
     data->camera.k = 6.2f;
     data->camera.c = 2.2f;
+    data->camera.range_limit = 200.0f;
 
     data->tilemap.max_tiles = max_tiles;
     if (tiles != NULL)

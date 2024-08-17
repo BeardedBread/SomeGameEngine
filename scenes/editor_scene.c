@@ -842,15 +842,19 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
         {
             case ACTION_UP:
                 p_playerstate->player_dir.y = (pressed)? -1 : 0;
+                if (data->camera.mode == CAMERA_RANGED_MOVEMENT) data->camera.cam.target.y -= 20;
             break;
             case ACTION_DOWN:
                 p_playerstate->player_dir.y = (pressed)? 1 : 0;
+                if (data->camera.mode == CAMERA_RANGED_MOVEMENT) data->camera.cam.target.y += 20;
             break;
             case ACTION_LEFT:
                 p_playerstate->player_dir.x = (pressed)? -1 : 0;
+                if (data->camera.mode == CAMERA_RANGED_MOVEMENT) data->camera.cam.target.x -= 20;
             break;
             case ACTION_RIGHT:
                 p_playerstate->player_dir.x = (pressed)? 1 : 0;
+                if (data->camera.mode == CAMERA_RANGED_MOVEMENT) data->camera.cam.target.x += 20;
             break;
             case ACTION_JUMP:
                 p_playerstate->jump_pressed = pressed;
@@ -1034,6 +1038,7 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             break;
             case ACTION_LOOKAHEAD:
                 p_playerstate->locked = pressed;
+                data->camera.mode = pressed ? CAMERA_RANGED_MOVEMENT : CAMERA_FOLLOW_PLAYER;
             default:
             break;
         }

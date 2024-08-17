@@ -27,8 +27,14 @@ typedef struct CoinCounter
     uint16_t total;
 }CoinCounter_t;
 
+typedef enum CameraMode {
+    CAMERA_FOLLOW_PLAYER = 0,
+    CAMERA_RANGED_MOVEMENT,
+} CameraMode_t;
+
 typedef struct LevelCamera {
     Camera2D cam;
+    CameraMode_t mode;
     Vector2 target_pos;
     float base_y;
     //Vector2 prev_pos;
@@ -36,6 +42,7 @@ typedef struct LevelCamera {
     float mass;
     float c; // damping factor
     float k; // spring constant
+    float range_limit;
 }LevelCamera_t;
 
 typedef struct LevelSceneData {

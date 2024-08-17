@@ -9,6 +9,7 @@ add_library(lib_scenes STATIC
     game_scene.c
     game_systems.c
     scene_systems.c
+    camera_systems.c
 )
 target_include_directories(lib_scenes
     PUBLIC

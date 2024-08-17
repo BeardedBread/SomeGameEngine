@@ -298,43 +298,47 @@ void player_movement_input_system(Scene_t* scene)
         // Ladder handling
         if (!p_pstate->ladder_state)
         {
-            if (p_pstate->player_dir.y < 0)
+            // Transit into ladder state if possible
+            if (!p_pstate->locked)
             {
-                unsigned int tile_idx = get_tile_idx(
-                    p_player->position.x + p_bbox->half_size.x,
-                    p_player->position.y + p_bbox->half_size.y,
-                    data->tilemap
-                );
-                if (tilemap.tiles[tile_idx].tile_type == LADDER && p_ctransform->velocity.y >= 0)
+                if (p_pstate->player_dir.y < 0)
                 {
-                    p_pstate->ladder_state = true;
-                    p_player->position.y--;
-                }
-            }
-            else if (p_pstate->player_dir.y > 0)
-            {
-                unsigned int tile_idx;
-
-                if (p_mstate->ground_state & 1)
-                {
-                    tile_idx = get_tile_idx(
-                        p_player->position.x + p_bbox->half_size.x,
-                        p_player->position.y + p_bbox->size.y,
-                        data->tilemap
-                    );
-                }
-                else
-                {
-                    tile_idx = get_tile_idx(
+                    unsigned int tile_idx = get_tile_idx(
                         p_player->position.x + p_bbox->half_size.x,
                         p_player->position.y + p_bbox->half_size.y,
                         data->tilemap
                     );
+                    if (tilemap.tiles[tile_idx].tile_type == LADDER && p_ctransform->velocity.y >= 0)
+                    {
+                        p_pstate->ladder_state = true;
+                        p_player->position.y--;
+                    }
                 }
-                if (tile_idx < tilemap.n_tiles && tilemap.tiles[tile_idx].tile_type == LADDER)
+                else if (p_pstate->player_dir.y > 0)
                 {
-                    p_pstate->ladder_state = true;
-                    p_player->position.y++;
+                    unsigned int tile_idx;
+
+                    if (p_mstate->ground_state & 1)
+                    {
+                        tile_idx = get_tile_idx(
+                            p_player->position.x + p_bbox->half_size.x,
+                            p_player->position.y + p_bbox->size.y,
+                            data->tilemap
+                        );
+                    }
+                    else
+                    {
+                        tile_idx = get_tile_idx(
+                            p_player->position.x + p_bbox->half_size.x,
+                            p_player->position.y + p_bbox->half_size.y,
+                            data->tilemap
+                        );
+                    }
+                    if (tile_idx < tilemap.n_tiles && tilemap.tiles[tile_idx].tile_type == LADDER)
+                    {
+                        p_pstate->ladder_state = true;
+                        p_player->position.y++;
+                    }
                 }
             }
         }
@@ -353,10 +357,11 @@ void player_movement_input_system(Scene_t* scene)
                     p_pstate->ladder_state |= tilemap.tiles[tile_idx].tile_type == LADDER;
                 }
             }
+
             if (p_pstate->ladder_state)
             {
-                p_ctransform->velocity.y = p_pstate->player_dir.y * 150;
-                p_ctransform->velocity.x = p_pstate->player_dir.x * 40;
+                p_ctransform->velocity.y = p_pstate->player_dir.y * 150 * (p_pstate->locked ? 0 : 1);
+                p_ctransform->velocity.x = p_pstate->player_dir.x * 40 * (p_pstate->locked ? 0 : 1);
                 if (p_pstate->player_dir.y != 0)
                 {
                     p_player->position.x = tile_x * TILE_SIZE + 1;
@@ -365,30 +370,50 @@ void player_movement_input_system(Scene_t* scene)
         }
 
         bool in_water = (p_mstate->water_state & 1);
-        p_pstate->is_crouch |= (p_pstate->player_dir.y > 0)? 0b10 : 0;
-        if (!in_water)
+        if (p_pstate->locked)
         {
-
-            p_pstate->player_dir.y = 0;
-            p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL);
+            p_pstate->is_crouch |= (p_pstate->is_crouch & 1)? 0b10 : 0;
         }
         else
         {
-            // Although this can be achieved via higher friction, i'll explain away as the player is not
-            // good with swimming, resulting in lower movement acceleration
-            p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL/1.2);
+            p_pstate->is_crouch |= (p_pstate->player_dir.y > 0)? 0b10 : 0;
+            Vector2 point_to_check = Vector2Add(
+                p_player->position,
+                (Vector2){0, p_bbox->size.y - PLAYER_HEIGHT}
+            );
+            uint8_t collide_type = check_collision_at(
+                    p_player, point_to_check, p_bbox->size, &tilemap
+            );
+            if (collide_type == 1)
+            {
+                p_pstate->is_crouch |= 0b10;
+            }
+            if (!(p_mstate->ground_state & 1)) p_pstate->is_crouch &= 0b01;
         }
 
-        if (p_pstate->is_crouch & 1)
+        if (!in_water)
         {
-            p_ctransform->accel = Vector2Scale(p_ctransform->accel, 0.5);
+            p_pstate->player_dir.y = 0;
         }
+
+        if (!p_pstate->locked)
+        {
+                // Although this can be achieved via higher friction, i'll explain away as the player is not
+                // good with swimming, resulting in lower movement acceleration
+            p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL / (in_water ? 1.2f : 1.0f));
+
+            if (p_pstate->is_crouch & 1)
+            {
+                p_ctransform->accel = Vector2Scale(p_ctransform->accel, 0.5);
+            }
+        }
+
         // Short Hop
         // Jumped check is needed to make sure it is applied on jumps, not generally
         // One issue caused is lower velocity in water
         if (p_cjump->jumped)
         {
-            if (!p_pstate->jump_pressed)
+            if (!p_pstate->jump_pressed || p_pstate->locked)
             {
                 p_cjump->jump_released = true;
                 if (!p_cjump->short_hop && p_ctransform->velocity.y < 0)
@@ -399,57 +424,50 @@ void player_movement_input_system(Scene_t* scene)
             }
         }
 
-        Vector2 point_to_check = Vector2Add(
-            p_player->position,
-            (Vector2){0, p_bbox->size.y - PLAYER_HEIGHT}
-        );
-        uint8_t collide_type = check_collision_at(
-                p_player, point_to_check, p_bbox->size, &tilemap
-        );
-        if (collide_type == 1)
-        {
-            p_pstate->is_crouch |= 0b10;
-        }
-        if (!(p_mstate->ground_state & 1)) p_pstate->is_crouch &= 0b01;
-        p_pstate->is_crouch >>= 1;
 
         // Jumps is possible as long as you have a jump
 
         // Check if possible to jump when jump is pressed
-        if (p_cjump->jump_released && p_pstate->jump_pressed && p_cjump->jumps > 0 && p_cjump->jump_ready)
+        if (!p_pstate->locked)
         {
-            play_sfx(scene->engine, PLAYER_JMP_SFX);
-            p_cjump->jumps--;
-            if (!in_water)
+            if (p_cjump->jump_released && p_pstate->jump_pressed && p_cjump->jumps > 0 && p_cjump->jump_ready)
             {
-                if (p_mstate->ground_state & 1 || p_cjump->coyote_timer > 0)
+                play_sfx(scene->engine, PLAYER_JMP_SFX);
+                p_cjump->jumps--;
+                if (!in_water)
                 {
-                    p_ctransform->velocity.y = -p_cjump->jump_speed;
+                    if (p_mstate->ground_state & 1 || p_cjump->coyote_timer > 0)
+                    {
+                        p_ctransform->velocity.y = -p_cjump->jump_speed;
+                    }
+                    else if (p_pstate->ladder_state)
+                    {
+                        p_ctransform->velocity.y = -p_cjump->jump_speed / 1.4;
+                    }
                 }
-                else if (p_pstate->ladder_state)
+                else
                 {
-                    p_ctransform->velocity.y = -p_cjump->jump_speed / 1.4;
+                    p_ctransform->velocity.y = -p_cjump->jump_speed / 1.75;
                 }
-            }
-            else
-            {
-                p_ctransform->velocity.y = -p_cjump->jump_speed / 1.75;
-            }
 
-            p_pstate->ladder_state = false;
-            p_cjump->coyote_timer = 0;
-            p_cjump->jumped = true;
-            p_cjump->jump_ready = false;
-            p_cjump->jump_released = false;
+                p_pstate->ladder_state = false;
+                p_cjump->coyote_timer = 0;
+                p_cjump->jumped = true;
+                p_cjump->jump_ready = false;
+                p_cjump->jump_released = false;
+            }
+            else if (p_mstate->ground_state == 0b01)
+            {
+                // the else if check is to prevent playing the landing sfx
+                // on first frame jumps
+                // This is also why this is done here instead of in the 
+                // state transition function
+                play_sfx_pitched(scene->engine, PLAYER_LAND_SFX, 0.8f + rand() * 0.4f / (float)RAND_MAX);
+            }
         }
-        else if (p_mstate->ground_state == 0b01)
-        {
-            // the else if check is to prevent playing the landing sfx
-            // on first frame jumps
-            // This is also why this is done here instead of in the 
-            // state transition function
-            play_sfx_pitched(scene->engine, PLAYER_LAND_SFX, 0.8f + rand() * 0.4f / (float)RAND_MAX);
-        }
+
+        // Post movement state update
+        p_pstate->is_crouch >>= 1;
     }
 }
 

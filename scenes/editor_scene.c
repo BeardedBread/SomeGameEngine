@@ -1022,7 +1022,6 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
             case ACTION_REMOVE_TILE:
                 toggle_block_system(scene, action, pressed);
                 update_entity_manager(&scene->ent_manager);
-            default:
             break;
             case ACTION_SWITCH_TILESET:
                 if (!pressed)
@@ -1032,6 +1031,10 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 
                     data->solid_tile_sprites = get_sprite(&scene->engine->assets, SOLID_TILE_SELECTIONS[data->selected_solid_tilemap]);
                 }
+            break;
+            case ACTION_LOOKAHEAD:
+                p_playerstate->locked = pressed;
+            default:
             break;
         }
     }
@@ -1321,10 +1324,11 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_map_put_64(&scene->scene.action_map, KEY_T, ACTION_CRATE_ACTIVATION);
     sc_map_put_64(&scene->scene.action_map, KEY_L, ACTION_EXIT);
     sc_map_put_64(&scene->scene.action_map, KEY_R, ACTION_RESTART);
-    sc_map_put_64(&scene->scene.action_map, KEY_B, ACTION_TOGGLE_GRID);
     sc_map_put_64(&scene->scene.action_map, KEY_Z, ACTION_SWITCH_TILESET);
-    sc_map_put_64(&scene->scene.action_map, KEY_V, ACTION_SET_SPAWNPOINT);
+    sc_map_put_64(&scene->scene.action_map, KEY_X, ACTION_TOGGLE_GRID);
+    sc_map_put_64(&scene->scene.action_map, KEY_C, ACTION_SET_SPAWNPOINT);
     sc_map_put_64(&scene->scene.action_map, KEY_U, ACTION_TOGGLE_TIMESLOW);
+    sc_map_put_64(&scene->scene.action_map, KEY_V, ACTION_LOOKAHEAD);
     sc_map_put_64(&scene->scene.action_map, MOUSE_LEFT_BUTTON, ACTION_SPAWN_TILE);
     sc_map_put_64(&scene->scene.action_map, MOUSE_RIGHT_BUTTON, ACTION_REMOVE_TILE);
 

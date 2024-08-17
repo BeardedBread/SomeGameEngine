@@ -91,6 +91,7 @@ typedef struct _CPlayerState_t {
     uint8_t jump_pressed;
     uint8_t is_crouch;
     bool ladder_state;
+    bool locked; // Whether to respond to inputs
 } CPlayerState_t;
 
 typedef enum ContainerItem {

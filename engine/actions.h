@@ -23,5 +23,6 @@ typedef enum ActionType
     ACTION_SPAWN_TILE,
     ACTION_REMOVE_TILE,
     ACTION_SWITCH_TILESET,
+    ACTION_LOOKAHEAD,
 }ActionType_t;
 #endif // __ACTIONS_H

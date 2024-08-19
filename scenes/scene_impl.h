@@ -45,6 +45,22 @@ typedef struct LevelCamera {
     float range_limit;
 }LevelCamera_t;
 
+typedef enum LevelSceneState {
+    LEVEL_STATE_STARTING = 0,
+    LEVEL_STATE_RUNNING,
+    LEVEL_STATE_DEAD,
+    LEVEL_STATE_COMPLETE,
+} LevelSceneState_t;
+
+typedef struct LevelSceneStateMachine {
+    LevelSceneState_t state;
+    system_func_t state_functions[4];
+
+    // Engine has no timeline support, so make a pseudo timeline implementation
+    float fractional;
+    uint32_t counter;
+} LevelSceneStateMachine_t;
+
 typedef struct LevelSceneData {
     TileGrid_t tilemap;
     // TODO: game_rec is actually obsolete since this is in the scene game layer
@@ -57,6 +73,8 @@ typedef struct LevelSceneData {
     unsigned int current_level;
     CoinCounter_t coins;
     bool show_grid;
+    Vector2 player_spawn;
+    LevelSceneStateMachine_t sm;
 }LevelSceneData_t;
 
 typedef struct LevelScene {

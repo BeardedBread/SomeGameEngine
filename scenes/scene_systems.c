@@ -41,6 +41,8 @@ void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* t
     }
     memset(&data->coins, 0, sizeof(data->coins));
     data->show_grid = false;
+
+    memset(&data->sm, 0, sizeof(data->sm));
 }
 
 void term_level_scene_data(LevelSceneData_t* data)
@@ -145,7 +147,6 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
                     Entity_t* ent = create_player(&scene->scene.ent_manager);
                     ent->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
                     ent->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
-                    ent->spawn_pos = ent->position;
                 }
                 break;
                 case 23:

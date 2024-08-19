@@ -220,6 +220,12 @@ static void render_editor_game_scene(Scene_t* scene)
         );
         
         BeginMode2D(data->camera.cam);
+
+        if (point_in_AABB(data->player_spawn, (Rectangle){min.x * tilemap.tile_size, min.y * tilemap.tile_size, data->game_rec.width, data->game_rec.height}))
+        {
+            DrawCircleV(data->player_spawn, 6, PURPLE);
+        }
+
         for (int tile_y = min.y; tile_y < max.y; tile_y++)
         {
             for (int tile_x = min.x; tile_x < max.x; tile_x++)
@@ -248,12 +254,6 @@ static void render_editor_game_scene(Scene_t* scene)
         {
             CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
 
-            // Draw the spawn point
-            if (p_ent->m_tag == PLAYER_ENT_TAG)
-            {
-                DrawCircleV(p_ent->spawn_pos, 6, PURPLE);
-            }
-            
             // Entity culling
             Vector2 box_size = {0};
             if (p_bbox != NULL) box_size = p_bbox->size;
@@ -887,6 +887,9 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
                     p_playerstate->locked = !p_playerstate->locked;
                 }
             break;
+            case ACTION_SET_SPAWNPOINT:
+                data->player_spawn = p_player->position;
+            break;
             default:
             break;
         }
@@ -1062,9 +1065,6 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
                 data->show_grid = !data->show_grid;
             }
         break;
-        case ACTION_SET_SPAWNPOINT:
-            p_player->spawn_pos = p_player->position;
-        break;
         case ACTION_TOGGLE_TIMESLOW:
             if (!pressed)
             {
@@ -1103,6 +1103,27 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
     }
 }
 
+static void at_level_start(Scene_t* scene)
+{
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    data->sm.state = LEVEL_STATE_RUNNING;
+}
+
+static void at_level_dead(Scene_t* scene)
+{
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    Entity_t* p_player = create_player(&scene->ent_manager);
+    p_player->position = data->player_spawn;
+    data->sm.state = LEVEL_STATE_STARTING;
+}
+
+static void at_level_complete(Scene_t* scene)
+{
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    do_action(scene, ACTION_NEXTLEVEL, true);
+    data->sm.state = LEVEL_STATE_STARTING;
+}
+
 void init_sandbox_scene(LevelScene_t* scene)
 {
     init_scene(&scene->scene, &level_do_action);
@@ -1116,7 +1137,11 @@ void init_sandbox_scene(LevelScene_t* scene)
         &scene->data, MAX_N_TILES, all_tiles,
         (Rectangle){25, 25, VIEWABLE_EDITOR_MAP_WIDTH*TILE_SIZE, VIEWABLE_EDITOR_MAP_HEIGHT*TILE_SIZE}
     );
-    scene->data.show_grid = true;
+    scene->data.sm.state_functions[LEVEL_STATE_STARTING] = at_level_start;
+    scene->data.sm.state_functions[LEVEL_STATE_RUNNING] = NULL;
+    scene->data.sm.state_functions[LEVEL_STATE_DEAD] = at_level_dead;
+    scene->data.sm.state_functions[LEVEL_STATE_COMPLETE] = at_level_complete;
+
     scene->data.tile_sprites[ONEWAY_TILE] = get_sprite(&scene->scene.engine->assets, "tl_owp");
     scene->data.tile_sprites[LADDER] = get_sprite(&scene->scene.engine->assets, "tl_ldr");
     scene->data.tile_sprites[SPIKES] = get_sprite(&scene->scene.engine->assets, "d_spikes");
@@ -1363,8 +1388,8 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &player_dir_reset_system);
     sc_array_add(&scene->scene.systems, &update_water_runner_system);
     sc_array_add(&scene->scene.systems, &check_player_dead_system);
-    sc_array_add(&scene->scene.systems, &player_respawn_system);
     sc_array_add(&scene->scene.systems, &level_end_detection_system);
+    sc_array_add(&scene->scene.systems, &level_state_management_system);
     sc_array_add(&scene->scene.systems, &render_editor_game_scene);
     sc_array_add(&scene->scene.systems, &level_scene_render_func);
 

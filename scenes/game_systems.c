@@ -231,7 +231,6 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
 void check_player_dead_system(Scene_t* scene)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
-    TileGrid_t tilemap = data->tilemap;
     Entity_t* p_player;
     // Cannot create player while looping though the players
     // So have to create outside of the loop
@@ -245,25 +244,7 @@ void check_player_dead_system(Scene_t* scene)
                 ent->position = p_player->position;
             }
             destroy_entity(scene, &data->tilemap, p_player);
-        }
-    }
-}
-
-void player_respawn_system(Scene_t* scene)
-{
-    Entity_t* p_player;
-    // Cannot create player while looping though the players
-    // So have to create outside of the loop
-    sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
-    {
-        if (!p_player->m_alive)
-        {
-
-            Entity_t* new_player = create_player(&scene->ent_manager);
-            CTransform_t* p_ct = get_component(new_player, CTRANSFORM_COMP_T);
-            new_player->position = p_player->spawn_pos;
-            memset(&p_ct->velocity, 0, sizeof(p_ct->velocity));
-            memset(&p_ct->accel, 0, sizeof(p_ct->accel));
+            data->sm.state = LEVEL_STATE_DEAD;
         }
     }
 }
@@ -2038,10 +2019,21 @@ void level_end_detection_system(Scene_t* scene)
                 )
             )
             {
-                do_action(scene, ACTION_NEXTLEVEL, true);
+                lvl_scene->data.sm.state = LEVEL_STATE_COMPLETE;
+                //do_action(scene, ACTION_NEXTLEVEL, true);
             }
         }
 
+    }
+}
+
+void level_state_management_system(Scene_t* scene)
+{
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+
+    if (data->sm.state_functions[data->sm.state] != NULL)
+    {
+        data->sm.state_functions[data->sm.state](scene);
     }
 }
 

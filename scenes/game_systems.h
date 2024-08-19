@@ -22,11 +22,11 @@ void boulder_destroy_wooden_tile_system(Scene_t* scene);
 void camera_update_system(Scene_t* scene);
 void container_destroy_system(Scene_t* scene);
 void player_dir_reset_system(Scene_t* scene);
-void player_respawn_system(Scene_t* scene);
 void check_player_dead_system(Scene_t* scene);
 void lifetimer_update_system(Scene_t* scene);
 void airtimer_update_system(Scene_t* scene);
 void spike_collision_system(Scene_t* scene);
 void level_end_detection_system(Scene_t* scene);
+void level_state_management_system(Scene_t* scene);
 
 #endif // __GAME_SYSTEMS_H

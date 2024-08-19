@@ -416,6 +416,19 @@ static void render_regular_game_scene(Scene_t* scene)
     EndTextureMode();
 }
 
+static void at_level_start(Scene_t* scene)
+{
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    data->sm.state = LEVEL_STATE_RUNNING;
+}
+
+static void at_level_complete(Scene_t* scene)
+{
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
+    do_action(scene, ACTION_NEXTLEVEL, true);
+    data->sm.state = LEVEL_STATE_STARTING;
+}
+
 void init_game_scene(LevelScene_t* scene)
 {
     init_scene(&scene->scene, &level_do_action);
@@ -433,6 +446,10 @@ void init_game_scene(LevelScene_t* scene)
             VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE
         }
     );
+    scene->data.sm.state_functions[LEVEL_STATE_STARTING] = at_level_start;
+    scene->data.sm.state_functions[LEVEL_STATE_RUNNING] = NULL;
+    scene->data.sm.state_functions[LEVEL_STATE_DEAD] = NULL;
+    scene->data.sm.state_functions[LEVEL_STATE_COMPLETE] = at_level_complete;
 
     scene->scene.bg_colour = LIGHTGRAY;
     add_scene_layer(
@@ -480,9 +497,10 @@ void init_game_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &sprite_animation_system);
     sc_array_add(&scene->scene.systems, &camera_update_system);
     sc_array_add(&scene->scene.systems, &player_dir_reset_system);
-    sc_array_add(&scene->scene.systems, &check_player_dead_system);
-    //sc_array_add(&scene->scene.systems, &player_respawn_system);
     sc_array_add(&scene->scene.systems, &update_water_runner_system);
+    sc_array_add(&scene->scene.systems, &check_player_dead_system);
+    sc_array_add(&scene->scene.systems, &level_end_detection_system);
+    sc_array_add(&scene->scene.systems, &level_state_management_system);
     sc_array_add(&scene->scene.systems, &render_regular_game_scene);
     sc_array_add(&scene->scene.systems, &level_scene_render_func);
     // This avoid graphical glitch, not essential

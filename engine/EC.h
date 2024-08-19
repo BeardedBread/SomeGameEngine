@@ -253,7 +253,6 @@ static inline void set_bbox(CBBox_t* p_bbox, unsigned int x, unsigned int y)
 }
 
 struct Entity {
-    Vector2 spawn_pos;
     Vector2 position;
     unsigned long m_id;
     unsigned int m_tag;

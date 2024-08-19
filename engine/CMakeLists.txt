@@ -1,34 +1,42 @@
 add_subdirectory(sc)
-add_library(lib_engine STATIC
+add_library(lib_assets STATIC
     assets.c
-    AABB.c
-    gui.c
-    engine.c
-    collisions.c
     rres.c
-    mempool.c
-    entManager.c
     particle_sys.c
 )
-target_include_directories(lib_engine
+target_include_directories(lib_assets
     PRIVATE
     ${LIBZSTD_DIR}/include
     PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}
     ${RAYLIB_DIR}/include
 )
-target_link_directories(lib_engine
+target_link_directories(lib_assets
     PUBLIC
     ${RAYLIB_DIR}/lib
     ${LIBZSTD_DIR}/lib
 )
-target_link_libraries(lib_engine
+target_link_libraries(lib_assets
     PUBLIC
     zstd
     raylib
     sc_queue
-    sc_heap
     sc_map
+    m
+)
+
+add_library(lib_engine OBJECT
+    AABB.c
+    gui.c
+    engine.c
+    collisions.c
+    mempool.c
+    entManager.c
+)
+target_link_libraries(lib_engine
+    PUBLIC
+    lib_assets
+    sc_heap
     sc_array
     m
 )

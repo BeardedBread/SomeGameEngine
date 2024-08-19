@@ -8,6 +8,6 @@ set_target_properties(rres_packer
 
 target_link_libraries(rres_packer
     PRIVATE
-    lib_engine
+    lib_assets
 )
 

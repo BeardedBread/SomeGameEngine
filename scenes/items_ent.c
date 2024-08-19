@@ -256,6 +256,6 @@ Entity_t* create_level_end(EntityManager_t* ent_manager)
     Entity_t* p_flag = add_entity(ent_manager, LEVEL_END_TAG);
     if (p_flag == NULL) return NULL;
 
-    add_component(p_flag, CTRANSFORM_COMP_T);
+    add_component(p_flag, CTILECOORD_COMP_T);
     return p_flag;
 }

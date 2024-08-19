@@ -3,16 +3,11 @@
 #include "raylib.h"
 #include "engine_conf.h"
 #include "sc_queue.h"
-#include "EC.h"
+#include "assets.h"
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef enum PartEmitterType
-{
-    EMITTER_UNKNOWN = 0,
-    EMITTER_BURST,
-    EMITTER_STREAM,
-} PartEmitterType_t;
+typedef uint16_t EmitterHandle;
 
 typedef struct Particle
 {
@@ -31,18 +26,6 @@ typedef struct ParticleEmitter ParticleEmitter_t;
 
 typedef void (*particle_update_func_t)(Particle_t* part, void* user_data, float delta_time);
 typedef bool (*emitter_check_func_t)(const ParticleEmitter_t* emitter, float delta_time);
-
-typedef struct EmitterConfig
-{
-    float launch_range[2];
-    float speed_range[2];
-    float angle_range[2];
-    float rotation_range[2];
-    float particle_lifetime[2];
-    float initial_spawn_delay;
-    PartEmitterType_t type;
-    bool one_shot;
-}EmitterConfig_t;
 
 struct ParticleEmitter
 {

@@ -1,4 +1,6 @@
 #include "mempool.h"
+#include "components.h"
+
 // Static allocate buffers
 static CBBox_t bbox_buffer[MAX_COMP_POOL_SIZE];
 static CTransform_t ctransform_buffer[MAX_COMP_POOL_SIZE];

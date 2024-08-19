@@ -1,7 +1,7 @@
 #ifndef __ENT_IMPL_H
 #define __ENT_IMPL_H
-#include "assets.h"
 #include "assets_tag.h"
+#include "components.h"
 
 bool init_player_creation(const char* info_file, Assets_t* assets);
 bool init_player_creation_rres(const char* rres_file, const char* file, Assets_t* assets);

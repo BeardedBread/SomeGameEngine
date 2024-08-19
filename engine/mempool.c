@@ -134,7 +134,7 @@ void free_entity_to_mempool(unsigned long idx)
     }
 }
 
-void* new_component_from_mempool(ComponentEnum_t comp_type, unsigned long* idx)
+void* new_component_from_mempool(unsigned int comp_type, unsigned long* idx)
 {
     void* comp = NULL;
     assert(comp_type < N_COMPONENTS);
@@ -147,7 +147,7 @@ void* new_component_from_mempool(ComponentEnum_t comp_type, unsigned long* idx)
     return comp;
 }
 
-void* get_component_wtih_id(ComponentEnum_t comp_type, unsigned long idx)
+void* get_component_wtih_id(unsigned int comp_type, unsigned long idx)
 {
     void * comp = NULL;
     assert(comp_type < N_COMPONENTS);
@@ -158,7 +158,7 @@ void* get_component_wtih_id(ComponentEnum_t comp_type, unsigned long idx)
     return comp;
 }
 
-void free_component_to_mempool(ComponentEnum_t comp_type, unsigned long idx)
+void free_component_to_mempool(unsigned int comp_type, unsigned long idx)
 {
     assert(comp_type < N_COMPONENTS);
     // This just free the component from the memory pool

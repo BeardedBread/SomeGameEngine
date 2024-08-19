@@ -144,7 +144,7 @@ Entity_t* get_entity(EntityManager_t* p_manager, unsigned long id)
     return p_entity;
 }
 
-void* add_component(Entity_t* p_entity, ComponentEnum_t comp_type)
+void* add_component(Entity_t* p_entity, unsigned int comp_type)
 {
     if (p_entity->components[comp_type] == MAX_COMP_POOL_SIZE)
     {
@@ -163,7 +163,7 @@ void* add_component(Entity_t* p_entity, ComponentEnum_t comp_type)
     return get_component(p_entity, comp_type);
 }
 
-void* get_component(Entity_t *p_entity, ComponentEnum_t comp_type)
+void* get_component(Entity_t *p_entity, unsigned int comp_type)
 {
     unsigned long comp_type_idx = (unsigned long)comp_type;
     unsigned long c_idx = p_entity->components[comp_type_idx];
@@ -171,7 +171,7 @@ void* get_component(Entity_t *p_entity, ComponentEnum_t comp_type)
     return get_component_wtih_id(comp_type, c_idx);
 }
 
-void remove_component(Entity_t *p_entity, ComponentEnum_t comp_type)
+void remove_component(Entity_t *p_entity, unsigned int comp_type)
 {
     if (p_entity->components[comp_type] == MAX_COMP_POOL_SIZE) return;
     struct EntityUpdateEventInfo evt = (struct EntityUpdateEventInfo){p_entity->m_id, comp_type, p_entity->components[comp_type] , COMP_DELETION};

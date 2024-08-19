@@ -4,7 +4,7 @@
 #include "EC.h"
 #include "raylib.h"
 #include "rres.h"
-#include "particle_sys.h"
+
 #define N_ASSETS_TYPE 6
 typedef enum AssetType
 {
@@ -16,6 +16,24 @@ typedef enum AssetType
     AST_EMITTER_CONF,
 }AssetType_t;
 
+typedef enum PartEmitterType
+{
+    EMITTER_UNKNOWN = 0,
+    EMITTER_BURST,
+    EMITTER_STREAM,
+} PartEmitterType_t;
+
+typedef struct EmitterConfig
+{
+    float launch_range[2];
+    float speed_range[2];
+    float angle_range[2];
+    float rotation_range[2];
+    float particle_lifetime[2];
+    float initial_spawn_delay;
+    PartEmitterType_t type;
+    bool one_shot;
+}EmitterConfig_t;
 
 typedef struct Assets
 {
@@ -48,6 +66,18 @@ typedef struct LevelPack
    uint32_t n_levels;
    LevelMap_t* levels;
 }LevelPack_t;
+
+// Credits to bedroomcoders.co.uk for this
+typedef struct Sprite {
+    Texture2D* texture;
+    Vector2 frame_size;
+    Vector2 origin; // TL of the frame
+    Vector2 anchor; // Where transformation anchors on
+    uint8_t frame_per_row;
+    int frame_count;
+    int speed;
+    char* name;
+} Sprite_t;
 
 typedef struct RresFileInfo
 {

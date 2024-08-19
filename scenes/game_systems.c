@@ -244,7 +244,7 @@ void check_player_dead_system(Scene_t* scene)
                 ent->position = p_player->position;
             }
             destroy_entity(scene, &data->tilemap, p_player);
-            data->sm.state = LEVEL_STATE_DEAD;
+            change_level_state(data, LEVEL_STATE_DEAD);
         }
     }
 }
@@ -1467,10 +1467,8 @@ void update_tilemap_system(Scene_t* scene)
     {
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         if (!p_ent->m_alive) continue;
-        CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
-        if (p_ctransform == NULL) continue;
-        CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
 
+        CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
         // Update tilemap position
         for (size_t i = 0;i < p_tilecoord->n_tiles; ++i)
         {
@@ -2019,7 +2017,10 @@ void level_end_detection_system(Scene_t* scene)
                 )
             )
             {
-                lvl_scene->data.sm.state = LEVEL_STATE_COMPLETE;
+                destroy_entity(scene, &lvl_scene->data.tilemap, p_other_ent);
+                change_level_state(&lvl_scene->data, LEVEL_STATE_COMPLETE);
+
+
                 //do_action(scene, ACTION_NEXTLEVEL, true);
             }
         }

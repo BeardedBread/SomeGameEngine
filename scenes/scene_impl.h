@@ -77,6 +77,13 @@ typedef struct LevelSceneData {
     LevelSceneStateMachine_t sm;
 }LevelSceneData_t;
 
+static inline void change_level_state(LevelSceneData_t* data, LevelSceneState_t state)
+{
+    data->sm.state = state;
+    data->sm.counter = 0;
+    data->sm.fractional = 0;
+}
+
 typedef struct LevelScene {
     Scene_t scene;
     LevelSceneData_t data;

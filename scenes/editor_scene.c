@@ -1114,14 +1114,28 @@ static void at_level_dead(Scene_t* scene)
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     Entity_t* p_player = create_player(&scene->ent_manager);
     p_player->position = data->player_spawn;
-    data->sm.state = LEVEL_STATE_STARTING;
+    CPlayerState_t* p_pstate = get_component(p_player, CPLAYERSTATE_T);
+    if (data->camera.mode == CAMERA_RANGED_MOVEMENT)
+    {
+        p_pstate->locked = true;
+    }
+    change_level_state(data, LEVEL_STATE_STARTING);
 }
 
 static void at_level_complete(Scene_t* scene)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
-    do_action(scene, ACTION_NEXTLEVEL, true);
-    data->sm.state = LEVEL_STATE_STARTING;
+    data->sm.fractional += scene->delta_time;
+    if (data->sm.fractional > 1.0f)
+    {
+        data->sm.fractional -= 1.0f;
+        data->sm.counter++;
+    }
+    if (data->sm.counter >= 3)
+    {
+        do_action(scene, ACTION_NEXTLEVEL, true);
+        at_level_dead(scene);
+    }
 }
 
 void init_sandbox_scene(LevelScene_t* scene)

@@ -33,4 +33,23 @@ void free_component_to_mempool(unsigned int comp_type, unsigned long idx);
 
 void print_mempool_stats(char* buffer);
 uint32_t get_num_of_free_entities(void);
+
+#define DEFINE_COMP_MEMPOOL_BUF(type, n) \
+    static type type##_buf[n]; \
+    const unsigned long type##_CNT = n; \
+
+#define ADD_COMP_MEMPOOL(type) \
+    {type##_buf, type##_CNT, sizeof(type), NULL, {0}}, \
+
+#define BEGIN_DEFINE_COMP_MEMPOOL \
+    DEFINE_COMP_MEMPOOL_BUF(CBBox_t, MAX_COMP_POOL_SIZE); \
+    DEFINE_COMP_MEMPOOL_BUF(CTransform_t, MAX_COMP_POOL_SIZE); \
+    DEFINE_COMP_MEMPOOL_BUF(CTileCoord_t, MAX_COMP_POOL_SIZE); \
+    MemPool_t comp_mempools[N_COMPONENTS] = { \
+        ADD_COMP_MEMPOOL(CBBox_t) \
+        ADD_COMP_MEMPOOL(CTransform_t) \
+        ADD_COMP_MEMPOOL(CTileCoord_t) \
+
+#define END_DEFINE_COMP_MEMPOOL };
+
 #endif //__MEMPOOL_H

@@ -65,6 +65,8 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
     scene->data.tilemap.width = lvl_map.width;
     scene->data.tilemap.height = lvl_map.height;
     scene->data.tilemap.n_tiles = n_tiles;
+    scene->data.coins.current = 0;
+    scene->data.coins.total = lvl_map.n_chests;
 
     clear_entity_manager(&scene->scene.ent_manager);
 

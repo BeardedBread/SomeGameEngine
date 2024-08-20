@@ -77,6 +77,7 @@ with open(converted_filename, 'wb+') as out_file:
     out_file.write(struct.pack("<I", n_levels))
     # Then loop the levels. Read the layerIndstances
     for level in level_pack_data["levels"]:
+        n_chests : int = 0
         # Search for __identifier for the level layout
         level_name = level["identifier"]
         print("Parsing level", level_name)
@@ -104,6 +105,8 @@ with open(converted_filename, 'wb+') as out_file:
         for i, tile in enumerate(level_layout["gridTiles"]):
             try:
                 tiles_info[tile["d"][0]][0] = ids_tiletype_map[tile["t"]]
+                if tiles_info[tile["d"][0]][0] == ENUMIDS_TILETYPE_MAPPING ["Chest"]:
+                    n_chests += 1
             except Exception as e:
                 print("Error on tile", i, i % width, i // height)
                 print(e)
@@ -117,7 +120,7 @@ with open(converted_filename, 'wb+') as out_file:
             x,y = ent["__grid"]
             tiles_info[y*width + x][0] = ENUMIDS_TILETYPE_MAPPING[ent["__identifier"]]
 
-        out_file.write(struct.pack("<32s2H", level_name.encode('utf-8'), width, height))
+        out_file.write(struct.pack("<32s3H", level_name.encode('utf-8'), width, height, n_chests))
         for tile in tiles_info:
             out_file.write(struct.pack("<3Bx", *tile))
 

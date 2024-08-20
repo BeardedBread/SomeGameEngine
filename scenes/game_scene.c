@@ -51,6 +51,8 @@ static void level_scene_render_func(Scene_t* scene)
 
         print_mempool_stats(buffer);
         DrawText(buffer, gui_x, 150, 12, BLACK);
+        sprintf(buffer, "Chests: %u / %u", data->coins.current, data->coins.total);
+        DrawText(buffer, gui_x, data->game_rec.y + data->game_rec.height, 24, BLACK);
     EndTextureMode();
 }
 

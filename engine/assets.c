@@ -275,7 +275,7 @@ static LevelPack_t* add_level_pack_zst(Assets_t* assets, const char* name, const
     for (lvls = 0; lvls < n_levels; ++lvls)
     {
         printf("Parsing level %u\n", lvls);
-        output.size = 36;
+        output.size = 38;
         output.pos = 0;
 
         do
@@ -310,6 +310,7 @@ static LevelPack_t* add_level_pack_zst(Assets_t* assets, const char* name, const
         memcpy(pack_info->pack.levels[lvls].level_name, level_decompressor.out_buffer, 32);
         memcpy(&pack_info->pack.levels[lvls].width, level_decompressor.out_buffer + 32, 2);
         memcpy(&pack_info->pack.levels[lvls].height, level_decompressor.out_buffer + 34, 2);
+        memcpy(&pack_info->pack.levels[lvls].n_chests, level_decompressor.out_buffer + 36, 2);
         pack_info->pack.levels[lvls].level_name[31] = '\0';
         printf("Level name: %s\n", pack_info->pack.levels[lvls].level_name);
         printf("WxH: %u %u\n", pack_info->pack.levels[lvls].width, pack_info->pack.levels[lvls].height);

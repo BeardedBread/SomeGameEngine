@@ -248,10 +248,38 @@ static void render_editor_game_scene(Scene_t* scene)
             }
         }
 
+        sc_map_foreach_value(&scene->ent_manager.entities_map[LEVEL_END_TAG], p_ent)
+        {
+            CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
+            if (p_cspr != NULL)
+            {
+                const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
+                if (spr.sprite != NULL)
+                {
+                    Vector2 pos = p_ent->position;
+                    pos = Vector2Subtract(
+                        pos,
+                        get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->flip_x)
+                    );
+
+                    Vector2 offset = spr.offset;
+                    if (p_cspr->flip_x) offset.x *= -1;
+
+                    pos = Vector2Add(pos, offset);
+                    draw_sprite(spr.sprite, (data->coins.current < data->coins.total) ? 0 : 1, pos, 0.0f, p_cspr->flip_x);
+                }
+            }
+            else
+            {
+                DrawCircleV(p_ent->position, tilemap.tile_size >> 1, (data->coins.current < data->coins.total)? RED : GREEN);
+            }
+        }
 
         char buffer[64] = {0};
         sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
         {
+            if (p_ent->m_tag == LEVEL_END_TAG) continue;
+
             CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
 
             // Entity culling
@@ -393,11 +421,11 @@ static void render_editor_game_scene(Scene_t* scene)
                             pos,
                             get_anchor_offset(p_bbox->size, spr.dest_anchor, p_cspr->flip_x)
                         );
-                        pos = Vector2Subtract(
-                            pos,
-                            get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->flip_x)
-                        );
                     }
+                    pos = Vector2Subtract(
+                        pos,
+                        get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->flip_x)
+                    );
 
                     Vector2 offset = spr.offset;
                     if (p_cspr->flip_x) offset.x *= -1;
@@ -406,11 +434,6 @@ static void render_editor_game_scene(Scene_t* scene)
                     draw_sprite(spr.sprite, p_cspr->current_frame, pos, 0.0f, p_cspr->flip_x);
                 }
             }
-        }
-
-        sc_map_foreach_value(&scene->ent_manager.entities_map[LEVEL_END_TAG], p_ent)
-        {
-            DrawCircleV(p_ent->position, tilemap.tile_size >> 1, (data->coins.current < data->coins.total)? RED : GREEN);
         }
 
         for (int tile_y = min.y; tile_y < max.y; tile_y++)
@@ -1131,7 +1154,7 @@ static void at_level_complete(Scene_t* scene)
         data->sm.fractional -= 1.0f;
         data->sm.counter++;
     }
-    if (data->sm.counter >= 3)
+    if (data->sm.counter >= 1)
     {
         do_action(scene, ACTION_NEXTLEVEL, true);
         at_level_dead(scene);
@@ -1194,6 +1217,20 @@ void init_sandbox_scene(LevelScene_t* scene)
         &scene->scene, scene->data.game_rec.width, scene->data.game_rec.height,
         scene->data.game_rec
     );
+
+    {
+        Entity_t* p_player = create_player(&scene->scene.ent_manager);
+        CSprite_t* p_cspr = get_component(p_player, CSPRITE_T);
+        p_cspr->flip_x = true;
+        
+        p_player->position.x = 100;
+        p_player->position.y = (scene->data.tilemap.height - 2) * scene->data.tilemap.tile_size;
+        scene->data.player_spawn = p_player->position;
+        scene->data.camera.target_pos = p_player->position;
+        scene->data.camera.cam.target = p_player->position;
+    }
+
+    update_entity_manager(&scene->scene.ent_manager);
 
     BeginTextureMode(scene->scene.layers.render_layers[SELECTION_LAYER].layer_tex);
         ClearBackground(LIGHTGRAY);
@@ -1370,8 +1407,6 @@ void init_sandbox_scene(LevelScene_t* scene)
 
     EndTextureMode();
 
-    create_player(&scene->scene.ent_manager);
-    update_entity_manager(&scene->scene.ent_manager);
 
     // insert level scene systems
     sc_array_add(&scene->scene.systems, &update_tilemap_system);

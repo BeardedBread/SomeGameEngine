@@ -2,7 +2,7 @@
 #include "constants.h"
 #include "raymath.h"
 
-static SpriteRenderInfo_t item_sprite_map[20] = {0};
+static SpriteRenderInfo_t item_sprite_map[21] = {0};
 
 bool init_item_creation(Assets_t* assets)
 {
@@ -29,6 +29,10 @@ bool init_item_creation(Assets_t* assets)
     item_sprite_map[17].offset = (Vector2){-12, -12};
     item_sprite_map[18].sprite = get_sprite(assets, "chest");
     item_sprite_map[19].sprite = get_sprite(assets, "boulder");
+    item_sprite_map[20].sprite = get_sprite(assets, "exit");
+    item_sprite_map[20].src_anchor = AP_BOT_CENTER;
+    item_sprite_map[20].src_anchor = AP_BOT_CENTER;
+    item_sprite_map[20].offset = (Vector2){0, TILE_SIZE >> 1};
     return true;
 }
 
@@ -255,6 +259,10 @@ Entity_t* create_level_end(EntityManager_t* ent_manager)
 {
     Entity_t* p_flag = add_entity(ent_manager, LEVEL_END_TAG);
     if (p_flag == NULL) return NULL;
+
+    CSprite_t* p_cspr = add_component(p_flag, CSPRITE_T);
+    p_cspr->sprites = item_sprite_map;
+    p_cspr->current_idx = 20;
 
     add_component(p_flag, CTILECOORD_COMP_T);
     return p_flag;

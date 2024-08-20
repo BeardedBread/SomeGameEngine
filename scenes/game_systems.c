@@ -2017,6 +2017,16 @@ void level_end_detection_system(Scene_t* scene)
                 )
             )
             {
+                Entity_t* ent = create_player_finish(&scene->ent_manager);
+                if (ent != NULL)
+                {
+                    ent->position = p_flag->position;
+                    ent->position.y += tilemap.tile_size >> 1;
+                    CSprite_t* p_cspr = get_component(p_other_ent, CSPRITE_T);
+                    CSprite_t* new_cspr = get_component(ent, CSPRITE_T);
+                    new_cspr->flip_x = p_cspr->flip_x;
+
+                }
                 destroy_entity(scene, &lvl_scene->data.tilemap, p_other_ent);
                 change_level_state(&lvl_scene->data, LEVEL_STATE_COMPLETE);
 

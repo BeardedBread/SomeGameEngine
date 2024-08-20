@@ -4,7 +4,7 @@
 #include <string.h>
 #include "raymath.h"
 
-#define N_PLAYER_SPRITES 11
+#define N_PLAYER_SPRITES 12
 enum PlayerSpriteEnum
 {
     SPR_PLAYER_STAND = 0,
@@ -18,6 +18,7 @@ enum PlayerSpriteEnum
     SPR_PLAYER_USWIM,
     SPR_PLAYER_DSWIM,
     SPR_PLAYER_DEAD,
+    SPR_PLAYER_ENTER,
 };
 
 static SpriteRenderInfo_t player_sprite_map[N_PLAYER_SPRITES] = {0};
@@ -132,6 +133,32 @@ Entity_t* create_dead_player(EntityManager_t* ent_manager)
     p_cspr->current_idx = SPR_PLAYER_DEAD;
 
     add_component(p_ent, CMOVEMENTSTATE_T);
+
+    return p_ent;
+}
+
+static unsigned int player_finish_transition_func(Entity_t* ent)
+{
+    CSprite_t* p_spr = get_component(ent, CSPRITE_T);
+    // Due to index-from-0
+    if (p_spr->current_frame == p_spr->sprites[p_spr->current_idx].sprite->frame_count - 1)
+    {
+        p_spr->pause = true;
+    }
+    return p_spr->current_idx;
+}
+
+Entity_t* create_player_finish(EntityManager_t* ent_manager)
+{
+    Entity_t* p_ent = add_entity(ent_manager, NO_ENT_TAG);
+    if (p_ent == NULL) return NULL;
+
+    CSprite_t* p_cspr = add_component(p_ent, CSPRITE_T);
+    p_cspr->sprites = player_sprite_map;
+    p_cspr->current_idx = SPR_PLAYER_ENTER;
+    p_cspr->transition_func = &player_finish_transition_func;
+
+    add_component(p_ent, CTILECOORD_COMP_T);
 
     return p_ent;
 }

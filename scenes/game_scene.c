@@ -174,8 +174,38 @@ static void render_regular_game_scene(Scene_t* scene)
             }
         }
 
+        sc_map_foreach_value(&scene->ent_manager.entities_map[LEVEL_END_TAG], p_ent)
+        {
+            // There is only a few exits, can may be get away without culling
+            CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
+            if (p_cspr != NULL)
+            {
+                const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
+                if (spr.sprite != NULL)
+                {
+                    Vector2 pos = p_ent->position;
+                    pos = Vector2Subtract(
+                        pos,
+                        get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->flip_x)
+                    );
+
+                    Vector2 offset = spr.offset;
+                    if (p_cspr->flip_x) offset.x *= -1;
+
+                    pos = Vector2Add(pos, offset);
+                    draw_sprite(spr.sprite, (data->coins.current < data->coins.total) ? 0 : 1, pos, 0.0f, p_cspr->flip_x);
+                }
+            }
+            else
+            {
+                DrawCircleV(p_ent->position, tilemap.tile_size >> 1, (data->coins.current < data->coins.total)? RED : GREEN);
+            }
+        }
+
         sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
         {
+            if (p_ent->m_tag == LEVEL_END_TAG) continue;
+
             CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
 
             // Entity culling
@@ -202,11 +232,11 @@ static void render_regular_game_scene(Scene_t* scene)
                             pos,
                             get_anchor_offset(p_bbox->size, spr.dest_anchor, p_cspr->flip_x)
                         );
-                        pos = Vector2Subtract(
-                            pos,
-                            get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->flip_x)
-                        );
                     }
+                    pos = Vector2Subtract(
+                        pos,
+                        get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->flip_x)
+                    );
 
                     Vector2 offset = spr.offset;
                     if (p_cspr->flip_x) offset.x *= -1;
@@ -374,14 +404,14 @@ static void render_regular_game_scene(Scene_t* scene)
         }
 
 
-        sc_map_foreach_value(&scene->ent_manager.entities_map[DYNMEM_ENT_TAG], p_ent)
-        {
-            CWaterRunner_t* p_runner = get_component(p_ent, CWATERRUNNER_T);
+        //sc_map_foreach_value(&scene->ent_manager.entities_map[DYNMEM_ENT_TAG], p_ent)
+        //{
+        //    CWaterRunner_t* p_runner = get_component(p_ent, CWATERRUNNER_T);
 
-            unsigned int x = ((p_runner->current_tile) % tilemap.width) * tilemap.tile_size;
-            unsigned int y = ((p_runner->current_tile) / tilemap.width) * tilemap.tile_size;
-            DrawCircle(x+16, y+16, 8, ColorAlpha(BLUE, 0.6));
-        }
+        //    unsigned int x = ((p_runner->current_tile) % tilemap.width) * tilemap.tile_size;
+        //    unsigned int y = ((p_runner->current_tile) / tilemap.width) * tilemap.tile_size;
+        //    DrawCircle(x+16, y+16, 8, ColorAlpha(BLUE, 0.6));
+        //}
         draw_particle_system(&scene->part_sys);
 
         // Draw water tile
@@ -425,8 +455,17 @@ static void at_level_start(Scene_t* scene)
 static void at_level_complete(Scene_t* scene)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
-    do_action(scene, ACTION_NEXTLEVEL, true);
-    data->sm.state = LEVEL_STATE_STARTING;
+    data->sm.fractional += scene->delta_time;
+    if (data->sm.fractional > 1.0f)
+    {
+        data->sm.fractional -= 1.0f;
+        data->sm.counter++;
+    }
+    if (data->sm.counter >= 1)
+    {
+        do_action(scene, ACTION_NEXTLEVEL, false);
+        data->sm.state = LEVEL_STATE_STARTING;
+    }
 }
 
 void init_game_scene(LevelScene_t* scene)

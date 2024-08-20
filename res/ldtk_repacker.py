@@ -38,6 +38,7 @@ ENUMIDS_TILETYPE_MAPPING = {
     'Runner': 21,
     'Player': 22,
     'Chest': 23,
+    'Exit': 24,
 }
 
 #ENTID_MAPPING = {

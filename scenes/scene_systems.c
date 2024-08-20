@@ -158,6 +158,16 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
                     p_ctransform->active = true;
                 }
                 break;
+                case 24:
+                {
+                    Entity_t* ent = create_level_end(&scene->scene.ent_manager);
+                    if (ent != NULL)
+                    {
+                        ent->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+                        ent->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size + (scene->data.tilemap.tile_size >> 1);
+                    }
+                }
+                break;
                 default:
                 break;
             }

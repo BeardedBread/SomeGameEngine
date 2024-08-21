@@ -1883,12 +1883,32 @@ void airtimer_update_system(Scene_t* scene)
         Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         if (!p_ent->m_alive) continue;
         CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
-        if (p_bbox == NULL) continue;
+        CMovementState_t* p_mstate = get_component(p_ent, CBBOX_COMP_T);
 
-        Vector2 point_to_check = {
-            p_ent->position.x + p_bbox->half_size.x,
-            p_ent->position.y + p_bbox->half_size.y / 2,
-        };
+        Vector2 point_to_check = p_ent->position;
+        if (p_bbox != NULL)
+        {
+            if (p_mstate != NULL && (p_mstate->ground_state & 1))
+            {
+                point_to_check = Vector2Add(
+                    point_to_check,
+                    (Vector2){
+                        p_bbox->half_size.x,
+                        p_bbox->half_size.y / 2,
+                    }
+                );
+            }
+            else
+            {
+                point_to_check = Vector2Add(
+                    point_to_check,
+                    (Vector2){
+                        p_bbox->half_size.x,
+                        p_bbox->half_size.y / 3,
+                    }
+                );
+            }
+        }
 
         unsigned int tile_idx = get_tile_idx(
             point_to_check.x,

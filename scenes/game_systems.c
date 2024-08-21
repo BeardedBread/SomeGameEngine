@@ -525,7 +525,35 @@ void player_bbox_update_system(Scene_t* scene)
         p_hitbox->boxes[0].height = p_bbox->size.y + 4;
         p_hitbox->boxes[1].height = p_bbox->size.y;
         CHurtbox_t* p_hurtbox = get_component(p_player, CHURTBOX_T);
-        p_hurtbox->size = p_bbox->size;
+
+        if ((p_mstate->water_state & 1) && !(p_mstate->ground_state & 1))
+        {
+            p_hurtbox->size = p_bbox->size;
+            p_hurtbox->size.x *= 1.7;
+            p_hitbox->boxes[0].width = p_bbox->size.x * 2.0f;
+            p_hitbox->boxes[1].width = p_bbox->size.x * 2.0f + 4;
+            if (p_mstate->x_dir > 0)
+            {
+                p_hitbox->boxes[0].x = -p_bbox->size.x;
+                p_hitbox->boxes[1].x = -p_bbox->size.x - 2;
+                p_hurtbox->offset.x = -p_bbox->size.x * 0.7;
+            }
+            else
+            {
+                p_hitbox->boxes[0].x = 0;
+                p_hitbox->boxes[1].x = -2;
+                p_hurtbox->offset.x = 0;
+            }
+        }
+        else
+        {
+            p_hitbox->boxes[0].x = 0;
+            p_hitbox->boxes[0].width = p_bbox->size.x;
+            p_hitbox->boxes[1].x = -2;
+            p_hitbox->boxes[1].width = p_bbox->size.x + 4;
+            p_hurtbox->offset = (Vector2){0,0};
+            p_hurtbox->size = p_bbox->size;
+        }
     }
 }
 

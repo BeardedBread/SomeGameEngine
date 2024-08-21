@@ -151,12 +151,23 @@ collision_end:
 
 void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
 {
+    /* Use the helper function to remove any entity
+     * This is because some components may have deinit steps
+     * This function will also take care of the tilemap collision handling
+     * */
+
     Vector2 half_size = {0,0};
     CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
     if (p_bbox != NULL)
     {
         half_size = p_bbox->half_size;
     }
+    CEmitter_t* p_emitter = get_component(p_ent, CEMITTER_T);
+    if (p_emitter != NULL)
+    {
+        unload_emitter_handle(&scene->part_sys, p_emitter->handle);
+    }
+
     if (p_ent->m_tag == BOULDER_ENT_TAG)
     {
         ParticleEmitter_t emitter = {

@@ -345,7 +345,9 @@ void player_movement_input_system(Scene_t* scene)
                 p_ctransform->velocity.x = p_pstate->player_dir.x * 40 * (p_pstate->locked ? 0 : 1);
                 if (p_pstate->player_dir.y != 0)
                 {
-                    p_player->position.x = tile_x * TILE_SIZE + 1;
+                    p_player->position.x = tile_x * tilemap.tile_size;
+                    p_player->position.x += (tilemap.tile_size >> 1);
+                    p_player->position.x -= p_bbox->half_size.x;
                 }
             }
         }

@@ -255,30 +255,32 @@ void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_ty
 
     tilemap->tiles[tile_idx].rotation = TILE_NOROTATE;
 
+    const int SPIKE_HITBOX_LONGSIDE = 30;
+    const int SPIKE_HITBOX_SHORTSIDE = 12;
     if (new_type == SPIKES)
     {
         // Priority: Down, Up, Left, Right
         if (tile_idx + tilemap->width < tilemap->n_tiles && tilemap->tiles[tile_idx + tilemap->width].tile_type == SOLID_TILE)
         {
-            tilemap->tiles[tile_idx].offset = (Vector2){0,16};
-            tilemap->tiles[tile_idx].size = (Vector2){32,16};
+            tilemap->tiles[tile_idx].offset = (Vector2){0,tilemap->tile_size - SPIKE_HITBOX_SHORTSIDE};
+            tilemap->tiles[tile_idx].size = (Vector2){SPIKE_HITBOX_LONGSIDE, SPIKE_HITBOX_SHORTSIDE};
         }
         else if (tile_idx - tilemap->width >= 0 && tilemap->tiles[tile_idx - tilemap->width].tile_type == SOLID_TILE)
         {
             tilemap->tiles[tile_idx].offset = (Vector2){0,0};
-            tilemap->tiles[tile_idx].size = (Vector2){32,16};
+            tilemap->tiles[tile_idx].size = (Vector2){SPIKE_HITBOX_LONGSIDE, SPIKE_HITBOX_SHORTSIDE};
             tilemap->tiles[tile_idx].rotation = TILE_180ROT;
         }
         else if (tile_idx % tilemap->width != 0 && tilemap->tiles[tile_idx - 1].tile_type == SOLID_TILE)
         {
             tilemap->tiles[tile_idx].offset = (Vector2){0,0};
-            tilemap->tiles[tile_idx].size = (Vector2){16,32};
+            tilemap->tiles[tile_idx].size = (Vector2){SPIKE_HITBOX_SHORTSIDE, SPIKE_HITBOX_LONGSIDE};
             tilemap->tiles[tile_idx].rotation = TILE_90CWROT;
         }
         else if ((tile_idx + 1) % tilemap->width != 0 && tilemap->tiles[tile_idx + 1].tile_type == SOLID_TILE)
         {
-            tilemap->tiles[tile_idx].offset = (Vector2){16,0};
-            tilemap->tiles[tile_idx].size = (Vector2){16,32};
+            tilemap->tiles[tile_idx].offset = (Vector2){SPIKE_HITBOX_SHORTSIDE >> 1,0};
+            tilemap->tiles[tile_idx].size = (Vector2){SPIKE_HITBOX_SHORTSIDE, SPIKE_HITBOX_LONGSIDE};
             tilemap->tiles[tile_idx].rotation = TILE_90CCWROT;
         }
         else

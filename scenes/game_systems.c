@@ -1722,6 +1722,7 @@ void boulder_destroy_wooden_tile_system(Scene_t* scene)
 
 void container_destroy_system(Scene_t* scene)
 {
+    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
     unsigned int ent_idx;
     CContainer_t* p_container;
     sc_map_foreach(&scene->ent_manager.component_map[CCONTAINER_T], ent_idx, p_container)
@@ -1737,23 +1738,28 @@ void container_destroy_system(Scene_t* scene)
             }
 
             Entity_t* new_ent;
+            AnchorPoint_t spawn_anchor = AP_MID_CENTER;
             switch (p_container->item)
             {
                 case CONTAINER_LEFT_ARROW:
                     new_ent = create_arrow(&scene->ent_manager, 0);
                     play_sfx(scene->engine, ARROW_RELEASE_SFX);
+                    spawn_anchor = AP_MID_LEFT;
                 break;
                 case CONTAINER_RIGHT_ARROW:
                     new_ent = create_arrow(&scene->ent_manager, 1);
                     play_sfx(scene->engine, ARROW_RELEASE_SFX);
+                    spawn_anchor = AP_MID_RIGHT;
                 break;
                 case CONTAINER_UP_ARROW:
                     new_ent = create_arrow(&scene->ent_manager, 2);
                     play_sfx(scene->engine, ARROW_RELEASE_SFX);
+                    spawn_anchor = AP_TOP_CENTER;
                 break;
                 case CONTAINER_DOWN_ARROW:
                     new_ent = create_arrow(&scene->ent_manager, 3);
                     play_sfx(scene->engine, ARROW_RELEASE_SFX);
+                    spawn_anchor = AP_BOT_CENTER;
                 break;
                 case CONTAINER_BOMB:
                     if (dmg_src != NULL && dmg_src->m_tag == PLAYER_ENT_TAG)
@@ -1786,24 +1792,25 @@ void container_destroy_system(Scene_t* scene)
                     new_ent = NULL;
                 break;
             }
-            if (
-                p_container->item != CONTAINER_EXPLOSION
-                && p_container->item != CONTAINER_BOMB
-            )
-            {
-                    if (p_container->material == WOODEN_CONTAINER)
-                    {
-                        play_sfx(scene->engine, WOOD_DESTROY_SFX);
-                    }
-                    else
-                    {
-                        play_sfx(scene->engine, METAL_DESTROY_SFX);
-                    }
-            }
-
             if (new_ent != NULL)
             {
-                new_ent->position = Vector2Add(new_ent->position, p_ent->position);
+                new_ent->position = Vector2Add(
+                    p_ent->position,
+                    get_anchor_offset(
+                        (Vector2){data->tilemap.tile_size, data->tilemap.tile_size}
+                        , spawn_anchor, false
+                    )
+                );
+            }
+
+            // In case there's more materials
+            if (p_container->material == WOODEN_CONTAINER)
+            {
+                play_sfx(scene->engine, WOOD_DESTROY_SFX);
+            }
+            else
+            {
+                play_sfx(scene->engine, METAL_DESTROY_SFX);
             }
         }
     }

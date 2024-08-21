@@ -9,12 +9,21 @@ bool init_item_creation(Assets_t* assets)
     item_sprite_map[0].sprite = get_sprite(assets, "w_crate");
     item_sprite_map[1].sprite = get_sprite(assets, "m_crate");
     item_sprite_map[2].sprite = get_sprite(assets, "r_arrow");
-    item_sprite_map[2].offset = (Vector2){-8, 4};
+    //item_sprite_map[2].offset = (Vector2){-8, 6};
+    item_sprite_map[2].src_anchor = AP_MID_CENTER;
+    item_sprite_map[2].src_anchor = AP_MID_CENTER;
     item_sprite_map[3].sprite = get_sprite(assets, "u_arrow");
+    item_sprite_map[3].src_anchor = AP_MID_CENTER;
+    item_sprite_map[3].src_anchor = AP_MID_CENTER;
     item_sprite_map[4].sprite = get_sprite(assets, "l_arrow");
+    item_sprite_map[4].src_anchor = AP_MID_CENTER;
+    item_sprite_map[4].src_anchor = AP_MID_CENTER;
     item_sprite_map[5].sprite = get_sprite(assets, "d_arrow");
+    item_sprite_map[5].src_anchor = AP_MID_CENTER;
+    item_sprite_map[5].src_anchor = AP_MID_CENTER;
     item_sprite_map[6].sprite = get_sprite(assets, "bomb");
-    item_sprite_map[6].offset = (Vector2){0, -4};
+    item_sprite_map[6].src_anchor = AP_MID_CENTER;
+    item_sprite_map[6].src_anchor = AP_MID_CENTER;
     item_sprite_map[7].sprite = get_sprite(assets, "w_ra_crate");
     item_sprite_map[8].sprite = get_sprite(assets, "m_ra_crate");
     item_sprite_map[9].sprite = get_sprite(assets, "w_ua_crate");
@@ -26,7 +35,8 @@ bool init_item_creation(Assets_t* assets)
     item_sprite_map[15].sprite = get_sprite(assets, "w_b_crate");
     item_sprite_map[16].sprite = get_sprite(assets, "m_b_crate");
     item_sprite_map[17].sprite = get_sprite(assets, "explode");
-    item_sprite_map[17].offset = (Vector2){-12, -12};
+    item_sprite_map[17].src_anchor = AP_MID_CENTER;
+    item_sprite_map[17].src_anchor = AP_MID_CENTER;
     item_sprite_map[18].sprite = get_sprite(assets, "chest");
     item_sprite_map[19].sprite = get_sprite(assets, "boulder");
     item_sprite_map[20].sprite = get_sprite(assets, "exit");
@@ -132,25 +142,29 @@ Entity_t* create_arrow(EntityManager_t* ent_manager, uint8_t dir)
     p_cspr->sprites = item_sprite_map;
     p_cspr->current_idx = 2;
     //p_hitbox->boxes[0] = (Rectangle){TILE_SIZE - 5, TILE_SIZE / 2 - 5, 5, 5};
+    const int HITBOX_LONG_SIDE = 10;
+    const int HITBOX_SHORT_SIDE = 4;
+    const int CENTER_POSITION = (TILE_SIZE - HITBOX_SHORT_SIDE) >> 1;
+    const int HITBOX_CENTER = (HITBOX_SHORT_SIDE >> 1);
     switch(dir)
     {
         case 0:
-            p_hitbox->boxes[0] = (Rectangle){10, TILE_SIZE / 2 - 5, 10, 5};
             p_ctransform->velocity.x = -ARROW_SPEED;
             p_cspr->current_idx += 2;
+            p_hitbox->boxes[0] = (Rectangle){-CENTER_POSITION, -HITBOX_CENTER, HITBOX_LONG_SIDE, HITBOX_SHORT_SIDE};
         break;
         case 2:
-            p_hitbox->boxes[0] = (Rectangle){TILE_SIZE / 2 - 5, 10, 5, 10};
+            p_hitbox->boxes[0] = (Rectangle){-HITBOX_CENTER, -CENTER_POSITION, HITBOX_SHORT_SIDE, HITBOX_LONG_SIDE};
             p_ctransform->velocity.y = -ARROW_SPEED;
             p_cspr->current_idx += 1;
         break;
         case 3:
-            p_hitbox->boxes[0] = (Rectangle){TILE_SIZE / 2 - 5, 10, 5, 10};
+            p_hitbox->boxes[0] = (Rectangle){-HITBOX_CENTER, CENTER_POSITION - HITBOX_LONG_SIDE, HITBOX_SHORT_SIDE, HITBOX_LONG_SIDE};
             p_ctransform->velocity.y = ARROW_SPEED;
             p_cspr->current_idx += 3;
         break;
         default:
-            p_hitbox->boxes[0] = (Rectangle){10, TILE_SIZE / 2 - 5, 10, 5};
+            p_hitbox->boxes[0] = (Rectangle){CENTER_POSITION - HITBOX_LONG_SIDE, -HITBOX_CENTER, HITBOX_LONG_SIDE, HITBOX_SHORT_SIDE};
             p_ctransform->velocity.x = ARROW_SPEED;
         break;
     }
@@ -163,22 +177,22 @@ Entity_t* create_bomb(EntityManager_t* ent_manager, Vector2 launch_dir)
     Entity_t* p_bomb = add_entity(ent_manager, DESTRUCTABLE_ENT_TAG);
     if (p_bomb == NULL) return NULL;
 
-    p_bomb->position.x += (TILE_SIZE - 25) / 2;
-    p_bomb->position.y += (TILE_SIZE - 25) / 2;
-    if (launch_dir.x > 0)
-    {
-        p_bomb->position.x += TILE_SIZE/ 2;
-    }
-    else if (launch_dir.x < 0)
-    {
-        p_bomb->position.x -= TILE_SIZE / 2;
-    }
+    //p_bomb->position.x += (TILE_SIZE - 25) / 2;
+    //p_bomb->position.y += (TILE_SIZE - 25) / 2;
+    //if (launch_dir.x > 0)
+    //{
+    //    p_bomb->position.x += TILE_SIZE/ 2;
+    //}
+    //else if (launch_dir.x < 0)
+    //{
+    //    p_bomb->position.x -= TILE_SIZE / 2;
+    //}
 
     add_component(p_bomb, CTILECOORD_COMP_T);
     add_component(p_bomb, CMOVEMENTSTATE_T);
     CHitBoxes_t* p_hitbox = add_component(p_bomb, CHITBOXES_T);
     p_hitbox->n_boxes = 1;
-    p_hitbox->boxes[0] = (Rectangle){0, 0, 25, 25};
+    p_hitbox->boxes[0] = (Rectangle){-13, -13, 26, 26};
 
     p_hitbox->atk = 0;
     p_hitbox->one_hit = true;
@@ -205,8 +219,8 @@ Entity_t* create_explosion(EntityManager_t* ent_manager)
     Entity_t* p_explosion = add_entity(ent_manager, DESTRUCTABLE_ENT_TAG);
     if (p_explosion == NULL) return NULL;
 
-    p_explosion->position.x -= 16;
-    p_explosion->position.y -= 16;
+    //p_explosion->position.x -= 16;
+    //p_explosion->position.y -= 16;
     add_component(p_explosion, CTILECOORD_COMP_T);
     CHitBoxes_t* p_hitbox = add_component(p_explosion, CHITBOXES_T);
     p_hitbox->n_boxes = 1;
@@ -216,7 +230,8 @@ Entity_t* create_explosion(EntityManager_t* ent_manager)
     CTransform_t* p_ctransform = add_component(p_explosion, CTRANSFORM_COMP_T);
     p_ctransform->movement_mode = KINEMATIC_MOVEMENT;
     p_ctransform->active = true;
-    p_hitbox->boxes[0] = (Rectangle){0, 0, TILE_SIZE + 32, TILE_SIZE + 32};
+    const int hitbox_sz = TILE_SIZE + 40;
+    p_hitbox->boxes[0] = (Rectangle){-(hitbox_sz >> 1), -(hitbox_sz >> 1), hitbox_sz, hitbox_sz};
 
     CSprite_t* p_cspr = add_component(p_explosion, CSPRITE_T);
     p_cspr->sprites = item_sprite_map;

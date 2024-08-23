@@ -195,7 +195,13 @@ static void render_regular_game_scene(Scene_t* scene)
                     if (p_cspr->flip_x) offset.x *= -1;
 
                     pos = Vector2Add(pos, offset);
-                    draw_sprite(spr.sprite, (data->coins.current < data->coins.total) ? 0 : 1, pos, 0.0f, p_cspr->flip_x);
+                    draw_sprite(
+                        spr.sprite,
+                        2 * data->selected_solid_tilemap + (
+                            (data->coins.current < data->coins.total) ? 0 : 1
+                        ),
+                        pos, 0.0f, p_cspr->flip_x
+                    );
                 }
             }
             else

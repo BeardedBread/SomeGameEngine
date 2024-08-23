@@ -568,6 +568,7 @@ void init_game_scene(LevelScene_t* scene)
 
 void free_game_scene(LevelScene_t* scene)
 {
+    clear_all_game_entities(scene);
     free_scene(&scene->scene);
     term_level_scene_data(&scene->data);
 }

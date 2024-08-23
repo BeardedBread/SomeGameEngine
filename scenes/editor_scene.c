@@ -844,40 +844,14 @@ static void restart_editor_level(Scene_t* scene)
         tilemap.tiles[i].water_level = 0;
         tilemap.tiles[i].wet = false;
         tilemap.tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
-        Entity_t* ent;
-        unsigned int m_id;
-        sc_map_foreach(&tilemap.tiles[i].entities_set, m_id, ent)
-        {
-            if (ent->m_tag == PLAYER_ENT_TAG) continue;
-            CTileCoord_t* p_tilecoord = get_component(
-                ent, CTILECOORD_COMP_T
-            );
 
-            for (size_t i = 0;i < p_tilecoord->n_tiles; ++i)
-            {
-                // Use previously store tile position
-                // Clear from those positions
-                unsigned int tile_idx = p_tilecoord->tiles[i];
-                sc_map_del_64v(&(tilemap.tiles[tile_idx].entities_set), m_id);
-            }
-            //remove_entity(&scene->ent_manager, m_id);
-            CWaterRunner_t* p_crunner = get_component(ent, CWATERRUNNER_T);
-            if (p_crunner == NULL)
-            {
-                remove_entity(&scene->ent_manager, m_id);
-            }
-            else
-            {
-                free_water_runner(ent, &scene->ent_manager);
-            }
-        }
     }
-    Entity_t* p_ent;
-    sc_map_foreach_value(&scene->ent_manager.entities_map[LEVEL_END_TAG], p_ent)
-    {
-        remove_entity(&scene->ent_manager, p_ent->m_id);
-    }
+    clear_all_game_entities(CONTAINER_OF(scene, LevelScene_t, scene));
+
+    Entity_t* p_player = create_player(&scene->ent_manager);
+    p_player->position = data->player_spawn;
     update_entity_manager(&scene->ent_manager);
+
     for (size_t i = 0; i < tilemap.width; ++i)
     {
         unsigned int tile_idx = (tilemap.height - 1) * tilemap.width + i;
@@ -1086,7 +1060,10 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
         break;
         case ACTION_NEXTLEVEL:
         case ACTION_RESTART:
-            restart_editor_level(scene);
+            if (!pressed)
+            {
+                restart_editor_level(scene);
+            }
         break;
         case ACTION_TOGGLE_GRID:
             if (!pressed)
@@ -1230,7 +1207,7 @@ void init_sandbox_scene(LevelScene_t* scene)
         p_cspr->flip_x = true;
         
         p_player->position.x = 100;
-        p_player->position.y = (scene->data.tilemap.height - 2) * scene->data.tilemap.tile_size;
+        p_player->position.y = (scene->data.tilemap.height - 1) * scene->data.tilemap.tile_size - PLAYER_HEIGHT;
         scene->data.player_spawn = p_player->position;
         scene->data.camera.target_pos = p_player->position;
         scene->data.camera.cam.target = p_player->position;
@@ -1479,6 +1456,7 @@ void init_sandbox_scene(LevelScene_t* scene)
 
 void free_sandbox_scene(LevelScene_t* scene)
 {
+    clear_all_game_entities(scene);
     free_scene(&scene->scene);
     term_level_scene_data(&scene->data);
 }

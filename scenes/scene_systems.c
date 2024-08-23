@@ -53,6 +53,29 @@ void term_level_scene_data(LevelSceneData_t* data)
     }
 }
 
+void clear_all_game_entities(LevelScene_t* scene)
+{
+    Entity_t* ent;
+    sc_map_foreach_value(&scene->scene.ent_manager.entities, ent)
+    {
+        CWaterRunner_t* p_crunner = get_component(ent, CWATERRUNNER_T);
+        if (p_crunner != NULL)
+        {
+            free_water_runner(ent, &scene->scene.ent_manager);
+        }
+        CEmitter_t* p_emitter = get_component(ent, CEMITTER_T);
+        if (p_emitter != NULL)
+        {
+            unload_emitter_handle(&scene->scene.part_sys, p_emitter->handle);
+        }
+    }
+    clear_entity_manager(&scene->scene.ent_manager);
+    for (size_t i = 0; i < scene->data.tilemap.n_tiles;i++)
+    {
+        sc_map_clear_64v(&scene->data.tilemap.tiles[i].entities_set);
+    }
+}
+
 bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
 {
     if (level_num >= scene->data.level_pack->n_levels) return false;
@@ -68,7 +91,7 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
     scene->data.coins.current = 0;
     scene->data.coins.total = lvl_map.n_chests;
 
-    clear_entity_manager(&scene->scene.ent_manager);
+    clear_all_game_entities(scene);
 
     for (size_t i = 0; i < scene->data.tilemap.n_tiles;i++)
     {
@@ -81,8 +104,6 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
         scene->data.tilemap.tiles[i].offset = (Vector2){0, 0};
         scene->data.tilemap.tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
         scene->data.tilemap.tiles[i].def = 0;
-
-        sc_map_clear_64v(&scene->data.tilemap.tiles[i].entities_set);
         
         if (lvl_map.tiles[i].tile_type == 1)
         {
@@ -279,7 +300,7 @@ void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_ty
         }
         else if ((tile_idx + 1) % tilemap->width != 0 && tilemap->tiles[tile_idx + 1].tile_type == SOLID_TILE)
         {
-            tilemap->tiles[tile_idx].offset = (Vector2){SPIKE_HITBOX_SHORTSIDE >> 1,0};
+            tilemap->tiles[tile_idx].offset = (Vector2){tilemap->tile_size - SPIKE_HITBOX_SHORTSIDE,0};
             tilemap->tiles[tile_idx].size = (Vector2){SPIKE_HITBOX_SHORTSIDE, SPIKE_HITBOX_LONGSIDE};
             tilemap->tiles[tile_idx].rotation = TILE_90CCWROT;
         }

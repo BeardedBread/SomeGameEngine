@@ -34,6 +34,10 @@ add_executable(${PROJECT_NAME}
     main.c
 )
 
+if (NOT EMSCRIPTEN)
+    target_compile_options(${PROJECT_NAME} PRIVATE -fsanitize=address -gdwarf-4)
+    target_link_options(${PROJECT_NAME} PRIVATE -fsanitize=address -gdwarf-4)
+endif ()
 target_include_directories(${PROJECT_NAME}
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}

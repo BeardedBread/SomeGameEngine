@@ -116,10 +116,10 @@ int main(void)
         {
             sc_queue_clear(&key_buffer);
         }
-
     }
     free_sandbox_scene(&sandbox_scene);
     free_game_scene(&level_scene);
+    free_level_select_scene(&level_sel_scene);
     free_menu_scene(&menu_scene);
     deinit_engine(&engine);
 }

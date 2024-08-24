@@ -11,13 +11,13 @@ The goal of the project is to make a game similar to Hannah and The Pirate Caves
 ## Implementation Notes
 As mentioned, this is mostly a learning experience, so certain things are implemented for the sake of learning. However, there are certain things that I didn't bother with because dealing with them will open up another can of worms. Either that or I find it too large of a feature to implement on my own without hating my existance. For these, I will use libraries.
 
-As this point of time (23/11/2023), these are the things I won't bother for now:
+As this point of time (24/08/2024), these are the things I won't bother for now:
 - Game rendering: I remember dealing with OpenGL for a little bit and it being a not-so-pleasant experience. This is also a large topic on its own too.
 - Camera System: This is an interesting one. I would really like to implement this. However, this is sort of tied to game rendering, so no.
 - Windows and raw input handling: Not keen on this.
-- GUI: I'm not about to roll my own GUI library for this.
+- GUI: I'm not about to roll my own GUI library for this. I'll do a lite version, but that's about it.
 - Data structures: Will only do it for specific reasons. Otherwise, use a library.
-- Level editor: ... no. This is more towards GUI design which I'm not currently keen on.
+- Level editor: ... maybe. I already have a sandbox, so maybe I can turn that into an editor lite??? Won't think too much about it for now.
 
 Libraries/Tools used:
 - _raylib_ \[[link](https://github.com/raysan5/raylib)\] + _raygui_ \[[link](https://github.com/raysan5/raygui)\]: MVP of this project. Basically the backbone of the game. I've use it for some past projects and it's always a pleasant experience. Can recommend!
@@ -29,14 +29,16 @@ Libraries/Tools used:
 - _LDtk_ \[[link](https://ldtk.io/)\]: A nice level editor. I haven't use it to its fullest extent, but definitely having a good experience so far.
 - _Aseprite_ \[[link](https://www.aseprite.org/)\]: Used it to create sprites. Good tool!
 - _Emscripten_ \[[link](https://emscripten.org/)\]: For web build. It's really a marvel of technology!
+- _heaptrack_ \[[link](https://github.com/KDE/heaptrack)\]: For heap profiling. Simple and straightforward to use.
 
 ## Progress
 The engine features:
 - An Entity-Component framework with an Entity Manager + memory pool that is specific for this project
 - AABB collision system + Grid-based Broad phase collision detection
-- Scene management and transition
+- Scene tree management and transition
 - Assets management and sprite transition
 - Simple level loading
+- Simple Particle effects management
 
 Current progress:
 - Simple main menu + sandbox scene
@@ -47,7 +49,6 @@ Current progress:
 - Chest and Level Ending
 - Arrows and dynamites
 - Water filling
-- Simple Particle Effects
 - Sound Effects
 - Simple Camera Update System
 - Demo level pack loading
@@ -67,6 +68,13 @@ cmake -DCMAKE_BUILD_TYPE=Release -DRAYLIB_DIR=/usr/local/lib -DLIBZSTD_DIR=/usr/
 You may also turn off `BUILD_TESTING` to avoid building the tests.
 
 There are also other binaries generated for testing purposes. Feel free to try them out if you manage to build them.
+
+## Debugging && Profiling
+All binaries except the _main_ one are built with ASAN, which helps to detect memory leakage.
+
+_Heaptrack_ is used to do so for the main program to keep for memory leakage + heap usage. From my experience, it doesn't work with ASAN.
+
+I'm looking for runtime profiler. Current candidates are: _Orbit_ and _tracey_. For small-ish gameplay, the program still runs fine.
 
 ## Note on assets
 This repository will not contain the assets used in the game, such as fonts, art, and sfx. However, the program should still run without those. Assets are placed in the _res/_ directory.

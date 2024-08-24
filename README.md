@@ -74,7 +74,7 @@ All binaries except the _main_ one are built with ASAN, which helps to detect me
 
 _Heaptrack_ is used to do so for the main program to keep for memory leakage + heap usage. From my experience, it doesn't work with ASAN.
 
-I'm looking for runtime profiler. Current candidates are: _Orbit_ and _tracey_. For small-ish gameplay, the program still runs fine.
+I'm looking for runtime profiler. Current candidates are: _Orbit_ and _Tracy_. For small-ish gameplay, the program still runs fine.
 
 ## Note on assets
 This repository will not contain the assets used in the game, such as fonts, art, and sfx. However, the program should still run without those. Assets are placed in the _res/_ directory.

@@ -104,7 +104,7 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
 #define SCROLL_TOTAL_HEIGHT 800
 void init_level_select_scene(LevelSelectScene_t* scene)
 {
-    init_scene(&scene->scene, &level_select_do_action);
+    init_scene(&scene->scene, &level_select_do_action, 0);
     add_scene_layer(
         &scene->scene, 400, 800,
         (Rectangle){START_X, START_Y, 400, 800}

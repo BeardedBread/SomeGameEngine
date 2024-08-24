@@ -1146,7 +1146,7 @@ static void at_level_complete(Scene_t* scene)
 
 void init_sandbox_scene(LevelScene_t* scene)
 {
-    init_scene(&scene->scene, &level_do_action);
+    init_scene(&scene->scene, &level_do_action, ENABLE_ENTITY_MANAGEMENT_SYSTEM | ENABLE_PARTICLE_SYSTEM);
     init_entity_tag_map(&scene->scene.ent_manager, PLAYER_ENT_TAG, 4);
     init_entity_tag_map(&scene->scene.ent_manager, BOULDER_ENT_TAG, MAX_COMP_POOL_SIZE);
     init_entity_tag_map(&scene->scene.ent_manager, LEVEL_END_TAG, 16);

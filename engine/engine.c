@@ -150,13 +150,20 @@ void update_sfx_list(GameEngine_t* engine)
     engine->sfx_list.played_sfx = 0;
 }
 
-void init_scene(Scene_t* scene, action_func_t action_func)
+void init_scene(Scene_t* scene, action_func_t action_func, uint32_t subsystem_init)
 {
     sc_map_init_64(&scene->action_map, 32, 0);
     sc_array_init(&scene->systems);
-    init_entity_manager(&scene->ent_manager);
-    init_particle_system(&scene->part_sys);
+    if (subsystem_init & ENABLE_ENTITY_MANAGEMENT_SYSTEM)
+    {
+        init_entity_manager(&scene->ent_manager);
+    }
+    if (subsystem_init & ENABLE_PARTICLE_SYSTEM)
+    {
+        init_particle_system(&scene->part_sys);
+    }
 
+    scene->subsystem_init = subsystem_init;
     //scene->scene_type = scene_type;
     scene->layers.n_layers = 0;
     scene->bg_colour = WHITE;
@@ -184,8 +191,16 @@ void free_scene(Scene_t* scene)
     {
         UnloadRenderTexture(scene->layers.render_layers[i].layer_tex);
     }
-    free_entity_manager(&scene->ent_manager);
-    deinit_particle_system(&scene->part_sys);
+
+    if (scene->subsystem_init & ENABLE_ENTITY_MANAGEMENT_SYSTEM)
+    {
+        free_entity_manager(&scene->ent_manager);
+    }
+
+    if (scene->subsystem_init & ENABLE_PARTICLE_SYSTEM)
+    {
+        deinit_particle_system(&scene->part_sys);
+    }
 }
 
 inline void update_scene(Scene_t* scene, float delta_time)
@@ -198,7 +213,10 @@ inline void update_scene(Scene_t* scene, float delta_time)
     {
         sys(scene);
     }
-    update_particle_system(&scene->part_sys, scene->delta_time);
+    if (scene->subsystem_init & ENABLE_PARTICLE_SYSTEM)
+    {
+        update_particle_system(&scene->part_sys, scene->delta_time);
+    }
 }
 
 static void _internal_render_scene(Scene_t* scene)

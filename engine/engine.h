@@ -60,6 +60,7 @@ typedef struct SceneRenderLayers {
 struct Scene {
     // Not all scene needs an entity manager
     // but too late to change this
+    uint32_t subsystem_init;
     EntityManager_t ent_manager;
     Scene_t* parent_scene;
     struct sc_map_64 action_map; // key -> actions
@@ -99,7 +100,10 @@ extern void update_scene(Scene_t* scene, float delta_time);
 extern void render_scene(Scene_t* scene);
 extern void do_action(Scene_t* scene, ActionType_t action, bool pressed);
 
-void init_scene(Scene_t* scene, action_func_t action_func);
+//void init_scene(Scene_t* scene, action_func_t action_func);
+#define ENABLE_ENTITY_MANAGEMENT_SYSTEM (1)
+#define ENABLE_PARTICLE_SYSTEM (1 << 1)
+void init_scene(Scene_t* scene, action_func_t action_func, uint32_t subsystem_init);
 bool add_scene_layer(Scene_t* scene, int width, int height, Rectangle render_area);
 void free_scene(Scene_t* scene);
 void add_child_scene(GameEngine_t* engine, unsigned int child_idx, unsigned int parent_idx);

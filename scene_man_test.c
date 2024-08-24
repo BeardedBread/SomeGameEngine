@@ -109,7 +109,7 @@ int main(void)
     for (uint8_t i = 0; i < 6; ++i)
     {
         scenes[i] = &dummy_scenes[i].scene;
-        init_scene(&dummy_scenes[i].scene, &level_do_action);
+        init_scene(&dummy_scenes[i].scene, &level_do_action, 0);
         dummy_scenes[i].scene.engine = &engine;
         dummy_scenes[i].number = i;
         add_scene_layer(

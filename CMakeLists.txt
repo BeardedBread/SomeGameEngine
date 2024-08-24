@@ -64,7 +64,7 @@ target_include_directories(sandbox_trace
 
 target_link_libraries(sandbox_trace
     PUBLIC
-    ${GAME_LIBS}
+    lib_scenes_trace
     pthread
     dl
 )

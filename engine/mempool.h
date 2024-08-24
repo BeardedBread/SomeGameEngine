@@ -1,23 +1,16 @@
 #ifndef __MEMPOOL_H
 #define __MEMPOOL_H
 #include "EC.h"
+#include "sc/queue/sc_queue.h"
 void init_memory_pools(void);
 void free_memory_pools(void);
 
-typedef struct ULongCircBuffer {
-    unsigned long* buffer;     // data buffer
-    unsigned long* buffer_end; // end of data buffer
-    uint32_t capacity;  // maximum number of items in the buffer
-    uint32_t count;     // number of items in the buffer
-    unsigned long* head;       // pointer to head
-    unsigned long* tail;       // pointer to tail
-}ULongCircBuffer_t;
 typedef struct MemPool {
     void * const buffer;
     const unsigned long max_size;
     const unsigned long elem_size;
     bool *use_list;
-    ULongCircBuffer_t free_list;
+    struct sc_queue_32 free_list;
 } MemPool_t;
 
 // Game needs to implement this somewhere

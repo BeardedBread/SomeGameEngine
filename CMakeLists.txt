@@ -2,7 +2,7 @@ set(PROJECT_NAME HATPC_remake)
 set(CMAKE_C_COMPILER clang)
 set(CMAKE_C_FLAGS "-Wall -Wextra")
 cmake_minimum_required(VERSION 3.22.1)
-project(${PROJECT_NAME} C)
+project(${PROJECT_NAME} C CXX)
 set(CMAKE_C_STANDARD 99)
 set(RAYLIB_DIR /usr/local/lib CACHE FILEPATH "directory to Raylib")
 set(LIBZSTD_DIR /usr/local/lib CACHE FILEPATH "directory to zstd")
@@ -45,6 +45,30 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
     ${GAME_LIBS}
 )
+
+add_executable(sandbox_trace
+    scene_test.c
+    tracy/public/TracyClient.cpp
+)
+target_compile_definitions(sandbox_trace
+    PUBLIC
+    TRACY_ENABLE
+    TRACY_ON_DEMAND
+)
+target_include_directories(sandbox_trace
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    PUBLIC
+    tracy/public/
+)
+
+target_link_libraries(sandbox_trace
+    PUBLIC
+    ${GAME_LIBS}
+    pthread
+    dl
+)
+
 add_executable(scene_test
     scene_test.c
 )
@@ -53,6 +77,7 @@ target_include_directories(scene_test
     PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
 )
+
 
 if (NOT EMSCRIPTEN)
 target_compile_options(scene_test PRIVATE -fsanitize=address -gdwarf-4)

@@ -1,3 +1,6 @@
+#ifdef TRACY_ENABLE
+#include "tracy/TracyC.h"
+#endif
 #include "scene_impl.h"
 #include "ent_impl.h"
 #include "assets_loader.h"
@@ -89,10 +92,22 @@ int main(void)
             float frame_time = GetFrameTime();
             float delta_time = fminf(frame_time, DT);
 
+            #ifdef TRACY_ENABLE
+            TracyCZoneN(ctx, "Overall", true)
+            #endif
+            #ifdef TRACY_ENABLE
+            TracyCZoneN(ctx1, "Update", true)
+            #endif
             update_scene(&scene.scene, delta_time);
             update_entity_manager(&scene.scene.ent_manager);
+            #ifdef TRACY_ENABLE
+            TracyCZoneEnd(ctx1)
+            #endif
             // This is needed to advance time delta
             render_scene(&scene.scene);
+            #ifdef TRACY_ENABLE
+            TracyCZoneEnd(ctx)
+            #endif
             update_sfx_list(&engine);
             if (WindowShouldClose()) break;
         }

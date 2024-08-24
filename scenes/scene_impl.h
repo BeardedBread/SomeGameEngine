@@ -94,6 +94,7 @@ void free_game_scene(LevelScene_t* scene);
 void init_sandbox_scene(LevelScene_t* scene);
 void free_sandbox_scene(LevelScene_t* scene);
 void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* tiles, Rectangle view_zone);
+void clear_an_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent);
 void clear_all_game_entities(LevelScene_t* scene);
 void term_level_scene_data(LevelSceneData_t* data);
 void reload_level_tilemap(LevelScene_t* scene);

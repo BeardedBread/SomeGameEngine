@@ -1,8 +1,12 @@
 #include "game_systems.h"
-#include "particle_sys.h"
+
+#include "scene_impl.h"
 #include "ent_impl.h"
+
+#include "particle_sys.h"
 #include "AABB.h"
 #include "EC.h"
+
 #include "constants.h"
 #include <stdio.h>
 
@@ -48,8 +52,8 @@ static inline void destroy_tile(LevelSceneData_t* lvl_data, unsigned int tile_id
             .spr = spr,
             .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
             .position = {
-                .x = tile_idx % tilemap.width * tilemap.tile_size + tilemap.tile_size / 2,
-                .y = tile_idx / tilemap.width * tilemap.tile_size + tilemap.tile_size / 2,
+                .x = tile_idx % tilemap.width * tilemap.tile_size + (tilemap.tile_size >> 1),
+                .y = tile_idx / tilemap.width * tilemap.tile_size + (tilemap.tile_size >> 1),
             },
             .n_particles = 5,
             .user_data = CONTAINER_OF(lvl_data, LevelScene_t, data),
@@ -71,6 +75,7 @@ static bool check_collision_and_move(
     SolidType_t other_solid
 )
 {
+    // TODO: Need some NULL checks to be more robust
     CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
     CBBox_t* p_bbox = get_component(ent, CBBOX_COMP_T);
     Vector2 overlap = {0,0};
@@ -149,23 +154,13 @@ collision_end:
     return overlap_mode > 0;
 }
 
-void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
+static void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
 {
-    /* Use the helper function to remove any entity
-     * This is because some components may have deinit steps
-     * This function will also take care of the tilemap collision handling
-     * */
-
     Vector2 half_size = {0,0};
     CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
     if (p_bbox != NULL)
     {
         half_size = p_bbox->half_size;
-    }
-    CEmitter_t* p_emitter = get_component(p_ent, CEMITTER_T);
-    if (p_emitter != NULL)
-    {
-        unload_emitter_handle(&scene->part_sys, p_emitter->handle);
     }
 
     if (p_ent->m_tag == BOULDER_ENT_TAG)
@@ -236,7 +231,7 @@ void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
         play_sfx(scene->engine, ARROW_DESTROY_SFX);
     }
 
-    remove_entity_from_tilemap(&scene->ent_manager, tilemap, p_ent);
+    clear_an_entity(scene, tilemap, p_ent);
 }
 
 void check_player_dead_system(Scene_t* scene)
@@ -564,7 +559,6 @@ void player_crushing_system(Scene_t* scene)
     Entity_t* p_player;
     sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
     {
-        // TODO: Use BBox for crushing check only if not noclip
         CBBox_t* p_bbox = get_component(p_player, CBBOX_COMP_T);
 
         uint8_t edges = check_bbox_edges(

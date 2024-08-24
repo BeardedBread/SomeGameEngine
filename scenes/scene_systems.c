@@ -53,22 +53,37 @@ void term_level_scene_data(LevelSceneData_t* data)
     }
 }
 
+void clear_an_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
+{
+    /* Use the helper function to remove any entity
+     * This is because some components may have deinit steps
+     * This function will also take care of the tilemap collision handling
+     * */
+
+    CEmitter_t* p_emitter = get_component(p_ent, CEMITTER_T);
+    if (p_emitter != NULL)
+    {
+        unload_emitter_handle(&scene->part_sys, p_emitter->handle);
+    }
+    if (get_component(p_ent, CWATERRUNNER_T)!= NULL)
+    {
+        free_water_runner(p_ent, &scene->ent_manager);
+    }
+
+    remove_entity_from_tilemap(&scene->ent_manager, tilemap, p_ent);
+}
+
 void clear_all_game_entities(LevelScene_t* scene)
 {
     Entity_t* ent;
     sc_map_foreach_value(&scene->scene.ent_manager.entities, ent)
     {
-        CWaterRunner_t* p_crunner = get_component(ent, CWATERRUNNER_T);
-        if (p_crunner != NULL)
-        {
-            free_water_runner(ent, &scene->scene.ent_manager);
-        }
-        CEmitter_t* p_emitter = get_component(ent, CEMITTER_T);
-        if (p_emitter != NULL)
-        {
-            unload_emitter_handle(&scene->scene.part_sys, p_emitter->handle);
-        }
+        clear_an_entity(&scene->scene, &scene->data.tilemap, ent);
     }
+
+    // This is unnecessary as the first pass should clear everything
+    // For now, leave it in. This is not expected to call all the time
+    // so not too bad
     clear_entity_manager(&scene->scene.ent_manager);
     for (size_t i = 0; i < scene->data.tilemap.n_tiles;i++)
     {

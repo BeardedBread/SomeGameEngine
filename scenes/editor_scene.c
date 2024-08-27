@@ -119,7 +119,7 @@ static void level_scene_render_func(Scene_t* scene)
             selection_rec.x + current_spawn_selection * SELECTION_TILE_SIZE, selection_rec.y,
             SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, GREEN
         );
-        DrawText("R to reset the map, Q/E to cycle the selection,\nF to toggle metal crates. T to toggle crate spawn behaviour\nB to toggle grid, V to set spawn point", selection_rec.x, selection_rec.y + selection_rec.height + 2, 14, BLACK);
+        DrawText("R to reset the map, Q/E to cycle the selection,\nF to toggle metal crates. T to toggle crate spawn behaviour\nZ to change tileset, X to toggle grid\nC to set spawn point, V to toggle free cam", selection_rec.x, selection_rec.y + selection_rec.height + 2, 14, BLACK);
 
         draw_pos.x = game_rec.x + (MAX_SPAWN_TYPE + 1) * SELECTION_TILE_SIZE;
         sprintf(buffer, "Selection: %s", get_spawn_selection_string(current_spawn_selection));
@@ -850,6 +850,11 @@ static void restart_editor_level(Scene_t* scene)
 
     Entity_t* p_player = create_player(&scene->ent_manager);
     p_player->position = data->player_spawn;
+    CPlayerState_t* p_pstate = get_component(p_player, CPLAYERSTATE_T);
+    if (data->camera.mode == CAMERA_RANGED_MOVEMENT)
+    {
+        p_pstate->locked = true;
+    }
     update_entity_manager(&scene->ent_manager);
 
     for (size_t i = 0; i < tilemap.width; ++i)

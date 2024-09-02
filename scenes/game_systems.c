@@ -69,7 +69,7 @@ static inline void destroy_tile(LevelSceneData_t* lvl_data, unsigned int tile_id
 // ------------------------- Collision functions ------------------------------------
 // Do not subtract one for the size for any collision check, just pass normally. The extra one is important for AABB test
 
-static bool check_collision_and_move(
+static uint8_t check_collision_and_move(
     TileGrid_t* tilemap,
     Entity_t* ent, Vector2* other_pos, Vector2 other_bbox,
     SolidType_t other_solid
@@ -81,6 +81,7 @@ static bool check_collision_and_move(
     Vector2 overlap = {0,0};
     Vector2 prev_overlap = {0,0};
     uint8_t overlap_mode = find_AABB_overlap(ent->position, p_bbox->size, *other_pos, other_bbox, &overlap);
+    uint8_t collided_side = 0;
     if (overlap_mode == 1)
     {
         // If there is collision, use previous overlap to determine direction
@@ -108,6 +109,24 @@ static bool check_collision_and_move(
                 offset.y = overlap.y;
             }
         }
+
+        if (offset.y < 0)
+        {
+            collided_side |= 1;
+        }
+        else if (offset.y > 0)
+        {
+            collided_side |= (1<<1);
+        }
+        else if (offset.x < 0)
+        {
+            collided_side |= (1<<2);
+        }
+        else if (offset.x > 0)
+        {
+            collided_side |= (1<<3);
+        }
+
         ent->position = Vector2Add(ent->position, offset);
     }
     else if (overlap_mode == 2)
@@ -120,6 +139,7 @@ static bool check_collision_and_move(
         if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap))
         {
             ent->position = point_to_test;
+            collided_side |= 1;
             goto collision_end;
         }
 
@@ -128,6 +148,7 @@ static bool check_collision_and_move(
         if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap))
         {
             ent->position = point_to_test;
+            collided_side |= (1<<2);
             goto collision_end;
         }
 
@@ -136,6 +157,7 @@ static bool check_collision_and_move(
         if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap))
         {
             ent->position = point_to_test;
+            collided_side |= (1<<3);
             goto collision_end;
         }
 
@@ -144,6 +166,7 @@ static bool check_collision_and_move(
         if (!check_collision_at(ent, point_to_test, p_bbox->size, tilemap))
         {
             ent->position = point_to_test;
+            collided_side |= (1<<1);
             goto collision_end;
         }
         // If no free space, Move up no matter what
@@ -151,7 +174,7 @@ static bool check_collision_and_move(
         ent->position.y = other_pos->y - p_bbox->size.y + 1;
     }
 collision_end:
-    return overlap_mode > 0;
+    return collided_side;
 }
 
 static void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
@@ -736,6 +759,7 @@ void tile_collision_system(Scene_t* scene)
             for (unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
             {
                 unsigned int tile_idx = tile_y * tilemap.width + tile_x;
+                uint8_t collide_side = 0;
                 if(tilemap.tiles[tile_idx].tile_type != EMPTY_TILE)
                 {
                     Vector2 other;
@@ -756,7 +780,7 @@ void tile_collision_system(Scene_t* scene)
                             && p_ent->position.y + p_bbox->size.y > other.y
                         ) ? SOLID : NOT_SOLID;
                     }
-                    check_collision_and_move(
+                    collide_side = check_collision_and_move(
                         &tilemap, p_ent,
                         &other, 
                         (Vector2){tilemap.tile_size, tilemap.tile_size},
@@ -784,51 +808,33 @@ void tile_collision_system(Scene_t* scene)
                         {
                             solid = NOT_SOLID;
                         }
-                        check_collision_and_move(
+                        collide_side = check_collision_and_move(
                             &tilemap, p_ent,
                             &p_other_ent->position, p_other_bbox->size,
                             solid
                         );
                     }
                 }
+
+                if (collide_side & (1<<3))
+                {
+                    if (p_ctransform->velocity.x < 0) p_ctransform->velocity.x = 0;
+                }
+                if (collide_side & (1<<2))
+                {
+                    if (p_ctransform->velocity.x > 0) p_ctransform->velocity.x = 0;
+                }
+                if (collide_side & (1<<1))
+                {
+                    if (p_ctransform->velocity.y < 0) p_ctransform->velocity.y = 0;
+                }
+                if (collide_side & (1))
+                {
+                    if (p_ctransform->velocity.y > 0) p_ctransform->velocity.y = 0;
+                }
+
             }
         }
-    }
-}
-
-void edge_velocity_check_system(Scene_t* scene)
-{
-    LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
-    unsigned int ent_idx;
-    CBBox_t* p_bbox;
-    sc_map_foreach(&scene->ent_manager.component_map[CBBOX_COMP_T], ent_idx, p_bbox)
-    {
-        Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
-        CTransform_t* p_ctransform = get_component(p_ent, CTRANSFORM_COMP_T);
-        if (!p_ctransform->active) continue;
-        // Post movement edge check to zero out velocity
-        uint8_t edges = check_bbox_edges(
-            &data->tilemap, p_ent,
-            p_bbox->size, false
-        );
-        if (edges & (1<<3))
-        {
-            if (p_ctransform->velocity.x < 0) p_ctransform->velocity.x = 0;
-        }
-        if (edges & (1<<2))
-        {
-            if (p_ctransform->velocity.x > 0) p_ctransform->velocity.x = 0;
-        }
-        if (edges & (1<<1))
-        {
-            if (p_ctransform->velocity.y < 0) p_ctransform->velocity.y = 0;
-        }
-        if (edges & (1))
-        {
-            if (p_ctransform->velocity.y > 0) p_ctransform->velocity.y = 0;
-        }
-
-        // Deal with float precision, by rounding when it is near to an integer enough by 2 dp
         float decimal;
         float fractional = modff(p_ent->position.x, &decimal);
         if (fractional > 0.99)

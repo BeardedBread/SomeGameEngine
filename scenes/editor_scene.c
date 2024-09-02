@@ -1413,7 +1413,7 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_array_add(&scene->scene.systems, &hitbox_update_system);
     sc_array_add(&scene->scene.systems, &player_crushing_system);
     sc_array_add(&scene->scene.systems, &spike_collision_system);
-    sc_array_add(&scene->scene.systems, &edge_velocity_check_system);
+    //sc_array_add(&scene->scene.systems, &edge_velocity_check_system);
     sc_array_add(&scene->scene.systems, &state_transition_update_system);
     sc_array_add(&scene->scene.systems, &update_entity_emitter_system);
     sc_array_add(&scene->scene.systems, &player_ground_air_transition_system);

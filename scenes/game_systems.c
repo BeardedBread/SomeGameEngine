@@ -754,12 +754,12 @@ void tile_collision_system(Scene_t* scene)
         tile_y1 = (tile_y1 < 0) ? 0 : tile_y1;
         tile_y2 = (tile_y2 >= tilemap.height) ? tilemap.height - 1 : tile_y2;
 
+        uint8_t collide_side = 0;
         for (unsigned int tile_y = tile_y1; tile_y <= tile_y2; tile_y++)
         {
             for (unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
             {
                 unsigned int tile_idx = tile_y * tilemap.width + tile_x;
-                uint8_t collide_side = 0;
                 if(tilemap.tiles[tile_idx].tile_type != EMPTY_TILE)
                 {
                     Vector2 other;
@@ -780,7 +780,7 @@ void tile_collision_system(Scene_t* scene)
                             && p_ent->position.y + p_bbox->size.y > other.y
                         ) ? SOLID : NOT_SOLID;
                     }
-                    collide_side = check_collision_and_move(
+                    collide_side |= check_collision_and_move(
                         &tilemap, p_ent,
                         &other, 
                         (Vector2){tilemap.tile_size, tilemap.tile_size},
@@ -808,7 +808,7 @@ void tile_collision_system(Scene_t* scene)
                         {
                             solid = NOT_SOLID;
                         }
-                        collide_side = check_collision_and_move(
+                        collide_side |= check_collision_and_move(
                             &tilemap, p_ent,
                             &p_other_ent->position, p_other_bbox->size,
                             solid
@@ -816,25 +816,27 @@ void tile_collision_system(Scene_t* scene)
                     }
                 }
 
-                if (collide_side & (1<<3))
-                {
-                    if (p_ctransform->velocity.x < 0) p_ctransform->velocity.x = 0;
-                }
-                if (collide_side & (1<<2))
-                {
-                    if (p_ctransform->velocity.x > 0) p_ctransform->velocity.x = 0;
-                }
-                if (collide_side & (1<<1))
-                {
-                    if (p_ctransform->velocity.y < 0) p_ctransform->velocity.y = 0;
-                }
-                if (collide_side & (1))
-                {
-                    if (p_ctransform->velocity.y > 0) p_ctransform->velocity.y = 0;
-                }
 
             }
         }
+
+        if (collide_side & (1<<3))
+        {
+            if (p_ctransform->velocity.x < 0) p_ctransform->velocity.x = 0;
+        }
+        if (collide_side & (1<<2))
+        {
+            if (p_ctransform->velocity.x > 0) p_ctransform->velocity.x = 0;
+        }
+        if (collide_side & (1<<1))
+        {
+            if (p_ctransform->velocity.y < 0) p_ctransform->velocity.y = 0;
+        }
+        if (collide_side & (1))
+        {
+            if (p_ctransform->velocity.y > 0) p_ctransform->velocity.y = 0;
+        }
+
         float decimal;
         float fractional = modff(p_ent->position.x, &decimal);
         if (fractional > 0.99)

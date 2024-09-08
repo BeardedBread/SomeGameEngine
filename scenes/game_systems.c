@@ -820,21 +820,20 @@ void tile_collision_system(Scene_t* scene)
             }
         }
 
-        if (collide_side & (1<<3))
+        if (
+            ((collide_side & (1<<3)) && (p_ctransform->velocity.x < 0))
+            || ((collide_side & (1<<2)) && (p_ctransform->velocity.x > 0))
+        )
         {
-            if (p_ctransform->velocity.x < 0) p_ctransform->velocity.x = 0;
+            p_ctransform->velocity.x *= -p_ctransform->bounce_coeff;
         }
-        if (collide_side & (1<<2))
+
+        if (
+            ((collide_side & (1<<1)) && (p_ctransform->velocity.y < 0))
+            || ((collide_side & (1)) && (p_ctransform->velocity.y > 0))
+        )
         {
-            if (p_ctransform->velocity.x > 0) p_ctransform->velocity.x = 0;
-        }
-        if (collide_side & (1<<1))
-        {
-            if (p_ctransform->velocity.y < 0) p_ctransform->velocity.y = 0;
-        }
-        if (collide_side & (1))
-        {
-            if (p_ctransform->velocity.y > 0) p_ctransform->velocity.y = 0;
+            p_ctransform->velocity.y *= -p_ctransform->bounce_coeff;
         }
 
         float decimal;
@@ -1303,7 +1302,7 @@ void movement_update_system(Scene_t* scene)
                 {
                     p_ent->position.x = p_ent->position.x;
                 }
-                p_ctransform->velocity.x = 0;
+                p_ctransform->velocity.x *= -p_ctransform->bounce_coeff;
             }
             
             if(p_ent->position.y < 0 || p_ent->position.y + p_bbox->size.y > level_height)
@@ -1317,7 +1316,7 @@ void movement_update_system(Scene_t* scene)
                 {
                     p_ent->position.y = p_ent->position.y;
                 }
-                p_ctransform->velocity.y = 0;
+                p_ctransform->velocity.y *= -p_ctransform->bounce_coeff;
             }
         }
         else

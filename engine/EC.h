@@ -54,6 +54,7 @@ typedef struct _CTransform_t {
     Vector2 shape_factor;
     float grav_delay;
     float grav_timer;
+    float bounce_coeff;
     MovementMode_t movement_mode;
     bool active;
 } CTransform_t;

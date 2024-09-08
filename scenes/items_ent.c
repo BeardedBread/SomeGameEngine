@@ -1,3 +1,5 @@
+#include "EC.h"
+#include "assets_tag.h"
 #include "ent_impl.h"
 #include "constants.h"
 #include "raymath.h"
@@ -240,6 +242,39 @@ Entity_t* create_explosion(EntityManager_t* ent_manager)
     CLifeTimer_t* p_clifetimer = add_component(p_explosion, CLIFETIMER_T);
     p_clifetimer->life_time = 0.05f;
     return p_explosion;
+}
+
+Entity_t* create_urchin(EntityManager_t* ent_manager)
+{
+    Entity_t* p_urchin = add_entity(ent_manager, NO_ENT_TAG);
+    if (p_urchin == NULL) return NULL;
+
+    CBBox_t* p_bbox = add_component(p_urchin, CBBOX_COMP_T);
+    set_bbox(p_bbox, TILE_SIZE, TILE_SIZE);
+
+    CTransform_t* p_ctransform = add_component(p_urchin, CTRANSFORM_COMP_T);
+    p_ctransform->movement_mode = KINEMATIC_MOVEMENT;
+    p_ctransform->bounce_coeff = 1.0f;
+    p_ctransform->velocity.x = -100;
+    p_ctransform->active = true;
+
+    add_component(p_urchin, CTILECOORD_COMP_T);
+    CHurtbox_t* p_hurtbox = add_component(p_urchin, CHURTBOX_T);
+    p_hurtbox->size = p_bbox->size;
+    p_hurtbox->def = 2;
+    p_hurtbox->damage_src = -1;
+
+    CHitBoxes_t* p_hitbox = add_component(p_urchin, CHITBOXES_T);
+    p_hitbox->n_boxes = 1;
+    p_hitbox->boxes[0] = (Rectangle){3, 3, 26, 26};
+    p_hitbox->atk = 3;
+
+    CSprite_t* p_cspr = add_component(p_urchin, CSPRITE_T);
+    p_cspr->sprites = item_sprite_map;
+    p_cspr->current_idx = 0;
+
+
+    return p_urchin;
 }
 
 Entity_t* create_chest(EntityManager_t* ent_manager)

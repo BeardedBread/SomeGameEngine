@@ -16,6 +16,7 @@ Entity_t* create_boulder(EntityManager_t* ent_manager);
 Entity_t* create_arrow(EntityManager_t* ent_manager, uint8_t dir);
 Entity_t* create_bomb(EntityManager_t* ent_manager, Vector2 launch_dir);
 Entity_t* create_explosion(EntityManager_t* ent_manager);
+Entity_t* create_urchin(EntityManager_t* ent_manager);
 Entity_t* create_chest(EntityManager_t* ent_manager);
 Entity_t* create_level_end(EntityManager_t* ent_manager);
 

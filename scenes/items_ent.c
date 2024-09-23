@@ -267,7 +267,7 @@ Entity_t* create_urchin(EntityManager_t* ent_manager)
     CHitBoxes_t* p_hitbox = add_component(p_urchin, CHITBOXES_T);
     p_hitbox->n_boxes = 1;
     p_hitbox->boxes[0] = (Rectangle){3, 3, 26, 26};
-    p_hitbox->atk = 3;
+    p_hitbox->atk = 2;
 
     CSprite_t* p_cspr = add_component(p_urchin, CSPRITE_T);
     p_cspr->sprites = item_sprite_map;

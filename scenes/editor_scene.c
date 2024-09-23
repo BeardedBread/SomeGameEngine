@@ -1,3 +1,4 @@
+#include "EC.h"
 #include "scene_impl.h"
 #include "game_systems.h"
 #include "water_flow.h"
@@ -28,12 +29,19 @@ enum EntitySpawnSelection {
     SPAWN_BOULDER,
     SPAWN_WATER_RUNNER,
     SPAWN_LEVEL_END,
+    SPAWN_URCHIN,
 };
 
-#define MAX_SPAWN_TYPE 16
+#define MAX_SPAWN_TYPE 17
 static unsigned int current_spawn_selection = 0;
 static bool metal_toggle = false;
 static bool crate_activation = false;
+
+#define MAX_URCHIN_SPAWN_SPD 20
+#define URCHIN_SPAWN_UI_RADIUS 40
+#define URCHIN_VELOCITY_SCALE 10
+static Vector2 urchin_spawn_vec = {0,0};
+
 
 #define SELECTION_TILE_SIZE 32
 #define SELECTION_TILE_HALFSIZE (SELECTION_TILE_SIZE >> 1)
@@ -77,6 +85,7 @@ static char* get_spawn_selection_string(enum EntitySpawnSelection sel)
         case SPAWN_BOULDER: return "boulder";
         case SPAWN_WATER_RUNNER: return "water runner";
         case SPAWN_LEVEL_END: return "level end";
+        case SPAWN_URCHIN: return "urchin";
         default: return "unknown";
     }
 }
@@ -133,6 +142,31 @@ static void level_scene_render_func(Scene_t* scene)
         draw_pos.y += 20 + 5;
         sprintf(buffer, "Camera mode: %s", data->camera.mode == CAMERA_FOLLOW_PLAYER ? "FOLLOW" : "FREE");
         DrawText(buffer, draw_pos.x, draw_pos.y, 20, BLACK);
+
+        draw_pos.x = game_rec.x + game_rec.width - 50 - URCHIN_SPAWN_UI_RADIUS;
+        draw_pos.y = game_rec.y + game_rec.height + SELECTION_GAP + URCHIN_SPAWN_UI_RADIUS;
+
+        // Draw Urchin spawn info
+        DrawCircleV(draw_pos, 40, RED);
+        // HACK: because this ui is not stored, need to perform the mouse check here
+        if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
+        {
+            Vector2 click_pos = Vector2Subtract(
+                scene->mouse_pos, draw_pos
+            );
+            float mag = Vector2Length(click_pos);
+            if (mag <= URCHIN_SPAWN_UI_RADIUS)
+            {
+                urchin_spawn_vec = Vector2Scale(
+                    Vector2Normalize(click_pos),
+                    mag
+                );
+            }
+        }
+        DrawCircleV(
+            Vector2Add(urchin_spawn_vec, draw_pos),
+            4, BLUE
+        );
 
         // For DEBUG
         const int gui_x = game_rec.x + game_rec.width + 10;
@@ -746,7 +780,19 @@ static void toggle_block_system(Scene_t* scene, ActionType_t action, bool presse
                     if (p_ent != NULL)
                     {
                         p_ent->position.x = (tile_idx % tilemap.width) * tilemap.tile_size + (tilemap.tile_size >> 1);
-                        p_ent->position.y = (tile_idx / tilemap.width) * tilemap.tile_size + (tilemap.tile_size >> 1);;
+                        p_ent->position.y = (tile_idx / tilemap.width) * tilemap.tile_size + (tilemap.tile_size >> 1);
+                    }
+                }
+                break;
+                case SPAWN_URCHIN:
+                {
+                    Entity_t* p_ent = create_urchin(&scene->ent_manager);
+                    if (p_ent != NULL)
+                    {
+                        p_ent->position.x = (tile_idx % tilemap.width) * tilemap.tile_size + (tilemap.tile_size >> 1);
+                        p_ent->position.y = (tile_idx / tilemap.width) * tilemap.tile_size + (tilemap.tile_size >> 1);
+                        CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
+                        p_ct->velocity = Vector2Scale(urchin_spawn_vec, URCHIN_VELOCITY_SCALE);
                     }
                 }
                 break;
@@ -1391,6 +1437,9 @@ void init_sandbox_scene(LevelScene_t* scene)
                 break;
                 case SPAWN_LEVEL_END:
                     DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, GREEN);
+                break;
+                case SPAWN_URCHIN:
+                    DrawCircleV(Vector2Add(draw_pos, half_size), half_size.x, RED);
                 break;
 
             }

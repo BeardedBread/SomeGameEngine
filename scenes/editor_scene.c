@@ -39,8 +39,13 @@ static bool crate_activation = false;
 
 #define MAX_URCHIN_SPAWN_SPD 20
 #define URCHIN_SPAWN_UI_RADIUS 40
+#define URCHIN_SPAWN_UI_DIVISION 10
+#define URCHIN_SPAWN_UI_N (URCHIN_SPAWN_UI_RADIUS / URCHIN_SPAWN_UI_DIVISION)
+#define URCHIN_SPAWN_ANGLE_DIVISION 45
+#define URCHIN_SPAWN_UI_ANGLE_N (360 / URCHIN_SPAWN_ANGLE_DIVISION)
 #define URCHIN_VELOCITY_SCALE 10
 static Vector2 urchin_spawn_vec = {0,0};
+static Vector2 urchin_click_pos = {0,0};
 
 
 #define SELECTION_TILE_SIZE 32
@@ -105,6 +110,20 @@ static inline unsigned int get_tile_idx(int x, int y, const TileGrid_t* tilemap)
     return MAX_N_TILES;
 }
 
+
+static int round_to_nearest(int in_val, int divider)
+{
+    if (divider == 0) return in_val;
+
+    int remainder = in_val % divider;
+    int dividend = in_val / divider;
+    if (remainder > (divider >> 1))
+    {
+        dividend++;
+    }
+    return dividend * divider;
+}
+
 // This means you might be able to have two editor scene without running into problems
 #define SELECTION_RENDER_HEIGHT  (SELECTION_REGION_HEIGHT * 3)
 static void level_scene_render_func(Scene_t* scene)
@@ -147,24 +166,66 @@ static void level_scene_render_func(Scene_t* scene)
         draw_pos.y = game_rec.y + game_rec.height + SELECTION_GAP + URCHIN_SPAWN_UI_RADIUS;
 
         // Draw Urchin spawn info
-        DrawCircleV(draw_pos, 40, RED);
+        DrawCircleV(draw_pos, URCHIN_SPAWN_UI_RADIUS, RED);
+        for (unsigned int i = 0; i <= URCHIN_SPAWN_UI_N; ++i)
+        {
+            DrawCircleLinesV(draw_pos, i * URCHIN_SPAWN_UI_DIVISION, BLACK);
+        }
+        for (unsigned int i = 0; i < URCHIN_SPAWN_UI_ANGLE_N; ++i)
+        {
+            float angle = i * URCHIN_SPAWN_ANGLE_DIVISION * PI / 180;
+            Vector2 draw_end = Vector2Scale(
+                (Vector2){cosf(angle), sinf(angle)}, URCHIN_SPAWN_UI_RADIUS
+            );
+            draw_end = Vector2Add(draw_end, draw_pos);
+            DrawLineEx(draw_pos, draw_end, 1, BLACK);
+        }
+
         // HACK: because this ui is not stored, need to perform the mouse check here
+        bool to_snap = false;
         if (IsMouseButtonDown(MOUSE_BUTTON_LEFT))
         {
-            Vector2 click_pos = Vector2Subtract(
+            Vector2 tmp = Vector2Subtract(
                 scene->mouse_pos, draw_pos
             );
-            float mag = Vector2Length(click_pos);
+            float mag = Vector2Length(tmp);
             if (mag <= URCHIN_SPAWN_UI_RADIUS)
             {
-                urchin_spawn_vec = Vector2Scale(
-                    Vector2Normalize(click_pos),
-                    mag
+                urchin_click_pos = Vector2Scale(
+                    Vector2Normalize(tmp), mag
                 );
             }
+            else
+            {
+                to_snap = true;
+            }
         }
+        else if (IsMouseButtonReleased(MOUSE_BUTTON_LEFT))
+        {
+            to_snap = true;
+        }
+
+        if (to_snap)
+        {
+            float mag = Vector2Length(urchin_click_pos);
+
+            float dir = atan2f(urchin_click_pos.y, urchin_click_pos.x);
+            dir *= 180 / PI;
+            dir += dir < 0 ? 360 : 0;
+
+            mag = round_to_nearest((int)mag, URCHIN_SPAWN_UI_DIVISION);
+            dir = round_to_nearest((int)dir, URCHIN_SPAWN_ANGLE_DIVISION);
+
+            dir *= PI / 180;
+            urchin_spawn_vec = Vector2Scale(
+                (Vector2){cosf(dir), sinf(dir)}, mag
+            );
+            urchin_click_pos = urchin_spawn_vec;
+            printf("%.2f, %.2f\n", urchin_spawn_vec.x, urchin_spawn_vec.y);
+        }
+
         DrawCircleV(
-            Vector2Add(urchin_spawn_vec, draw_pos),
+            Vector2Add(urchin_click_pos, draw_pos),
             4, BLUE
         );
 

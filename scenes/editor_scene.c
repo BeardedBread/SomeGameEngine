@@ -38,12 +38,12 @@ static bool metal_toggle = false;
 static bool crate_activation = false;
 
 #define MAX_URCHIN_SPAWN_SPD 20
-#define URCHIN_SPAWN_UI_RADIUS 40
-#define URCHIN_SPAWN_UI_DIVISION 10
+#define URCHIN_SPAWN_UI_RADIUS 52
+#define URCHIN_SPAWN_UI_DIVISION 13
 #define URCHIN_SPAWN_UI_N (URCHIN_SPAWN_UI_RADIUS / URCHIN_SPAWN_UI_DIVISION)
 #define URCHIN_SPAWN_ANGLE_DIVISION 45
 #define URCHIN_SPAWN_UI_ANGLE_N (360 / URCHIN_SPAWN_ANGLE_DIVISION)
-#define URCHIN_VELOCITY_SCALE 10
+#define URCHIN_VELOCITY_SCALE 8
 static Vector2 urchin_spawn_vec = {0,0};
 static Vector2 urchin_click_pos = {0,0};
 
@@ -850,8 +850,8 @@ static void toggle_block_system(Scene_t* scene, ActionType_t action, bool presse
                     Entity_t* p_ent = create_urchin(&scene->ent_manager);
                     if (p_ent != NULL)
                     {
-                        p_ent->position.x = (tile_idx % tilemap.width) * tilemap.tile_size + (tilemap.tile_size >> 1);
-                        p_ent->position.y = (tile_idx / tilemap.width) * tilemap.tile_size + (tilemap.tile_size >> 1);
+                        p_ent->position.x = (tile_idx % tilemap.width) * tilemap.tile_size;
+                        p_ent->position.y = (tile_idx / tilemap.width) * tilemap.tile_size;
                         CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
                         p_ct->velocity = Vector2Scale(urchin_spawn_vec, URCHIN_VELOCITY_SCALE);
                     }
@@ -1268,7 +1268,7 @@ void init_sandbox_scene(LevelScene_t* scene)
     scene->data.tilemap.tiles = all_tiles;
     init_level_scene_data(
         &scene->data, MAX_N_TILES, all_tiles,
-        (Rectangle){25, 25, VIEWABLE_EDITOR_MAP_WIDTH*TILE_SIZE, VIEWABLE_EDITOR_MAP_HEIGHT*TILE_SIZE}
+        (Rectangle){10, 10, VIEWABLE_EDITOR_MAP_WIDTH*TILE_SIZE, VIEWABLE_EDITOR_MAP_HEIGHT*TILE_SIZE}
     );
     scene->data.sm.state_functions[LEVEL_STATE_STARTING] = at_level_start;
     scene->data.sm.state_functions[LEVEL_STATE_RUNNING] = NULL;

@@ -822,25 +822,30 @@ void tile_collision_system(Scene_t* scene)
                         );
                     }
                 }
-
-
             }
         }
 
-        if (
-            ((collide_side & (1<<3)) && (p_ctransform->velocity.x < 0))
-            || ((collide_side & (1<<2)) && (p_ctransform->velocity.x > 0))
-        )
+        
+        // Check X first
+        if ((collide_side & (1<<2)) || (collide_side & (1<<3)))
         {
-            p_ctransform->velocity.x *= -p_ctransform->bounce_coeff;
+            Vector2 check_pos = p_ent->position;
+            check_pos.x += p_ctransform->velocity.x * scene->delta_time;
+            if (check_collision_at(p_ent, check_pos, p_bbox->size, &tilemap))
+            {
+                p_ctransform->velocity.x *= -p_ctransform->bounce_coeff;
+            }
         }
 
-        if (
-            ((collide_side & (1<<1)) && (p_ctransform->velocity.y < 0))
-            || ((collide_side & (1)) && (p_ctransform->velocity.y > 0))
-        )
+        // Check Y next
+        if ((collide_side & (1<<1)) || (collide_side & (1)))
         {
-            p_ctransform->velocity.y *= -p_ctransform->bounce_coeff;
+            Vector2 check_pos = p_ent->position;
+            check_pos.y += p_ctransform->velocity.y * scene->delta_time;
+            if (check_collision_at(p_ent, check_pos, p_bbox->size, &tilemap))
+            {
+                p_ctransform->velocity.y *= -p_ctransform->bounce_coeff;
+            }
         }
 
         float decimal;

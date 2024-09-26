@@ -221,7 +221,6 @@ static void level_scene_render_func(Scene_t* scene)
                 (Vector2){cosf(dir), sinf(dir)}, mag
             );
             urchin_click_pos = urchin_spawn_vec;
-            printf("%.2f, %.2f\n", urchin_spawn_vec.x, urchin_spawn_vec.y);
         }
 
         DrawCircleV(
@@ -1324,11 +1323,6 @@ void init_sandbox_scene(LevelScene_t* scene)
         scene->data.player_spawn = p_player->position;
         scene->data.camera.target_pos = p_player->position;
         scene->data.camera.cam.target = p_player->position;
-
-        Entity_t* p_urchin = create_urchin(&scene->scene.ent_manager);
-        p_urchin->position = p_player->position;
-        p_urchin->position.x += 64;
-        p_urchin->position.y -= 240;
     }
 
     update_entity_manager(&scene->scene.ent_manager);

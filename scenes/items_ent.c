@@ -4,7 +4,7 @@
 #include "constants.h"
 #include "raymath.h"
 
-static SpriteRenderInfo_t item_sprite_map[21] = {0};
+static SpriteRenderInfo_t item_sprite_map[22] = {0};
 
 bool init_item_creation(Assets_t* assets)
 {
@@ -45,6 +45,7 @@ bool init_item_creation(Assets_t* assets)
     item_sprite_map[20].src_anchor = AP_BOT_CENTER;
     item_sprite_map[20].src_anchor = AP_BOT_CENTER;
     item_sprite_map[20].offset = (Vector2){0, TILE_SIZE >> 1};
+    item_sprite_map[21].sprite = get_sprite(assets, "urchin");
     return true;
 }
 
@@ -267,11 +268,11 @@ Entity_t* create_urchin(EntityManager_t* ent_manager)
     CHitBoxes_t* p_hitbox = add_component(p_urchin, CHITBOXES_T);
     p_hitbox->n_boxes = 1;
     p_hitbox->boxes[0] = (Rectangle){3, 3, 26, 26};
-    p_hitbox->atk = 2;
+    p_hitbox->atk = 1;
 
     CSprite_t* p_cspr = add_component(p_urchin, CSPRITE_T);
     p_cspr->sprites = item_sprite_map;
-    p_cspr->current_idx = 0;
+    p_cspr->current_idx = 21;
 
 
     return p_urchin;

@@ -583,13 +583,16 @@ void player_crushing_system(Scene_t* scene)
 {
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
 
-    Entity_t* p_player;
-    sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
+    //sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_player)
+    CSquishable_t* p_squish;
+    unsigned int ent_idx;
+    sc_map_foreach(&scene->ent_manager.component_map[CSQUISHABLE_T], ent_idx, p_squish)
     {
-        CBBox_t* p_bbox = get_component(p_player, CBBOX_COMP_T);
+        Entity_t* p_ent = get_entity(&scene->ent_manager, ent_idx);
+        CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
 
         uint8_t edges = check_bbox_edges(
-            &data->tilemap, p_player,
+            &data->tilemap, p_ent,
             p_bbox->size, true
         );
 
@@ -601,14 +604,14 @@ void player_crushing_system(Scene_t* scene)
             uint8_t collide = 0;
             CollideEntity_t ent = 
             {
-                .p_ent = p_player,
-                .bbox = (Rectangle){p_player->position.x, p_player->position.y, p_bbox->size.x, 1},
-                .prev_bbox = (Rectangle){p_player->position.x, p_player->position.y, p_bbox->size.x, p_bbox->size.y},
+                .p_ent = p_ent,
+                .bbox = (Rectangle){p_ent->position.x, p_ent->position.y, p_bbox->size.x, 1},
+                .prev_bbox = (Rectangle){p_ent->position.x, p_ent->position.y, p_bbox->size.x, p_bbox->size.y},
                 .area = (TileArea_t){
-                    .tile_x1 = (p_player->position.x) / TILE_SIZE,
-                    .tile_y1 = (p_player->position.y) / TILE_SIZE,
-                    .tile_x2 = (p_player->position.x + p_bbox->size.x - 1) / TILE_SIZE,
-                    .tile_y2 = (p_player->position.y + p_bbox->size.y - 1) / TILE_SIZE,
+                    .tile_x1 = (p_ent->position.x) / TILE_SIZE,
+                    .tile_y1 = (p_ent->position.y) / TILE_SIZE,
+                    .tile_x2 = (p_ent->position.x + p_bbox->size.x - 1) / TILE_SIZE,
+                    .tile_y2 = (p_ent->position.y + p_bbox->size.y - 1) / TILE_SIZE,
                 }
             };
             
@@ -619,7 +622,7 @@ void player_crushing_system(Scene_t* scene)
                 collide |= 1 << 1;
             }
             
-            ent.bbox.y = p_player->position.y + p_bbox->size.y;
+            ent.bbox.y = p_ent->position.y + p_bbox->size.y;
             collide_type = check_collision_line(&ent, &data->tilemap, true);
             if (collide_type == 1)
             {
@@ -628,7 +631,14 @@ void player_crushing_system(Scene_t* scene)
 
             if (collide != 0)
             {
-                p_player->m_alive = false;
+                if (p_ent->m_tag == PLAYER_ENT_TAG)
+                {
+                    p_ent->m_alive = false;
+                }
+                else
+                {
+                    destroy_entity(scene, &data->tilemap, p_ent);
+                }
                 return;
             }
         }
@@ -638,14 +648,14 @@ void player_crushing_system(Scene_t* scene)
             uint8_t collide = 0;
             CollideEntity_t ent = 
             {
-                .p_ent = p_player,
-                .bbox = (Rectangle){p_player->position.x, p_player->position.y, 1, p_bbox->size.y},
-                .prev_bbox = (Rectangle){p_player->position.x, p_player->position.y, p_bbox->size.x, p_bbox->size.y},
+                .p_ent = p_ent,
+                .bbox = (Rectangle){p_ent->position.x, p_ent->position.y, 1, p_bbox->size.y},
+                .prev_bbox = (Rectangle){p_ent->position.x, p_ent->position.y, p_bbox->size.x, p_bbox->size.y},
                 .area = (TileArea_t){
-                    .tile_x1 = (p_player->position.x) / TILE_SIZE,
-                    .tile_y1 = (p_player->position.y) / TILE_SIZE,
-                    .tile_x2 = (p_player->position.x + p_bbox->size.x - 1) / TILE_SIZE,
-                    .tile_y2 = (p_player->position.y + p_bbox->size.y - 1) / TILE_SIZE,
+                    .tile_x1 = (p_ent->position.x) / TILE_SIZE,
+                    .tile_y1 = (p_ent->position.y) / TILE_SIZE,
+                    .tile_x2 = (p_ent->position.x + p_bbox->size.x - 1) / TILE_SIZE,
+                    .tile_y2 = (p_ent->position.y + p_bbox->size.y - 1) / TILE_SIZE,
                 }
             };
 
@@ -657,7 +667,7 @@ void player_crushing_system(Scene_t* scene)
             }
 
             //Right
-            ent.bbox.x = p_player->position.x + p_bbox->size.x; // 2 to account for the previous subtraction
+            ent.bbox.x = p_ent->position.x + p_bbox->size.x; // 2 to account for the previous subtraction
             collide_type = check_collision_line(&ent, &data->tilemap, false);
             if (collide_type == 1)
             {
@@ -666,7 +676,14 @@ void player_crushing_system(Scene_t* scene)
 
             if (collide != 0)
             {
-                p_player->m_alive = false;
+                if (p_ent->m_tag == PLAYER_ENT_TAG)
+                {
+                    p_ent->m_alive = false;
+                }
+                else
+                {
+                    destroy_entity(scene, &data->tilemap, p_ent);
+                }
                 return;
             }
         }

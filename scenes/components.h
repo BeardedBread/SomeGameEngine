@@ -14,6 +14,7 @@ enum ComponentEnum {
     CWATERRUNNER_T,
     CAIRTIMER_T,
     CEMITTER_T,
+    CSQUISHABLE_T
 };
 
 typedef struct _CMovementState_t {
@@ -171,3 +172,7 @@ typedef struct _CEmitter_t
     EmitterHandle handle;
     Vector2 offset;
 } CEmitter_t;
+
+typedef struct _CSquishable_t {
+    bool active; //< Dummy variable
+} CSquishable_t;

@@ -115,6 +115,8 @@ Entity_t* create_player(EntityManager_t* ent_manager)
     CEmitter_t* p_emitter = add_component(p_ent, CEMITTER_T);
     p_emitter->offset = (Vector2){7,0};
 
+    add_component(p_ent, CSQUISHABLE_T);
+
     return p_ent;
 }
 

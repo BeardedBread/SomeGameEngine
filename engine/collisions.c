@@ -160,7 +160,7 @@ uint8_t check_collision_at(Entity_t* p_ent, Vector2 pos, Vector2 bbox_sz, TileGr
     CollideEntity_t ent = {
         .p_ent = p_ent,
         .bbox = (Rectangle){pos.x, pos.y, bbox_sz.x, bbox_sz.y},
-        .prev_bbox = (Rectangle){pos.x, pos.y, bbox_sz.x, bbox_sz.y},
+        .prev_bbox = (Rectangle){p_ent->position.x, p_ent->position.y, bbox_sz.x, bbox_sz.y},
         .area = (TileArea_t){
             .tile_x1 = (pos.x) / grid->tile_size,
             .tile_y1 = (pos.y) / grid->tile_size,
@@ -169,7 +169,7 @@ uint8_t check_collision_at(Entity_t* p_ent, Vector2 pos, Vector2 bbox_sz, TileGr
         }
     };
     
-    return check_collision(&ent, grid, false);
+    return check_collision(&ent, grid, true);
 }
 
 bool check_on_ground(Entity_t* p_ent, Vector2 prev_pos, Vector2 bbox_sz, TileGrid_t* grid)

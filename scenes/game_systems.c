@@ -1,3 +1,4 @@
+#include "assets_tag.h"
 #ifdef TRACY_ENABLE
 #include "tracy/TracyC.h"
 #endif
@@ -256,6 +257,19 @@ static void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
         };
         play_particle_emitter(&scene->part_sys, &emitter);
         play_sfx(scene->engine, ARROW_DESTROY_SFX);
+    }
+    else if (p_ent->m_tag == NO_ENT_TAG)
+    {
+        ParticleEmitter_t emitter = {
+            .spr = get_sprite(&scene->engine->assets, "p_spike"),
+            .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
+            .position = Vector2Add(p_ent->position, half_size),
+            .n_particles = 8,
+            .user_data = CONTAINER_OF(scene, LevelScene_t, scene),
+            .update_func = &simple_particle_system_update,
+            .emitter_update_func = NULL,
+        };
+        play_particle_emitter(&scene->part_sys, &emitter);
     }
 
     clear_an_entity(scene, tilemap, p_ent);

@@ -247,11 +247,14 @@ Entity_t* create_explosion(EntityManager_t* ent_manager)
 
 Entity_t* create_urchin(EntityManager_t* ent_manager)
 {
+    // The hit box is larger than the bbox
+    // Unfortunately, it's too late to incorporate the offset for the bbox component
+    // So, offset the hitbox instead and external reposition it.
     Entity_t* p_urchin = add_entity(ent_manager, NO_ENT_TAG);
     if (p_urchin == NULL) return NULL;
 
     CBBox_t* p_bbox = add_component(p_urchin, CBBOX_COMP_T);
-    set_bbox(p_bbox, TILE_SIZE, TILE_SIZE);
+    set_bbox(p_bbox, TILE_SIZE-2, TILE_SIZE-2);
 
     CTransform_t* p_ctransform = add_component(p_urchin, CTRANSFORM_COMP_T);
     p_ctransform->movement_mode = KINEMATIC_MOVEMENT;
@@ -267,7 +270,7 @@ Entity_t* create_urchin(EntityManager_t* ent_manager)
 
     CHitBoxes_t* p_hitbox = add_component(p_urchin, CHITBOXES_T);
     p_hitbox->n_boxes = 1;
-    p_hitbox->boxes[0] = (Rectangle){3, 3, 26, 26};
+    p_hitbox->boxes[0] = (Rectangle) {-1,-1,TILE_SIZE,TILE_SIZE};
     p_hitbox->atk = 2;
 
     CSprite_t* p_cspr = add_component(p_urchin, CSPRITE_T);
@@ -287,7 +290,7 @@ Entity_t* create_chest(EntityManager_t* ent_manager)
     CBBox_t* p_bbox = add_component(p_chest, CBBOX_COMP_T);
     set_bbox(p_bbox, TILE_SIZE, TILE_SIZE);
     p_bbox->solid = true;
-    p_bbox->fragile = true;
+    p_bbox->fragile = false;
 
     CTransform_t* p_ctransform = add_component(p_chest, CTRANSFORM_COMP_T);
     p_ctransform->grav_delay = 0.3f;

@@ -397,6 +397,7 @@ static void render_editor_game_scene(Scene_t* scene)
                 Color colour;
                 switch(p_ent->m_tag)
                 {
+                    case NO_ENT_TAG:
                     case PLAYER_ENT_TAG:
                         colour = RED;
                     break;
@@ -849,8 +850,11 @@ static void toggle_block_system(Scene_t* scene, ActionType_t action, bool presse
                     Entity_t* p_ent = create_urchin(&scene->ent_manager);
                     if (p_ent != NULL)
                     {
-                        p_ent->position.x = (tile_idx % tilemap.width) * tilemap.tile_size;
-                        p_ent->position.y = (tile_idx / tilemap.width) * tilemap.tile_size;
+                        CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+                        p_ent->position.x = (tile_idx % tilemap.width) * tilemap.tile_size 
+                            + (tilemap.tile_size >> 1) - p_bbox->half_size.x;
+                        p_ent->position.y = (tile_idx / tilemap.width) * tilemap.tile_size
+                            + (tilemap.tile_size >> 1) - p_bbox->half_size.y;
                         CTransform_t* p_ct = get_component(p_ent, CTRANSFORM_COMP_T);
                         p_ct->velocity = Vector2Scale(urchin_spawn_vec, URCHIN_VELOCITY_SCALE);
                     }

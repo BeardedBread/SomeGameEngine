@@ -146,9 +146,7 @@ static unsigned int player_finish_transition_func(Entity_t* ent)
     if (p_spr->current_frame == p_spr->sprites[p_spr->current_idx].sprite->frame_count - 1)
     {
         p_spr->pause = true;
-        // This entity has no special init, so it's fine to remove
-        // at end of animation
-        remove_entity(ent->manager, ent->m_id);
+        //remove_entity(ent->manager, ent->m_id);
     }
     return p_spr->current_idx;
 }
@@ -165,6 +163,8 @@ Entity_t* create_player_finish(EntityManager_t* ent_manager)
 
     add_component(p_ent, CTILECOORD_COMP_T);
 
+    CLifeTimer_t* p_clifetimer = add_component(p_ent, CLIFETIMER_T);
+    p_clifetimer->life_time = 0.9f;
     return p_ent;
 }
 

@@ -161,8 +161,6 @@ Entity_t* create_player_finish(EntityManager_t* ent_manager)
     p_cspr->current_idx = SPR_PLAYER_ENTER;
     p_cspr->transition_func = &player_finish_transition_func;
 
-    add_component(p_ent, CTILECOORD_COMP_T);
-
     CLifeTimer_t* p_clifetimer = add_component(p_ent, CLIFETIMER_T);
     p_clifetimer->life_time = 0.9f;
     return p_ent;

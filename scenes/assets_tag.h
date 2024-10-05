@@ -11,6 +11,7 @@ typedef enum EntityTag {
     LEVEL_END_TAG,
     DESTRUCTABLE_ENT_TAG,
     DYNMEM_ENT_TAG,
+    URCHIN_ENT_TAG,
 } EntityTag_t;
 
 typedef enum SFXTag {

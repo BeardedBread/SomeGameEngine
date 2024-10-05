@@ -250,7 +250,7 @@ Entity_t* create_urchin(EntityManager_t* ent_manager)
     // The hit box is larger than the bbox
     // Unfortunately, it's too late to incorporate the offset for the bbox component
     // So, offset the hitbox instead and external reposition it.
-    Entity_t* p_urchin = add_entity(ent_manager, NO_ENT_TAG);
+    Entity_t* p_urchin = add_entity(ent_manager, URCHIN_ENT_TAG);
     if (p_urchin == NULL) return NULL;
 
     CBBox_t* p_bbox = add_component(p_urchin, CBBOX_COMP_T);

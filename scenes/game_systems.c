@@ -258,7 +258,7 @@ static void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
         play_particle_emitter(&scene->part_sys, &emitter);
         play_sfx(scene->engine, ARROW_DESTROY_SFX);
     }
-    else if (p_ent->m_tag == NO_ENT_TAG)
+    else if (p_ent->m_tag == URCHIN_ENT_TAG)
     {
         ParticleEmitter_t emitter = {
             .spr = get_sprite(&scene->engine->assets, "p_spike"),

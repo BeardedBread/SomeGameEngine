@@ -261,7 +261,7 @@ static void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
     else if (p_ent->m_tag == URCHIN_ENT_TAG)
     {
         ParticleEmitter_t emitter = {
-            .spr = get_sprite(&scene->engine->assets, "p_spike"),
+            .spr = get_sprite(&scene->engine->assets, "p_urc"),
             .config = get_emitter_conf(&scene->engine->assets, "pe_burst"),
             .position = Vector2Add(p_ent->position, half_size),
             .n_particles = 8,

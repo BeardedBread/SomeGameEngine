@@ -147,10 +147,10 @@ static void level_scene_render_func(Scene_t* scene)
             selection_rec.x + current_spawn_selection * SELECTION_TILE_SIZE, selection_rec.y,
             SELECTION_TILE_SIZE, SELECTION_TILE_SIZE, GREEN
         );
-        DrawText("R to reset the map, Q/E to cycle the selection,\nF to toggle metal crates. T to toggle crate spawn behaviour\nZ to change tileset, X to toggle grid\nC to set spawn point, V to toggle free cam", selection_rec.x, selection_rec.y + selection_rec.height + 2, 14, BLACK);
+        DrawText("R to reset the map, Q/E to cycle the selection,\nF to toggle metal crates. T to toggle crate spawn behaviour\nZ to change tileset, X to toggle grid\nC to set spawn point, V to toggle free cam, B to toggle slowmo", selection_rec.x, selection_rec.y + selection_rec.height + 2, 14, BLACK);
 
         draw_pos.x = game_rec.x + (MAX_SPAWN_TYPE + 1) * SELECTION_TILE_SIZE;
-        sprintf(buffer, "Selection: %s", get_spawn_selection_string(current_spawn_selection));
+        sprintf(buffer, "%s", get_spawn_selection_string(current_spawn_selection));
         DrawText(buffer, draw_pos.x, draw_pos.y, 20, BLACK);
         draw_pos.y += 20 + 5;
         sprintf(buffer, "Crate %s on spawn", crate_activation? "active" : "inactive");
@@ -1566,8 +1566,8 @@ void init_sandbox_scene(LevelScene_t* scene)
     sc_map_put_64(&scene->scene.action_map, KEY_Z, ACTION_SWITCH_TILESET);
     sc_map_put_64(&scene->scene.action_map, KEY_X, ACTION_TOGGLE_GRID);
     sc_map_put_64(&scene->scene.action_map, KEY_C, ACTION_SET_SPAWNPOINT);
-    sc_map_put_64(&scene->scene.action_map, KEY_U, ACTION_TOGGLE_TIMESLOW);
     sc_map_put_64(&scene->scene.action_map, KEY_V, ACTION_LOOKAHEAD);
+    sc_map_put_64(&scene->scene.action_map, KEY_B, ACTION_TOGGLE_TIMESLOW);
     sc_map_put_64(&scene->scene.action_map, MOUSE_LEFT_BUTTON, ACTION_SPAWN_TILE);
     sc_map_put_64(&scene->scene.action_map, MOUSE_RIGHT_BUTTON, ACTION_REMOVE_TILE);
 

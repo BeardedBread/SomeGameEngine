@@ -263,6 +263,8 @@ Entity_t* create_urchin(EntityManager_t* ent_manager)
     p_ctransform->active = true;
 
     add_component(p_urchin, CTILECOORD_COMP_T);
+    add_component(p_urchin, CMOVEMENTSTATE_T);
+
     CHurtbox_t* p_hurtbox = add_component(p_urchin, CHURTBOX_T);
     p_hurtbox->size = p_bbox->size;
     p_hurtbox->def = 2;

@@ -45,7 +45,7 @@ static void level_scene_render_func(Scene_t* scene)
         sprintf(buffer, "%u %u", sc_map_size_64v(&scene->ent_manager.entities), GetFPS());
         DrawText(buffer, gui_x, data->game_rec.height - 12, 12, WHITE);
 
-        DrawRectangle(0, 0, data->game_rec.width, 0, (Color){0,0,0,64});
+        DrawRectangle(0, 0, data->game_rec.width, 32, (Color){0,0,0,128});
         sprintf(buffer, "Chests: %u / %u", data->coins.current, data->coins.total);
         gui_x = data->game_rec.width - MeasureText(buffer, 24) - 5;
         DrawText(buffer, gui_x, 0, 24, RED);

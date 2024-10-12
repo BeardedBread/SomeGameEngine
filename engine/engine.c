@@ -262,8 +262,13 @@ inline void render_scene(Scene_t* scene)
     float wscale = (curr_width / original_size.x);
     float hscale = (curr_height / original_size.y);
     float min_dim = (wscale > hscale) ? hscale : wscale;
+    Vector2 offset = {
+        scene->engine->intended_window_size.x * (wscale - min_dim) / 2,
+        scene->engine->intended_window_size.y * (hscale - min_dim) / 2
+    };
     wscale = min_dim;
     hscale = min_dim;
+
 
     Rectangle draw_rec = {
         0,0,
@@ -271,7 +276,7 @@ inline void render_scene(Scene_t* scene)
         scene->engine->intended_window_size.y
     };
     Rectangle draw_pos = {
-        draw_rec.x * wscale, draw_rec.y * hscale,
+        draw_rec.x * wscale + offset.x, draw_rec.y * hscale + offset.y,
         draw_rec.width * wscale, draw_rec.height * hscale
     };
     draw_rec.y *= -1;

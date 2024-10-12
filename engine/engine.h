@@ -37,6 +37,7 @@ typedef struct GameEngine {
     // This is in case of window scaling, where there needs to be
     // an absolute reference
     Vector2 intended_window_size;
+    RenderTexture2D base_canvas;
 } GameEngine_t;
 
 #define SCENE_ACTIVE_BIT (1 << 0) // Systems Active

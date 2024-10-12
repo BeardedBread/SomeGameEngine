@@ -26,6 +26,7 @@ int main(void)
 {
     // Initialization
     //--------------------------------------------------------------------------------------
+    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     init_engine(&engine, (Vector2){screenWidth, screenHeight});
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
 #ifndef NDEBUG

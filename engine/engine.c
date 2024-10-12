@@ -15,6 +15,7 @@ void init_engine(GameEngine_t* engine, Vector2 starting_win_size)
     init_assets(&engine->assets);
     engine->intended_window_size = starting_win_size;
     InitWindow(starting_win_size.x, starting_win_size.y, "raylib");
+    engine->base_canvas = LoadRenderTexture(starting_win_size.x, starting_win_size.y);
 }
 
 void deinit_engine(GameEngine_t* engine)
@@ -24,6 +25,7 @@ void deinit_engine(GameEngine_t* engine)
     sc_queue_term(&engine->key_buffer);
     sc_queue_term(&engine->scene_stack);
     sc_heap_term(&engine->scenes_render_order);
+    UnloadRenderTexture(engine->base_canvas);
     CloseAudioDevice();
     CloseWindow(); 
 }
@@ -239,7 +241,6 @@ static void _internal_render_scene(Scene_t* scene)
         Vector2 draw_pos = {draw_rec.x, draw_rec.y};
         draw_rec.x = 0;
         draw_rec.y = 0;
-        draw_rec.height *= -1;
         DrawTextureRec(
             layer->layer_tex.texture,
             draw_rec,
@@ -251,8 +252,38 @@ static void _internal_render_scene(Scene_t* scene)
 
 inline void render_scene(Scene_t* scene)
 {
-    BeginDrawing();
+    BeginTextureMode(scene->engine->base_canvas);
     _internal_render_scene(scene);
+    EndTextureMode();
+
+    int curr_width = GetRenderWidth();
+    int curr_height = GetRenderHeight();
+    Vector2 original_size = scene->engine->intended_window_size;
+    float wscale = (curr_width / original_size.x);
+    float hscale = (curr_height / original_size.y);
+    float min_dim = (wscale > hscale) ? hscale : wscale;
+    wscale = min_dim;
+    hscale = min_dim;
+
+    Rectangle draw_rec = {
+        0,0,
+        scene->engine->intended_window_size.x,
+        scene->engine->intended_window_size.y
+    };
+    Rectangle draw_pos = {
+        draw_rec.x * wscale, draw_rec.y * hscale,
+        draw_rec.width * wscale, draw_rec.height * hscale
+    };
+    draw_rec.y *= -1;
+
+    BeginDrawing();
+        ClearBackground((Color){0,0,0,255});
+        DrawTexturePro(
+            scene->engine->base_canvas.texture,
+            draw_rec,
+            draw_pos,
+            (Vector2){0,0}, 0.0, WHITE
+        );
     EndDrawing();
 }
 

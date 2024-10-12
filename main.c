@@ -3,6 +3,7 @@
 #include "scene_impl.h"
 #include "ent_impl.h"
 #include "mempool.h"
+#include "constants.h"
 #include <stdio.h>
 #include <math.h>
 #define N_SCENES 4
@@ -15,8 +16,8 @@ static GameEngine_t engine = {
     .assets = {0}
 };
 
-const int screenWidth = 1280;
-const int screenHeight = 640;
+const int screenWidth = VIEWABLE_MAP_WIDTH * TILE_SIZE;
+const int screenHeight = VIEWABLE_MAP_HEIGHT * TILE_SIZE;
 
 // Maintain own queue to handle key presses
 struct sc_queue_32 key_buffer;

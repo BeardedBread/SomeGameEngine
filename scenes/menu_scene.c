@@ -3,22 +3,21 @@
 #include "raymath.h"
 #include <stdio.h>
 
-#define START_X 300
-
 static void menu_scene_render_func(Scene_t* scene)
 {
     MenuSceneData_t* data = &(CONTAINER_OF(scene, MenuScene_t, scene)->data);
 
     Sprite_t* spr = get_sprite(&scene->engine->assets, "title_spr");
+    Rectangle render_rec = scene->layers.render_layers[0].render_area;
     BeginTextureMode(scene->layers.render_layers[0].layer_tex);
         ClearBackground(RAYWHITE);
-        DrawText("Bunny's Spelunking Adventure", START_X, 100, 32, BLACK);
+        int title_width = MeasureText("Bunny's Spelunking Adventure", 32);
+        DrawText("Bunny's Spelunking Adventure", (render_rec.width - title_width) / 2, 20, 32, BLACK);
         UI_button(data->buttons, "Start");
-        UI_button(data->buttons + 1, "Sandbox");
-        UI_button(data->buttons + 2, "Continue");
-        UI_button(data->buttons + 3, "Exit");
+        UI_button(data->buttons + 1, "Continue");
+        UI_button(data->buttons + 2, "Exit");
 
-        draw_sprite(spr, 0, (Vector2){START_X + 200, 120}, 0, false);
+        draw_sprite(spr, 0, (Vector2){render_rec.width / 2, 50}, 0, false);
     EndTextureMode();
 }
 
@@ -29,10 +28,7 @@ static void exec_component_function(Scene_t* scene, int sel)
         case 0:
             change_scene(scene->engine, LEVEL_SELECT_SCENE);
         break;
-        case 1:
-            change_scene(scene->engine, SANDBOX_SCENE);
-        break;
-        case 3:
+        case 2:
             scene->state = 0;
         break;
         default:
@@ -143,23 +139,25 @@ void init_menu_scene(MenuScene_t* scene)
     sc_array_add(&scene->scene.systems, &gui_loop);
     sc_array_add(&scene->scene.systems, &menu_scene_render_func);
     
+    int button_x = scene->scene.engine->intended_window_size.x / 4;
+    int button_y = scene->scene.engine->intended_window_size.y / 4;
     scene->data.buttons[0] = (UIComp_t) {
-        .bbox = {START_X,255,125,30},
+        .bbox = {button_x,button_y,125,30},
         .state = STATE_NORMAL,
         .alpha = 1.0
     };
     scene->data.buttons[1] = (UIComp_t) {
-        .bbox = {START_X,300,125,30},
+        .bbox = {button_x,button_y+45,125,30},
         .state = STATE_NORMAL,
         .alpha = 1.0
     };
     scene->data.buttons[2] = (UIComp_t) {
-        .bbox = {START_X,345,125,30},
+        .bbox = {button_x,button_y+90,125,30},
         .state = STATE_NORMAL,
         .alpha = 1.0
     };
     scene->data.buttons[3] = (UIComp_t) {
-        .bbox = {START_X,390,125,30},
+        .bbox = {button_x,button_y+135,125,30},
         .state = STATE_NORMAL,
         .alpha = 1.0
     };

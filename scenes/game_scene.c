@@ -32,7 +32,7 @@ static void level_scene_render_func(Scene_t* scene)
             CAirTimer_t* p_air = get_component(p_ent, CAIRTIMER_T);
 
             Sprite_t* spr = get_sprite(&scene->engine->assets, "p_bigbubble");
-            Vector2 air_pos = {data->game_rec.x + data->game_rec.width - 32, data->game_rec.y + data->game_rec.height - 32};
+            Vector2 air_pos = {data->game_rec.width - 32, data->game_rec.height - 32};
             for (uint8_t i = 0; i < p_air->curr_count; i++)
             {
                 draw_sprite(spr, 0, air_pos, 0, false);
@@ -41,18 +41,14 @@ static void level_scene_render_func(Scene_t* scene)
             }
         }
         // For DEBUG
-        const int gui_x = data->game_rec.x + data->game_rec.width + 10;
-        //sprintf(buffer, "Spawn Entity: %s", get_spawn_selection_string(current_spawn_selection));
-        //DrawText(buffer, gui_x, 240, 12, BLACK);
-        sprintf(buffer, "Number of Entities: %u", sc_map_size_64v(&scene->ent_manager.entities));
-        DrawText(buffer, gui_x, 70, 12, BLACK);
-        sprintf(buffer, "FPS: %u", GetFPS());
-        DrawText(buffer, gui_x, 120, 12, BLACK);
+        int gui_x = 5;
+        sprintf(buffer, "%u %u", sc_map_size_64v(&scene->ent_manager.entities), GetFPS());
+        DrawText(buffer, gui_x, data->game_rec.height - 12, 12, WHITE);
 
-        print_mempool_stats(buffer);
-        DrawText(buffer, gui_x, 150, 12, BLACK);
+        DrawRectangle(0, 0, data->game_rec.width, 0, (Color){0,0,0,64});
         sprintf(buffer, "Chests: %u / %u", data->coins.current, data->coins.total);
-        DrawText(buffer, gui_x, data->game_rec.y + data->game_rec.height, 24, BLACK);
+        gui_x = data->game_rec.width - MeasureText(buffer, 24) - 5;
+        DrawText(buffer, gui_x, 0, 24, RED);
     EndTextureMode();
 }
 
@@ -488,8 +484,7 @@ void init_game_scene(LevelScene_t* scene)
     init_level_scene_data(
         &scene->data, MAX_N_TILES, all_tiles,
         (Rectangle){
-            (scene->scene.engine->intended_window_size.x- VIEWABLE_MAP_WIDTH*TILE_SIZE) / 2.0f,
-            (scene->scene.engine->intended_window_size.y- VIEWABLE_MAP_HEIGHT*TILE_SIZE) / 2.0f,
+            0,0,
             VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE
         }
     );
@@ -504,13 +499,9 @@ void init_game_scene(LevelScene_t* scene)
         scene->data.game_rec
     );
     add_scene_layer(
-        &scene->scene, scene->scene.engine->intended_window_size.x,
-        scene->scene.engine->intended_window_size.y,
-        (Rectangle){
-            0, 0,
-            scene->scene.engine->intended_window_size.x,
-            scene->scene.engine->intended_window_size.y
-        }
+        &scene->scene,
+        scene->data.game_rec.width, scene->data.game_rec.height,
+        scene->data.game_rec
     );
 
     create_player(&scene->scene.ent_manager);

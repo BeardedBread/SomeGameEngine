@@ -58,6 +58,7 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
             if (!pressed)
             {
                 unsigned int prev_sel = data->scroll_area.curr_selection;
+                // TODO: Add scene offset to scroll area calculation
                 if (vert_scrollarea_set_pos(&data->scroll_area, scene->mouse_pos) != data->scroll_area.n_items)
                 {
                     vert_scrollarea_refocus(&data->scroll_area);
@@ -96,18 +97,21 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
     }
 }
 
-#define START_X 300
-#define START_Y 100
 #define FONT_SIZE 30
 #define TEXT_PADDING 3
-#define DISPLAY_AREA_HEIGHT 400
-#define SCROLL_TOTAL_HEIGHT 800
+#define DISPLAY_AREA_HEIGHT 200
+#define SCROLL_TOTAL_HEIGHT 300
 void init_level_select_scene(LevelSelectScene_t* scene)
 {
     init_scene(&scene->scene, &level_select_do_action, 0);
     add_scene_layer(
-        &scene->scene, 400, 800,
-        (Rectangle){START_X, START_Y, 400, 800}
+        &scene->scene, scene->scene.engine->intended_window_size.x,
+        scene->scene.engine->intended_window_size.y,
+        (Rectangle){
+            0, 0,
+            scene->scene.engine->intended_window_size.x,
+            scene->scene.engine->intended_window_size.y
+        }
     );
     vert_scrollarea_init(&scene->data.scroll_area, (Rectangle){50, 100, 150, DISPLAY_AREA_HEIGHT - 100}, (Vector2){150, SCROLL_TOTAL_HEIGHT});
     vert_scrollarea_set_item_dims(&scene->data.scroll_area, FONT_SIZE, TEXT_PADDING);

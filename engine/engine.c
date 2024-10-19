@@ -241,6 +241,7 @@ static void _internal_render_scene(Scene_t* scene)
         Vector2 draw_pos = {draw_rec.x, draw_rec.y};
         draw_rec.x = 0;
         draw_rec.y = 0;
+        draw_rec.height *= -1;
         DrawTextureRec(
             layer->layer_tex.texture,
             draw_rec,
@@ -279,7 +280,7 @@ inline void render_scene(Scene_t* scene)
         draw_rec.x * wscale + offset.x, draw_rec.y * hscale + offset.y,
         draw_rec.width * wscale, draw_rec.height * hscale
     };
-    draw_rec.y *= -1;
+    draw_rec.height *= -1;
 
     BeginDrawing();
         ClearBackground((Color){0,0,0,255});

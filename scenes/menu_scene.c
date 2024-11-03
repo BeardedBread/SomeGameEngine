@@ -11,13 +11,13 @@ static void menu_scene_render_func(Scene_t* scene)
     Rectangle render_rec = scene->layers.render_layers[0].render_area;
     BeginTextureMode(scene->layers.render_layers[0].layer_tex);
         ClearBackground(RAYWHITE);
+        draw_sprite(spr, 0, (Vector2){0, 0}, 0, false);
         int title_width = MeasureText("Bunny's Spelunking Adventure", 32);
         DrawText("Bunny's Spelunking Adventure", (render_rec.width - title_width) / 2, 20, 32, BLACK);
         UI_button(data->buttons, "Start");
         UI_button(data->buttons + 1, "Continue");
         UI_button(data->buttons + 2, "Exit");
 
-        draw_sprite(spr, 0, (Vector2){render_rec.width / 2, 50}, 0, false);
     EndTextureMode();
 }
 

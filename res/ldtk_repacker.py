@@ -39,11 +39,8 @@ ENUMIDS_TILETYPE_MAPPING = {
     'Player': 22,
     'Chest': 23,
     'Exit': 24,
+    'Urchin': 25,
 }
-
-#ENTID_MAPPING = {
-#    'Player': 1
-#}
 
 # First go to tilesets and find Simple_tiles identifier, then find enumTags to identifier which tile type is what tileid
 ids_tiletype_map = {}
@@ -137,6 +134,15 @@ with open(converted_filename, 'wb+') as out_file:
         for ent in entity_layout["entityInstances"]:
             x,y = ent["__grid"]
             tiles_info[y*width + x][0] = ENUMIDS_TILETYPE_MAPPING[ent["__identifier"]]
+            if ent["__identifier"] == "Urchin":
+                spd_encoding = 0
+                for urchin_data in ent['fieldInstances']:
+                    if urchin_data["__identifier"] == "Direction":
+                        spd_encoding |= urchin_data["__value"] << 2
+                    elif urchin_data["__identifier"] == "SpeedLevel":
+                        spd_encoding |= urchin_data["__value"]
+
+                tiles_info[y*width + x][0] += spd_encoding
 
         out_file.write(struct.pack("<32s4H", level_name.encode('utf-8'), width, height, n_chests, level_tileset))
         for tile in tiles_info:

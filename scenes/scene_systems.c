@@ -3,6 +3,8 @@
 #include "ent_impl.h"
 #include "constants.h"
 
+#include "raymath.h"
+
 void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* tiles, Rectangle view_zone)
 {
     data->game_rec = view_zone;
@@ -213,8 +215,30 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
                     }
                 }
                 break;
+   
                 default:
                 break;
+            }
+
+            if (lvl_map.tiles[i].tile_type >= 25) 
+            {
+                Entity_t* ent = create_urchin(&scene->scene.ent_manager);
+                if (ent != NULL)
+                {
+                    CBBox_t* p_bbox = get_component(ent, CBBOX_COMP_T);
+                    ent->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size + (scene->data.tilemap.tile_size >> 1) - p_bbox->half_size.x;
+
+                    ent->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size + (scene->data.tilemap.tile_size >> 1) + (scene->data.tilemap.tile_size >> 1) - p_bbox->half_size.y;
+
+                    uint8_t spd_encoding = lvl_map.tiles[i].tile_type - 25;
+                    float angle = 45.0f / 180.0f * PI * ((spd_encoding >> 2) & 7);
+                    float mag = 100 * (spd_encoding & 3);
+
+                    CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
+                    p_ct->velocity = Vector2Scale(
+                        (Vector2){cosf(angle), sinf(angle)}, mag
+                    );
+                }
             }
         }
     }

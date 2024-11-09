@@ -97,10 +97,10 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
     }
 }
 
-#define FONT_SIZE 30
+#define FONT_SIZE 15
 #define TEXT_PADDING 3
-#define DISPLAY_AREA_HEIGHT 200
-#define SCROLL_TOTAL_HEIGHT 300
+#define DISPLAY_AREA_HEIGHT 400
+#define SCROLL_TOTAL_HEIGHT 400
 void init_level_select_scene(LevelSelectScene_t* scene)
 {
     init_scene(&scene->scene, &level_select_do_action, 0);

@@ -61,8 +61,18 @@ if not ids_tiletype_map:
 
 pprint.pprint(ids_tiletype_map)
 
+def get_level_order(lvl) -> int:
+    order = 65535;
+    for data in lvl['fieldInstances']:
+        if data["__identifier"] == "Order":
+            order = data["__value"]
+    return order
+
+all_levels = level_pack_data["levels"]
+all_levels.sort(key=get_level_order)
+
 # Number of levels is the length of the levels
-n_levels = len(level_pack_data["levels"])
+n_levels = len(all_levels)
 print("Number of levels:", n_levels)
 
 fileparts = args.filename.split('.')
@@ -76,17 +86,20 @@ converted_filename = '.'.join(fileparts)
 with open(converted_filename, 'wb+') as out_file:
     out_file.write(struct.pack("<I", n_levels))
     # Then loop the levels. Read the layerIndstances
-    for level in level_pack_data["levels"]:
+    for level in all_levels:
         n_chests : int = 0
         # Search for __identifier for the level layout
-        level_name = level["identifier"]
-        print("Parsing level", level_name)
+        level_name = "" 
 
         level_metadata = level['fieldInstances']
         level_tileset = 0;
         for data in level_metadata:
             if data["__identifier"] == "TileSet":
                 level_tileset = data["__value"]
+            if data["__identifier"] == "Name":
+                level_name = data["__value"]
+
+        print("Parsing level", level_name)
 
         level_layout = {}
         entity_layout = {}

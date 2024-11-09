@@ -75,7 +75,7 @@ Entity_t* create_player(EntityManager_t* ent_manager)
     p_ct->shape_factor = (Vector2){1, 1};
 
     CJump_t* p_cjump = add_component(p_ent, CJUMP_COMP_T);
-    p_cjump->jump_speed = 680;
+    p_cjump->jump_speed = JUMP_SPEED;
     p_cjump->jumps = 1;
     p_cjump->max_jumps = 1;
     p_cjump->jump_ready = true;

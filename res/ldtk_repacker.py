@@ -82,6 +82,11 @@ with open(converted_filename, 'wb+') as out_file:
         level_name = level["identifier"]
         print("Parsing level", level_name)
 
+        level_metadata = level['fieldInstances']
+        level_tileset = 0;
+        for data in level_metadata:
+            if data["__identifier"] == "TileSet":
+                level_tileset = data["__value"]
 
         level_layout = {}
         entity_layout = {}
@@ -97,7 +102,7 @@ with open(converted_filename, 'wb+') as out_file:
         # Dimensions of each level is obtained via __cWid and __cHei. Get the __gridSize as well
         width = level_layout["__cWid"]
         height = level_layout["__cHei"]
-        print(f"Dim.: {width}x{height}")
+        print(f"Dim.: {width}x{height}. N Tiles: {width * height}")
         # Create a W x H array of tile information
         n_tiles = width * height
         tiles_info = [[0,0,0] for _ in range(n_tiles)]
@@ -120,7 +125,7 @@ with open(converted_filename, 'wb+') as out_file:
             x,y = ent["__grid"]
             tiles_info[y*width + x][0] = ENUMIDS_TILETYPE_MAPPING[ent["__identifier"]]
 
-        out_file.write(struct.pack("<32s3H", level_name.encode('utf-8'), width, height, n_chests))
+        out_file.write(struct.pack("<32s4H", level_name.encode('utf-8'), width, height, n_chests, level_tileset))
         for tile in tiles_info:
             out_file.write(struct.pack("<3Bx", *tile))
 

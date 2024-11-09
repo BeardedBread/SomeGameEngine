@@ -59,6 +59,7 @@ typedef struct LevelMap
     uint16_t width;
     uint16_t height;
     uint16_t n_chests;
+    uint16_t flags; // In case of extras
     LevelTileInfo_t* tiles;
 }LevelMap_t;
 

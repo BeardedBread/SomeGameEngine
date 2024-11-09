@@ -106,6 +106,13 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
     scene->data.coins.current = 0;
     scene->data.coins.total = lvl_map.n_chests;
 
+    #define N_SOLID_TILESETS 3
+    static const char* SOLID_TILE_SELECTIONS[N_SOLID_TILESETS] = {
+        "stile0", "stile1", "stile2"
+    };
+    scene->data.selected_solid_tilemap = lvl_map.flags;
+    scene->data.solid_tile_sprites = get_sprite(&scene->scene.engine->assets, SOLID_TILE_SELECTIONS[lvl_map.flags]);
+
     clear_all_game_entities(scene);
 
     for (size_t i = 0; i < scene->data.tilemap.n_tiles;i++)

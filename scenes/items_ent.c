@@ -233,7 +233,7 @@ Entity_t* create_explosion(EntityManager_t* ent_manager)
     CTransform_t* p_ctransform = add_component(p_explosion, CTRANSFORM_COMP_T);
     p_ctransform->movement_mode = KINEMATIC_MOVEMENT;
     p_ctransform->active = true;
-    const int hitbox_sz = TILE_SIZE + 40;
+    const int hitbox_sz = (TILE_SIZE << 1) + (TILE_SIZE >> 1);
     p_hitbox->boxes[0] = (Rectangle){-(hitbox_sz >> 1), -(hitbox_sz >> 1), hitbox_sz, hitbox_sz};
 
     CSprite_t* p_cspr = add_component(p_explosion, CSPRITE_T);

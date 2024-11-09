@@ -1739,7 +1739,7 @@ void hitbox_update_system(Scene_t* scene)
                                             }
                                             else
                                             {
-                                                p_clifetimer->life_time = 0.05f;
+                                                p_clifetimer->life_time = 0.1f;
                                             }
                                         }
                                         else

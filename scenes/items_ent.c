@@ -5,7 +5,7 @@
 #include "raymath.h"
 
 static SpriteRenderInfo_t item_sprite_map[22] = {0};
-
+#define URCHIN_OFFSET 6
 bool init_item_creation(Assets_t* assets)
 {
     item_sprite_map[0].sprite = get_sprite(assets, "w_crate");
@@ -46,6 +46,7 @@ bool init_item_creation(Assets_t* assets)
     item_sprite_map[20].src_anchor = AP_BOT_CENTER;
     item_sprite_map[20].offset = (Vector2){0, TILE_SIZE >> 1};
     item_sprite_map[21].sprite = get_sprite(assets, "urchin");
+    item_sprite_map[21].offset = (Vector2){-URCHIN_OFFSET, -URCHIN_OFFSET};
     return true;
 }
 
@@ -254,7 +255,7 @@ Entity_t* create_urchin(EntityManager_t* ent_manager)
     if (p_urchin == NULL) return NULL;
 
     CBBox_t* p_bbox = add_component(p_urchin, CBBOX_COMP_T);
-    set_bbox(p_bbox, TILE_SIZE-2, TILE_SIZE-2);
+    set_bbox(p_bbox, TILE_SIZE-(URCHIN_OFFSET<<1), TILE_SIZE-(URCHIN_OFFSET<<1));
 
     CTransform_t* p_ctransform = add_component(p_urchin, CTRANSFORM_COMP_T);
     p_ctransform->movement_mode = KINEMATIC_MOVEMENT;
@@ -272,7 +273,7 @@ Entity_t* create_urchin(EntityManager_t* ent_manager)
 
     CHitBoxes_t* p_hitbox = add_component(p_urchin, CHITBOXES_T);
     p_hitbox->n_boxes = 1;
-    p_hitbox->boxes[0] = (Rectangle) {-1,-1,TILE_SIZE,TILE_SIZE};
+    p_hitbox->boxes[0] = (Rectangle) {-(URCHIN_OFFSET>>1),-(URCHIN_OFFSET>>1),TILE_SIZE-URCHIN_OFFSET,TILE_SIZE-URCHIN_OFFSET};
     p_hitbox->atk = 2;
 
     CSprite_t* p_cspr = add_component(p_urchin, CSPRITE_T);

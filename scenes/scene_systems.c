@@ -228,7 +228,7 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
                     CBBox_t* p_bbox = get_component(ent, CBBOX_COMP_T);
                     ent->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size + (scene->data.tilemap.tile_size >> 1) - p_bbox->half_size.x;
 
-                    ent->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size + (scene->data.tilemap.tile_size >> 1) + (scene->data.tilemap.tile_size >> 1) - p_bbox->half_size.y;
+                    ent->position.y = (int)(i / scene->data.tilemap.width) * scene->data.tilemap.tile_size + (scene->data.tilemap.tile_size >> 1) - p_bbox->half_size.y;
 
                     uint8_t spd_encoding = lvl_map.tiles[i].tile_type - 25;
                     float angle = 45.0f / 180.0f * PI * ((spd_encoding >> 2) & 7);

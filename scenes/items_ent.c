@@ -181,16 +181,6 @@ Entity_t* create_bomb(EntityManager_t* ent_manager, Vector2 launch_dir)
     Entity_t* p_bomb = add_entity(ent_manager, DESTRUCTABLE_ENT_TAG);
     if (p_bomb == NULL) return NULL;
 
-    //p_bomb->position.x += (TILE_SIZE - 25) / 2;
-    //p_bomb->position.y += (TILE_SIZE - 25) / 2;
-    //if (launch_dir.x > 0)
-    //{
-    //    p_bomb->position.x += TILE_SIZE/ 2;
-    //}
-    //else if (launch_dir.x < 0)
-    //{
-    //    p_bomb->position.x -= TILE_SIZE / 2;
-    //}
 
     add_component(p_bomb, CTILECOORD_COMP_T);
     add_component(p_bomb, CMOVEMENTSTATE_T);

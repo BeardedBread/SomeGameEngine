@@ -134,9 +134,15 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
             change_a_tile(&scene->data.tilemap, i, SOLID_TILE);
         }
 
-        scene->data.tilemap.tiles[i].max_water_level = 4;
-        scene->data.tilemap.tiles[i].water_level = lvl_map.tiles[i].water;
-        scene->data.tilemap.tiles[i].wet =  scene->data.tilemap.tiles[i].water_level > 0;
+        if (lvl_map.tiles[i].water > MAX_WATER_LEVEL) {
+            scene->data.tilemap.tiles[i].max_water_level = 0;
+        }
+        else
+        {
+            scene->data.tilemap.tiles[i].max_water_level = 4;
+            scene->data.tilemap.tiles[i].water_level = lvl_map.tiles[i].water;
+            scene->data.tilemap.tiles[i].wet =  scene->data.tilemap.tiles[i].water_level > 0;
+        }
     }
     // Two pass
     for (size_t i = 0; i < scene->data.tilemap.n_tiles;i++)

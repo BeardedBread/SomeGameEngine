@@ -15,6 +15,8 @@
 #include "constants.h"
 #include <stdio.h>
 
+#define CRITICAL_WATER_OVERLAP 0.4f
+
 void simple_particle_system_update(Particle_t* part, void* user_data, float delta_time);
 void floating_particle_system_update(Particle_t* part, void* user_data, float delta_time);
 bool check_in_water(const ParticleEmitter_t* emitter, float delta_time);
@@ -421,7 +423,7 @@ void player_movement_input_system(Scene_t* scene)
             if (!(p_mstate->ground_state & 1)) p_pstate->is_crouch &= 0b01;
         }
 
-        if (!in_water)
+        if (p_mstate->water_overlap < CRITICAL_WATER_OVERLAP)
         {
             p_pstate->player_dir.y = 0;
         }
@@ -430,8 +432,9 @@ void player_movement_input_system(Scene_t* scene)
         {
                 // Although this can be achieved via higher friction, i'll explain away as the player is not
                 // good with swimming, resulting in lower movement acceleration
-            p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL / (in_water ? 1.2f : 1.0f));
+            p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL / (1.0f + 0.2f * p_mstate->water_overlap));
 
+            p_ctransform->accel.y *= p_mstate->water_overlap * 0.8;
             if (p_pstate->is_crouch & 1)
             {
                 p_ctransform->accel = Vector2Scale(p_ctransform->accel, 0.5);
@@ -477,7 +480,11 @@ void player_movement_input_system(Scene_t* scene)
                 }
                 else
                 {
-                    p_ctransform->velocity.y = -p_cjump->jump_speed / 1.75;
+                    p_ctransform->velocity.y = -p_cjump->jump_speed
+                        / (
+                            (p_mstate->ground_state & 1) ? 1 : 1.2
+                            + (p_mstate->water_overlap > CRITICAL_WATER_OVERLAP ? 0.6 * p_mstate->water_overlap : 0)
+                        );
                 }
 
                 p_pstate->ladder_state = false;

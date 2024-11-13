@@ -553,16 +553,11 @@ void player_bbox_update_system(Scene_t* scene)
             }
         }
 
-        Vector2 point_to_check = Vector2Add(p_player->position, offset);
-        if (
-            check_collision_at(
-                p_player, point_to_check, new_bbox, &tilemap
-            ) != 1
-        )
-        {
-            set_bbox(p_bbox, new_bbox.x, new_bbox.y);
-            p_player->position = Vector2Add(p_player->position, offset);
-        }
+
+        // As long as the change in hitbox is less than a tile size,
+        // it should be fine
+        set_bbox(p_bbox, new_bbox.x, new_bbox.y);
+        p_player->position = Vector2Add(p_player->position, offset);
 
         CHitBoxes_t* p_hitbox = get_component(p_player, CHITBOXES_T);
         p_hitbox->boxes[0].height = p_bbox->size.y + 4;
@@ -571,22 +566,33 @@ void player_bbox_update_system(Scene_t* scene)
 
         if ((p_mstate->water_state & 1) && !(p_mstate->ground_state & 1))
         {
+#define EXTENDED_WIDTH_FACTOR 1.5f;
+            float extended_width = p_bbox->size.x * EXTENDED_WIDTH_FACTOR;
             p_hurtbox->size = p_bbox->size;
-            p_hurtbox->size.x *= 1.7;
-            p_hitbox->boxes[0].width = p_bbox->size.x * 2.0f;
-            p_hitbox->boxes[1].width = p_bbox->size.x * 2.0f + 4;
-            if (p_mstate->x_dir > 0)
-            {
-                p_hitbox->boxes[0].x = -p_bbox->size.x;
-                p_hitbox->boxes[1].x = -p_bbox->size.x - 2;
-                p_hurtbox->offset.x = -p_bbox->size.x * 0.7;
-            }
-            else
-            {
-                p_hitbox->boxes[0].x = 0;
-                p_hitbox->boxes[1].x = -2;
-                p_hurtbox->offset.x = 0;
-            }
+            p_hurtbox->size.x *= EXTENDED_WIDTH_FACTOR;
+            p_hitbox->boxes[0].width = extended_width;
+            p_hitbox->boxes[1].width = extended_width + 4;
+
+            AnchorPoint_t anchor = p_mstate->x_dir > 0 ? AP_TOP_RIGHT : AP_TOP_LEFT;
+            Vector2 offset = shift_bbox(
+                p_bbox->size,
+                (Vector2){
+                    p_hitbox->boxes[0].width, p_hitbox->boxes[0].height
+                },
+                anchor
+            );
+            p_hitbox->boxes[0].x = offset.x;
+
+            offset = shift_bbox(
+                p_bbox->size,
+                (Vector2){
+                    p_hitbox->boxes[1].width, p_hitbox->boxes[1].height
+                },
+                anchor
+            );
+            p_hitbox->boxes[1].x = offset.x;
+
+            p_hurtbox->offset = shift_bbox(p_bbox->size, p_hurtbox->size, anchor);
         }
         else
         {

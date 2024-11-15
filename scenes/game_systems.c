@@ -760,7 +760,7 @@ void spike_collision_system(Scene_t* scene)
                             p_ent->m_alive = false;
                             return;
                         }
-                        else if (p_ent->m_tag != NO_ENT_TAG)
+                        else if (p_ent->m_tag != URCHIN_ENT_TAG)
                         {
                             // Hack to avoid urchin destorying spikes
                             destroy_tile(data, tile_idx);

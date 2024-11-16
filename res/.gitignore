@@ -2,6 +2,7 @@
 !.gitignore
 !CMakeLists.txt
 !ldtk_repacker.py
+!pack_ldtk.sh
 !test_assets.info
 !testLevels.lvldata.zst
 !rres_packer.c

@@ -432,9 +432,8 @@ void player_movement_input_system(Scene_t* scene)
         {
                 // Although this can be achieved via higher friction, i'll explain away as the player is not
                 // good with swimming, resulting in lower movement acceleration
-            p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL / (1.0f + 0.2f * p_mstate->water_overlap));
+            p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL / (1.0f + 0.12f * p_mstate->water_overlap));
 
-            p_ctransform->accel.y *= p_mstate->water_overlap * 0.8;
             if (p_pstate->is_crouch & 1)
             {
                 p_ctransform->accel = Vector2Scale(p_ctransform->accel, 0.5);
@@ -482,7 +481,7 @@ void player_movement_input_system(Scene_t* scene)
                 {
                     p_ctransform->velocity.y = -p_cjump->jump_speed
                         / (
-                            (p_mstate->ground_state & 1) ? 1 : 1.2
+                            ((p_mstate->ground_state & 1) ? 1 : 1.2)
                             + (p_mstate->water_overlap > CRITICAL_WATER_OVERLAP ? 0.6 * p_mstate->water_overlap : 0)
                         );
                 }

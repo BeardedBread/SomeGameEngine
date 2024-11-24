@@ -25,7 +25,7 @@
 #ifndef TILE16_SIZE
 #define PLAYER_WIDTH 22
 #define PLAYER_HEIGHT 42
-#define PLAYER_C_WIDTH 22
+#define PLAYER_C_WIDTH 30
 #define PLAYER_C_HEIGHT 26
 #else
 #define PLAYER_WIDTH 14

@@ -565,7 +565,8 @@ void player_bbox_update_system(Scene_t* scene)
 
         if ((p_mstate->water_state & 1) && !(p_mstate->ground_state & 1))
         {
-#define EXTENDED_WIDTH_FACTOR 1.5f;
+            // Unsure about this extension, keep it for now.
+#define EXTENDED_WIDTH_FACTOR 1.0f;
             float extended_width = p_bbox->size.x * EXTENDED_WIDTH_FACTOR;
             p_hurtbox->size = p_bbox->size;
             p_hurtbox->size.x *= EXTENDED_WIDTH_FACTOR;
@@ -580,7 +581,7 @@ void player_bbox_update_system(Scene_t* scene)
                 },
                 anchor
             );
-            p_hitbox->boxes[0].x = offset.x;
+            p_hitbox->boxes[0].x = offset.x * p_mstate->x_dir > 0 ? 1 : -1;
 
             offset = shift_bbox(
                 p_bbox->size,
@@ -589,7 +590,7 @@ void player_bbox_update_system(Scene_t* scene)
                 },
                 anchor
             );
-            p_hitbox->boxes[1].x = offset.x;
+            p_hitbox->boxes[1].x = (offset.x + 1) * p_mstate->x_dir > 0 ? 1 : -1;
 
             p_hurtbox->offset = shift_bbox(p_bbox->size, p_hurtbox->size, anchor);
         }

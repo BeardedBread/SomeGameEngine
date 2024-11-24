@@ -8,14 +8,18 @@ static void level_select_render_func(Scene_t* scene)
 {
     LevelSelectSceneData_t* data = &(CONTAINER_OF(scene, LevelSelectScene_t, scene)->data);
     Sprite_t* spr = get_sprite(&scene->engine->assets, "bunny_spr1");
+    Sprite_t* level_board = get_sprite(&scene->engine->assets, "lvl_board");
+    Sprite_t* level_select = get_sprite(&scene->engine->assets, "lvl_select");
     BeginTextureMode(scene->layers.render_layers[0].layer_tex);
         ClearBackground(BLANK);
+        draw_sprite(level_select, 0, (Vector2){0,0},0, false);
+        draw_sprite(level_board, 0, (Vector2){level_select->frame_size.x,0},0, false);
         DrawText("Level Select", 10, 10, 40, BLACK);
         vert_scrollarea_render(&data->scroll_area);
         draw_sprite(
             spr, 0, (Vector2){
-                data->scroll_area.display_area.x + data->scroll_area.display_area.width + 50,
-                data->scroll_area.display_area.y + data->scroll_area.display_area.height / 2
+                scene->engine->intended_window_size.x / 2,
+                scene->engine->intended_window_size.y / 2,
             }, 0, false);
     EndTextureMode();
 }
@@ -113,6 +117,7 @@ void init_level_select_scene(LevelSelectScene_t* scene)
             scene->scene.engine->intended_window_size.y
         }
     );
+    scene->scene.bg_colour = BLACK;
     vert_scrollarea_init(&scene->data.scroll_area, (Rectangle){50, 100, 150, DISPLAY_AREA_HEIGHT - 100}, (Vector2){150, SCROLL_TOTAL_HEIGHT});
     vert_scrollarea_set_item_dims(&scene->data.scroll_area, FONT_SIZE, TEXT_PADDING);
     char buf[32];

@@ -8,16 +8,33 @@ static void menu_scene_render_func(Scene_t* scene)
     MenuSceneData_t* data = &(CONTAINER_OF(scene, MenuScene_t, scene)->data);
 
     Sprite_t* spr = get_sprite(&scene->engine->assets, "title_spr");
+    Sprite_t* title_spr = get_sprite(&scene->engine->assets, "title_board");
+    Sprite_t* title_select = get_sprite(&scene->engine->assets, "title_select");
     Rectangle render_rec = scene->layers.render_layers[0].render_area;
     BeginTextureMode(scene->layers.render_layers[0].layer_tex);
         ClearBackground(RAYWHITE);
         draw_sprite(spr, 0, (Vector2){0, 0}, 0, false);
+        draw_sprite(title_spr, 0, (Vector2){32, 10}, 0, false);
         int title_width = MeasureText("Bunny's Spelunking Adventure", 32);
         DrawText("Bunny's Spelunking Adventure", (render_rec.width - title_width) / 2, 20, 32, BLACK);
-        UI_button(data->buttons, "Start");
-        UI_button(data->buttons + 1, "Continue");
-        UI_button(data->buttons + 2, "Exit");
 
+        const char* OPTIONS[3] = {"Start", "Credits", "Exit"};
+        for (uint8_t i = 0; i < 3; ++i)
+        {
+            Vector2 pos = (Vector2){data->buttons[i].bbox.x, data->buttons[i].bbox.y};
+            pos = Vector2Add(
+                pos,
+                shift_bbox(
+                    (Vector2){
+                        data->buttons[i].bbox.width,data->buttons[i].bbox.height
+                    },
+                title_select->frame_size,
+                AP_MID_CENTER
+                )
+            );
+            draw_sprite(title_select, 0, pos, 0, false);
+            UI_button(data->buttons + i, OPTIONS[i]);
+        }
     EndTextureMode();
 }
 
@@ -139,25 +156,26 @@ void init_menu_scene(MenuScene_t* scene)
     sc_array_add(&scene->scene.systems, &gui_loop);
     sc_array_add(&scene->scene.systems, &menu_scene_render_func);
     
-    int button_x = scene->scene.engine->intended_window_size.x / 4;
-    int button_y = scene->scene.engine->intended_window_size.y / 4;
+    int button_x = scene->scene.engine->intended_window_size.x / 8;
+    int button_y = scene->scene.engine->intended_window_size.y / 3;
+    int spacing = 100;
     scene->data.buttons[0] = (UIComp_t) {
         .bbox = {button_x,button_y,125,30},
         .state = STATE_NORMAL,
         .alpha = 1.0
     };
     scene->data.buttons[1] = (UIComp_t) {
-        .bbox = {button_x,button_y+45,125,30},
+        .bbox = {button_x,button_y+spacing,125,30},
         .state = STATE_NORMAL,
         .alpha = 1.0
     };
     scene->data.buttons[2] = (UIComp_t) {
-        .bbox = {button_x,button_y+90,125,30},
+        .bbox = {button_x,button_y+spacing * 2,125,30},
         .state = STATE_NORMAL,
         .alpha = 1.0
     };
     scene->data.buttons[3] = (UIComp_t) {
-        .bbox = {button_x,button_y+135,125,30},
+        .bbox = {button_x,button_y+spacing * 3,125,30},
         .state = STATE_NORMAL,
         .alpha = 1.0
     };

@@ -552,11 +552,16 @@ void player_bbox_update_system(Scene_t* scene)
             }
         }
 
-
-        // As long as the change in hitbox is less than a tile size,
-        // it should be fine
-        set_bbox(p_bbox, new_bbox.x, new_bbox.y);
-        p_player->position = Vector2Add(p_player->position, offset);
+        Vector2 point_to_check = Vector2Add(p_player->position, offset);
+        if (
+            check_collision_at(
+                p_player, point_to_check, new_bbox, &tilemap
+            ) != 1
+        )
+        {
+            set_bbox(p_bbox, new_bbox.x, new_bbox.y);
+            p_player->position = Vector2Add(p_player->position, offset);
+        }
 
         CHitBoxes_t* p_hitbox = get_component(p_player, CHITBOXES_T);
         p_hitbox->boxes[0].height = p_bbox->size.y + 4;

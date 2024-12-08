@@ -46,6 +46,24 @@ target_link_libraries(${PROJECT_NAME}
     ${GAME_LIBS}
 )
 
+
+add_executable(level_player
+    level_test.c
+)
+
+# Use Heaptrack to profile the main application
+# Do not compile in ASAN
+
+target_include_directories(level_player
+    PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+)
+
+
+target_link_libraries(level_player
+    ${GAME_LIBS}
+)
+
 add_executable(sandbox_trace
     scene_test.c
     tracy/public/TracyClient.cpp

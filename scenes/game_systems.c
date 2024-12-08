@@ -464,21 +464,23 @@ void player_movement_input_system(Scene_t* scene)
         {
             if (p_cjump->jump_released && p_pstate->jump_pressed && p_cjump->jumps > 0 && p_cjump->jump_ready)
             {
-                play_sfx(scene->engine, PLAYER_JMP_SFX);
                 p_cjump->jumps--;
                 if (!in_water)
                 {
                     if (p_mstate->ground_state & 1 || p_cjump->coyote_timer > 0)
                     {
+                        play_sfx(scene->engine, PLAYER_JMP_SFX);
                         p_ctransform->velocity.y = -p_cjump->jump_speed;
                     }
                     else if (p_pstate->ladder_state)
                     {
+                        play_sfx(scene->engine, PLAYER_JMP_SFX);
                         p_ctransform->velocity.y = -p_cjump->jump_speed / 1.4;
                     }
                 }
                 else
                 {
+                    play_sfx(scene->engine, PLAYER_JMP_SFX);
                     p_ctransform->velocity.y = -p_cjump->jump_speed
                         / (
                             ((p_mstate->ground_state & 1) ? 1 : 1.2)

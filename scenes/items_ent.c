@@ -62,7 +62,7 @@ Entity_t* create_crate(EntityManager_t* ent_manager, bool metal, ContainerItem_t
     p_bbox->fragile = false;
 
     CTransform_t* p_ctransform = add_component(p_crate, CTRANSFORM_COMP_T);
-    p_ctransform->grav_delay = 0.20f;
+    p_ctransform->grav_delay = 0.10f;
     p_ctransform->shape_factor = metal ? (Vector2){0.7,0.7} : (Vector2){0.8,0.8} ;
     add_component(p_crate, CMOVEMENTSTATE_T);
 

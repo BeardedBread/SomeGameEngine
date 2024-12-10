@@ -26,6 +26,30 @@ static void level_scene_render_func(Scene_t* scene)
     BeginTextureMode(scene->layers.render_layers[CONTROL_LAYER].layer_tex);
         ClearBackground(BLANK);
 
+        if (data->camera.mode == CAMERA_RANGED_MOVEMENT)
+        {
+            // TL
+            DrawLineEx((Vector2){32,32},
+                (Vector2){64,32}, 5, WHITE);
+            DrawLineEx((Vector2){32,32},
+                (Vector2){32,64}, 5, WHITE);
+            //TR
+            DrawLineEx((Vector2){data->game_rec.width - 64,32},
+                (Vector2){data->game_rec.width - 32, 32}, 5, WHITE);
+            DrawLineEx((Vector2){data->game_rec.width - 32,32},
+                (Vector2){data->game_rec.width - 32, 64}, 5, WHITE);
+            //BL
+            DrawLineEx((Vector2){32,data->game_rec.height-32},
+                (Vector2){64,data->game_rec.height - 32}, 5, WHITE);
+            DrawLineEx((Vector2){32,data->game_rec.height-64},
+                (Vector2){32, data->game_rec.height - 32}, 5, WHITE);
+            //BR
+            DrawLineEx((Vector2){data->game_rec.width - 64,data->game_rec.height-32},
+                (Vector2){data->game_rec.width - 32,data->game_rec.height - 32}, 5, WHITE);
+            DrawLineEx((Vector2){data->game_rec.width - 32,data->game_rec.height-64},
+                (Vector2){data->game_rec.width - 32, data->game_rec.height - 32}, 5, WHITE);
+        }
+
         Entity_t* p_ent;
         sc_map_foreach_value(&scene->ent_manager.entities_map[PLAYER_ENT_TAG], p_ent)
         {

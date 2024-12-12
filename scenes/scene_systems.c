@@ -238,7 +238,7 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
 
                     uint8_t spd_encoding = lvl_map.tiles[i].tile_type - 25;
                     float angle = 45.0f / 180.0f * PI * ((spd_encoding >> 2) & 7);
-                    float mag = 100 * (spd_encoding & 3);
+                    float mag = 75 * (spd_encoding & 3);
 
                     CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
                     p_ct->velocity = Vector2Scale(
@@ -338,7 +338,7 @@ void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_ty
             tilemap->tiles[tile_idx].offset = (Vector2){0,tilemap->tile_size - SPIKE_HITBOX_SHORTSIDE};
             tilemap->tiles[tile_idx].size = (Vector2){SPIKE_HITBOX_LONGSIDE, SPIKE_HITBOX_SHORTSIDE};
         }
-        else if (tile_idx - tilemap->width >= 0 && tilemap->tiles[tile_idx - tilemap->width].tile_type == SOLID_TILE)
+        else if (tile_idx >= tilemap->width && tilemap->tiles[tile_idx - tilemap->width].tile_type == SOLID_TILE)
         {
             tilemap->tiles[tile_idx].offset = (Vector2){0,0};
             tilemap->tiles[tile_idx].size = (Vector2){SPIKE_HITBOX_LONGSIDE, SPIKE_HITBOX_SHORTSIDE};

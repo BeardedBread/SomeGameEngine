@@ -1792,10 +1792,11 @@ void boulder_destroy_wooden_tile_system(Scene_t* scene)
     Entity_t* p_boulder;
     sc_map_foreach_value(&scene->ent_manager.entities_map[BOULDER_ENT_TAG], p_boulder)
     {
-        //const CTransform_t* p_ctransform = get_component(p_boulder, CTRANSFORM_COMP_T);
+        const CTransform_t* p_ctransform = get_component(p_boulder, CTRANSFORM_COMP_T);
         const CBBox_t* p_bbox = get_component(p_boulder, CBBOX_COMP_T);
 
-        //if (p_ctransform->velocity.y <= 0) continue;
+        // To prevent falling if already on ground. This only allows wooden tile destruction on falling
+        if (p_ctransform->velocity.y <= 0) continue;
 
         unsigned int tile_idx = get_tile_idx(
                 p_boulder->position.x + p_bbox->half_size.x,

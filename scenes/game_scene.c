@@ -182,12 +182,12 @@ static void render_regular_game_scene(Scene_t* scene)
     }
 
     // Queue Sprite rendering
-    sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
+    unsigned int ent_idx;
+    CSprite_t* p_cspr;
+    sc_map_foreach(&scene->ent_manager.component_map[CSPRITE_T], ent_idx, p_cspr)
     {
+        Entity_t* p_ent =  get_entity(&scene->ent_manager, ent_idx);
         if (!p_ent->m_alive) continue;
-
-        CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
-        if (p_cspr == NULL) continue;
 
         const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
         if (spr.sprite == NULL) continue;
@@ -234,6 +234,7 @@ static void render_regular_game_scene(Scene_t* scene)
     }
 
     Texture2D* bg = get_texture(&scene->engine->assets, "bg_tex");
+
     BeginTextureMode(scene->layers.render_layers[GAME_LAYER].layer_tex);
         ClearBackground(WHITE);
         DrawTexturePro(*bg,
@@ -416,43 +417,44 @@ static void render_regular_game_scene(Scene_t* scene)
             for (int tile_x = min.x; tile_x < max.x; tile_x++)
             {
                 int i = tile_x + tile_y * tilemap.width;
+                if (!tilemap.tiles[i].wet && tilemap.tiles[i].water_level == 0) {
+                    continue;
+                }
+
                 int x = tile_x * TILE_SIZE;
                 int y = tile_y * TILE_SIZE;
 
                 // Draw water flow
-                if (tilemap.tiles[i].wet)
-                {
 #define SURFACE_THICKNESS 4
-                    int up = i - tilemap.width;
-                    unsigned int bot = i + tilemap.width;
-                    int right = i + 1;
-                    int left = i - 1;
-                    int bot_line = y + TILE_SIZE - tilemap.tiles[i].water_level * WATER_BBOX_STEP - SURFACE_THICKNESS / 2;
-                    if (up >= 0 && tilemap.tiles[up].wet)
-                    {
-                        DrawLineEx((Vector2){x + TILE_SIZE / 2, y}, (Vector2){x + TILE_SIZE / 2, y + TILE_SIZE - tilemap.tiles[i].water_level * WATER_BBOX_STEP}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
-                    }
+                int up = i - tilemap.width;
+                unsigned int bot = i + tilemap.width;
+                int right = i + 1;
+                int left = i - 1;
+                int bot_line = y + TILE_SIZE - tilemap.tiles[i].water_level * WATER_BBOX_STEP - SURFACE_THICKNESS / 2;
+                if (up >= 0 && tilemap.tiles[up].wet)
+                {
+                    DrawLineEx((Vector2){x + TILE_SIZE / 2, y}, (Vector2){x + TILE_SIZE / 2, y + TILE_SIZE - tilemap.tiles[i].water_level * WATER_BBOX_STEP}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
+                }
 
-                    if (
-                        bot <= tilemap.n_tiles
-                        && tilemap.tiles[i].water_level == 0
-                        )
+                if (
+                    bot <= tilemap.n_tiles
+                    && tilemap.tiles[i].water_level == 0
+                    )
+                {
+                    if (i % tilemap.width != 0 && tilemap.tiles[left].wet && (tilemap.tiles[bot].solid == SOLID || tilemap.tiles[bot-1].solid == SOLID))
                     {
-                        if (i % tilemap.width != 0 && tilemap.tiles[left].wet && (tilemap.tiles[bot].solid == SOLID || tilemap.tiles[bot-1].solid == SOLID))
-                        {
-                            DrawLineEx((Vector2){x, bot_line}, (Vector2){x + TILE_SIZE / 2, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
-                        }
-                        if (right % tilemap.width != 0 && tilemap.tiles[right].wet && (tilemap.tiles[bot].solid == SOLID || tilemap.tiles[bot+1].solid == SOLID))
-                        {
-                            DrawLineEx((Vector2){x + TILE_SIZE / 2, bot_line}, (Vector2){x + TILE_SIZE, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
-                        }
+                        DrawLineEx((Vector2){x, bot_line}, (Vector2){x + TILE_SIZE / 2, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
                     }
-
-                    if (tilemap.tiles[i].max_water_level < MAX_WATER_LEVEL)
+                    if (right % tilemap.width != 0 && tilemap.tiles[right].wet && (tilemap.tiles[bot].solid == SOLID || tilemap.tiles[bot+1].solid == SOLID))
                     {
-                        DrawRectangleLinesEx((Rectangle){x, y, TILE_SIZE, TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
+                        DrawLineEx((Vector2){x + TILE_SIZE / 2, bot_line}, (Vector2){x + TILE_SIZE, bot_line}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
                     }
                 }
+
+                //if (tilemap.tiles[i].max_water_level < MAX_WATER_LEVEL)
+                //{
+                //    DrawRectangleLinesEx((Rectangle){x, y, TILE_SIZE, TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
+                //}
 
                 uint32_t water_height = tilemap.tiles[i].water_level * WATER_BBOX_STEP;
                 Color water_colour = ColorAlpha(BLUE, 0.5);

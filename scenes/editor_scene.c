@@ -310,82 +310,42 @@ static void render_editor_game_scene(Scene_t* scene)
         CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
         if (p_cspr == NULL) continue;
 
-        if (p_ent->m_tag == LEVEL_END_TAG)
-        {
-            if (p_cspr != NULL)
-            {
-                const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
-                if (spr.sprite != NULL)
-                {
-                    Vector2 pos = p_ent->position;
-                    pos = Vector2Subtract(
-                        pos,
-                        get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->node.flip & 1)
-                    );
+        const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
+        if (spr.sprite == NULL) continue;
 
-                    Vector2 offset = spr.offset;
-                    if (p_cspr->node.flip & 1) offset.x *= -1;
-
-                    pos = Vector2Add(pos, offset);
-
-                    p_cspr->node.spr = spr.sprite;
-                    p_cspr->node.frame_num = 
-                        2 * data->selected_solid_tilemap + (
-                            (data->coins.current < data->coins.total) ? 0 : 1
-                        );
-                    p_cspr->node.pos = pos;
-                    p_cspr->node.scale = (Vector2){1, 1};
-                    p_cspr->node.colour = WHITE;
-                    add_render_node(&data->render_manager, &p_cspr->node, p_cspr->depth);
-                }
-            }
-            continue;
-        }
-
+        Vector2 pos = p_ent->position;
         CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+        if (p_bbox != NULL)
+        {
+            pos = Vector2Add(
+                pos,
+                get_anchor_offset(p_bbox->size, spr.dest_anchor, p_cspr->node.flip & 1)
+            );
+        }
+        pos = Vector2Subtract(
+            pos,
+            get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->node.flip & 1)
+        );
 
+        Vector2 offset = spr.offset;
+        if (p_cspr->node.flip & 1) offset.x *= -1;
+
+        pos = Vector2Add(pos, offset);
         // Entity culling
-        Vector2 box_size = {0};
-        if (p_bbox != NULL) box_size = p_bbox->size;
         if (
-            p_ent->position.x + box_size.x < min.x * tilemap.tile_size
-            || p_ent->position.x > max.x * tilemap.tile_size
-            || p_ent->position.y + box_size.y < min.y * tilemap.tile_size
-            || p_ent->position.y > max.y * tilemap.tile_size
+            pos.x + spr.sprite->frame_size.x < min.x * tilemap.tile_size
+            || pos.x > max.x * tilemap.tile_size
+            || pos.y + spr.sprite->frame_size.y < min.y * tilemap.tile_size
+            || pos.y > max.y * tilemap.tile_size
         )
         {
             continue;
         }
 
-        if (p_cspr != NULL)
-        {
-            const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
-            if (spr.sprite != NULL)
-            {
-                Vector2 pos = p_ent->position;
-                if (p_bbox != NULL)
-                {
-                    pos = Vector2Add(
-                        pos,
-                        get_anchor_offset(p_bbox->size, spr.dest_anchor, p_cspr->node.flip & 1)
-                    );
-                }
-                pos = Vector2Subtract(
-                    pos,
-                    get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->node.flip & 1)
-                );
-
-                Vector2 offset = spr.offset;
-                if (p_cspr->node.flip & 1) offset.x *= -1;
-
-                pos = Vector2Add(pos, offset);
-
-                p_cspr->node.spr = spr.sprite;
-                p_cspr->node.frame_num = p_cspr->current_frame;
-                p_cspr->node.pos = pos;
-                add_render_node(&data->render_manager, &p_cspr->node, p_cspr->depth);
-            }
-        }
+        p_cspr->node.spr = spr.sprite;
+        p_cspr->node.frame_num = p_cspr->current_frame;
+        p_cspr->node.pos = pos;
+        add_render_node(&data->render_manager, &p_cspr->node, p_cspr->depth);
     }
 
     Texture2D* bg = get_texture(&scene->engine->assets, "bg_tex");
@@ -429,32 +389,22 @@ static void render_editor_game_scene(Scene_t* scene)
         }
 
         char buffer[64] = {0};
-        sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
+        if (data->show_grid)
         {
-            if (p_ent->m_tag == LEVEL_END_TAG && data->show_grid)
+            sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
             {
-                CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
-                if (p_cspr == NULL)
-                {
-                    DrawCircleV(p_ent->position, tilemap.tile_size >> 1, (data->coins.current < data->coins.total)? RED : GREEN);
-                }
-                continue;
-            }
+                CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
 
-            CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+                // Entity culling
+                Vector2 box_size = {0};
+                if (p_bbox != NULL) box_size = p_bbox->size;
+                if (
+                    p_ent->position.x + box_size.x < min.x * tilemap.tile_size
+                    || p_ent->position.x > max.x * tilemap.tile_size
+                    || p_ent->position.y + box_size.y < min.y * tilemap.tile_size
+                    || p_ent->position.y > max.y * tilemap.tile_size
+                ) continue;
 
-            // Entity culling
-            Vector2 box_size = {0};
-            if (p_bbox != NULL) box_size = p_bbox->size;
-            if (
-                p_ent->position.x + box_size.x < min.x * tilemap.tile_size
-                || p_ent->position.x > max.x * tilemap.tile_size
-                || p_ent->position.y + box_size.y < min.y * tilemap.tile_size
-                || p_ent->position.y > max.y * tilemap.tile_size
-            ) continue;
-
-            if (data->show_grid)
-            {
                 Color colour;
                 switch(p_ent->m_tag)
                 {
@@ -477,6 +427,21 @@ static void render_editor_game_scene(Scene_t* scene)
                     default:
                         colour = BLACK;
                     break;
+                }
+
+                if (p_ent->m_tag == LEVEL_END_TAG)
+                {
+                    DrawCircleV(p_ent->position, tilemap.tile_size >> 1, (data->coins.current < data->coins.total)? RED : GREEN);
+                    continue;
+                }
+
+                if (p_ent->m_tag == DYNMEM_ENT_TAG)
+                {
+                    CWaterRunner_t* p_runner = get_component(p_ent, CWATERRUNNER_T);
+
+                    unsigned int x = ((p_runner->current_tile) % tilemap.width) * tilemap.tile_size;
+                    unsigned int y = ((p_runner->current_tile) / tilemap.width) * tilemap.tile_size;
+                    DrawCircle(x+16, y+16, 8, ColorAlpha(BLUE, 0.6));
                 }
 
                 if (p_bbox != NULL)
@@ -671,16 +636,6 @@ static void render_editor_game_scene(Scene_t* scene)
                 );
             }
         }
-
-        sc_map_foreach_value(&scene->ent_manager.entities_map[DYNMEM_ENT_TAG], p_ent)
-        {
-            CWaterRunner_t* p_runner = get_component(p_ent, CWATERRUNNER_T);
-
-            unsigned int x = ((p_runner->current_tile) % tilemap.width) * tilemap.tile_size;
-            unsigned int y = ((p_runner->current_tile) / tilemap.width) * tilemap.tile_size;
-            DrawCircle(x+16, y+16, 8, ColorAlpha(BLUE, 0.6));
-        }
-
 
         if (data->show_grid)
         {

@@ -1,7 +1,5 @@
 #include "assets_tag.h"
-#ifdef TRACY_ENABLE
 #include "tracy/TracyC.h"
-#endif
 
 #include "game_systems.h"
 
@@ -781,9 +779,7 @@ void spike_collision_system(Scene_t* scene)
 
 void tile_collision_system(Scene_t* scene)
 {
-    #ifdef TRACY_ENABLE
     TracyCZoneN(ctx, "TileCol", true)
-    #endif
     static bool checked_entities[MAX_COMP_POOL_SIZE] = {0};
 
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
@@ -924,9 +920,7 @@ void tile_collision_system(Scene_t* scene)
         }
     }
 
-    #ifdef TRACY_ENABLE
     TracyCZoneEnd(ctx)
-    #endif
 }
 
 void friction_coefficient_update_system(Scene_t* scene)

@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
+
+#include "tracy/TracyC.h"
 #define N_SCENES 1
 
 Scene_t *scenes[N_SCENES];
@@ -30,13 +32,8 @@ int main(int argc, char** argv)
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     init_engine(&engine, (Vector2){screenWidth, screenHeight});
     SetTargetFPS(60);               // Set our game to run at 60 frames-per-second
-#ifndef NDEBUG
     load_from_infofile("res/assets.info.raw", &engine.assets);
     init_player_creation("res/player_spr.info", &engine.assets);
-#else
-    load_from_rres("res/myresources.rres", &engine.assets);
-    init_player_creation_rres("res/myresources.rres", "player_spr.info", &engine.assets);
-#endif
     init_item_creation(&engine.assets);
 
     load_sfx(&engine, "snd_jump", PLAYER_JMP_SFX);
@@ -91,6 +88,7 @@ int main(int argc, char** argv)
     const float DT = 1.0f/60.0f;
     while (!WindowShouldClose())
     {
+        TracyCFrameMark;
         // This entire key processing relies on the assumption that a pressed key will
         // appear in the polling of raylib
         Scene_t* curr_scene = engine.scenes[engine.curr_scene];
@@ -106,11 +104,16 @@ int main(int argc, char** argv)
         float frame_time = GetFrameTime();
         float delta_time = fminf(frame_time, DT);
 
-        update_scene(curr_scene, delta_time);
-        update_entity_manager(&curr_scene->ent_manager);
+        {
+            TracyCZoneN(ctx, "Update", true)
+            update_scene(curr_scene, delta_time);
+            update_entity_manager(&curr_scene->ent_manager);
+            update_sfx_list(&engine);
+            TracyCZoneEnd(ctx)
+        }
+
         // This is needed to advance time delta
         render_scene(curr_scene);
-        update_sfx_list(&engine);
 
         if (curr_scene->state != 0)
         {

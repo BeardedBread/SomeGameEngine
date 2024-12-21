@@ -1,3 +1,5 @@
+#include "tracy/TracyC.h"
+
 #include "scene_impl.h"
 #include "game_systems.h"
 #include "water_flow.h"
@@ -135,6 +137,7 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 
 static void render_regular_game_scene(Scene_t* scene)
 {
+    TracyCZoneN(ctx, "GameRender", true)
     // This function will render the game scene outside of the intended draw function
     // Just for clarity and separation of logic
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
@@ -464,6 +467,7 @@ static void render_regular_game_scene(Scene_t* scene)
         }
         EndMode2D();
     EndTextureMode();
+    TracyCZoneEnd(ctx)
 }
 
 static void at_level_start(Scene_t* scene)

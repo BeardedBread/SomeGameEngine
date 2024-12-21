@@ -58,13 +58,6 @@ static Vector2 urchin_click_pos = {0,0};
 #define SELECTION_LAYER 0
 #define CONTROL_LAYER 1
 
-static const uint8_t CONNECTIVITY_TILE_MAPPING[16] = {
-    0,3,15,14,
-    1,2,12,13,
-    7,6,11,10,
-    4,5,8 ,9 ,
-};
-
 #define N_SOLID_TILESETS 3
 static const char* SOLID_TILE_SELECTIONS[N_SOLID_TILESETS] = {
     "stile0", "stile1", "stile2"
@@ -340,6 +333,12 @@ static void render_editor_game_scene(Scene_t* scene)
         )
         {
             continue;
+        }
+
+        if (p_ent->m_tag == LEVEL_END_TAG)
+        {
+            p_cspr->current_frame = 2 * data->selected_solid_tilemap + (
+                            (data->coins.current < data->coins.total) ? 0 : 1);
         }
 
         p_cspr->node.spr = spr.sprite;

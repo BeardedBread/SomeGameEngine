@@ -131,8 +131,16 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
         scene->data.tilemap.tiles[i].offset = (Vector2){0, 0};
         scene->data.tilemap.tiles[i].size = (Vector2){TILE_SIZE, TILE_SIZE};
         scene->data.tilemap.tiles[i].def = 0;
-        
-        if (lvl_map.tiles[i].tile_type == 1)
+
+        memset(scene->data.tilemap.render_nodes + i, 0, sizeof(RenderInfoNode));
+        scene->data.tilemap.render_nodes[i].pos = (Vector2){
+            (i % scene->data.tilemap.width) * TILE_SIZE,
+            (i / scene->data.tilemap.width) * TILE_SIZE,
+        };
+        scene->data.tilemap.render_nodes[i].scale = (Vector2){1,1};
+        scene->data.tilemap.render_nodes[i].colour = WHITE;
+
+        if (lvl_map.tiles[i].tile_type == SOLID_TILE)
         {
             change_a_tile(&scene->data.tilemap, i, SOLID_TILE);
         }
@@ -147,7 +155,8 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
             scene->data.tilemap.tiles[i].wet =  scene->data.tilemap.tiles[i].water_level > 0;
         }
     }
-    // Two pass
+
+    // Two pass, because some tile depends on the solidity of the tiles
     for (size_t i = 0; i < scene->data.tilemap.n_tiles;i++)
     {
         if (lvl_map.tiles[i].tile_type >= 8 && lvl_map.tiles[i].tile_type < 20)
@@ -249,6 +258,24 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
                     );
                 }
             }
+        }
+
+        // This only works for static loading.
+        // If a tilemap change change to some other arbitrary tile.
+        // Then this should be done while changing a tile.
+        if (lvl_map.tiles[i].tile_type == SOLID_TILE)
+        {
+            scene->data.tilemap.render_nodes[i].spr = scene->data.solid_tile_sprites;
+            scene->data.tilemap.render_nodes[i].frame_num = CONNECTIVITY_TILE_MAPPING[
+                scene->data.tilemap.tiles[i].connectivity
+            ];
+        }
+        else
+        {
+            uint8_t tile_sprite_idx = scene->data.tilemap.tiles[i].tile_type + scene->data.tilemap.tiles[i].rotation;
+            scene->data.tilemap.render_nodes[i].spr = scene->data.tile_sprites[
+                tile_sprite_idx
+            ];
         }
     }
 

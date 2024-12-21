@@ -9,12 +9,7 @@
 #include <stdio.h>
 
 static Tile_t all_tiles[MAX_N_TILES] = {0};
-static const uint8_t CONNECTIVITY_TILE_MAPPING[16] = {
-    0,3,15,14,
-    1,2,12,13,
-    7,6,11,10,
-    4,5,8 ,9 ,
-};
+static RenderInfoNode all_tile_rendernodes[MAX_N_TILES] = {0};
 
 #define GAME_LAYER 0
 #define CONTROL_LAYER 1
@@ -161,6 +156,80 @@ static void render_regular_game_scene(Scene_t* scene)
     max.x = (int)fmin(tilemap.width, max.x + 1);
     max.y = (int)fmin(tilemap.height, max.y + 1);
 
+    // Queue TileMap rendering
+    for (int tile_y = min.y; tile_y < max.y; tile_y++)
+    {
+        for (int tile_x = min.x; tile_x < max.x; tile_x++)
+        {
+
+            int i = tile_x + tile_y * tilemap.width;
+            // Tile render nodes is static on load and is not dynamically updated.
+            // We exploit the fact that all tiles can only change into an empty
+            // tile.
+            // This won't work if a tile can change into something else
+            if (tilemap.tiles[i].tile_type == EMPTY_TILE) continue;
+
+            uint8_t depth = 2;
+            if (tilemap.tiles[i].tile_type == LADDER)
+            {
+                depth = 0;
+            }
+            add_render_node(&data->render_manager, all_tile_rendernodes + i, depth);
+        }
+    }
+
+    // Queue Sprite rendering
+    sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
+    {
+        if (!p_ent->m_alive) continue;
+
+        CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
+        if (p_cspr == NULL) continue;
+
+        const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
+        if (spr.sprite == NULL) continue;
+
+        Vector2 pos = p_ent->position;
+        CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+        if (p_bbox != NULL)
+        {
+            pos = Vector2Add(
+                pos,
+                get_anchor_offset(p_bbox->size, spr.dest_anchor, p_cspr->node.flip & 1)
+            );
+        }
+        pos = Vector2Subtract(
+            pos,
+            get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->node.flip & 1)
+        );
+
+        Vector2 offset = spr.offset;
+        if (p_cspr->node.flip & 1) offset.x *= -1;
+
+        pos = Vector2Add(pos, offset);
+        // Entity culling
+        if (
+            pos.x + spr.sprite->frame_size.x < min.x * tilemap.tile_size
+            || pos.x > max.x * tilemap.tile_size
+            || pos.y + spr.sprite->frame_size.y < min.y * tilemap.tile_size
+            || pos.y > max.y * tilemap.tile_size
+        )
+        {
+            continue;
+        }
+
+        if (p_ent->m_tag == LEVEL_END_TAG)
+        {
+            p_cspr->current_frame = 2 * data->selected_solid_tilemap + (
+                            (data->coins.current < data->coins.total) ? 0 : 1);
+        }
+
+        p_cspr->node.spr = spr.sprite;
+        p_cspr->node.frame_num = p_cspr->current_frame;
+        p_cspr->node.pos = pos;
+        add_render_node(&data->render_manager, &p_cspr->node, p_cspr->depth);
+    }
+
     Texture2D* bg = get_texture(&scene->engine->assets, "bg_tex");
     BeginTextureMode(scene->layers.render_layers[GAME_LAYER].layer_tex);
         ClearBackground(WHITE);
@@ -174,6 +243,7 @@ static void render_regular_game_scene(Scene_t* scene)
 
         BeginMode2D(data->camera.cam);
 
+#ifdef ENABLE_RENDER_FALLBACK
         for (int tile_y = min.y; tile_y < max.y; tile_y++)
         {
             for (int tile_x = min.x; tile_x < max.x; tile_x++)
@@ -184,56 +254,15 @@ static void render_regular_game_scene(Scene_t* scene)
 
                 if (tilemap.tiles[i].tile_type == LADDER)
                 {
-                    if (data->tile_sprites[tilemap.tiles[i].tile_type] != NULL)
-                    {
-                        draw_sprite(data->tile_sprites[tilemap.tiles[i].tile_type], 0, (Vector2){x,y}, 0.0f, false);
-                    }
-                    else
+                    if (data->tile_sprites[tilemap.tiles[i].tile_type] == NULL)
                     {
                         DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, ORANGE);
                     }
                 }
             }
         }
-
-        sc_map_foreach_value(&scene->ent_manager.entities_map[LEVEL_END_TAG], p_ent)
-        {
-            // There is only a few exits, can may be get away without culling
-            CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
-            if (p_cspr != NULL)
-            {
-                const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
-                if (spr.sprite != NULL)
-                {
-                    Vector2 pos = p_ent->position;
-                    pos = Vector2Subtract(
-                        pos,
-                        get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->node.flip & 1)
-                    );
-
-                    Vector2 offset = spr.offset;
-                    if (p_cspr->node.flip & 1) offset.x *= -1;
-
-                    pos = Vector2Add(pos, offset);
-                    draw_sprite(
-                        spr.sprite,
-                        2 * data->selected_solid_tilemap + (
-                            (data->coins.current < data->coins.total) ? 0 : 1
-                        ),
-                        pos, 0.0f, p_cspr->node.flip & 1
-                    );
-                }
-            }
-            else
-            {
-                DrawCircleV(p_ent->position, tilemap.tile_size >> 1, (data->coins.current < data->coins.total)? RED : GREEN);
-            }
-        }
-
         sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
         {
-            if (p_ent->m_tag == LEVEL_END_TAG) continue;
-
             CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
 
             // Entity culling
@@ -246,34 +275,8 @@ static void render_regular_game_scene(Scene_t* scene)
                 || p_ent->position.y > max.y * tilemap.tile_size
             ) continue;
 
-            // Render Sprite only
             CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
-            if (p_cspr != NULL)
-            {
-                const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
-                if (spr.sprite != NULL)
-                {
-                    Vector2 pos = p_ent->position;
-                    if (p_bbox != NULL)
-                    {
-                        pos = Vector2Add(
-                            pos,
-                            get_anchor_offset(p_bbox->size, spr.dest_anchor, p_cspr->node.flip & 1)
-                        );
-                    }
-                    pos = Vector2Subtract(
-                        pos,
-                        get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->node.flip & 1)
-                    );
-
-                    Vector2 offset = spr.offset;
-                    if (p_cspr->node.flip & 1) offset.x *= -1;
-
-                    pos = Vector2Add(pos, offset);
-                    draw_sprite(spr.sprite, p_cspr->current_frame, pos, 0.0f, p_cspr->node.flip & 1);
-                }
-                continue;
-            }
+            if (p_cspr != NULL) continue;
 
             // Continue here only if no sprite
             Color colour;
@@ -291,6 +294,12 @@ static void render_regular_game_scene(Scene_t* scene)
                 default:
                     colour = BLACK;
                 break;
+            }
+
+            if (p_ent->m_tag == LEVEL_END_TAG)
+            {
+                DrawCircleV(p_ent->position, tilemap.tile_size >> 1, (data->coins.current < data->coins.total)? RED : GREEN);
+                continue;
             }
 
             if (p_bbox != NULL)
@@ -357,7 +366,6 @@ static void render_regular_game_scene(Scene_t* scene)
                 }
             }
         }
-
         for (int tile_y = min.y; tile_y < max.y; tile_y++)
         {
             for (int tile_x = min.x; tile_x < max.x; tile_x++)
@@ -369,31 +377,46 @@ static void render_regular_game_scene(Scene_t* scene)
                 if (tilemap.tiles[i].tile_type != LADDER)
                 {
                     uint8_t tile_sprite_idx = tilemap.tiles[i].tile_type + tilemap.tiles[i].rotation;
-                    if (data->tile_sprites[tile_sprite_idx] != NULL)
+                    if (tilemap.tiles[i].tile_type == SOLID_TILE)
                     {
-                        draw_sprite(data->tile_sprites[tile_sprite_idx], 0, (Vector2){x,y}, 0.0f, false);
+                        if (data->solid_tile_sprites == NULL) {
+                            DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
+                        }
                     }
-                    else if (tilemap.tiles[i].tile_type == SOLID_TILE)
+                    else if (data->tile_sprites[tile_sprite_idx] == NULL)
                     {
-                        DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, BLACK);
-                        draw_sprite(
-                            data->solid_tile_sprites,
-                            CONNECTIVITY_TILE_MAPPING[tilemap.tiles[i].connectivity],
-                            (Vector2){x,y}, 0.0f, false
-                        );
-                    }
-                    else if (tilemap.tiles[i].tile_type == ONEWAY_TILE)
-                    {
-                        DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, MAROON);
-                    }
-                    else if (tilemap.tiles[i].tile_type == SPIKES)
-                    {
-                        DrawRectangle(
-                            x + tilemap.tiles[i].offset.x, y + tilemap.tiles[i].offset.y,
-                            tilemap.tiles[i].size.x, tilemap.tiles[i].size.y, RED
-                        );
+                        if (tilemap.tiles[i].tile_type == ONEWAY_TILE)
+                        {
+                            DrawRectangle(x, y, TILE_SIZE, TILE_SIZE, MAROON);
+                        }
+                        else if (tilemap.tiles[i].tile_type == SPIKES)
+                        {
+                            DrawRectangle(
+                                x + tilemap.tiles[i].offset.x, y + tilemap.tiles[i].offset.y,
+                                tilemap.tiles[i].size.x, tilemap.tiles[i].size.y, RED
+                            );
+                        }
                     }
                 }
+            }
+        }
+#endif //ENABLE_RENDER_FALLBACK
+
+        execute_render(&data->render_manager);
+
+        // Particle effect will always be in front of everything except water
+        draw_particle_system(&scene->part_sys);
+
+        // Render water
+        for (int tile_y = min.y; tile_y < max.y; tile_y++)
+        {
+            for (int tile_x = min.x; tile_x < max.x; tile_x++)
+            {
+                int i = tile_x + tile_y * tilemap.width;
+                int x = tile_x * TILE_SIZE;
+                int y = tile_y * TILE_SIZE;
+
+                // Draw water flow
                 if (tilemap.tiles[i].wet)
                 {
 #define SURFACE_THICKNESS 4
@@ -406,7 +429,6 @@ static void render_regular_game_scene(Scene_t* scene)
                     {
                         DrawLineEx((Vector2){x + TILE_SIZE / 2, y}, (Vector2){x + TILE_SIZE / 2, y + TILE_SIZE - tilemap.tiles[i].water_level * WATER_BBOX_STEP}, SURFACE_THICKNESS, ColorAlpha(BLUE, 0.7));
                     }
-
 
                     if (
                         bot <= tilemap.n_tiles
@@ -428,28 +450,6 @@ static void render_regular_game_scene(Scene_t* scene)
                         DrawRectangleLinesEx((Rectangle){x, y, TILE_SIZE, TILE_SIZE}, 2.0, ColorAlpha(BLUE, 0.5));
                     }
                 }
-            }
-        }
-
-
-        //sc_map_foreach_value(&scene->ent_manager.entities_map[DYNMEM_ENT_TAG], p_ent)
-        //{
-        //    CWaterRunner_t* p_runner = get_component(p_ent, CWATERRUNNER_T);
-
-        //    unsigned int x = ((p_runner->current_tile) % tilemap.width) * tilemap.tile_size;
-        //    unsigned int y = ((p_runner->current_tile) / tilemap.width) * tilemap.tile_size;
-        //    DrawCircle(x+16, y+16, 8, ColorAlpha(BLUE, 0.6));
-        //}
-        draw_particle_system(&scene->part_sys);
-
-        // Draw water tile
-        for (int tile_y = min.y; tile_y < max.y; tile_y++)
-        {
-            for (int tile_x = min.x; tile_x < max.x; tile_x++)
-            {
-                int i = tile_x + tile_y * tilemap.width;
-                int x = tile_x * TILE_SIZE;
-                int y = tile_y * TILE_SIZE;
 
                 uint32_t water_height = tilemap.tiles[i].water_level * WATER_BBOX_STEP;
                 Color water_colour = ColorAlpha(BLUE, 0.5);
@@ -462,14 +462,6 @@ static void render_regular_game_scene(Scene_t* scene)
                 );
             }
         }
-
-        //// Draw Border (remove later)
-        //DrawLine(0, 0, 0, tilemap.height * tilemap.tile_size, BLACK);
-        //DrawLine(0, 0, tilemap.width * TILE_SIZE, 0, BLACK);
-        //int val = (tilemap.width) * tilemap.tile_size;
-        //DrawLine(val, 0, val, tilemap.height * tilemap.tile_size, BLACK);
-        //val = (tilemap.height) * tilemap.tile_size;
-        //DrawLine(0, val, tilemap.width * TILE_SIZE, val, BLACK);
         EndMode2D();
     EndTextureMode();
 }
@@ -505,6 +497,7 @@ void init_game_scene(LevelScene_t* scene)
     init_entity_tag_map(&scene->scene.ent_manager, DYNMEM_ENT_TAG, 16);
 
     scene->data.tilemap.tiles = all_tiles;
+    scene->data.tilemap.render_nodes = all_tile_rendernodes;
     init_level_scene_data(
         &scene->data, MAX_N_TILES, all_tiles,
         (Rectangle){
@@ -512,6 +505,16 @@ void init_game_scene(LevelScene_t* scene)
             VIEWABLE_MAP_WIDTH*TILE_SIZE, VIEWABLE_MAP_HEIGHT*TILE_SIZE
         }
     );
+    for (size_t i = 0; i < MAX_N_TILES; i++)
+    {
+        memset(all_tile_rendernodes + i, 0, sizeof(RenderInfoNode));
+        all_tile_rendernodes[i].pos = (Vector2){
+            (i % scene->data.tilemap.width) * TILE_SIZE,
+            (i / scene->data.tilemap.width) * TILE_SIZE,
+        };
+        all_tile_rendernodes[i].scale = (Vector2){1,1};
+        all_tile_rendernodes[i].colour = WHITE;
+    }
     scene->data.sm.state_functions[LEVEL_STATE_STARTING] = at_level_start;
     scene->data.sm.state_functions[LEVEL_STATE_RUNNING] = NULL;
     scene->data.sm.state_functions[LEVEL_STATE_DEAD] = NULL;

@@ -143,7 +143,7 @@ Entity_t* create_dead_player(EntityManager_t* ent_manager)
     p_cspr->current_idx = SPR_PLAYER_DEAD;
     p_cspr->node.colour = WHITE;
     p_cspr->node.scale = (Vector2){1, 1};
-    p_cspr->depth = 2;
+    p_cspr->depth = 3;
 
     add_component(p_ent, CMOVEMENTSTATE_T);
 

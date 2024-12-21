@@ -1,6 +1,7 @@
 #ifndef __COLLISION_FUNCS_H
 #define __COLLISION_FUNCS_H
 #include "EC.h"
+#include "render_queue.h"
 
 typedef enum SolidType
 {
@@ -42,6 +43,7 @@ typedef struct TileGrid
     unsigned int max_tiles;
     unsigned int tile_size;
     Tile_t* tiles;
+    RenderInfoNode* render_nodes;
 }TileGrid_t;
 
 typedef struct TileArea {

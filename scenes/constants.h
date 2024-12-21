@@ -1,6 +1,8 @@
 // Constants to be used in game
 #ifndef __CONSTANTS_H
 #define __CONSTANTS_H
+#include <stdint.h>
+
 #ifndef TILE16_SIZE
 #define TILE_SIZE 32
 #define DEFAULT_MAP_WIDTH 48
@@ -47,4 +49,11 @@
 #define WATER_BBOX_STEP (TILE_SIZE / MAX_WATER_LEVEL)
 
 #define MAX_LEVEL_NUM 50
+
+static const uint8_t CONNECTIVITY_TILE_MAPPING[16] = {
+    0,3,15,14,
+    1,2,12,13,
+    7,6,11,10,
+    4,5,8 ,9 ,
+};
 #endif // __CONSTANTS_H

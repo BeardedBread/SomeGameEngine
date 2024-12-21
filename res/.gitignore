@@ -3,6 +3,7 @@
 !CMakeLists.txt
 !ldtk_repacker.py
 !pack_ldtk.sh
+!pack_resources.sh
 !test_assets.info
 !testLevels.lvldata.zst
 !rres_packer.c

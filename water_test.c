@@ -110,7 +110,7 @@ static void level_scene_render_func(Scene_t* scene)
                 if (spr.sprite != NULL)
                 {
                     Vector2 pos = Vector2Add(p_ent->position, spr.offset);
-                    draw_sprite(spr.sprite, p_cspr->current_frame, pos, 0.0f, p_cspr->flip_x);
+                    draw_sprite(spr.sprite, p_cspr->current_frame, pos, 0.0f, p_cspr->node.flip & 1);
                 }
             }
         }

@@ -2155,7 +2155,7 @@ void level_end_detection_system(Scene_t* scene)
                     ent->position.y += tilemap.tile_size >> 1;
                     CSprite_t* p_cspr = get_component(p_other_ent, CSPRITE_T);
                     CSprite_t* new_cspr = get_component(ent, CSPRITE_T);
-                    new_cspr->flip_x = p_cspr->flip_x;
+                    new_cspr->node.flip = p_cspr->node.flip;
 
                 }
                 destroy_entity(scene, &lvl_scene->data.tilemap, p_other_ent);

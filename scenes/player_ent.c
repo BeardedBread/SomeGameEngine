@@ -30,8 +30,13 @@ static unsigned int player_sprite_transition_func(Entity_t* ent)
     CSprite_t* p_spr = get_component(ent, CSPRITE_T);
     CPlayerState_t* p_plr = get_component(ent, CPLAYERSTATE_T);
 
-    if (p_ctrans->velocity.x > 0) p_spr->flip_x = true;
-    else if (p_ctrans->velocity.x < 0) p_spr->flip_x = false;
+    if (p_ctrans->velocity.x > 0) {
+        p_spr->node.flip |= 1;
+    }
+    else if (p_ctrans->velocity.x < 0)
+    {
+        p_spr->node.flip &= ~1;
+    }
 
     p_spr->pause = false;
 
@@ -111,6 +116,9 @@ Entity_t* create_player(EntityManager_t* ent_manager)
     CSprite_t* p_cspr = add_component(p_ent, CSPRITE_T);
     p_cspr->sprites = player_sprite_map;
     p_cspr->transition_func = &player_sprite_transition_func;
+    p_cspr->node.colour = WHITE;
+    p_cspr->node.scale = (Vector2){1, 1};
+    p_cspr->depth = 1;
 
     CEmitter_t* p_emitter = add_component(p_ent, CEMITTER_T);
     p_emitter->offset = (Vector2){7,0};
@@ -133,6 +141,9 @@ Entity_t* create_dead_player(EntityManager_t* ent_manager)
     CSprite_t* p_cspr = add_component(p_ent, CSPRITE_T);
     p_cspr->sprites = player_sprite_map;
     p_cspr->current_idx = SPR_PLAYER_DEAD;
+    p_cspr->node.colour = WHITE;
+    p_cspr->node.scale = (Vector2){1, 1};
+    p_cspr->depth = 2;
 
     add_component(p_ent, CMOVEMENTSTATE_T);
 
@@ -160,6 +171,9 @@ Entity_t* create_player_finish(EntityManager_t* ent_manager)
     p_cspr->sprites = player_sprite_map;
     p_cspr->current_idx = SPR_PLAYER_ENTER;
     p_cspr->transition_func = &player_finish_transition_func;
+    p_cspr->node.colour = WHITE;
+    p_cspr->node.scale = (Vector2){1, 1};
+    p_cspr->depth = 1;
 
     CLifeTimer_t* p_clifetimer = add_component(p_ent, CLIFETIMER_T);
     p_clifetimer->life_time = 0.9f;

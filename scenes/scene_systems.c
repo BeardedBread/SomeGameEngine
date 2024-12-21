@@ -7,6 +7,8 @@
 
 void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* tiles, Rectangle view_zone)
 {
+    init_render_manager(&data->render_manager);
+
     data->game_rec = view_zone;
     memset(&data->camera, 0, sizeof(LevelCamera_t));
     data->camera.cam.rotation = 0.0f;
@@ -45,6 +47,7 @@ void init_level_scene_data(LevelSceneData_t* data, uint32_t max_tiles, Tile_t* t
     data->show_grid = false;
 
     memset(&data->sm, 0, sizeof(data->sm));
+
 }
 
 void term_level_scene_data(LevelSceneData_t* data)

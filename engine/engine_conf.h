@@ -5,6 +5,7 @@
 // if memory used too high
 #define MAX_SCENES_TO_RENDER 8
 #define MAX_RENDER_LAYERS 4
+#define MAX_RENDERMANAGER_DEPTH 4
 #define MAX_ENTITIES 2047
 #define MAX_TEXTURES 16
 #define MAX_SPRITES 127

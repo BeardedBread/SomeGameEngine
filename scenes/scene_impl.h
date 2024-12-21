@@ -75,6 +75,7 @@ typedef struct LevelSceneData {
     bool show_grid;
     Vector2 player_spawn;
     LevelSceneStateMachine_t sm;
+    RenderManager render_manager;
 }LevelSceneData_t;
 
 static inline void change_level_state(LevelSceneData_t* data, LevelSceneState_t state)

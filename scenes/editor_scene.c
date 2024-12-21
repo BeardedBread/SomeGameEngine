@@ -302,6 +302,92 @@ static void render_editor_game_scene(Scene_t* scene)
     max.x = (int)fmin(tilemap.width, max.x + 1);
     max.y = (int)fmin(tilemap.height, max.y + 1);
 
+    // Queue Sprite rendering
+    sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
+    {
+        if (!p_ent->m_alive) continue;
+
+        CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
+        if (p_cspr == NULL) continue;
+
+        if (p_ent->m_tag == LEVEL_END_TAG)
+        {
+            if (p_cspr != NULL)
+            {
+                const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
+                if (spr.sprite != NULL)
+                {
+                    Vector2 pos = p_ent->position;
+                    pos = Vector2Subtract(
+                        pos,
+                        get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->node.flip & 1)
+                    );
+
+                    Vector2 offset = spr.offset;
+                    if (p_cspr->node.flip & 1) offset.x *= -1;
+
+                    pos = Vector2Add(pos, offset);
+
+                    p_cspr->node.spr = spr.sprite;
+                    p_cspr->node.frame_num = 
+                        2 * data->selected_solid_tilemap + (
+                            (data->coins.current < data->coins.total) ? 0 : 1
+                        );
+                    p_cspr->node.pos = pos;
+                    p_cspr->node.scale = (Vector2){1, 1};
+                    p_cspr->node.colour = WHITE;
+                    add_render_node(&data->render_manager, &p_cspr->node, p_cspr->depth);
+                }
+            }
+            continue;
+        }
+
+        CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
+
+        // Entity culling
+        Vector2 box_size = {0};
+        if (p_bbox != NULL) box_size = p_bbox->size;
+        if (
+            p_ent->position.x + box_size.x < min.x * tilemap.tile_size
+            || p_ent->position.x > max.x * tilemap.tile_size
+            || p_ent->position.y + box_size.y < min.y * tilemap.tile_size
+            || p_ent->position.y > max.y * tilemap.tile_size
+        )
+        {
+            continue;
+        }
+
+        if (p_cspr != NULL)
+        {
+            const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
+            if (spr.sprite != NULL)
+            {
+                Vector2 pos = p_ent->position;
+                if (p_bbox != NULL)
+                {
+                    pos = Vector2Add(
+                        pos,
+                        get_anchor_offset(p_bbox->size, spr.dest_anchor, p_cspr->node.flip & 1)
+                    );
+                }
+                pos = Vector2Subtract(
+                    pos,
+                    get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->node.flip & 1)
+                );
+
+                Vector2 offset = spr.offset;
+                if (p_cspr->node.flip & 1) offset.x *= -1;
+
+                pos = Vector2Add(pos, offset);
+
+                p_cspr->node.spr = spr.sprite;
+                p_cspr->node.frame_num = p_cspr->current_frame;
+                p_cspr->node.pos = pos;
+                add_render_node(&data->render_manager, &p_cspr->node, p_cspr->depth);
+            }
+        }
+    }
+
     Texture2D* bg = get_texture(&scene->engine->assets, "bg_tex");
     BeginTextureMode(scene->layers.render_layers[GAME_LAYER].layer_tex);
         ClearBackground(WHITE);
@@ -342,43 +428,18 @@ static void render_editor_game_scene(Scene_t* scene)
             }
         }
 
-        sc_map_foreach_value(&scene->ent_manager.entities_map[LEVEL_END_TAG], p_ent)
-        {
-            CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
-            if (p_cspr != NULL)
-            {
-                const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
-                if (spr.sprite != NULL)
-                {
-                    Vector2 pos = p_ent->position;
-                    pos = Vector2Subtract(
-                        pos,
-                        get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->flip_x)
-                    );
-
-                    Vector2 offset = spr.offset;
-                    if (p_cspr->flip_x) offset.x *= -1;
-
-                    pos = Vector2Add(pos, offset);
-                    draw_sprite(
-                        spr.sprite,
-                        2 * data->selected_solid_tilemap + (
-                            (data->coins.current < data->coins.total) ? 0 : 1
-                        ),
-                        pos, 0.0f, p_cspr->flip_x
-                    );
-                }
-            }
-            else
-            {
-                DrawCircleV(p_ent->position, tilemap.tile_size >> 1, (data->coins.current < data->coins.total)? RED : GREEN);
-            }
-        }
-
         char buffer[64] = {0};
         sc_map_foreach_value(&scene->ent_manager.entities, p_ent)
         {
-            if (p_ent->m_tag == LEVEL_END_TAG) continue;
+            if (p_ent->m_tag == LEVEL_END_TAG && data->show_grid)
+            {
+                CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
+                if (p_cspr == NULL)
+                {
+                    DrawCircleV(p_ent->position, tilemap.tile_size >> 1, (data->coins.current < data->coins.total)? RED : GREEN);
+                }
+                continue;
+            }
 
             CBBox_t* p_bbox = get_component(p_ent, CBBOX_COMP_T);
 
@@ -508,34 +569,9 @@ static void render_editor_game_scene(Scene_t* scene)
                     DrawRectangleLinesEx(rec, 1.5, PURPLE);
                 }
             }
-
-            CSprite_t* p_cspr = get_component(p_ent, CSPRITE_T);
-            if (p_cspr != NULL)
-            {
-                const SpriteRenderInfo_t spr = p_cspr->sprites[p_cspr->current_idx];
-                if (spr.sprite != NULL)
-                {
-                    Vector2 pos = p_ent->position;
-                    if (p_bbox != NULL)
-                    {
-                        pos = Vector2Add(
-                            pos,
-                            get_anchor_offset(p_bbox->size, spr.dest_anchor, p_cspr->flip_x)
-                        );
-                    }
-                    pos = Vector2Subtract(
-                        pos,
-                        get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->flip_x)
-                    );
-
-                    Vector2 offset = spr.offset;
-                    if (p_cspr->flip_x) offset.x *= -1;
-
-                    pos = Vector2Add(pos, offset);
-                    draw_sprite(spr.sprite, p_cspr->current_frame, pos, 0.0f, p_cspr->flip_x);
-                }
-            }
         }
+
+        execute_render(&data->render_manager);
 
         for (int tile_y = min.y; tile_y < max.y; tile_y++)
         {
@@ -1321,7 +1357,7 @@ void init_sandbox_scene(LevelScene_t* scene)
     {
         Entity_t* p_player = create_player(&scene->scene.ent_manager);
         CSprite_t* p_cspr = get_component(p_player, CSPRITE_T);
-        p_cspr->flip_x = true;
+        p_cspr->node.flip |= 1;
         
         p_player->position.x = 100;
         p_player->position.y = (scene->data.tilemap.height - 1) * scene->data.tilemap.tile_size - PLAYER_HEIGHT;

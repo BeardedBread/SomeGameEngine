@@ -6,6 +6,7 @@
 #include "sc/heap/sc_heap.h"
 #include "assets.h"
 #include "particle_sys.h"
+#include "render_queue.h"
 
 typedef struct Scene Scene_t;
 

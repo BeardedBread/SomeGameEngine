@@ -208,11 +208,11 @@ static void render_regular_game_scene(Scene_t* scene)
                     Vector2 pos = p_ent->position;
                     pos = Vector2Subtract(
                         pos,
-                        get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->flip_x)
+                        get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->node.flip & 1)
                     );
 
                     Vector2 offset = spr.offset;
-                    if (p_cspr->flip_x) offset.x *= -1;
+                    if (p_cspr->node.flip & 1) offset.x *= -1;
 
                     pos = Vector2Add(pos, offset);
                     draw_sprite(
@@ -220,7 +220,7 @@ static void render_regular_game_scene(Scene_t* scene)
                         2 * data->selected_solid_tilemap + (
                             (data->coins.current < data->coins.total) ? 0 : 1
                         ),
-                        pos, 0.0f, p_cspr->flip_x
+                        pos, 0.0f, p_cspr->node.flip & 1
                     );
                 }
             }
@@ -258,19 +258,19 @@ static void render_regular_game_scene(Scene_t* scene)
                     {
                         pos = Vector2Add(
                             pos,
-                            get_anchor_offset(p_bbox->size, spr.dest_anchor, p_cspr->flip_x)
+                            get_anchor_offset(p_bbox->size, spr.dest_anchor, p_cspr->node.flip & 1)
                         );
                     }
                     pos = Vector2Subtract(
                         pos,
-                        get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->flip_x)
+                        get_anchor_offset(spr.sprite->frame_size, spr.src_anchor, p_cspr->node.flip & 1)
                     );
 
                     Vector2 offset = spr.offset;
-                    if (p_cspr->flip_x) offset.x *= -1;
+                    if (p_cspr->node.flip & 1) offset.x *= -1;
 
                     pos = Vector2Add(pos, offset);
-                    draw_sprite(spr.sprite, p_cspr->current_frame, pos, 0.0f, p_cspr->flip_x);
+                    draw_sprite(spr.sprite, p_cspr->current_frame, pos, 0.0f, p_cspr->node.flip & 1);
                 }
                 continue;
             }

@@ -74,6 +74,9 @@ Entity_t* create_crate(EntityManager_t* ent_manager, bool metal, ContainerItem_t
 
     CSprite_t* p_cspr = add_component(p_crate, CSPRITE_T);
     p_cspr->sprites = item_sprite_map;
+    p_cspr->node.scale = (Vector2){1, 1};
+    p_cspr->node.colour = WHITE;
+
     {
         CContainer_t* p_container = add_component(p_crate, CCONTAINER_T);
         p_container->material = metal? METAL_CONTAINER : WOODEN_CONTAINER;
@@ -122,6 +125,9 @@ Entity_t* create_boulder(EntityManager_t* ent_manager)
     CSprite_t* p_cspr = add_component(p_boulder, CSPRITE_T);
     p_cspr->sprites = item_sprite_map;
     p_cspr->current_idx = 19;
+    p_cspr->node.scale = (Vector2){1, 1};
+    p_cspr->node.colour = WHITE;
+    p_cspr->depth = 2;
 
     return p_boulder;
 }
@@ -145,6 +151,8 @@ Entity_t* create_arrow(EntityManager_t* ent_manager, uint8_t dir)
     CSprite_t* p_cspr = add_component(p_arrow, CSPRITE_T);
     p_cspr->sprites = item_sprite_map;
     p_cspr->current_idx = 2;
+    p_cspr->node.scale = (Vector2){1, 1};
+    p_cspr->node.colour = WHITE;
     //p_hitbox->boxes[0] = (Rectangle){TILE_SIZE - 5, TILE_SIZE / 2 - 5, 5, 5};
     const int HITBOX_LONG_SIDE = 10;
     const int HITBOX_SHORT_SIDE = 4;
@@ -197,6 +205,8 @@ Entity_t* create_bomb(EntityManager_t* ent_manager, Vector2 launch_dir)
     CSprite_t* p_cspr = add_component(p_bomb, CSPRITE_T);
     p_cspr->sprites = item_sprite_map;
     p_cspr->current_idx = 6;
+    p_cspr->node.scale = (Vector2){1, 1};
+    p_cspr->node.colour = WHITE;
 
     CTransform_t* p_ctransform = add_component(p_bomb, CTRANSFORM_COMP_T);
     p_ctransform->active = true; 
@@ -230,6 +240,9 @@ Entity_t* create_explosion(EntityManager_t* ent_manager)
     CSprite_t* p_cspr = add_component(p_explosion, CSPRITE_T);
     p_cspr->sprites = item_sprite_map;
     p_cspr->current_idx = 17;
+    p_cspr->node.scale = (Vector2){1, 1};
+    p_cspr->node.colour = WHITE;
+    p_cspr->depth = 3;
 
     CLifeTimer_t* p_clifetimer = add_component(p_explosion, CLIFETIMER_T);
     p_clifetimer->life_time = 0.05f;
@@ -269,6 +282,9 @@ Entity_t* create_urchin(EntityManager_t* ent_manager)
     CSprite_t* p_cspr = add_component(p_urchin, CSPRITE_T);
     p_cspr->sprites = item_sprite_map;
     p_cspr->current_idx = 21;
+    p_cspr->node.scale = (Vector2){1, 1};
+    p_cspr->node.colour = WHITE;
+    p_cspr->depth = 2;
 
     add_component(p_urchin, CSQUISHABLE_T);
 
@@ -298,6 +314,9 @@ Entity_t* create_chest(EntityManager_t* ent_manager)
     CSprite_t* p_cspr = add_component(p_chest, CSPRITE_T);
     p_cspr->sprites = item_sprite_map;
     p_cspr->current_idx = 18;
+    p_cspr->node.scale = (Vector2){1, 1};
+    p_cspr->node.colour = WHITE;
+    p_cspr->depth = 2;
 
 
     return p_chest;
@@ -311,6 +330,8 @@ Entity_t* create_level_end(EntityManager_t* ent_manager)
     CSprite_t* p_cspr = add_component(p_flag, CSPRITE_T);
     p_cspr->sprites = item_sprite_map;
     p_cspr->current_idx = 20;
+    p_cspr->node.scale = (Vector2){1, 1};
+    p_cspr->node.colour = WHITE;
 
     add_component(p_flag, CTILECOORD_COMP_T);
     return p_flag;

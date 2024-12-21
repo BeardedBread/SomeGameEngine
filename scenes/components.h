@@ -1,4 +1,5 @@
 #include "EC.h"
+#include "render_queue.h"
 #include "particle_sys.h" // includes assets
 
 enum ComponentEnum {
@@ -145,19 +146,17 @@ typedef struct _SpriteRenderInfo
 } SpriteRenderInfo_t;
 
 typedef struct _CSprite_t {
+    RenderInfoNode node;
     SpriteRenderInfo_t* sprites;
     sprite_transition_func_t transition_func;
     unsigned int current_idx;
-    bool flip_x;
-    bool flip_y;
-    bool pause;
     int current_frame;
     float fractional;
-    float rotation; // Degree
     float rotation_speed; // Degree / s
     int elapsed;
     Vector2 offset;
-    Color colour;
+    uint8_t depth;
+    bool pause;
 } CSprite_t;
 
 typedef struct _CMoveable_t {

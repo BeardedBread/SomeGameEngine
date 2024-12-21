@@ -32,6 +32,7 @@ add_library(lib_engine OBJECT
     collisions.c
     mempool.c
     entManager.c
+    render_queue.c
 )
 target_link_libraries(lib_engine
     PUBLIC

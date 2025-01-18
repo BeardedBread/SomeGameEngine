@@ -11,12 +11,17 @@ static void menu_scene_render_func(Scene_t* scene)
     Sprite_t* title_spr = get_sprite(&scene->engine->assets, "title_board");
     Sprite_t* title_select = get_sprite(&scene->engine->assets, "title_select");
     Rectangle render_rec = scene->layers.render_layers[0].render_area;
+    Font* menu_font = get_font(&scene->engine->assets, "MenuFont");
     BeginTextureMode(scene->layers.render_layers[0].layer_tex);
         ClearBackground(RAYWHITE);
         draw_sprite(spr, 0, (Vector2){0, 0}, 0, false);
         draw_sprite(title_spr, 0, (Vector2){32, 10}, 0, false);
-        int title_width = MeasureText("Bunny's Spelunking Adventure", 32);
-        DrawText("Bunny's Spelunking Adventure", (render_rec.width - title_width) / 2, 20, 32, BLACK);
+        Vector2 title_sz = MeasureTextEx(*menu_font, "Bunny's Spelunking Adventure", 56, 0);
+        Vector2 title_pos = {
+            .x = (render_rec.width - title_sz.x) / 2,
+            .y = 32 + (title_spr->frame_size.y - title_sz.y) / 2
+        };
+        DrawTextEx(*menu_font, "Bunny's Spelunking Adventure", title_pos, 56, 0, BLACK);
 
         const char* OPTIONS[3] = {"Start", "Credits", "Exit"};
         for (uint8_t i = 0; i < 3; ++i)

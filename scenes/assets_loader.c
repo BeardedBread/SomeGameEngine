@@ -7,6 +7,7 @@ typedef enum AssetInfoType
     TEXTURE_INFO,
     SPRITE_INFO,
     SOUND_INFO,
+    FONT_INFO,
     EMITTER_INFO,
     LEVELPACK_INFO,
     INVALID_INFO
@@ -79,6 +80,8 @@ static inline AssetInfoType_t get_asset_type(const char* str)
     if (strcmp(str, "Emitter") == 0) return EMITTER_INFO;
 
     if (strcmp(str, "LevelPack") == 0) return LEVELPACK_INFO;
+
+    if (strcmp(str, "Font") == 0) return FONT_INFO;
 
     return INVALID_INFO;
 }
@@ -272,10 +275,20 @@ bool load_from_infofile(const char* file, Assets_t* assets)
                 {
                     if (add_sound(assets, name, info_str) == NULL)
                     {
-                        printf("Unable to add texture at line %lu\n", line_num);
+                        printf("Unable to add sound at line %lu\n", line_num);
                         break;
                     }
                     printf("Added sound %s as %s\n", info_str, name);
+                }
+                break;
+                case FONT_INFO:
+                {
+                    if (add_font(assets, name, info_str) == NULL)
+                    {
+                        printf("Unable to add font at line %lu\n", line_num);
+                        break;
+                    }
+                    printf("Added font %s as %s\n", info_str, name);
                 }
                 break;
                 case LEVELPACK_INFO:

@@ -16,10 +16,10 @@ static void menu_scene_render_func(Scene_t* scene)
         ClearBackground(RAYWHITE);
         draw_sprite(spr, 0, (Vector2){0, 0}, 0, false);
         draw_sprite(title_spr, 0, (Vector2){32, 10}, 0, false);
-        Vector2 title_sz = MeasureTextEx(*menu_font, "Bunny's Spelunking Adventure", 56, 0);
+        Vector2 font_sz = MeasureTextEx(*menu_font, "Bunny's Spelunking Adventure", 56, 0);
         Vector2 title_pos = {
-            .x = (render_rec.width - title_sz.x) / 2,
-            .y = 32 + (title_spr->frame_size.y - title_sz.y) / 2
+            .x = (render_rec.width - font_sz.x) / 2,
+            .y = 32 + (title_spr->frame_size.y - font_sz.y) / 2
         };
         DrawTextEx(*menu_font, "Bunny's Spelunking Adventure", title_pos, 56, 0, BLACK);
 
@@ -38,7 +38,12 @@ static void menu_scene_render_func(Scene_t* scene)
                 )
             );
             draw_sprite(title_select, 0, pos, 0, false);
-            UI_button(data->buttons + i, OPTIONS[i]);
+            font_sz = MeasureTextEx(*menu_font, OPTIONS[i], 32, 6);
+            Vector2 title_pos = {
+                .x = pos.x + (title_select->frame_size.x - font_sz.x) / 2,
+                .y = pos.y + (title_spr->frame_size.y) / 2  - font_sz.y
+            };
+            hover_text(data->buttons + i, *menu_font, OPTIONS[i], title_pos, 32, 6, BLACK);
         }
     EndTextureMode();
 }

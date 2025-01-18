@@ -374,6 +374,14 @@ void UI_button(const UIComp_t* comp, const char* text)
     
 }
 
+void hover_text(const UIComp_t* comp, Font font, const char* text, Vector2 pos, int font_size, int spacing, Color colour) {
+    if (comp->state == STATE_FOCUSED) {
+        DrawTextEx(font, text, pos, font_size, spacing, Fade(colour, 0.1));
+        pos.y -= font_size >> 2;
+    }
+    DrawTextEx(font, text, pos, font_size, spacing, colour);
+}
+
 
 // Slider control with pro parameters
 // NOTE: Other GuiSlider*() controls use this one

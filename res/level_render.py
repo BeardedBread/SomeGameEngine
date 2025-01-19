@@ -44,18 +44,21 @@ ENUMIDS_TILETYPE_MAPPING = {
     'Urchin': 25,
 }
 
-REC_DRAW_FUNCTION = lambda ctx,x,y,s,c : ctx.rectangle(((x,y), (x+s, y+s)), c) 
-HALFREC_DRAW_FUNCTION = lambda ctx,x,y,s,c : ctx.rectangle(((x,y), (x+s, y+s//2)), c) 
+REC_DRAW_FUNCTION = lambda ctx,x,y,s,c : ctx.rectangle(((x,y), (x+s-1, y+s-1)), c) 
+UPHALFREC_DRAW_FUNCTION = lambda ctx,x,y,s,c : ctx.rectangle(((x,y), (x+s-1, y+s//2-1)), c) 
+DOWNHALFREC_DRAW_FUNCTION = lambda ctx,x,y,s,c : ctx.rectangle(((x, y+s//2), (x+s-1,y+s-1)), c) 
+LEFTHALFREC_DRAW_FUNCTION = lambda ctx,x,y,s,c : ctx.rectangle(((x,y), (x+s//2-1, y+s-1)), c) 
+RIGHTHALFREC_DRAW_FUNCTION = lambda ctx,x,y,s,c : ctx.rectangle(((x+s//2,y), (x+s-1, y+s-1)), c) 
 CIRCLE_DRAW_FUNCTION = lambda ctx,x,y,s,c : ctx.circle((x+s//2, y+s//2), s//2, c) 
 
 TILETYPE_SHAPE_MAP = {
     'Solid': (REC_DRAW_FUNCTION, (0,0,0,255)),
-    'WoodenPlat': (HALFREC_DRAW_FUNCTION, (128,64,0,255)),
+    'WoodenPlat': (UPHALFREC_DRAW_FUNCTION, (128,64,0,255)),
     'Ladder': (REC_DRAW_FUNCTION, (214,141,64,255)),
-    #'LSpike': 4,
-    #'RSpike': 5,
-    'USpike': (HALFREC_DRAW_FUNCTION, (64,0,0,255)),
-    #'DSpike': 7,
+    'LSpike': (LEFTHALFREC_DRAW_FUNCTION, (239,79,81,255)),
+    'RSpike': (RIGHTHALFREC_DRAW_FUNCTION, (239,79,81,255)),
+    'USpike': (UPHALFREC_DRAW_FUNCTION, (239,79,81,255)),
+    'DSpike': (DOWNHALFREC_DRAW_FUNCTION, (239,79,81,255)),
     'EmptyWCrate': (REC_DRAW_FUNCTION, (160,117,48,255)),
     #'LArrowWCrate': 9,
     #'RArrowWCrate': 10,
@@ -70,7 +73,6 @@ TILETYPE_SHAPE_MAP = {
     #'BombMCrate': 19,
     'Boulder': (CIRCLE_DRAW_FUNCTION, (45,45,45,255)),
     #'Runner': 21,
-    #'Player': 22,
     'Player': (REC_DRAW_FUNCTION, (255,0,255,255)),
     'Chest': (REC_DRAW_FUNCTION, (255,255,0,255)),
     'Exit': (REC_DRAW_FUNCTION, (0,255,0,255)),
@@ -124,7 +126,7 @@ converted_filename = '.'.join(fileparts)
 TILE_SIZE = 8
 # Each level should be packed as: [width, 2 bytes][height, 2 bytes][tile_type,entity,water,padding 1,1,1,1 bytes][tile_type,entity,water,padding 1,1,1,1 bytes]...
 # Then loop the levels. Read the layerIndstances
-for level in all_levels[3:4]:
+for level in all_levels[17:18]:
     n_chests : int = 0
     # Search for __identifier for the level layout
     level_name = "" 
@@ -171,7 +173,8 @@ for level in all_levels[3:4]:
             else:
                 print(ids_tiletype_map[tile["t"]], "is not mapped");
         except Exception as e:
-            print("Error on tile", i, x, y)
+            print("Error on tile", x, y)
+            render_ctx.circle((x,y), 2,(255,0,0,255))
             print(e)
     lvl_render.show()
     #for i, water_level in enumerate(water_layout["intGridCsv"]):
@@ -192,9 +195,6 @@ for level in all_levels[3:4]:
     #        tiles_info[y*width + x][0] += spd_encoding
 
     
-    break
-
-
     #for y in range(height):
     #    for x in range(width):
     #        print(tiles_info[y*width + x], end=" ")

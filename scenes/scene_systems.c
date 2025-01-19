@@ -322,20 +322,20 @@ void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_ty
         break;
         case LADDER:
         {
-            int up_tile = tile_idx - tilemap->width;
-            if (up_tile > 0 && tilemap->tiles[up_tile].tile_type != LADDER)
-            {
-                tilemap->tiles[tile_idx].solid = ONE_WAY;
-            }
-            else
+            //int up_tile = tile_idx - tilemap->width;
+            //if (up_tile > 0 && tilemap->tiles[up_tile].tile_type != LADDER)
+            //{
+            //    tilemap->tiles[tile_idx].solid = ONE_WAY;
+            //}
+            //else
             {
                 tilemap->tiles[tile_idx].solid = NOT_SOLID;
             }
-            unsigned int down_tile = tile_idx + tilemap->width;
-            if (down_tile < tilemap->n_tiles && tilemap->tiles[down_tile].tile_type == LADDER)
-            {
-                tilemap->tiles[down_tile].solid = (tilemap->tiles[tile_idx].tile_type != LADDER)? ONE_WAY : NOT_SOLID;
-            }
+            //unsigned int down_tile = tile_idx + tilemap->width;
+            //if (down_tile < tilemap->n_tiles && tilemap->tiles[down_tile].tile_type == LADDER)
+            //{
+            //    tilemap->tiles[down_tile].solid = (tilemap->tiles[tile_idx].tile_type != LADDER)? ONE_WAY : NOT_SOLID;
+            //}
         }
         break;
         case SPIKES:

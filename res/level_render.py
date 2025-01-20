@@ -47,6 +47,7 @@ ENUMIDS_TILETYPE_MAPPING = {
 DANGER_COLOUR = (239,79,81,255)
 WCRATE_COLOUR = (160,117,48,255)
 MCRATE_COLOUR = (110,110,110,255)
+WATER_COLOUR = (0,0,110,128)
 
 REC_DRAW_FUNCTION = lambda ctx,x,y,s,c : ctx.rectangle(((x,y), (x+s-1, y+s-1)), c) 
 UPHALFREC_DRAW_FUNCTION = lambda ctx,x,y,s,c : ctx.rectangle(((x,y), (x+s-1, y+s//2-1)), c) 
@@ -203,8 +204,6 @@ for level in all_levels[13:15]:
             print("Error on tile", x, y)
             render_ctx.circle((x,y), 2,(255,0,0,255))
             print(e)
-    #for i, water_level in enumerate(water_layout["intGridCsv"]):
-    #    tiles_info[i][2] = water_level
 
     ## Subject to change
     for ent in entity_layout["entityInstances"]:
@@ -223,4 +222,10 @@ for level in all_levels[13:15]:
             render_ctx.circle((x,y), 2,(255,0,0,255))
             print(e)
 
+    for i, water_level in enumerate(water_layout["intGridCsv"]):
+        if water_level == 0:
+            continue
+        x, y = (i % width * TILE_SIZE, i // width * TILE_SIZE)
+        height = TILE_SIZE * water_level / 4
+        render_ctx.rectangle(((x,y+TILE_SIZE-height), (x+TILE_SIZE-1, y+TILE_SIZE-1)), WATER_COLOUR) 
     lvl_render.show()

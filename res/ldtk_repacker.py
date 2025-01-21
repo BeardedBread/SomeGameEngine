@@ -61,7 +61,7 @@ pprint.pprint(ids_tiletype_map)
 def get_level_order(lvl) -> int:
     order = 65535;
     for data in lvl['fieldInstances']:
-        if data["__identifier"] == "Order":
+        if data["__identifier"] == "Order" and data["realEditorValues"]:
             order = data["__value"]
     return order
 

@@ -126,7 +126,7 @@ pprint.pprint(ids_tiletype_map)
 def get_level_order(lvl) -> int:
     order = 65535;
     for data in lvl['fieldInstances']:
-        if data["__identifier"] == "Order":
+        if data["__identifier"] == "Order" and data["realEditorValues"]:
             order = data["__value"]
     return order
 
@@ -151,12 +151,24 @@ converted_filename = '.'.join(fileparts)
 # Get the tile size that fit within the dimensions
 # Error out if tile size is zero
 # Figure out the offset to center the render
+LEVELS_PER_ROW = 5
+N_ROWS = n_levels // LEVELS_PER_ROW
+if n_levels % LEVELS_PER_ROW != 0:
+    N_ROWS += 1
 
 IMG_WIDTH = 400
 IMG_HEIGHT = 400
+
+FULL_IMG_WIDTH = LEVELS_PER_ROW * IMG_WIDTH
+FULL_IMG_HEIGHT = N_ROWS * IMG_HEIGHT
 # Each level should be packed as: [width, 2 bytes][height, 2 bytes][tile_type,entity,water,padding 1,1,1,1 bytes][tile_type,entity,water,padding 1,1,1,1 bytes]...
 # Then loop the levels. Read the layerIndstances
-for level in all_levels[18:21]:
+
+lvl_render = Image.new("RGBA", (FULL_IMG_WIDTH, FULL_IMG_HEIGHT), (255,255,255,0))
+render_ctx = ImageDraw.Draw(lvl_render)
+for l, level in enumerate(all_levels):
+    lx = (l % LEVELS_PER_ROW) * IMG_WIDTH
+    ly = (l // LEVELS_PER_ROW) * IMG_HEIGHT
     n_chests : int = 0
     # Search for __identifier for the level layout
     level_name = "" 
@@ -188,15 +200,13 @@ for level in all_levels[18:21]:
     print(f"Dim.: {width}x{height}. N Tiles: {width * height}")
 
     TILE_SIZE = 400 // max(width, height)
-    TILE_SIZE = max(min(TILE_SIZE, 10),1)
+    TILE_SIZE = max(TILE_SIZE,1)
 
     # Create a W x H array of tile information
     n_tiles = width * height
 
-    lvl_render = Image.new("RGBA", (IMG_WIDTH, IMG_HEIGHT), (255,255,255,0))
-    render_ctx = ImageDraw.Draw(lvl_render)
     LVL_SIZE = (width*TILE_SIZE-1, height*TILE_SIZE-1)
-    OFFSET = ((IMG_WIDTH - LVL_SIZE[0]) // 2, (IMG_HEIGHT - LVL_SIZE[1])//2)
+    OFFSET = ((IMG_WIDTH - LVL_SIZE[0]) // 2 + lx, (IMG_HEIGHT - LVL_SIZE[1])//2 + ly)
 
     render_ctx.rectangle((OFFSET, (OFFSET[0]+width*TILE_SIZE-1, OFFSET[1] + height*TILE_SIZE-1)), (64,64,64,255)) 
     # Loop through gridTiles, get "d" as the index to fill the info
@@ -238,4 +248,6 @@ for level in all_levels[18:21]:
         x, y = (i % width * TILE_SIZE + OFFSET[0], i // width * TILE_SIZE + OFFSET[1])
         height = TILE_SIZE * water_level / 4
         render_ctx.rectangle(((x,y+TILE_SIZE-height), (x+TILE_SIZE-1, y+TILE_SIZE-1)), WATER_COLOUR) 
-    lvl_render.show()
+
+lvl_render.save("preview.png")
+lvl_render.show()

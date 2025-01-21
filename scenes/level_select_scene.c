@@ -16,7 +16,7 @@ static void level_select_render_func(Scene_t* scene)
         draw_sprite(level_select, 0, (Vector2){0,0},0, false);
         draw_sprite(level_board, 0, (Vector2){level_select->frame_size.x,0},0, false);
 
-        draw_sprite(preview, 0, (Vector2){
+        draw_sprite(preview, data->scroll_area.curr_selection, (Vector2){
             level_select->frame_size.x + (level_board->frame_size.x - preview->frame_size.x) / 2,
             (level_board->frame_size.y - preview->frame_size.y) / 2,
         },0, false);

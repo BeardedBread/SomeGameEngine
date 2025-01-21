@@ -10,10 +10,16 @@ static void level_select_render_func(Scene_t* scene)
     Sprite_t* spr = get_sprite(&scene->engine->assets, "bunny_spr1");
     Sprite_t* level_board = get_sprite(&scene->engine->assets, "lvl_board");
     Sprite_t* level_select = get_sprite(&scene->engine->assets, "lvl_select");
+    Sprite_t* preview = get_sprite(&scene->engine->assets, "lvlprvw");
     BeginTextureMode(scene->layers.render_layers[0].layer_tex);
         ClearBackground(BLANK);
         draw_sprite(level_select, 0, (Vector2){0,0},0, false);
         draw_sprite(level_board, 0, (Vector2){level_select->frame_size.x,0},0, false);
+
+        draw_sprite(preview, 0, (Vector2){
+            level_select->frame_size.x + (level_board->frame_size.x - preview->frame_size.x) / 2,
+            (level_board->frame_size.y - preview->frame_size.y) / 2,
+        },0, false);
         DrawText("Level Select", 10, 10, 40, BLACK);
         vert_scrollarea_render(&data->scroll_area);
         draw_sprite(

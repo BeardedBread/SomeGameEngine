@@ -151,10 +151,12 @@ converted_filename = '.'.join(fileparts)
 # Get the tile size that fit within the dimensions
 # Error out if tile size is zero
 # Figure out the offset to center the render
-TILE_SIZE = 8
+
+IMG_WIDTH = 400
+IMG_HEIGHT = 400
 # Each level should be packed as: [width, 2 bytes][height, 2 bytes][tile_type,entity,water,padding 1,1,1,1 bytes][tile_type,entity,water,padding 1,1,1,1 bytes]...
 # Then loop the levels. Read the layerIndstances
-for level in all_levels[13:15]:
+for level in all_levels[18:21]:
     n_chests : int = 0
     # Search for __identifier for the level layout
     level_name = "" 
@@ -184,16 +186,22 @@ for level in all_levels[13:15]:
     width = level_layout["__cWid"]
     height = level_layout["__cHei"]
     print(f"Dim.: {width}x{height}. N Tiles: {width * height}")
-    IMG_WIDTH = width * TILE_SIZE
-    IMG_HEIGHT = height * TILE_SIZE
+
+    TILE_SIZE = 400 // max(width, height)
+    TILE_SIZE = max(min(TILE_SIZE, 10),1)
+
     # Create a W x H array of tile information
     n_tiles = width * height
 
     lvl_render = Image.new("RGBA", (IMG_WIDTH, IMG_HEIGHT), (255,255,255,0))
     render_ctx = ImageDraw.Draw(lvl_render)
+    LVL_SIZE = (width*TILE_SIZE-1, height*TILE_SIZE-1)
+    OFFSET = ((IMG_WIDTH - LVL_SIZE[0]) // 2, (IMG_HEIGHT - LVL_SIZE[1])//2)
+
+    render_ctx.rectangle((OFFSET, (OFFSET[0]+width*TILE_SIZE-1, OFFSET[1] + height*TILE_SIZE-1)), (64,64,64,255)) 
     # Loop through gridTiles, get "d" as the index to fill the info
     for i, tile in enumerate(level_layout["gridTiles"]):
-        x, y= (tile["d"][0] % width * TILE_SIZE, tile["d"][0] // width * TILE_SIZE)
+        x, y= (tile["d"][0] % width * TILE_SIZE + OFFSET[0], tile["d"][0] // width * TILE_SIZE + OFFSET[1])
         try:
             if ids_tiletype_map[tile["t"]] in TILETYPE_SHAPE_MAP:
                 draw_func, colour = TILETYPE_SHAPE_MAP[ids_tiletype_map[tile["t"]]]
@@ -209,7 +217,9 @@ for level in all_levels[13:15]:
     for ent in entity_layout["entityInstances"]:
         x,y = ent["__grid"]
         x *= TILE_SIZE
+        x += OFFSET[0]
         y *= TILE_SIZE
+        y += OFFSET[1]
         ent = ent["__identifier"]
         try:
             if ent in TILETYPE_SHAPE_MAP:
@@ -225,7 +235,7 @@ for level in all_levels[13:15]:
     for i, water_level in enumerate(water_layout["intGridCsv"]):
         if water_level == 0:
             continue
-        x, y = (i % width * TILE_SIZE, i // width * TILE_SIZE)
+        x, y = (i % width * TILE_SIZE + OFFSET[0], i // width * TILE_SIZE + OFFSET[1])
         height = TILE_SIZE * water_level / 4
         render_ctx.rectangle(((x,y+TILE_SIZE-height), (x+TILE_SIZE-1, y+TILE_SIZE-1)), WATER_COLOUR) 
     lvl_render.show()

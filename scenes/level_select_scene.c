@@ -130,8 +130,7 @@ void init_level_select_scene(LevelSelectScene_t* scene)
         ClearBackground(BLANK);
         if (scene->data.level_pack != NULL)
         {
-            scene->data.scroll_area.n_items = scene->data.level_pack->n_levels;
-            //vert_scrollarea_n_items(&scene->data.scroll_area, scene->data.level_pack->n_levels);
+            vert_scrollarea_n_items(&scene->data.scroll_area, scene->data.level_pack->n_levels);
             for (unsigned int i = 0; i < scene->data.level_pack->n_levels; ++i)
             {
                 vert_scrollarea_insert_item(&scene->data.scroll_area, scene->data.level_pack->levels[i].level_name, i);

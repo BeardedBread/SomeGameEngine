@@ -25,7 +25,6 @@ typedef struct VertScrollArea {
     unsigned int item_padding;
 
     float scroll_pos;
-    float max_scroll_bounds;
     Vector2 scroll_bounds;
     
     UIComp_t scroll_bar;

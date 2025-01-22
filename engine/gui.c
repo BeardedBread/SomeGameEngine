@@ -1,6 +1,7 @@
 #include "gui.h"
 #include "raylib.h"
 #include <string.h>
+#include <stdio.h>
 
 #define RAYGUI_MAX_CONTROLS             16      // Maximum number of standard controls
 #define RAYGUI_MAX_PROPS_BASE           16      // Maximum number of standard properties
@@ -669,11 +670,14 @@ void vert_scrollarea_set_item_dims(VertScrollArea_t* scroll_area, unsigned int i
 bool vert_scrollarea_n_items(VertScrollArea_t* scroll_area, unsigned int n_items) {
     if (n_items >= scroll_area->max_items) return false;
 
-    //scroll_area->n_items = n_items;
-    //scroll_area->scroll_bounds.y = n_items * (scroll_area->item_height + scroll_area->item_padding);
-    //scroll_area->scroll_pos = 
-    //    (scroll_area->scroll_pos > scroll_area->scroll_bounds.y ) ? 
-    //    scroll_area->scroll_bounds.y : (scroll_area->scroll_pos;
+    // Due to OpenGL convention where y is -1 downwards,
+    // The scroll bar is set to decreases the scroll_pos when going down
+    // This value is used as the offset when rendering, which results in correctly
+    // give the illusion of 'scrolling down'
+    // So, adjust the minimum bound which is the height of the items that are not shown
+    scroll_area->n_items = n_items;
+    scroll_area->scroll_bounds.x =
+        (scroll_area->max_items - n_items)* (scroll_area->item_height + scroll_area->item_padding) + scroll_area->item_padding;
     return true;
 }
 

@@ -9,6 +9,7 @@ typedef struct UIComp {
     GuiState state;
     float alpha;
     bool pressed;
+    Font font;
 } UIComp_t;
 
 typedef struct VertScrollArea {
@@ -18,12 +19,15 @@ typedef struct VertScrollArea {
     RenderTexture2D canvas; // Complete canvas
     
     unsigned int n_items;
+    unsigned int max_items;
     unsigned int curr_selection;
     unsigned int item_height;
     unsigned int item_padding;
 
     float scroll_pos;
+    float max_scroll_bounds;
     Vector2 scroll_bounds;
+    
     UIComp_t scroll_bar;
 
 } VertScrollArea_t;
@@ -31,6 +35,7 @@ typedef struct VertScrollArea {
 void init_UI(void);
 void vert_scrollarea_init(VertScrollArea_t* scroll_area, Rectangle display_area, Vector2 canvas_dims);
 void vert_scrollarea_set_item_dims(VertScrollArea_t* scroll_area, unsigned int item_height, unsigned int item_padding);
+bool vert_scrollarea_n_items(VertScrollArea_t* scroll_area, unsigned int n_items);
 void vert_scrollarea_insert_item(VertScrollArea_t* scroll_area, char* str, unsigned int item_idx);
 unsigned int vert_scrollarea_set_pos(VertScrollArea_t* scroll_area, Vector2 pos);
 void vert_scrollarea_refocus(VertScrollArea_t* scroll_area);

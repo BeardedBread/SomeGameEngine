@@ -7,10 +7,10 @@
 static void level_select_render_func(Scene_t* scene)
 {
     LevelSelectSceneData_t* data = &(CONTAINER_OF(scene, LevelSelectScene_t, scene)->data);
-    Sprite_t* spr = get_sprite(&scene->engine->assets, "bunny_spr1");
     Sprite_t* level_board = get_sprite(&scene->engine->assets, "lvl_board");
     Sprite_t* level_select = get_sprite(&scene->engine->assets, "lvl_select");
     Sprite_t* preview = get_sprite(&scene->engine->assets, "lvlprvw");
+    Font* menu_font = get_font(&scene->engine->assets, "MenuFont");
     BeginTextureMode(scene->layers.render_layers[0].layer_tex);
         ClearBackground(BLANK);
         draw_sprite(level_select, 0, (Vector2){0,0},0, false);
@@ -20,13 +20,8 @@ static void level_select_render_func(Scene_t* scene)
             level_select->frame_size.x + (level_board->frame_size.x - preview->frame_size.x) / 2,
             (level_board->frame_size.y - preview->frame_size.y) / 2,
         },0, false);
-        DrawText("Level Select", 10, 10, 40, BLACK);
+        DrawTextEx(*menu_font, "Level Select", (Vector2){60, 20}, 40, 4, BLACK);
         vert_scrollarea_render(&data->scroll_area);
-        draw_sprite(
-            spr, 0, (Vector2){
-                scene->engine->intended_window_size.x / 2,
-                scene->engine->intended_window_size.y / 2,
-            }, 0, false);
     EndTextureMode();
 }
 
@@ -48,7 +43,7 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
         case ACTION_DOWN:
             if (!pressed)
             {
-                if (data->scroll_area.curr_selection < data->scroll_area.n_items - 1)
+                if (data->scroll_area.curr_selection < data->level_pack->n_levels - 1)
                 {
                     data->scroll_area.curr_selection++;
                     vert_scrollarea_refocus(&data->scroll_area);
@@ -69,7 +64,7 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
             {
                 unsigned int prev_sel = data->scroll_area.curr_selection;
                 // TODO: Add scene offset to scroll area calculation
-                if (vert_scrollarea_set_pos(&data->scroll_area, scene->mouse_pos) != data->scroll_area.n_items)
+                if (vert_scrollarea_set_pos(&data->scroll_area, scene->mouse_pos) != data->scroll_area.max_items)
                 {
                     vert_scrollarea_refocus(&data->scroll_area);
                 
@@ -107,10 +102,9 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
     }
 }
 
-#define FONT_SIZE 15
+#define FONT_SIZE 22
 #define TEXT_PADDING 3
-#define DISPLAY_AREA_HEIGHT 400
-#define SCROLL_TOTAL_HEIGHT 400
+#define SCROLL_TOTAL_HEIGHT 800
 void init_level_select_scene(LevelSelectScene_t* scene)
 {
     init_scene(&scene->scene, &level_select_do_action, 0);
@@ -124,26 +118,32 @@ void init_level_select_scene(LevelSelectScene_t* scene)
         }
     );
     scene->scene.bg_colour = BLACK;
-    vert_scrollarea_init(&scene->data.scroll_area, (Rectangle){50, 100, 150, DISPLAY_AREA_HEIGHT - 100}, (Vector2){150, SCROLL_TOTAL_HEIGHT});
+    Sprite_t* level_select = get_sprite(&scene->scene.engine->assets, "lvl_select");
+    vert_scrollarea_init(&scene->data.scroll_area, (Rectangle){50, 75, level_select->frame_size.x * 0.6, level_select->frame_size.y * 3 / 4}, (Vector2){level_select->frame_size.x * 0.6, SCROLL_TOTAL_HEIGHT});
     vert_scrollarea_set_item_dims(&scene->data.scroll_area, FONT_SIZE, TEXT_PADDING);
+    Font* menu_font = get_font(&scene->scene.engine->assets, "MenuFont");
+    if (menu_font != NULL) {
+        scene->data.scroll_area.comp.font = *menu_font; 
+    }
     char buf[32];
     ScrollAreaRenderBegin(&scene->data.scroll_area);
         ClearBackground(BLANK);
         if (scene->data.level_pack != NULL)
         {
             scene->data.scroll_area.n_items = scene->data.level_pack->n_levels;
+            //vert_scrollarea_n_items(&scene->data.scroll_area, scene->data.level_pack->n_levels);
             for (unsigned int i = 0; i < scene->data.level_pack->n_levels; ++i)
             {
                 vert_scrollarea_insert_item(&scene->data.scroll_area, scene->data.level_pack->levels[i].level_name, i);
             }
-            for (unsigned int i = scene->data.level_pack->n_levels; i < scene->data.scroll_area.n_items; ++i)
+            for (unsigned int i = scene->data.level_pack->n_levels; i < scene->data.scroll_area.max_items; ++i)
             {
                 vert_scrollarea_insert_item(&scene->data.scroll_area, "---", i);
             }
         }
         else
         {
-            for (unsigned int i = 0; i < scene->data.scroll_area.n_items; ++i)
+            for (unsigned int i = 0; i < scene->data.scroll_area.max_items; ++i)
             {
                 sprintf(buf, "Level %u", i); 
                 vert_scrollarea_insert_item(&scene->data.scroll_area, buf, i);

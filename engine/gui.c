@@ -1,4 +1,5 @@
 #include "gui.h"
+#include "raylib.h"
 #include <string.h>
 
 #define RAYGUI_MAX_CONTROLS             16      // Maximum number of standard controls
@@ -633,6 +634,7 @@ float UI_slider(const UIComp_t* comp, const char *textLeft, const char *textRigh
 
 void vert_scrollarea_init(VertScrollArea_t* scroll_area, Rectangle display_area, Vector2 canvas_dims)
 {
+    scroll_area->comp.font = GetFontDefault(); 
     scroll_area->canvas = LoadRenderTexture(canvas_dims.x, canvas_dims.y);
     scroll_area->scroll_pos = canvas_dims.y - display_area.height;
     scroll_area->scroll_bounds = (Vector2){
@@ -661,14 +663,29 @@ void vert_scrollarea_set_item_dims(VertScrollArea_t* scroll_area, unsigned int i
 {
     scroll_area->item_height = item_height;
     scroll_area->item_padding = item_padding;
-    scroll_area->n_items = (scroll_area->canvas.texture.height - scroll_area->item_padding) / (scroll_area->item_height + scroll_area->item_padding);
+    scroll_area->max_items = (scroll_area->canvas.texture.height - scroll_area->item_padding) / (scroll_area->item_height + scroll_area->item_padding);
+}
+
+bool vert_scrollarea_n_items(VertScrollArea_t* scroll_area, unsigned int n_items) {
+    if (n_items >= scroll_area->max_items) return false;
+
+    //scroll_area->n_items = n_items;
+    //scroll_area->scroll_bounds.y = n_items * (scroll_area->item_height + scroll_area->item_padding);
+    //scroll_area->scroll_pos = 
+    //    (scroll_area->scroll_pos > scroll_area->scroll_bounds.y ) ? 
+    //    scroll_area->scroll_bounds.y : (scroll_area->scroll_pos;
+    return true;
 }
 
 void vert_scrollarea_insert_item(VertScrollArea_t* scroll_area, char* str, unsigned int item_idx)
 {
-    if (item_idx >= scroll_area->n_items) return;
+    if (item_idx >= scroll_area->max_items) return;
 
-    DrawText(str, 0, scroll_area->item_padding + (scroll_area->item_height + scroll_area->item_padding) * item_idx, scroll_area->item_height, BLACK);
+    DrawTextEx(
+        scroll_area->comp.font,
+        str,
+        (Vector2){0, scroll_area->item_padding + (scroll_area->item_height + scroll_area->item_padding) * item_idx}
+        , scroll_area->item_height, 0, BLACK);
 }
 
 unsigned int vert_scrollarea_set_pos(VertScrollArea_t* scroll_area, Vector2 pos)
@@ -676,18 +693,22 @@ unsigned int vert_scrollarea_set_pos(VertScrollArea_t* scroll_area, Vector2 pos)
     float x = pos.x - scroll_area->display_area.x;
     float y = pos.y - scroll_area->display_area.y;
 
-    if (x >= scroll_area->display_area.width || x < 0) return scroll_area->n_items;
-    if (y >= scroll_area->display_area.height || y < 0) return scroll_area->n_items;
+    if (x >= scroll_area->display_area.width || x < 0) return scroll_area->max_items;
+    if (y >= scroll_area->display_area.height || y < 0) return scroll_area->max_items;
 
+    // How much have scroll down
+    float canvas_offset = (scroll_area->scroll_bounds.y - scroll_area->scroll_pos);
 
-    scroll_area->curr_selection = (y - scroll_area->item_padding + (scroll_area->scroll_bounds.y - scroll_area->scroll_pos)) / (scroll_area->item_height + scroll_area->item_padding);
+    scroll_area->curr_selection = (y + canvas_offset - scroll_area->item_padding) / (scroll_area->item_height + scroll_area->item_padding);
 
     return scroll_area->curr_selection;
 }
 
 void vert_scrollarea_refocus(VertScrollArea_t* scroll_area)
 {
-    float selection_y = scroll_area->curr_selection * (scroll_area->item_height + scroll_area->item_padding)  + scroll_area->item_padding - (scroll_area->scroll_bounds.y - scroll_area->scroll_pos);
+    float canvas_offset = (scroll_area->scroll_bounds.y - scroll_area->scroll_pos);
+    // Reverse from item selection to y in display area
+    float selection_y = scroll_area->curr_selection * (scroll_area->item_height + scroll_area->item_padding)  + scroll_area->item_padding - canvas_offset;
 
     // Auto adjust scroll based on selection
     if (selection_y < 0)
@@ -717,7 +738,9 @@ void vert_scrollarea_render(VertScrollArea_t* scroll_area)
         scroll_area->display_area.width,
         scroll_area->display_area.height
     };
-    float selection_y = scroll_area->curr_selection * (scroll_area->item_height + scroll_area->item_padding)  + scroll_area->item_padding - (scroll_area->scroll_bounds.y - scroll_area->scroll_pos);
+
+    float canvas_offset = (scroll_area->scroll_bounds.y - scroll_area->scroll_pos);
+    float selection_y = scroll_area->curr_selection * (scroll_area->item_height + scroll_area->item_padding)  + scroll_area->item_padding - canvas_offset;
 
     DrawRectangle(
         scroll_area->display_area.x,

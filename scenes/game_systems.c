@@ -878,7 +878,7 @@ void tile_collision_system(Scene_t* scene)
         if ((collide_side & (1<<2)) || (collide_side & (1<<3)))
         {
             Vector2 check_pos = p_ent->position;
-            check_pos.x += p_ctransform->velocity.x * scene->delta_time;
+            check_pos.x += (signbit(p_ctransform->velocity.x) ? -1: 1);
             if (check_collision_at(p_ent, check_pos, p_bbox->size, &tilemap))
             {
                 p_ctransform->velocity.x *= -p_ctransform->bounce_coeff;
@@ -889,7 +889,7 @@ void tile_collision_system(Scene_t* scene)
         if ((collide_side & (1<<1)) || (collide_side & (1)))
         {
             Vector2 check_pos = p_ent->position;
-            check_pos.y += p_ctransform->velocity.y * scene->delta_time;
+            check_pos.y += (signbit(p_ctransform->velocity.y) ? -1: 1);
             if (check_collision_at(p_ent, check_pos, p_bbox->size, &tilemap))
             {
                 p_ctransform->velocity.y *= -p_ctransform->bounce_coeff;

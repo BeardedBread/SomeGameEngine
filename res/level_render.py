@@ -47,9 +47,10 @@ ENUMIDS_TILETYPE_MAPPING = {
 DANGER_COLOUR = (239,79,81,255)
 WCRATE_COLOUR = (160,117,48,255)
 MCRATE_COLOUR = (110,110,110,255)
-WATER_COLOUR = (0,0,110,128)
+WATER_COLOUR = (0,0,128,64)
 
 REC_DRAW_FUNCTION = lambda ctx,x,y,s,c : ctx.rectangle(((x,y), (x+s-1, y+s-1)), c) 
+RECLINE_DRAW_FUNCTION = lambda ctx,x,y,s,c : ctx.rectangle(((x,y), (x+s-1, y+s-1)), fill=None, outline=c) 
 UPHALFREC_DRAW_FUNCTION = lambda ctx,x,y,s,c : ctx.rectangle(((x,y), (x+s-1, y+s//2-1)), c) 
 DOWNHALFREC_DRAW_FUNCTION = lambda ctx,x,y,s,c : ctx.rectangle(((x, y+s//2), (x+s-1,y+s-1)), c) 
 LEFTHALFREC_DRAW_FUNCTION = lambda ctx,x,y,s,c : ctx.rectangle(((x,y), (x+s//2-1, y+s-1)), c) 
@@ -82,7 +83,7 @@ def draw_urchin_tile(ctx, x, y, s, c):
 TILETYPE_SHAPE_MAP = {
     'Solid': (REC_DRAW_FUNCTION, (0,0,0,255)),
     'WoodenPlat': (UPHALFREC_DRAW_FUNCTION, (128,64,0,255)),
-    'Ladder': (REC_DRAW_FUNCTION, (214,141,64,255)),
+    'Ladder': (RECLINE_DRAW_FUNCTION, (214,141,64,255)),
     'LSpike': (LEFTHALFREC_DRAW_FUNCTION, DANGER_COLOUR),
     'RSpike': (RIGHTHALFREC_DRAW_FUNCTION, DANGER_COLOUR),
     'USpike': (UPHALFREC_DRAW_FUNCTION, DANGER_COLOUR),
@@ -165,7 +166,9 @@ FULL_IMG_HEIGHT = N_ROWS * IMG_HEIGHT
 # Then loop the levels. Read the layerIndstances
 
 lvl_render = Image.new("RGBA", (FULL_IMG_WIDTH, FULL_IMG_HEIGHT), (255,255,255,0))
+water_render = Image.new("RGBA", (FULL_IMG_WIDTH, FULL_IMG_HEIGHT), (255,255,255,0))
 render_ctx = ImageDraw.Draw(lvl_render)
+water_render_ctx = ImageDraw.Draw(water_render)
 for l, level in enumerate(all_levels):
     lx = (l % LEVELS_PER_ROW) * IMG_WIDTH
     ly = (l // LEVELS_PER_ROW) * IMG_HEIGHT
@@ -247,7 +250,8 @@ for l, level in enumerate(all_levels):
             continue
         x, y = (i % width * TILE_SIZE + OFFSET[0], i // width * TILE_SIZE + OFFSET[1])
         height = TILE_SIZE * water_level / 4
-        render_ctx.rectangle(((x,y+TILE_SIZE-height), (x+TILE_SIZE-1, y+TILE_SIZE-1)), WATER_COLOUR) 
+        water_render_ctx.rectangle(((x,y+TILE_SIZE-height), (x+TILE_SIZE-1, y+TILE_SIZE-1)), WATER_COLOUR) 
 
+lvl_render = Image.alpha_composite(lvl_render, water_render)
 lvl_render.save("preview.png")
 lvl_render.show()

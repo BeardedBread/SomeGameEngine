@@ -678,6 +678,9 @@ bool vert_scrollarea_n_items(VertScrollArea_t* scroll_area, unsigned int n_items
     scroll_area->n_items = n_items;
     scroll_area->scroll_bounds.x =
         (scroll_area->max_items - n_items)* (scroll_area->item_height + scroll_area->item_padding) + scroll_area->item_padding;
+    if (scroll_area->scroll_bounds.x > scroll_area->scroll_bounds.y) {
+        scroll_area->scroll_bounds.x = scroll_area->scroll_bounds.y;
+    }
     return true;
 }
 

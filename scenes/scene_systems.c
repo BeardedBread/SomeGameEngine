@@ -212,6 +212,10 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
                     Entity_t* ent = create_player(&scene->scene.ent_manager);
                     ent->position.x = (i % scene->data.tilemap.width) * scene->data.tilemap.tile_size;
                     ent->position.y = (i / scene->data.tilemap.width) * scene->data.tilemap.tile_size;
+                    scene->data.camera.target_pos.x = ent->position.x;
+                    scene->data.camera.target_pos.y = ent->position.y;
+                    scene->data.camera.cam.target.x = ent->position.x;
+                    scene->data.camera.cam.target.y = ent->position.y;
                 }
                 break;
                 case 23:

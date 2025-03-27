@@ -67,9 +67,15 @@ static void level_scene_render_func(Scene_t* scene)
         DrawText(buffer, gui_x, data->game_rec.height - 12, 12, WHITE);
 
         DrawRectangle(0, 0, data->game_rec.width, 32, (Color){0,0,0,128});
+        DrawText("Z", 300, 5, 24, RED);
+        if (data->camera.mode == CAMERA_RANGED_MOVEMENT)
+        {
+            DrawText("Eyes", 320, 5, 24, RED);
+        }
+        DrawText(data->level_pack->levels[data->current_level].level_name, 5, 5, 24, WHITE);
         sprintf(buffer, "Chests: %u / %u", data->coins.current, data->coins.total);
         gui_x = data->game_rec.width - MeasureText(buffer, 24) - 5;
-        DrawText(buffer, gui_x, 0, 24, RED);
+        DrawText(buffer, gui_x, 5, 24, RED);
     EndTextureMode();
 }
 

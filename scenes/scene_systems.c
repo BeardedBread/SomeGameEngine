@@ -1,3 +1,4 @@
+#include "collisions.h"
 #include "scene_impl.h"
 #include "water_flow.h"
 #include "ent_impl.h"
@@ -355,7 +356,7 @@ void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_ty
         unsigned int down_tile = tile_idx + tilemap->width;
         if (down_tile < tilemap->n_tiles && tilemap->tiles[down_tile].tile_type == LADDER)
         {
-            tilemap->tiles[down_tile].solid = ONE_WAY;
+            tilemap->tiles[down_tile].solid = NOT_SOLID;
         }
 
     }

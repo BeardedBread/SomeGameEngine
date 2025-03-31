@@ -286,6 +286,7 @@ void check_player_dead_system(Scene_t* scene)
         if (!p_player->m_alive)
         {
             Entity_t* ent = create_dead_player(&scene->ent_manager);
+            play_sfx(scene->engine, PLAYER_DEAD_SFX);
             if (ent != NULL)
             {
                 ent->position = p_player->position;
@@ -2045,6 +2046,10 @@ void airtimer_update_system(Scene_t* scene)
                     };
                     play_particle_emitter(&scene->part_sys, &emitter);
                     play_sfx(scene->engine, BUBBLE_SFX);
+                    if (p_air->curr_count < 2)
+                    {
+                        play_sfx(scene->engine, PLAYER_DROWNING_SFX);
+                    }
                 }
                 else
                 {
@@ -2105,6 +2110,9 @@ void sprite_animation_system(Scene_t* scene)
                 {
                     p_cspr->current_frame++;
                     p_cspr->current_frame %= spr.sprite->frame_count;
+                }
+                if (p_cspr->sfx_func != NULL) {
+                    p_cspr->sfx_func(scene->engine, p_ent);
                 }
             }
         }

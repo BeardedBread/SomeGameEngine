@@ -1,4 +1,5 @@
 #include "EC.h"
+#include "engine.h"
 #include "render_queue.h"
 #include "particle_sys.h" // includes assets
 
@@ -136,6 +137,7 @@ typedef struct _CWaterRunner {
 }CWaterRunner_t;
 
 typedef unsigned int (*sprite_transition_func_t)(Entity_t *ent); // Transition requires knowledge of the entity
+typedef void (*sprite_sfx_func_t)(GameEngine_t*, Entity_t *ent); // Transition requires knowledge of the entity
 
 typedef struct _SpriteRenderInfo
 {
@@ -149,6 +151,7 @@ typedef struct _CSprite_t {
     RenderInfoNode node;
     SpriteRenderInfo_t* sprites;
     sprite_transition_func_t transition_func;
+    sprite_sfx_func_t sfx_func;
     unsigned int current_idx;
     int current_frame;
     float fractional;

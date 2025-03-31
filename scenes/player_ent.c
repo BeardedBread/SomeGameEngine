@@ -1,3 +1,4 @@
+#include "engine.h"
 #include "ent_impl.h"
 #include "constants.h"
 #include <stdio.h>
@@ -67,6 +68,20 @@ static unsigned int player_sprite_transition_func(Entity_t* ent)
     return (p_ctrans->velocity.y < 0) ? SPR_PLAYER_JUMP : SPR_PLAYER_FALL;
 }
 
+static void player_sfx_func(GameEngine_t* engine, Entity_t* ent) {
+    CSprite_t* p_spr = get_component(ent, CSPRITE_T);
+    if (p_spr->current_idx == SPR_PLAYER_RUN) {
+        if (p_spr->current_frame % 3 == 0) {
+            play_sfx_pitched(engine, PLAYER_STEP_SFX, p_spr->current_frame == 0?1.0f : 0.75f );
+        }
+    }
+    if (p_spr->current_idx == SPR_PLAYER_CRMOVE) {
+        if (p_spr->current_frame % 2 == 0) {
+            play_sfx(engine, PLAYER_STEP_SFX);
+        }
+    }
+}
+
 Entity_t* create_player(EntityManager_t* ent_manager)
 {
     Entity_t* p_ent = add_entity(ent_manager, PLAYER_ENT_TAG);
@@ -116,6 +131,7 @@ Entity_t* create_player(EntityManager_t* ent_manager)
     CSprite_t* p_cspr = add_component(p_ent, CSPRITE_T);
     p_cspr->sprites = player_sprite_map;
     p_cspr->transition_func = &player_sprite_transition_func;
+    p_cspr->sfx_func = &player_sfx_func;
     p_cspr->node.colour = WHITE;
     p_cspr->node.scale = (Vector2){1, 1};
     p_cspr->depth = 1;

@@ -118,7 +118,7 @@ void play_sfx_pitched(GameEngine_t* engine, unsigned int tag_idx, float pitch)
         //if (sfx->snd != NULL)
         {
             PlaySound(*sfx->snd);
-            sfx->plays++;
+            //sfx->plays++;
         }
         //SetSoundPitch(*sfx->snd, 0.0f);
     }

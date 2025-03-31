@@ -41,6 +41,9 @@ int main(int argc, char** argv)
     load_sfx(&engine, "snd_wdrop", WATER_IN_SFX);
     load_sfx(&engine, "snd_bland", BOULDER_LAND_SFX);
     load_sfx(&engine, "snd_bubble", BUBBLE_SFX);
+    load_sfx(&engine, "snd_step", PLAYER_STEP_SFX);
+    load_sfx(&engine, "snd_dead", PLAYER_DEAD_SFX);
+    load_sfx(&engine, "snd_drwg", PLAYER_DROWNING_SFX);
     load_sfx(&engine, "snd_mdestroy", METAL_DESTROY_SFX);
     load_sfx(&engine, "snd_wdestroy", WOOD_DESTROY_SFX);
     load_sfx(&engine, "snd_cland", WOOD_LAND_SFX);

@@ -1710,13 +1710,15 @@ void hitbox_update_system(Scene_t* scene)
                                     {
                                         if (p_ent->position.y + p_bbox->size.y <= p_other_ent->position.y)
                                         {
+                                            CJump_t * p_cjump = get_component(p_ent, CJUMP_COMP_T);
+                                            // Don't allow the usual jump interaction with crate jump
+                                            p_cjump->short_hop = true;
+                                            p_cjump->jumped = false;
+
                                             p_ctransform->velocity.y = -400;
                                             if (p_pstate->jump_pressed)
                                             {
                                                 p_ctransform->velocity.y = -600;
-                                                CJump_t * p_cjump = get_component(p_ent, CJUMP_COMP_T);
-                                                p_cjump->short_hop = false;
-                                                p_cjump->jumped = true;
                                             }
                                             if (p_ent->m_tag == PLAYER_ENT_TAG)
                                             {

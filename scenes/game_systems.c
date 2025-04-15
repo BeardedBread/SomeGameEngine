@@ -1408,6 +1408,10 @@ void player_ground_air_transition_system(Scene_t* scene)
         // Handle Ground<->Air Transition
         bool in_water = (p_mstate->water_state & 1);
         bool jump_recover_cond = (p_mstate->ground_state & 1 || in_water || p_pstate->ladder_state);
+
+        // There is this odd state that can happen, so deal with it
+        if(!p_cjump->jump_released && !p_pstate->jump_pressed) p_cjump->jump_released = true;
+
         // Landing or in water
         if (p_mstate->water_state == 0b10 || p_mstate->ground_state == 0b10)
         {
@@ -1418,7 +1422,6 @@ void player_ground_air_transition_system(Scene_t* scene)
             // Recover jumps
             p_cjump->jumps = p_cjump->max_jumps;
             p_cjump->jumped = false;
-            if(!p_cjump->jump_released && !p_pstate->jump_pressed) p_cjump->jump_released = true;
             p_cjump->short_hop = false;
             p_cjump->jump_ready = true;
             p_cjump->coyote_timer = 0;
@@ -1714,6 +1717,8 @@ void hitbox_update_system(Scene_t* scene)
                                             // Don't allow the usual jump interaction with crate jump
                                             p_cjump->short_hop = true;
                                             p_cjump->jumped = false;
+                                            p_cjump->jump_released = false;
+                                            p_pstate->jump_pressed = true;
 
                                             p_ctransform->velocity.y = -400;
                                             if (p_pstate->jump_pressed)

@@ -343,32 +343,32 @@ void player_movement_input_system(Scene_t* scene)
                         p_player->position.y--;
                     }
                 }
-                else if (p_pstate->player_dir.y > 0)
-                {
-                    unsigned int tile_idx;
+                //else if (p_pstate->player_dir.y > 0)
+                //{
+                //    unsigned int tile_idx;
 
-                    if (p_mstate->ground_state & 1)
-                    {
-                        tile_idx = get_tile_idx(
-                            p_player->position.x + p_bbox->half_size.x,
-                            p_player->position.y + p_bbox->size.y,
-                            data->tilemap
-                        );
-                    }
-                    else
-                    {
-                        tile_idx = get_tile_idx(
-                            p_player->position.x + p_bbox->half_size.x,
-                            p_player->position.y + p_bbox->half_size.y,
-                            data->tilemap
-                        );
-                    }
-                    if (tile_idx < tilemap.n_tiles && tilemap.tiles[tile_idx].tile_type == LADDER)
-                    {
-                        p_pstate->ladder_state = true;
-                        p_player->position.y++;
-                    }
-                }
+                //    if (p_mstate->ground_state & 1)
+                //    {
+                //        tile_idx = get_tile_idx(
+                //            p_player->position.x + p_bbox->half_size.x,
+                //            p_player->position.y + p_bbox->size.y,
+                //            data->tilemap
+                //        );
+                //    }
+                //    else
+                //    {
+                //        tile_idx = get_tile_idx(
+                //            p_player->position.x + p_bbox->half_size.x,
+                //            p_player->position.y + p_bbox->half_size.y,
+                //            data->tilemap
+                //        );
+                //    }
+                //    if (tile_idx < tilemap.n_tiles && tilemap.tiles[tile_idx].tile_type == LADDER)
+                //    {
+                //        p_pstate->ladder_state = true;
+                //        p_player->position.y++;
+                //    }
+                //}
             }
         }
         else

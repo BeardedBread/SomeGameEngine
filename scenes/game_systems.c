@@ -1718,7 +1718,7 @@ void hitbox_update_system(Scene_t* scene)
                                             p_cjump->short_hop = true;
                                             p_cjump->jumped = false;
                                             p_cjump->jump_released = false;
-                                            p_pstate->jump_pressed = true;
+                                            //p_pstate->jump_pressed = true;
 
                                             p_ctransform->velocity.y = -400;
                                             if (p_pstate->jump_pressed)

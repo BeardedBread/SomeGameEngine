@@ -1752,10 +1752,14 @@ void hitbox_update_system(Scene_t* scene)
                                     {
                                         remove_component(p_other_ent, CHURTBOX_T);
                                         CLifeTimer_t* p_clifetimer = add_component(p_other_ent, CLIFETIMER_T);
-                                        if (p_other_ent->m_tag == CRATES_ENT_TAG
-                                            && (p_ent->m_tag == ARROW_ENT_TAG || p_ent->m_tag == DESTRUCTABLE_ENT_TAG))
+                                        if (p_other_ent->m_tag == CRATES_ENT_TAG)
                                         {
-                                            p_clifetimer->life_time = 0.1f;
+                                            if (p_ent->m_tag == ARROW_ENT_TAG) {
+                                                p_clifetimer->life_time = 0.15f;
+                                            }
+                                            else if (p_ent->m_tag == DESTRUCTABLE_ENT_TAG) {
+                                                p_clifetimer->life_time = 0.12f;
+                                            }
                                         }
                                         else
                                         {

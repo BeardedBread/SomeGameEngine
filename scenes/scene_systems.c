@@ -411,6 +411,7 @@ void change_a_tile(TileGrid_t* tilemap, unsigned int tile_idx, TileType_t new_ty
     tilemap->tiles[tile_idx].moveable = (
         tilemap->tiles[tile_idx].tile_type == EMPTY_TILE
         || tilemap->tiles[tile_idx].tile_type == SPIKES
+        || tilemap->tiles[tile_idx].tile_type == LADDER
     );
     tilemap->tiles[tile_idx].def = (tilemap->tiles[tile_idx].tile_type == SOLID_TILE) ? 5: 2;
 

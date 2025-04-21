@@ -816,6 +816,8 @@ void tile_collision_system(Scene_t* scene)
             for (unsigned int tile_x = tile_x1; tile_x <= tile_x2; tile_x++)
             {
                 unsigned int tile_idx = tile_y * tilemap.width + tile_x;
+
+                // Tilemap collision check
                 if(tilemap.tiles[tile_idx].tile_type != EMPTY_TILE)
                 {
                     Vector2 other;
@@ -844,7 +846,7 @@ void tile_collision_system(Scene_t* scene)
                     );
 
                 }
-                else
+                // Entity collision check
                 {
                     unsigned int other_ent_idx;
                     Entity_t* p_other_ent;
@@ -1246,7 +1248,7 @@ void player_pushing_system(Scene_t* scene)
         unsigned int tile_x = (point_to_check.x) / TILE_SIZE;
         unsigned int tile_y = (point_to_check.y) / TILE_SIZE;
         unsigned int tile_idx = tile_y * tilemap.width + tile_x;
-        if(tilemap.tiles[tile_idx].tile_type != EMPTY_TILE) continue;
+        if(!tilemap.tiles[tile_idx].moveable) continue;
 
         Entity_t* p_other_ent;
         sc_map_foreach_value(&tilemap.tiles[tile_idx].entities_set, p_other_ent)

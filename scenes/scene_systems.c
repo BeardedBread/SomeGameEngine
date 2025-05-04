@@ -160,6 +160,10 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
     // Two pass, because some tile depends on the solidity of the tiles
     for (size_t i = 0; i < scene->data.tilemap.n_tiles;i++)
     {
+        if (lvl_map.tiles[i].tile_type == SOLID_TILE)
+        {
+            change_a_tile(&scene->data.tilemap, i, SOLID_TILE);
+        }
         if (lvl_map.tiles[i].tile_type >= 8 && lvl_map.tiles[i].tile_type < 20)
         {
             uint32_t tmp_idx = lvl_map.tiles[i].tile_type - 8;

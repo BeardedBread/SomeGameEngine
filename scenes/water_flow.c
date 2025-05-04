@@ -289,7 +289,7 @@ void update_water_runner_system(Scene_t* scene)
             break;
             case SCANLINE_FILL:
             {
-                const float FILL_RATE = 1.0f/20;
+                const float FILL_RATE = 1.0f/22;
                 p_crunner->fractional += scene->delta_time;
                 if (p_crunner->fractional < FILL_RATE) break;
 

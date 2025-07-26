@@ -431,7 +431,7 @@ void player_movement_input_system(Scene_t* scene)
         {
                 // Although this can be achieved via higher friction, i'll explain away as the player is not
                 // good with swimming, resulting in lower movement acceleration
-            p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL / (1.0f + 0.12f * p_mstate->water_overlap));
+            p_ctransform->accel = Vector2Scale(Vector2Normalize(p_pstate->player_dir), MOVE_ACCEL / (1.0f + 0.05f * p_mstate->water_overlap));
 
             if (p_pstate->is_crouch & 1)
             {
@@ -1760,7 +1760,7 @@ void hitbox_update_system(Scene_t* scene)
                                                 p_clifetimer->life_time = 0.15f;
                                             }
                                             else if (p_ent->m_tag == DESTRUCTABLE_ENT_TAG) {
-                                                p_clifetimer->life_time = 0.12f;
+                                                p_clifetimer->life_time = 0.11f;
                                             }
                                         }
                                         else

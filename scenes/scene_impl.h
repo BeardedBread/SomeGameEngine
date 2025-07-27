@@ -43,6 +43,8 @@ typedef struct LevelCamera {
     float c; // damping factor
     float k; // spring constant
     float range_limit;
+    int offset_dir;
+    float delay;
 }LevelCamera_t;
 
 typedef enum LevelSceneState {

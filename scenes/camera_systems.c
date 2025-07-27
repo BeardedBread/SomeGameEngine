@@ -20,7 +20,18 @@ void camera_update_system(Scene_t* scene)
             target_vel = p_ctransform->velocity;
             CMovementState_t* p_movement = get_component(p_player, CMOVEMENTSTATE_T);
             CPlayerState_t* p_pstate = get_component(p_player, CPLAYERSTATE_T);
-            data->camera.target_pos.x += (p_movement->x_dir == 1) ? width/6: -width/6;
+            if (data->camera.offset_dir != p_movement->x_dir) {
+                data->camera.delay += scene->delta_time;
+                if (data->camera.delay >= 0.25f) {
+                    data->camera.delay = 0.0f;
+                    data->camera.offset_dir = p_movement->x_dir;
+                }
+            }
+            else 
+            {
+                data->camera.delay = 0.0f;
+            }
+            data->camera.target_pos.x += width * 1.0f * data->camera.offset_dir / 6;
 
             if (p_movement->ground_state == 0b01
                 || (p_movement->water_state & 1)
@@ -32,7 +43,8 @@ void camera_update_system(Scene_t* scene)
             if (p_player->position.y >= data->camera.base_y)
             {
                 data->camera.target_pos.y = p_player->position.y;
-                data->camera.target_pos.y += p_ctransform->velocity.y * 0.2;
+                data->camera.target_pos.y += 
+                    (p_ctransform->velocity.y > 0) ? p_ctransform->velocity.y * 0.2 : 0;
             }
         }
         data->camera.target_pos.x = Clamp(data->camera.target_pos.x, data->game_rec.width / 2,

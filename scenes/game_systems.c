@@ -203,6 +203,7 @@ static void destroy_entity(Scene_t* scene, TileGrid_t* tilemap, Entity_t* p_ent)
             .emitter_update_func = NULL,
         };
         play_particle_emitter(&scene->part_sys, &emitter);
+        play_sfx(scene->engine, BOULDER_DESTROY_SFX);
     }
     else if (p_ent->m_tag == CRATES_ENT_TAG)
     {

@@ -45,9 +45,13 @@ int main(void)
     load_sfx(&engine, "snd_bubble", BUBBLE_SFX);
     load_sfx(&engine, "snd_mdestroy", METAL_DESTROY_SFX);
     load_sfx(&engine, "snd_wdestroy", WOOD_DESTROY_SFX);
+    load_sfx(&engine, "snd_bdestroy", BOULDER_DESTROY_SFX);
     load_sfx(&engine, "snd_cland", WOOD_LAND_SFX);
     load_sfx(&engine, "snd_explsn", EXPLOSION_SFX);
     load_sfx(&engine, "snd_coin", COIN_SFX);
+    load_sfx(&engine, "snd_step", PLAYER_STEP_SFX);
+    load_sfx(&engine, "snd_dead", PLAYER_DEAD_SFX);
+    load_sfx(&engine, "snd_drwg", PLAYER_DROWNING_SFX);
     load_sfx(&engine, "snd_arrhit", ARROW_DESTROY_SFX);
     load_sfx(&engine, "snd_launch", ARROW_RELEASE_SFX);
     load_sfx(&engine, "snd_launch", BOMB_RELEASE_SFX);

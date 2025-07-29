@@ -242,7 +242,6 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
                     }
                 }
                 break;
-   
                 default:
                 break;
             }
@@ -288,6 +287,7 @@ bool load_level_tilemap(LevelScene_t* scene, unsigned int level_num)
         }
     }
 
+    scene->data.camera.mode = CAMERA_FOLLOW_PLAYER;
     return true;
 }
 

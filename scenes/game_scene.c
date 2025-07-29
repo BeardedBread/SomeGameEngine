@@ -17,6 +17,7 @@ static RenderInfoNode all_tile_rendernodes[MAX_N_TILES] = {0};
 #define CONTROL_LAYER 1
 static void level_scene_render_func(Scene_t* scene)
 {
+    Font* menu_font = get_font(&scene->engine->assets, "MenuFont");
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);
 
     static char buffer[512];
@@ -60,6 +61,10 @@ static void level_scene_render_func(Scene_t* scene)
                 //DrawCircleV(air_pos, 16, BLUE);
                 air_pos.x -= 32;
             }
+        }
+        if (sc_map_size_64v(&scene->ent_manager.entities_map[PLAYER_ENT_TAG]) == 0)
+        {
+            DrawTextEx(*menu_font, "Press R to Try Again", (Vector2){32, data->game_rec.height/2 - 64}, 64, 4, WHITE);
         }
         // For DEBUG
         int gui_x = 5;
@@ -156,6 +161,7 @@ static void level_do_action(Scene_t* scene, ActionType_t action, bool pressed)
 static void render_regular_game_scene(Scene_t* scene)
 {
     TracyCZoneN(ctx, "GameRender", true)
+    update_entity_manager(&scene->ent_manager);
     // This function will render the game scene outside of the intended draw function
     // Just for clarity and separation of logic
     LevelSceneData_t* data = &(CONTAINER_OF(scene, LevelScene_t, scene)->data);

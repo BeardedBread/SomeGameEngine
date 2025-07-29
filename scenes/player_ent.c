@@ -80,6 +80,11 @@ static void player_sfx_func(GameEngine_t* engine, Entity_t* ent) {
             play_sfx(engine, PLAYER_STEP_SFX);
         }
     }
+
+    CTransform_t* p_ct = get_component(ent, CTRANSFORM_COMP_T);
+    if (p_spr->current_idx == SPR_PLAYER_LADDER && Vector2LengthSqr(p_ct->velocity) > 0.1) {
+        play_sfx_pitched(engine, PLAYER_CLIMB_SFX, p_spr->current_frame % 2 == 0 ? 1.0f : 0.75f );
+    }
 }
 
 Entity_t* create_player(EntityManager_t* ent_manager)

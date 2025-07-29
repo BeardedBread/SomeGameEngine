@@ -52,6 +52,7 @@ int main(void)
     load_sfx(&engine, "snd_step", PLAYER_STEP_SFX);
     load_sfx(&engine, "snd_dead", PLAYER_DEAD_SFX);
     load_sfx(&engine, "snd_drwg", PLAYER_DROWNING_SFX);
+    load_sfx(&engine, "snd_climb", PLAYER_CLIMB_SFX);
     load_sfx(&engine, "snd_arrhit", ARROW_DESTROY_SFX);
     load_sfx(&engine, "snd_launch", ARROW_RELEASE_SFX);
     load_sfx(&engine, "snd_launch", BOMB_RELEASE_SFX);
@@ -113,7 +114,6 @@ int main(void)
         float delta_time = fminf(frame_time, DT);
 
         update_scene(curr_scene, delta_time);
-        update_entity_manager(&curr_scene->ent_manager);
         // This is needed to advance time delta
         render_scene(curr_scene);
         update_sfx_list(&engine);

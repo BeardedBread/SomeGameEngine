@@ -135,6 +135,14 @@ static void level_preview_render_func(Scene_t* scene)
                     case 20:
                         DrawCircle(pos_x + tile_halfsize, pos_y + tile_halfsize, tile_halfsize, (Color){12,12,12,255});
                     break;
+                    case 21:
+                    DrawTriangle(
+                        (Vector2){pos_x,pos_y},
+                        (Vector2){pos_x+tile_halfsize,pos_y+tile_size},
+                        (Vector2){pos_x+tile_size,pos_y},
+                        (Color){0,0,128,255}
+                    );
+                    break;
                     case 22:
                         DrawRectangle(pos_x, pos_y, tile_size, tile_size, (Color){255,0,255,255});
                     break;
@@ -148,6 +156,10 @@ static void level_preview_render_func(Scene_t* scene)
                         DrawCircle(pos_x + tile_halfsize, pos_y + tile_halfsize, tile_halfsize-1, danger_col);
                     break;
                 }
+            }
+            if (level.tiles[i].water > 0 && level.tiles[i].water < 5) {
+                uint32_t height = tile_size * level.tiles[i].water / 4;
+                DrawRectangle(pos_x, pos_y+tile_size - height, tile_size, height, (Color){0,0,255,64});
             }
         }
     EndTextureMode();

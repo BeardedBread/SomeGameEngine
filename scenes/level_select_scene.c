@@ -4,25 +4,154 @@
 #include "raymath.h"
 #include <stdio.h>
 
+#define LEVEL_PREVIEW_SIZE 400
 static void level_select_render_func(Scene_t* scene)
 {
     LevelSelectSceneData_t* data = &(CONTAINER_OF(scene, LevelSelectScene_t, scene)->data);
     Sprite_t* level_board = get_sprite(&scene->engine->assets, "lvl_board");
     Sprite_t* level_select = get_sprite(&scene->engine->assets, "lvl_select");
-    Sprite_t* preview = get_sprite(&scene->engine->assets, "lvlprvw");
+    //Sprite_t* preview = get_sprite(&scene->engine->assets, "lvlprvw");
     Font* menu_font = get_font(&scene->engine->assets, "MenuFont");
     BeginTextureMode(scene->layers.render_layers[0].layer_tex);
         ClearBackground(BLANK);
         draw_sprite(level_select, 0, (Vector2){0,0},0, false);
         draw_sprite(level_board, 0, (Vector2){level_select->frame_size.x,0},0, false);
 
-        draw_sprite(preview, data->scroll_area.curr_selection, (Vector2){
-            level_select->frame_size.x + (level_board->frame_size.x - preview->frame_size.x) / 2,
-            (level_board->frame_size.y - preview->frame_size.y) / 2,
-        },0, false);
+        Rectangle draw_rec = {0,0,LEVEL_PREVIEW_SIZE,LEVEL_PREVIEW_SIZE * -1};
+        Vector2 draw_pos = {
+            level_select->frame_size.x + (level_board->frame_size.x - LEVEL_PREVIEW_SIZE) / 2,
+            (level_board->frame_size.y - LEVEL_PREVIEW_SIZE) / 2
+        };
+        DrawTextureRec(
+            data->preview.texture,
+            draw_rec,
+            draw_pos,
+            WHITE
+        );
+
         DrawTextEx(*menu_font, "Level Select", (Vector2){60, 20}, 40, 4, BLACK);
         vert_scrollarea_render(&data->scroll_area);
     EndTextureMode();
+}
+
+static void level_preview_render_func(Scene_t* scene)
+{
+    LevelSelectSceneData_t* data = &(CONTAINER_OF(scene, LevelSelectScene_t, scene)->data);
+
+    if (!data->update_preview) return;
+
+    LevelMap_t level = data->level_pack->levels[data->scroll_area.curr_selection];
+
+    const uint32_t n_tiles = level.width * level.height;
+    uint16_t max_dim = (level.width > level.height ? level.width : level.height);
+    max_dim = (max_dim == 0)? 1: max_dim;
+    uint32_t tile_size = LEVEL_PREVIEW_SIZE / max_dim;
+    uint32_t tile_halfsize = tile_size >> 1;
+    tile_halfsize = (tile_halfsize == 0)? 1 : tile_halfsize;
+
+    const uint32_t lvl_width = level.width*tile_size-1;
+    const uint32_t lvl_height = level.height*tile_size-1;
+
+    const uint32_t x_offset = (LEVEL_PREVIEW_SIZE - lvl_width) / 2;
+    const uint32_t y_offset = (LEVEL_PREVIEW_SIZE - lvl_height) / 2;
+    const Color danger_col = {239,79,81,255};
+    BeginTextureMode(data->preview);
+        ClearBackground((Color){255,255,255,0});
+        DrawRectangle(
+            x_offset, y_offset, lvl_width, lvl_height,
+            (Color){64,64,64,255}
+        );
+        for (uint32_t i = 0; i < n_tiles; ++i)
+        {
+            uint32_t pos_x = tile_size * (i % level.width) + x_offset;
+            uint32_t pos_y = tile_size * (i / level.width) + y_offset;
+            if (level.tiles[i].tile_type >= 8 && level.tiles[i].tile_type < 20)
+            {
+                uint32_t tmp_idx = level.tiles[i].tile_type - 8;
+                uint32_t item_type = tmp_idx % 6;
+                Color col = (tmp_idx > 5)? (Color){110,110,110,255} : (Color){160,117,48,255};
+                DrawRectangle(pos_x, pos_y, tile_size, tile_size, col);
+                switch (item_type)
+                {
+                    case 1:
+                        DrawLine(pos_x, pos_y + tile_halfsize, pos_x + tile_halfsize, pos_y + tile_halfsize, danger_col);
+                    break;
+                    case 2:
+                        DrawLine(pos_x + tile_halfsize, pos_y + tile_halfsize, pos_x + tile_size, pos_y + tile_halfsize, danger_col);
+                    break;
+                    case 3:
+                        DrawLine(pos_x + tile_halfsize, pos_y, pos_x + tile_halfsize, pos_y + tile_halfsize, danger_col);
+                    break;
+                    case 4:
+                        DrawLine(pos_x + tile_halfsize, pos_y + tile_halfsize, pos_x + tile_halfsize, pos_y + tile_size, danger_col);
+                    break;
+                    case 5:
+                        DrawLine(pos_x, pos_y, pos_x + tile_size, pos_y + tile_size, danger_col);
+                        DrawLine(pos_x, pos_y + tile_size, pos_x + tile_size, pos_y, danger_col);
+                    break;
+                }
+                DrawRectangleLines(pos_x, pos_y, tile_size, tile_size, (Color){0,0,0,64});
+            }
+            else
+            {
+
+                switch(level.tiles[i].tile_type) {
+                    case SOLID_TILE:
+                        DrawRectangle(pos_x, pos_y, tile_size, tile_size, BLACK);
+                    break;
+                    case ONEWAY_TILE:
+                        DrawRectangle(pos_x, pos_y, tile_size, tile_halfsize, (Color){128,64,0,255});
+                    break;
+                    case LADDER:
+                        DrawRectangleLines(pos_x, pos_y, tile_size, tile_size, (Color){214,141,64,255});
+                    break;
+                    case 4:
+                    case 5:
+                    case 6:
+                    case 7:
+                        // Copied from level generation
+                        // Priority: Down, Up, Left, Right
+                        if (i + level.width < n_tiles && level.tiles[i + level.width].tile_type == SOLID_TILE)
+                        {
+                            DrawRectangle(pos_x, pos_y + tile_halfsize , tile_size, tile_halfsize, danger_col);
+                        }
+                        else if (i >= level.width && level.tiles[i - level.width].tile_type == SOLID_TILE)
+                        {
+                            DrawRectangle(pos_x, pos_y, tile_size, tile_halfsize, danger_col);
+                        }
+                        else if (i % level.width != 0 && level.tiles[i - 1].tile_type == SOLID_TILE)
+                        {
+                            DrawRectangle(pos_x, pos_y, tile_halfsize, tile_size, danger_col);
+                        }
+                        else if ((i + 1) % level.width != 0 && level.tiles[i + 1].tile_type == SOLID_TILE)
+                        {
+                            DrawRectangle(pos_x + tile_halfsize, pos_y, tile_halfsize, tile_size, danger_col);
+                        }
+                        else
+                        {
+                            DrawRectangle(pos_x, pos_y + tile_halfsize , tile_size, tile_halfsize, danger_col);
+                        }
+                    break;
+                    case 20:
+                        DrawCircle(pos_x + tile_halfsize, pos_y + tile_halfsize, tile_halfsize, (Color){12,12,12,255});
+                    break;
+                    case 22:
+                        DrawRectangle(pos_x, pos_y, tile_size, tile_size, (Color){255,0,255,255});
+                    break;
+                    case 23:
+                        DrawRectangle(pos_x, pos_y, tile_size, tile_size, (Color){255,255,0,255});
+                    break;
+                    case 24:
+                        DrawRectangle(pos_x, pos_y, tile_size, tile_size, (Color){0,255,0,255});
+                    break;
+                    case 25:
+                        DrawCircle(pos_x + tile_halfsize, pos_y + tile_halfsize, tile_halfsize-1, danger_col);
+                    break;
+                }
+            }
+        }
+    EndTextureMode();
+    data->update_preview = false;
 }
 
 static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pressed)
@@ -37,6 +166,7 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
                 {
                     data->scroll_area.curr_selection--;
                     vert_scrollarea_refocus(&data->scroll_area);
+                    data->update_preview = true;
                 }
             }
         break;
@@ -47,6 +177,7 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
                 {
                     data->scroll_area.curr_selection++;
                     vert_scrollarea_refocus(&data->scroll_area);
+                    data->update_preview = true;
                 }
             }
         break;
@@ -108,6 +239,8 @@ static void level_select_do_action(Scene_t* scene, ActionType_t action, bool pre
 void init_level_select_scene(LevelSelectScene_t* scene)
 {
     init_scene(&scene->scene, &level_select_do_action, 0);
+    scene->data.preview = LoadRenderTexture(LEVEL_PREVIEW_SIZE, LEVEL_PREVIEW_SIZE);
+    scene->data.update_preview = true;
     add_scene_layer(
         &scene->scene, scene->scene.engine->intended_window_size.x,
         scene->scene.engine->intended_window_size.y,
@@ -150,6 +283,7 @@ void init_level_select_scene(LevelSelectScene_t* scene)
         }
     ScrollAreaRenderEnd();
 
+    sc_array_add(&scene->scene.systems, &level_preview_render_func);
     sc_array_add(&scene->scene.systems, &level_select_render_func);
     sc_map_put_64(&scene->scene.action_map, KEY_UP, ACTION_UP);
     sc_map_put_64(&scene->scene.action_map, KEY_DOWN, ACTION_DOWN);
@@ -159,7 +293,7 @@ void init_level_select_scene(LevelSelectScene_t* scene)
 }
 void free_level_select_scene(LevelSelectScene_t* scene)
 {
-
+    UnloadRenderTexture(scene->data.preview);
     vert_scrollarea_free(&scene->data.scroll_area);
     free_scene(&scene->scene);
 }

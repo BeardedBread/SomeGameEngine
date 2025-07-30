@@ -125,7 +125,9 @@ typedef struct MenuScene {
 
 typedef struct LevelSelectSceneData {
     VertScrollArea_t scroll_area;
+    RenderTexture2D preview;
     LevelPack_t* level_pack;
+    bool update_preview;
 } LevelSelectSceneData_t;
 
 typedef struct LevelSelectScene {

@@ -4,7 +4,7 @@
 #include "raymath.h"
 #include <stdio.h>
 
-#define LEVEL_PREVIEW_SIZE 400
+#define LEVEL_PREVIEW_SIZE 430
 static void level_select_render_func(Scene_t* scene)
 {
     LevelSelectSceneData_t* data = &(CONTAINER_OF(scene, LevelSelectScene_t, scene)->data);
